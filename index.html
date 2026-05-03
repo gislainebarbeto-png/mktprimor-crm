@@ -174,6 +174,39 @@
     .lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 48px rgba(0,0,0,.7);cursor:default;}
     .lightbox-close{position:absolute;top:18px;right:24px;color:#fff;font-size:32px;line-height:1;cursor:pointer;opacity:.75;transition:opacity .2s;}
     .lightbox-close:hover{opacity:1;}
+    .lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.18);border:none;color:#fff;font-size:36px;width:48px;height:48px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+    .lb-nav:hover{background:rgba(255,255,255,.35);}
+    .lb-prev{left:16px;}.lb-next{right:16px;}
+    .lb-counter{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.7);font-size:12px;letter-spacing:.1em;}
+    /* Instagram feed grid */
+    .ig-profile-hd{display:flex;align-items:center;gap:16px;padding:14px 16px;border-bottom:1px solid #efefef;}
+    .ig-profile-av{width:56px;height:56px;border-radius:50%;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);flex-shrink:0;overflow:hidden;}
+    .ig-profile-av img{width:100%;height:100%;object-fit:cover;}
+    .ig-profile-info{flex:1;}
+    .ig-profile-uname{font-size:14px;font-weight:600;color:#000;}
+    .ig-profile-stats{display:flex;gap:18px;margin-top:4px;}
+    .ig-profile-stat{text-align:center;font-size:12px;color:#262626;}
+    .ig-profile-stat strong{display:block;font-size:14px;font-weight:600;}
+    .ig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}
+    .ig-grid-item{aspect-ratio:1;overflow:hidden;cursor:pointer;position:relative;background:#f0f0f0;}
+    .ig-grid-item img{width:100%;height:100%;object-fit:cover;transition:opacity .15s;}
+    .ig-grid-item:hover img{opacity:.85;}
+    .ig-grid-item .ig-grid-multi{position:absolute;top:6px;right:6px;color:#fff;font-size:14px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));}
+    .ig-grid-empty{aspect-ratio:1;background:#fafafa;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:22px;}
+    .ig-post-header{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #efefef;}
+    .ig-post-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);overflow:hidden;flex-shrink:0;}
+    .ig-post-av img{width:100%;height:100%;object-fit:cover;}
+    .ig-back{background:none;border:none;font-size:20px;cursor:pointer;color:#262626;padding:0;margin-right:4px;}
+    /* Client avatar with photo */
+    .col-av-photo{width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;}
+    .col-av-photo img{width:100%;height:100%;object-fit:cover;}
+    .mc-photo-wrap{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+    .mc-photo-prev{width:56px;height:56px;border-radius:50%;overflow:hidden;background:var(--beige);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--copper);}
+    .mc-photo-prev img{width:100%;height:100%;object-fit:cover;display:none;}
+    /* Client portal avatar */
+    .client-avatar{width:52px;height:52px;border-radius:50%;overflow:hidden;background:var(--beige);border:2px solid rgba(196,150,122,.3);display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:22px;color:var(--copper);flex-shrink:0;}
+    .client-avatar img{width:100%;height:100%;object-fit:cover;}
+    .client-header-row{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
     .cp-ph{width:100%;height:180px;background:var(--beige);display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:26px;color:var(--copper);}
     .cp-body{padding:16px;flex:1;display:flex;flex-direction:column;}
     .cp-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
@@ -327,9 +360,15 @@
     </div>
   </div>
   <div class="client-main">
-    <h2 id="client-greeting">Olá!</h2>
-    <div class="client-sub">Seus posts · Marketing Primor</div>
-    <div class="client-stats">
+    <div class="client-header-row">
+      <div class="client-avatar" id="client-avatar">✦</div>
+      <div>
+        <h2 id="client-greeting" style="margin-bottom:2px;">Olá!</h2>
+        <div class="client-sub" style="margin-bottom:0;">Seus posts · Marketing Primor</div>
+      </div>
+      <button onclick="Client.openFeed()" style="margin-left:auto;padding:9px 16px;border-radius:20px;border:1px solid rgba(196,150,122,.4);background:none;color:var(--copper);font-size:11px;cursor:pointer;letter-spacing:.06em;">📱 Prévia do Feed</button>
+    </div>
+    <div class="client-stats" style="margin-top:16px;">
       <div class="c-stat"><div class="c-stat-n" id="cs-total">0</div><div class="c-stat-l">Posts</div></div>
       <div class="c-stat"><div class="c-stat-n" id="cs-rev" style="color:#E65100">0</div><div class="c-stat-l">Aguardando você</div></div>
       <div class="c-stat"><div class="c-stat-n" id="cs-pub" style="color:#6A1B9A">0</div><div class="c-stat-l">Publicados</div></div>
@@ -725,7 +764,10 @@ const Admin = {
       '<div class="table-wrap">' +
       '<div class="table-row table-head"><div style="width:36px"></div><div class="col-main">Nome · Empresa</div><div style="width:120px">Instagram</div><div style="width:100px">E-mail</div><div style="width:80px">Posts</div></div>' +
       list.map(c => `<div class="table-row" onclick="Admin.openCliente(${c.id})">
-        <div class="col-av" style="background:rgba(196,150,122,.12);border:1px solid rgba(196,150,122,.25);color:var(--copper);">${(c.nome||'?')[0].toUpperCase()}</div>
+        ${c.foto_url
+          ? `<div class="col-av-photo"><img src="${c.foto_url}" alt=""/></div>`
+          : `<div class="col-av" style="background:rgba(196,150,122,.12);border:1px solid rgba(196,150,122,.25);color:var(--copper);">${(c.nome||'?')[0].toUpperCase()}</div>`
+        }
         <div class="col-main"><div class="col-name">${c.nome||'—'}</div><div class="col-sub">${c.empresa||'—'}</div></div>
         <div style="width:120px"><div class="col-sub">${c.instagram||'—'}</div></div>
         <div style="width:100px"><div class="col-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.email||'—'}</div></div>
@@ -740,6 +782,17 @@ const Admin = {
     });
   },
 
+  previewFoto(input) {
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById('mc-photo-img');
+      img.src = e.target.result;
+      img.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  },
+
   abrirModal() {
     document.getElementById('modal-cliente').classList.remove('hidden');
     document.getElementById('mc-err').style.display = 'none';
@@ -748,6 +801,8 @@ const Admin = {
       if (el) el.value = '';
     });
     document.getElementById('mc-senha').value = 'Primor2026!';
+    document.getElementById('mc-foto').value = '';
+    document.getElementById('mc-photo-img').style.display = 'none';
   },
 
   fecharModal() {
@@ -771,6 +826,19 @@ const Admin = {
 
     this.loader(true);
     try {
+      // Upload foto se selecionada
+      let foto_url = null;
+      const fotoFile = document.getElementById('mc-foto').files[0];
+      if (fotoFile) {
+        const ext = fotoFile.name.split('.').pop();
+        const path = `clientes/${Date.now()}.${ext}`;
+        const { error: upErr } = await db.storage.from('posts-media').upload(path, fotoFile, { cacheControl: '3600', upsert: false });
+        if (!upErr) {
+          const { data: urlData } = db.storage.from('posts-media').getPublicUrl(path);
+          foto_url = urlData.publicUrl;
+        }
+      }
+
       // Cria usuário no Supabase Auth
       const { data: authData, error: authErr } = await db.auth.signUp({
         email, password: senha,
@@ -779,7 +847,7 @@ const Admin = {
       if (authErr) throw authErr;
 
       // Salva na tabela clients
-      await db.from('clients').insert([{ nome, empresa, instagram: ig, email, access_code: senha }]);
+      await db.from('clients').insert([{ nome, empresa, instagram: ig, email, access_code: senha, foto_url }]);
 
       this.fecharModal();
       this.tab('clientes');
@@ -955,9 +1023,17 @@ const Client = {
     try {
       const [{ data }, { data: clientData }] = await Promise.all([
         db.from('posts').select('*').eq('client_email', App.user.email).order('created_at',{ascending:false}),
-        db.from('clients').select('instagram').eq('email', App.user.email).single()
+        db.from('clients').select('instagram,foto_url,nome').eq('email', App.user.email).single()
       ]);
       this._igHandle = (clientData?.instagram || '').replace('@','');
+      this._fotoUrl = clientData?.foto_url || '';
+      // Avatar no portal
+      const av = document.getElementById('client-avatar');
+      if (this._fotoUrl) {
+        av.innerHTML = `<img src="${this._fotoUrl}" style="width:100%;height:100%;object-fit:cover;" alt=""/>`;
+      } else {
+        av.textContent = (clientData?.nome || App.user.email)[0].toUpperCase();
+      }
       const posts = data || [];
       document.getElementById('cs-total').textContent = posts.length;
       document.getElementById('cs-rev').textContent = posts.filter(p=>p.status==='revisao').length;
@@ -968,6 +1044,7 @@ const Client = {
 
   _posts: [],
   _igHandle: '',
+  _fotoUrl: '',
 
   parseImgs(raw) {
     if (!raw) return [];
@@ -988,10 +1065,39 @@ const Client = {
     car.dataset.cur = cur;
   },
 
-  openPreview(id) {
-    const p = this._posts.find(x => x.id === id); if (!p) return;
-    const imgs = this.parseImgs(p.img_url);
+  openFeed() {
     const handle = this._igHandle || 'seu_perfil';
+    const posts9 = this._posts.slice(0, 9);
+    // Header
+    document.getElementById('ig-uname').textContent = '@' + handle;
+    document.getElementById('ig-stat-posts').textContent = this._posts.length;
+    // Avatar
+    const avImg = document.getElementById('ig-av-img');
+    if (this._fotoUrl) { avImg.src = this._fotoUrl; avImg.style.display = 'block'; }
+    else { avImg.style.display = 'none'; }
+    // Grid
+    const filled = posts9.map(p => {
+      const imgs = this.parseImgs(p.img_url);
+      const thumb = imgs[0] || '';
+      const multi = imgs.length > 1 ? '<span class="ig-grid-multi">❒</span>' : '';
+      return thumb
+        ? `<div class="ig-grid-item" onclick="Client.igShowPost(${p.id})">${multi}<img src="${thumb}" alt=""/></div>`
+        : `<div class="ig-grid-item ig-grid-empty" onclick="Client.igShowPost(${p.id})">✦</div>`;
+    });
+    while (filled.length < 9) filled.push(`<div class="ig-grid-empty">+</div>`);
+    document.getElementById('ig-grid').innerHTML = filled.join('');
+    // Show grid, hide post detail
+    document.getElementById('ig-grid-view').style.display = 'block';
+    document.getElementById('ig-post-view').style.display = 'none';
+    document.getElementById('ig-back-btn').style.display = 'none';
+    document.getElementById('ig-preview').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  },
+
+  igShowPost(id) {
+    const p = this._posts.find(x => x.id === id); if (!p) return;
+    const handle = this._igHandle || 'seu_perfil';
+    const imgs = this.parseImgs(p.img_url);
     const wrap = document.getElementById('ig-car-wrap');
     if (imgs.length) {
       wrap.innerHTML = imgs.map((u, i) =>
@@ -1004,16 +1110,18 @@ const Client = {
         ? imgs.map((_,i) => `<span class="ig-car-dot${i===0?' active':''}"></span>`).join('') : '';
       wrap.dataset.cur = '0';
     } else {
-      wrap.innerHTML = `<div style="height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:13px;">Sem imagem</div>`;
+      wrap.innerHTML = `<div style="height:220px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;color:#aaa;">Sem imagem</div>`;
       document.getElementById('ig-car-dots').innerHTML = '';
     }
-    document.getElementById('ig-uname').textContent = '@' + handle;
-    const legenda = p.legenda || '';
-    const hashtags = p.hashtags || '';
-    document.getElementById('ig-caption').innerHTML = `<strong>@${handle}</strong> ${legenda}`;
-    document.getElementById('ig-hashtags').textContent = hashtags;
-    document.getElementById('ig-preview').classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+    document.getElementById('ig-post-uname').textContent = '@' + handle;
+    const postAvImg = document.getElementById('ig-post-av-img');
+    if (this._fotoUrl) { postAvImg.src = this._fotoUrl; postAvImg.style.display = 'block'; }
+    else { postAvImg.style.display = 'none'; }
+    document.getElementById('ig-caption').innerHTML = `<strong>@${handle}</strong> ${p.legenda || ''}`;
+    document.getElementById('ig-hashtags').textContent = p.hashtags || '';
+    document.getElementById('ig-grid-view').style.display = 'none';
+    document.getElementById('ig-post-view').style.display = 'block';
+    document.getElementById('ig-back-btn').style.display = 'block';
   },
 
   igNav(dir) {
@@ -1027,6 +1135,12 @@ const Client = {
     imgs[cur].style.display = 'block';
     dots[cur]?.classList.add('active');
     wrap.dataset.cur = cur;
+  },
+
+  igBackToGrid() {
+    document.getElementById('ig-grid-view').style.display = 'block';
+    document.getElementById('ig-post-view').style.display = 'none';
+    document.getElementById('ig-back-btn').style.display = 'none';
   },
 
   closePreview() {
@@ -1078,20 +1192,33 @@ const Client = {
             <span class="badge badge-${p.status}">${labels[p.status]||p.status}</span>
           </div>
           <p class="cp-desc">${p.legenda||'—'}</p>
-          <div style="margin-bottom:8px;">
-            <button class="cp-btn-ig" onclick="Client.openPreview(${p.id})">📱 Prévia do Instagram</button>
-          </div>
           <div class="cp-actions">${actions}</div>
         </div>
       </div>`;
     }).join('');
   },
 
-  openLightbox(url) {
-    document.getElementById('lightbox-img').src = url;
+  _lbUrls: [],
+  _lbIdx: 0,
+
+  openLightbox(urls, idx) {
+    this._lbUrls = urls;
+    this._lbIdx = idx || 0;
+    const multi = urls.length > 1;
+    document.getElementById('lightbox-img').src = urls[this._lbIdx];
+    document.getElementById('lb-prev').style.display = multi ? 'flex' : 'none';
+    document.getElementById('lb-next').style.display = multi ? 'flex' : 'none';
+    document.getElementById('lb-counter').textContent = multi ? `${this._lbIdx + 1} / ${urls.length}` : '';
     document.getElementById('lightbox').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   },
+
+  lbNav(dir) {
+    this._lbIdx = (this._lbIdx + dir + this._lbUrls.length) % this._lbUrls.length;
+    document.getElementById('lightbox-img').src = this._lbUrls[this._lbIdx];
+    document.getElementById('lb-counter').textContent = `${this._lbIdx + 1} / ${this._lbUrls.length}`;
+  },
+
   closeLightbox() {
     document.getElementById('lightbox').classList.add('hidden');
     document.body.style.overflow = '';
@@ -1107,35 +1234,78 @@ const Client = {
 };
 
 document.addEventListener('DOMContentLoaded', () => App.init());
-document.addEventListener('keydown', e => { if (e.key === 'Escape') Client.closeLightbox(); });
-document.addEventListener('click', e => { if (e.target.dataset.lightbox) Client.openLightbox(e.target.dataset.lightbox); });</script>
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { Client.closeLightbox(); Client.closePreview(); }
+});
+document.addEventListener('click', e => {
+  if (!e.target.dataset.lightbox) return;
+  const car = e.target.closest('.carousel');
+  if (car) {
+    const slides = [...car.querySelectorAll('.car-slide')];
+    const urls = slides.map(s => s.dataset.lightbox);
+    Client.openLightbox(urls, parseInt(car.dataset.cur) || 0);
+  } else {
+    Client.openLightbox([e.target.dataset.lightbox], 0);
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') Client.lbNav(1);
+  if (e.key === 'ArrowLeft') Client.lbNav(-1);
+});</script>
 
   <!-- INSTAGRAM PREVIEW -->
   <div id="ig-preview" class="ig-modal-bg hidden" onclick="Client.closePreview()">
     <div class="ig-phone" onclick="event.stopPropagation()">
-      <div class="ig-header">
-        <div class="ig-avatar"></div>
-        <div class="ig-uname" id="ig-uname">@perfil</div>
-        <span class="ig-close-btn" onclick="Client.closePreview()">✕</span>
+      <!-- Profile header (always visible) -->
+      <div style="display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid #efefef;gap:10px;">
+        <button id="ig-back-btn" class="ig-back" onclick="Client.igBackToGrid()" style="display:none">←</button>
+        <div class="ig-profile-av" id="ig-av-circle"><img id="ig-av-img" src="" style="display:none"/></div>
+        <div style="flex:1;font-size:13px;font-weight:600;color:#000;" id="ig-uname">@perfil</div>
+        <span style="font-size:22px;cursor:pointer;color:#888;line-height:1;" onclick="Client.closePreview()">✕</span>
       </div>
-      <div id="ig-car-wrap" class="ig-car-wrap" data-cur="0"></div>
-      <div id="ig-car-dots" class="ig-car-dots"></div>
-      <div class="ig-actions">
-        <span class="ig-icon">♡</span>
-        <span class="ig-icon">💬</span>
-        <span class="ig-icon">✈</span>
-        <span class="ig-icon ig-save">🔖</span>
+
+      <!-- Grid view -->
+      <div id="ig-grid-view">
+        <div class="ig-profile-hd" style="border:none;padding:10px 16px 0;">
+          <div style="flex:1;">
+            <div class="ig-profile-stats">
+              <div class="ig-profile-stat"><strong id="ig-stat-posts">0</strong><span>posts</span></div>
+              <div class="ig-profile-stat"><strong>—</strong><span>seguidores</span></div>
+              <div class="ig-profile-stat"><strong>—</strong><span>seguindo</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:6px 0 4px;border-bottom:1px solid #efefef;text-align:center;font-size:11px;color:#8e8e8e;letter-spacing:.06em;">⊞ PUBLICAÇÕES</div>
+        <div id="ig-grid" class="ig-grid"></div>
       </div>
-      <div class="ig-caption" id="ig-caption"></div>
-      <div class="ig-hashtags" id="ig-hashtags"></div>
-      <div class="ig-time">Agora mesmo</div>
+
+      <!-- Post detail view -->
+      <div id="ig-post-view" style="display:none;">
+        <div class="ig-post-header">
+          <div class="ig-post-av"><img id="ig-post-av-img" src="" style="display:none"/></div>
+          <div style="font-size:13px;font-weight:600;color:#000;flex:1;" id="ig-post-uname">@perfil</div>
+          <span style="font-size:20px;color:#262626;">···</span>
+        </div>
+        <div id="ig-car-wrap" class="ig-car-wrap" data-cur="0"></div>
+        <div id="ig-car-dots" class="ig-car-dots"></div>
+        <div class="ig-actions">
+          <span class="ig-icon">♡</span><span class="ig-icon">💬</span><span class="ig-icon">✈</span>
+          <span class="ig-icon ig-save">🔖</span>
+        </div>
+        <div class="ig-caption" id="ig-caption"></div>
+        <div class="ig-hashtags" id="ig-hashtags"></div>
+        <div class="ig-time">Agora mesmo</div>
+      </div>
     </div>
   </div>
 
   <!-- LIGHTBOX FOTO -->
   <div id="lightbox" class="lightbox hidden" onclick="Client.closeLightbox()">
     <span class="lightbox-close" onclick="Client.closeLightbox()">✕</span>
+    <button id="lb-prev" class="lb-nav lb-prev" onclick="event.stopPropagation();Client.lbNav(-1)" style="display:none">&#8249;</button>
     <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()"/>
+    <button id="lb-next" class="lb-nav lb-next" onclick="event.stopPropagation();Client.lbNav(1)" style="display:none">&#8250;</button>
+    <div id="lb-counter" class="lb-counter"></div>
   </div>
 
   <!-- MODAL NOVO POST -->
@@ -1220,6 +1390,14 @@ document.addEventListener('click', e => { if (e.target.dataset.lightbox) Client.
   <div id="modal-cliente" class="modal-bg hidden">
     <div class="modal-box">
       <h3>Novo Cliente</h3>
+      <div class="modal-field">
+        <label>Foto do cliente</label>
+        <div class="mc-photo-wrap">
+          <div class="mc-photo-prev" id="mc-photo-prev" onclick="document.getElementById('mc-foto').click()">✦<img id="mc-photo-img" src="" alt=""/></div>
+          <div style="font-size:12px;color:var(--muted);cursor:pointer;" onclick="document.getElementById('mc-foto').click()">Clique para adicionar foto</div>
+        </div>
+        <input type="file" id="mc-foto" accept="image/*" style="display:none" onchange="Admin.previewFoto(this)"/>
+      </div>
       <div class="modal-field"><label>Nome completo</label><input type="text" id="mc-nome" placeholder="Nome do cliente"/></div>
       <div class="modal-field"><label>Empresa / Marca</label><input type="text" id="mc-empresa" placeholder="Nome da marca"/></div>
       <div class="modal-field"><label>@ Instagram</label><input type="text" id="mc-ig" placeholder="@perfil"/></div>
