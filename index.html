@@ -926,7 +926,7 @@ const Client = {
     }
     const labels = {revisao:'Em Revisão',aprovado:'Aprovado',publicado:'Publicado',criacao:'Em Criação'};
     c.innerHTML = posts.map(p => {
-      const img = p.img_url ? `<img src="${p.img_url}" class="cp-img" alt="" onclick="Client.openLightbox('${p.img_url}')"/>` : `<div class="cp-ph">✦</div>`;
+      const img = p.img_url ? `<img src="${p.img_url}" class="cp-img" alt="" data-lightbox="${p.img_url}"/>` : `<div class="cp-ph">✦</div>`;
       const date = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '';
       let actions = '';
       if (p.status === 'revisao') {
@@ -972,7 +972,8 @@ const Client = {
 };
 
 document.addEventListener('DOMContentLoaded', () => App.init());
-document.addEventListener('keydown', e => { if (e.key === 'Escape') Client.closeLightbox(); });</script>
+document.addEventListener('keydown', e => { if (e.key === 'Escape') Client.closeLightbox(); });
+document.addEventListener('click', e => { if (e.target.dataset.lightbox) Client.openLightbox(e.target.dataset.lightbox); });</script>
 
   <!-- LIGHTBOX FOTO -->
   <div id="lightbox" class="lightbox hidden" onclick="Client.closeLightbox()">
