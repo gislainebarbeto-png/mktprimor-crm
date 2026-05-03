@@ -168,7 +168,12 @@
     .client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px;}
     .cp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);transition:all .22s;display:flex;flex-direction:column;animation:fadeIn .4s ease;}
     .cp-card:hover{box-shadow:var(--sh2);transform:translateY(-3px);}
-    .cp-img{width:100%;height:180px;object-fit:cover;background:var(--beige);display:block;}
+    .cp-img{width:100%;height:180px;object-fit:cover;background:var(--beige);display:block;cursor:zoom-in;}
+    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000;display:flex;align-items:center;justify-content:center;cursor:zoom-out;}
+    .lightbox.hidden{display:none;}
+    .lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 48px rgba(0,0,0,.7);cursor:default;}
+    .lightbox-close{position:absolute;top:18px;right:24px;color:#fff;font-size:32px;line-height:1;cursor:pointer;opacity:.75;transition:opacity .2s;}
+    .lightbox-close:hover{opacity:1;}
     .cp-ph{width:100%;height:180px;background:var(--beige);display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:26px;color:var(--copper);}
     .cp-body{padding:16px;flex:1;display:flex;flex-direction:column;}
     .cp-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
@@ -921,7 +926,7 @@ const Client = {
     }
     const labels = {revisao:'Em Revisão',aprovado:'Aprovado',publicado:'Publicado',criacao:'Em Criação'};
     c.innerHTML = posts.map(p => {
-      const img = p.img_url ? `<img src="${p.img_url}" class="cp-img" alt=""/>` : `<div class="cp-ph">✦</div>`;
+      const img = p.img_url ? `<img src="${p.img_url}" class="cp-img" alt="" onclick="Client.openLightbox('${p.img_url}')"/>` : `<div class="cp-ph">✦</div>`;
       const date = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '';
       let actions = '';
       if (p.status === 'revisao') {
@@ -947,6 +952,16 @@ const Client = {
     }).join('');
   },
 
+  openLightbox(url) {
+    document.getElementById('lightbox-img').src = url;
+    document.getElementById('lightbox').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  },
+  closeLightbox() {
+    document.getElementById('lightbox').classList.add('hidden');
+    document.body.style.overflow = '';
+  },
+
   async changeStatus(id, status) {
     App.loader(true);
     try {
@@ -956,7 +971,14 @@ const Client = {
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => App.init());</script>
+document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('keydown', e => { if (e.key === 'Escape') Client.closeLightbox(); });</script>
+
+  <!-- LIGHTBOX FOTO -->
+  <div id="lightbox" class="lightbox hidden" onclick="Client.closeLightbox()">
+    <span class="lightbox-close" onclick="Client.closeLightbox()">✕</span>
+    <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()"/>
+  </div>
 
   <!-- MODAL NOVO POST -->
   <div id="modal-post" class="modal-bg hidden">
