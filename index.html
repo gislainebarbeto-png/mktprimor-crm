@@ -782,6 +782,25 @@ const Admin = {
     });
   },
 
+  async uploadFotoCliente(input, id) {
+    const file = input.files[0]; if (!file) return;
+    this.loader(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `clientes/${Date.now()}.${ext}`;
+      const { error: upErr } = await db.storage.from('posts-media').upload(path, file, { cacheControl: '3600', upsert: false });
+      if (upErr) throw upErr;
+      const { data: urlData } = db.storage.from('posts-media').getPublicUrl(path);
+      const foto_url = urlData.publicUrl;
+      await db.from('clients').update({ foto_url }).eq('id', id);
+      // Atualiza o avatar na tela sem recarregar
+      const el = document.getElementById('dp-foto-img');
+      if (el) { el.outerHTML = `<img id="dp-foto-img" src="${foto_url}" style="width:100%;height:100%;object-fit:cover;"/>`; }
+      this.renderClientes();
+    } catch(e) { alert('Erro ao enviar foto: ' + e.message); }
+    finally { this.loader(false); }
+  },
+
   previewFoto(input) {
     const file = input.files[0]; if (!file) return;
     const reader = new FileReader();
@@ -870,9 +889,19 @@ const Admin = {
         <span class="dp-title">${c.nome}</span>
         <button class="dp-close" onclick="Admin.closeDetail()">×</button>
       </div>
-      <div style="background:var(--beige);border-radius:9px;padding:12px;margin-bottom:12px;">
-        <div style="font-size:14px;font-style:italic;font-family:'Cormorant Garamond',serif;color:var(--brown);">${c.empresa||c.nome}</div>
-        <div style="font-size:11px;color:var(--muted);">${c.instagram||'—'}</div>
+      <!-- Foto do cliente -->
+      <div style="display:flex;align-items:center;gap:14px;background:var(--beige);border-radius:9px;padding:12px;margin-bottom:12px;">
+        <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;background:#ddd;flex-shrink:0;border:2px solid rgba(196,150,122,.3);">
+          ${c.foto_url ? `<img src="${c.foto_url}" id="dp-foto-img" style="width:100%;height:100%;object-fit:cover;"/>` : `<div id="dp-foto-img" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;font-family:'Cormorant Garamond',serif;color:var(--copper);">${(c.nome||'?')[0].toUpperCase()}</div>`}
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-style:italic;font-family:'Cormorant Garamond',serif;color:var(--brown);">${c.empresa||c.nome}</div>
+          <div style="font-size:11px;color:var(--muted);">${c.instagram||'—'}</div>
+        </div>
+        <label style="font-size:11px;color:var(--copper);cursor:pointer;border:1px solid rgba(196,150,122,.4);padding:5px 10px;border-radius:20px;white-space:nowrap;">
+          📷 Foto
+          <input type="file" accept="image/*" style="display:none" onchange="Admin.uploadFotoCliente(this,${c.id})"/>
+        </label>
       </div>
       ${this.dpField('✉ E-mail / Login', c.email)}
       ${this.dpField('🔑 Senha temporária', c.access_code||'—')}
