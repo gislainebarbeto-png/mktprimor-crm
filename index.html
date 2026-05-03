@@ -165,10 +165,29 @@
     .c-stat-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
 
     /* Client posts grid */
+    .client-layout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start;}
     .client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px;}
+    .ig-inline{background:#fff;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh);position:sticky;top:20px;}
+    .ig-inline-hd{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #efefef;}
+    /* Client boards in admin */
+    .client-board{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:20px;overflow:hidden;box-shadow:var(--sh);}
+    .client-board-hd{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--border);background:var(--beige);}
+    .cb-av{width:36px;height:36px;border-radius:50%;object-fit:cover;background:rgba(196,150,122,.15);border:1px solid rgba(196,150,122,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;color:var(--copper);font-size:16px;overflow:hidden;}
+    .cb-av img{width:100%;height:100%;object-fit:cover;}
+    .cb-name{font-size:15px;font-style:italic;color:var(--brown);font-family:"Cormorant Garamond",serif;}
+    .cb-sub{font-size:10px;color:var(--muted);}
+    .cb-posts-row{display:flex;gap:10px;padding:14px 18px;overflow-x:auto;}
+    .cb-post{flex-shrink:0;width:130px;cursor:pointer;border-radius:9px;overflow:hidden;border:1px solid var(--border);background:var(--bg);transition:transform .2s,box-shadow .2s;}
+    .cb-post:hover{transform:translateY(-2px);box-shadow:var(--sh2);}
+    .cb-post-img{width:130px;height:130px;object-fit:cover;background:var(--beige);display:block;}
+    .cb-post-ph{width:130px;height:130px;background:var(--beige);display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-style:italic;color:var(--copper);font-size:22px;}
+    .cb-post-body{padding:7px 8px;}
+    .cb-post-cap{font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
+    .cb-empty{padding:20px 18px;font-size:13px;color:var(--muted);font-style:italic;font-family:"Cormorant Garamond",serif;}
+    @media(max-width:860px){.client-layout{grid-template-columns:1fr;}}
     .cp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);transition:all .22s;display:flex;flex-direction:column;animation:fadeIn .4s ease;}
     .cp-card:hover{box-shadow:var(--sh2);transform:translateY(-3px);}
-    .cp-img{width:100%;height:180px;object-fit:cover;background:var(--beige);display:block;cursor:zoom-in;}
+    .cp-img{width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--beige);display:block;cursor:zoom-in;}
     .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000;display:flex;align-items:center;justify-content:center;cursor:zoom-out;}
     .lightbox.hidden{display:none;}
     .lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 48px rgba(0,0,0,.7);cursor:default;}
@@ -247,7 +266,7 @@
     .upload-thumbs{display:none;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-top:10px;}
     .upload-thumbs img{width:100%;height:80px;object-fit:cover;border-radius:7px;border:2px solid var(--border);}
     .carousel{position:relative;overflow:hidden;}
-    .car-slide{width:100%;height:180px;object-fit:cover;background:var(--beige);display:block;cursor:zoom-in;}
+    .car-slide{width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--beige);display:block;cursor:zoom-in;}
     .car-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.45);border:none;color:#fff;font-size:22px;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;transition:background .2s;}
     .car-btn:hover{background:rgba(0,0,0,.7);}
     .car-prev{left:8px;}.car-next{right:8px;}
@@ -366,14 +385,16 @@
         <h2 id="client-greeting" style="margin-bottom:2px;">Olá!</h2>
         <div class="client-sub" style="margin-bottom:0;">Seus posts · Marketing Primor</div>
       </div>
-      <button onclick="Client.openFeed()" style="margin-left:auto;padding:9px 16px;border-radius:20px;border:1px solid rgba(196,150,122,.4);background:none;color:var(--copper);font-size:11px;cursor:pointer;letter-spacing:.06em;">📱 Prévia do Feed</button>
     </div>
     <div class="client-stats" style="margin-top:16px;">
       <div class="c-stat"><div class="c-stat-n" id="cs-total">0</div><div class="c-stat-l">Posts</div></div>
       <div class="c-stat"><div class="c-stat-n" id="cs-rev" style="color:#E65100">0</div><div class="c-stat-l">Aguardando você</div></div>
       <div class="c-stat"><div class="c-stat-n" id="cs-pub" style="color:#6A1B9A">0</div><div class="c-stat-l">Publicados</div></div>
     </div>
-    <div id="client-posts" class="client-grid"></div>
+    <div class="client-layout">
+      <div id="client-posts" class="client-grid"></div>
+      <div id="ig-inline-feed" class="ig-inline"></div>
+    </div>
   </div>
 </div>
 
@@ -680,49 +701,85 @@ const Admin = {
 
   // ── POSTS ──
   async renderPosts() {
-    const { data } = await db.from('posts').select('*').order('created_at',{ascending:false});
+    const [{ data }, { data: clients }] = await Promise.all([
+      db.from('posts').select('*').order('created_at',{ascending:false}),
+      db.from('clients').select('*')
+    ]);
     this.posts = data || [];
     const rev = this.posts.filter(p=>p.status==='revisao').length;
     const badge = document.getElementById('nb-posts');
     badge.textContent = rev; badge.style.display = rev ? 'inline' : 'none';
 
     const SM = {criacao:{l:'Em Criação',c:'#455A64',bc:'#ECEFF1'},revisao:{l:'Em Revisão',c:'#E65100',bc:'#FFF3E0'},aprovado:{l:'Aprovado',c:'#2E7D32',bc:'#E8F5E9'},publicado:{l:'Publicado',c:'#6A1B9A',bc:'#F3E5F5'}};
-    const cols = ['criacao','revisao','aprovado','publicado'];
 
     const main = document.getElementById('admin-main');
     main.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h2 class="section-title" style="margin:0;">Quadro de Posts</h2>
+        <h2 class="section-title" style="margin:0;">Posts por Cliente</h2>
         <button onclick="Admin.abrirModalPost()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,#4B2D22,#6B3E28);color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;">+ Novo Post</button>
       </div>
-      <div class="kanban" id="kanban"></div>`;
-    const kb = document.getElementById('kanban');
+      <div id="boards"></div>`;
 
-    cols.forEach(status => {
-      const m = SM[status];
-      const items = this.posts.filter(p=>p.status===status);
-      const col = document.createElement('div');
-      col.className = 'k-col';
-      col.innerHTML = `
-        <div class="k-col-h" style="border-color:${m.bc};">
-          <span class="k-col-title" style="color:${m.c};">${m.l}</span>
-          <span class="k-count">${items.length}</span>
-        </div>
-        ${items.map(p=>`
-          <div class="k-card" onclick="Admin.openPost(${p.id})">
-            <div class="k-img">${p.img_url?`<img src="${p.img_url}" alt=""/>`:'<div class="k-img-ph">✦</div>'}</div>
-            <div class="k-body">
-              <div class="k-cap">${p.legenda||'—'}</div>
-              <div class="k-meta">
-                <span class="k-date">${p.data_post||new Date(p.created_at).toLocaleDateString('pt-BR')}</span>
-                <span class="k-badge" style="background:${m.bc};color:${m.c};">${m.l}</span>
-              </div>
-            </div>
-          </div>`).join('')}
-        ${!items.length ? '<div style="padding:16px;text-align:center;color:var(--muted);font-size:11px;border:1px dashed var(--border);border-radius:9px;font-style:italic;font-family:Cormorant Garamond,serif;">Nenhum post</div>' : ''}
-      `;
-      kb.appendChild(col);
+    const boards = document.getElementById('boards');
+    const clientList = clients || [];
+
+    // Group posts by client_email
+    const grouped = {};
+    this.posts.forEach(p => {
+      const key = p.client_email || '__sem_cliente__';
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(p);
     });
+
+    const parseFirst = (raw) => {
+      if (!raw) return '';
+      try { const a = JSON.parse(raw); return Array.isArray(a) ? a[0] : raw; }
+      catch { return raw; }
+    };
+
+    // Render one board per client that has posts
+    Object.entries(grouped).forEach(([email, posts]) => {
+      const c = clientList.find(x => x.email === email);
+      const name = c?.nome || email;
+      const ig = c?.instagram || '';
+      const foto = c?.foto_url || '';
+      const avHtml = foto
+        ? `<div class="cb-av"><img src="${foto}" alt=""/></div>`
+        : `<div class="cb-av">${(name[0]||'?').toUpperCase()}</div>`;
+
+      const revCount = posts.filter(p=>p.status==='revisao').length;
+      const revBadge = revCount ? `<span style="margin-left:auto;background:#FFF3E0;color:#E65100;font-size:10px;padding:3px 9px;border-radius:20px;">${revCount} aguardando aprovação</span>` : '';
+
+      const postCards = posts.map(p => {
+        const thumb = parseFirst(p.img_url);
+        const m = SM[p.status] || SM.criacao;
+        return `<div class="cb-post" onclick="Admin.openPost(${p.id})">
+          ${thumb ? `<img src="${thumb}" class="cb-post-img" alt=""/>` : `<div class="cb-post-ph">✦</div>`}
+          <div class="cb-post-body">
+            <div class="cb-post-cap">${p.legenda||'—'}</div>
+            <span style="font-size:10px;background:${m.bc};color:${m.c};padding:2px 7px;border-radius:20px;">${m.l}</span>
+          </div>
+        </div>`;
+      }).join('');
+
+      const board = document.createElement('div');
+      board.className = 'client-board';
+      board.innerHTML = `
+        <div class="client-board-hd">
+          ${avHtml}
+          <div>
+            <div class="cb-name">${name}</div>
+            <div class="cb-sub">${ig || email} · ${posts.length} post${posts.length!==1?'s':''}</div>
+          </div>
+          ${revBadge}
+        </div>
+        <div class="cb-posts-row">${postCards}</div>`;
+      boards.appendChild(board);
+    });
+
+    if (!Object.keys(grouped).length) {
+      boards.innerHTML = `<p style="color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:18px;margin-top:40px;text-align:center;">Nenhum post criado ainda ✦</p>`;
+    }
   },
 
   async openPost(id) {
@@ -734,7 +791,7 @@ const Admin = {
         <span class="dp-title">Post</span>
         <button class="dp-close" onclick="Admin.closeDetail()">×</button>
       </div>
-      ${p.img_url ? `<img src="${p.img_url}" style="width:100%;height:140px;object-fit:cover;border-radius:9px;margin-bottom:12px;"/>` : ''}
+      ${(() => { try { const a=JSON.parse(p.img_url); return Array.isArray(a)?a[0]:p.img_url; } catch{return p.img_url;} })()?`<img src="${(() => { try { const a=JSON.parse(p.img_url); return Array.isArray(a)?a[0]:p.img_url; } catch{return p.img_url;} })()}" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:9px;margin-bottom:12px;"/>`:''}
       ${this.dpField('Legenda', p.legenda)}
       ${p.hashtags ? this.dpField('Hashtags', `<span style="color:var(--copper);font-size:11px;">${p.hashtags}</span>`) : ''}
       ${this.dpField('Tipo · Data', `${p.tipo||'Feed'} · ${p.data_post||'—'}`)}
@@ -1189,6 +1246,36 @@ const Client = {
     document.body.style.overflow = '';
   },
 
+  renderInlineFeed() {
+    const feed = document.getElementById('ig-inline-feed');
+    if (!feed) return;
+    const handle = this._igHandle || 'seu_perfil';
+    const posts9 = this._posts.slice(0, 9);
+    const avHtml = this._fotoUrl
+      ? `<div class="ig-profile-av" style="border:none;"><img src="${this._fotoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></div>`
+      : `<div class="ig-profile-av"></div>`;
+    const cells = posts9.map(p => {
+      const imgs = this.parseImgs(p.img_url);
+      const thumb = imgs[0] || '';
+      return thumb
+        ? `<div class="ig-grid-item" onclick="Client.igShowPost(${p.id})">${imgs.length>1?'<span class="ig-grid-multi">❒</span>':''}<img src="${thumb}" alt=""/></div>`
+        : `<div class="ig-grid-item ig-grid-empty" onclick="Client.igShowPost(${p.id})">✦</div>`;
+    });
+    while (cells.length < 9) cells.push(`<div class="ig-grid-empty">+</div>`);
+    feed.innerHTML = `
+      <div class="ig-inline-hd">
+        ${avHtml}
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#000;">@${handle}</div>
+          <div style="font-size:11px;color:#8e8e8e;">${this._posts.length} posts</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid #efefef;">
+        <div style="text-align:center;font-size:10px;color:#8e8e8e;padding:6px;letter-spacing:.08em;">⊞ PUBLICAÇÕES</div>
+        <div class="ig-grid">${cells.join('')}</div>
+      </div>`;
+  },
+
   render(posts) {
     this._posts = posts;
     const c = document.getElementById('client-posts');
@@ -1203,9 +1290,9 @@ const Client = {
       if (imgs.length === 0) {
         mediaBlock = `<div class="cp-ph">✦</div>`;
       } else if (imgs.length === 1) {
-        mediaBlock = `<img src="${imgs[0]}" class="car-slide" alt="" data-lightbox="${imgs[0]}" style="width:100%;height:180px;object-fit:cover;display:block;cursor:zoom-in;background:var(--beige);"/>`;
+        mediaBlock = `<img src="${imgs[0]}" class="car-slide" alt="" data-lightbox="${imgs[0]}"/>`;
       } else {
-        const slides = imgs.map((u,i) => `<img src="${u}" class="car-slide" alt="" data-lightbox="${u}" style="width:100%;height:180px;object-fit:cover;${i>0?'display:none':'display:block'};cursor:zoom-in;background:var(--beige);"/>`).join('');
+        const slides = imgs.map((u,i) => `<img src="${u}" class="car-slide" alt="" data-lightbox="${u}" style="${i>0?'display:none':''}"/>`).join('');
         const dots = imgs.map((_,i) => `<span class="car-dot${i===0?' active':''}"></span>`).join('');
         mediaBlock = `<div class="carousel" id="car-${p.id}" data-cur="0" style="position:relative;">
           ${slides}
@@ -1237,6 +1324,7 @@ const Client = {
         </div>
       </div>`;
     }).join('');
+    this.renderInlineFeed();
   },
 
   _lbUrls: [],
