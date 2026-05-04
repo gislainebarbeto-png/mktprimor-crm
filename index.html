@@ -1833,7 +1833,7 @@ const Admin = {
     if (this._comeceTipo === 'video') {
       url = document.getElementById('cf-url')?.value.trim();
       if (!url) { alert('Cole o link do YouTube.'); return; }
-      if (!url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/)) {
+      if (!url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/)) {
         alert('Link inválido. Use o link completo do vídeo:\nhttps://www.youtube.com/watch?v=XXXXXXXXXXX'); return;
       }
       nome = 'VIDEO::' + titulo;
@@ -3078,7 +3078,7 @@ const Client = {
     if (!rows.length) { el.classList.add('hidden'); return; }
     el.classList.remove('hidden');
     const toEmbed = url => {
-      const m = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+      const m = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/);
       return m ? `https://www.youtube-nocookie.com/embed/${m[1]}?rel=0` : url;
     };
     const items = rows.map(r => {
