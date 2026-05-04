@@ -1306,7 +1306,11 @@ const Admin = {
   async openCliente(id) {
     const { data: clients } = await db.from('clients').select('*').eq('id',id);
     const c = clients?.[0]; if (!c) return;
-    const { data: posts } = await db.from('posts').select('*').eq('client_email',c.email);
+    const [{ data: posts }, { data: metricoolRow }] = await Promise.all([
+      db.from('posts').select('*').eq('client_email',c.email),
+      db.from('arquivos_cliente').select('url').eq('client_email',c.email).eq('nome','__metricool__').maybeSingle()
+    ]);
+    const metricoolUrl = metricoolRow?.url || '';
     const total = posts?.length || 0;
     const rev = posts?.filter(p=>p.status==='revisao').length || 0;
     const inp = (id,val,ph,type='text') => `<input type="${type}" id="${id}" value="${(val||'').replace(/"/g,'&quot;')}" placeholder="${ph}" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);margin-top:4px;"/>`;
@@ -1342,6 +1346,8 @@ const Admin = {
       ${fld('✉ E-mail / Login (não editável)', `<div style="padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;background:var(--bg);color:var(--muted);margin-top:4px;">${c.email}</div>`)}
       <!-- Mensagem da Gi -->
       ${fld('Mensagem para a cliente', `<textarea id="dp-mensagem-gi" rows="2" placeholder="Ex: Essa semana trabalhamos muito no seu posicionamento 🌿" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);resize:none;margin-top:4px;">${c.mensagem_gi||''}</textarea>`)}
+      <!-- Metricool -->
+      ${fld('📊 Link do relatório Metricool', inp('dp-metricool', metricoolUrl, 'https://app.metricool.com/...'))}
       <!-- Arquivos (links) -->
       ${fld('Arquivos do cliente (links)', `<textarea id="dp-arquivos" rows="2" placeholder='[{"nome":"Briefing","url":"https://...","icon":"📋"}]' style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:11px;font-family:monospace;background:var(--bg);resize:vertical;margin-top:4px;">${c.arquivos||''}</textarea><div style="font-size:10px;color:var(--muted);margin-top:3px;">Ícones sugeridos: 📋 📄 🎨 🖼️ 📁</div>`)}
       <div style="display:flex;gap:8px;margin-top:14px;">
@@ -1473,14 +1479,21 @@ const Admin = {
     const data_inicio = document.getElementById('dp-inicio')?.value || null;
     const access_code = document.getElementById('dp-senha')?.value.trim() || null;
     const mensagem_gi = document.getElementById('dp-mensagem-gi')?.value.trim() || null;
+    const metricoolUrl = document.getElementById('dp-metricool')?.value.trim() || '';
     const arquivosRaw = document.getElementById('dp-arquivos')?.value.trim() || null;
     if (arquivosRaw) {
       try { JSON.parse(arquivosRaw); } catch { alert('JSON inválido no campo Arquivos. Verifique o formato.'); return; }
     }
     this.loader(true);
     try {
+      const { data: clientData } = await db.from('clients').select('email').eq('id',id).single();
+      const clientEmail = clientData?.email;
       const { error } = await db.from('clients').update({ nome, empresa, instagram, nome_projeto, data_inicio, access_code, mensagem_gi, arquivos: arquivosRaw }).eq('id', id);
       if (error) throw error;
+      if (clientEmail) {
+        await db.from('arquivos_cliente').delete().eq('client_email',clientEmail).eq('nome','__metricool__');
+        if (metricoolUrl) await db.from('arquivos_cliente').insert([{client_email:clientEmail,nome:'__metricool__',url:metricoolUrl,uploader:'admin'}]);
+      }
       alert('Salvo com sucesso!');
       this.renderClientes();
     } catch(e) { alert('Erro: ' + e.message); }
@@ -2982,12 +2995,21 @@ const Client = {
   async renderMetricasTab() {
     const el = document.getElementById('ctab-content-metricas'); if (!el) return;
     el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;font-style:italic;">Carregando...</p>';
-    const [{ data: mets }, { data: posts }] = await Promise.all([
+    const [{ data: mets }, { data: posts }, { data: metricoolRow }] = await Promise.all([
       db.from('metricas').select('*').eq('client_email', App.user.email).order('mes',{ascending:true}),
-      db.from('posts').select('id,legenda,img_url').eq('client_email', App.user.email)
+      db.from('posts').select('id,legenda,img_url').eq('client_email', App.user.email),
+      db.from('arquivos_cliente').select('url').eq('client_email',App.user.email).eq('nome','__metricool__').maybeSingle()
     ]);
+    const metricoolUrl = metricoolRow?.url || '';
+    const metricoolBtn = metricoolUrl ? `<a href="${metricoolUrl}" target="_blank" style="display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#4B2D22,#7a4b2f);color:#F5EDD8;border-radius:12px;padding:16px 20px;text-decoration:none;margin-bottom:20px;">
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;margin-bottom:2px;">Ver relatório completo</div>
+        <div style="font-size:11px;opacity:.7;">Abre o Metricool com todas as métricas do seu perfil</div>
+      </div>
+      <span style="font-size:22px;">📊 →</span>
+    </a>` : '';
     const list = mets||[], pList = posts||[];
-    if (!list.length) { el.innerHTML='<p style="color:var(--muted);font-size:14px;text-align:center;padding:40px;font-style:italic;font-family:Cormorant Garamond,serif;">Métricas ainda não disponíveis ✦</p>'; return; }
+    if (!list.length) { el.innerHTML=metricoolBtn+'<p style="color:var(--muted);font-size:14px;text-align:center;padding:40px;font-style:italic;font-family:Cormorant Garamond,serif;">Métricas ainda não disponíveis ✦</p>'; return; }
     const last = list[list.length-1];
     const prev = list[list.length-2];
     const delta = (cur,ant) => ant>0 ? `<span style="color:${cur>=ant?'#2E7D32':'#C62828'};font-size:11px;">${cur>=ant?'↑':'↓'}${Math.abs(Math.round((cur-ant)/ant*100))}%</span>` : '';
@@ -2997,7 +3019,7 @@ const Client = {
       const p=pList.find(x=>String(x.id)===String(pid));
       return p ? `<div class="top-post-item">${parseFirst(p.img_url)?`<img src="${parseFirst(p.img_url)}" class="top-post-thumb"/>`:`<div style="aspect-ratio:1/1;background:var(--beige);display:flex;align-items:center;justify-content:center;color:var(--copper);">✦</div>`}<div style="font-size:14px;padding:4px;">${['🥇','🥈','🥉'][i]}</div><div style="font-size:10px;color:var(--muted);padding:0 6px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(p.legenda||'').substring(0,20)}</div></div>` : '';
     }).join('');
-    el.innerHTML = `
+    el.innerHTML = metricoolBtn + `
       <div class="met-grid">
         <div class="met-card"><div class="met-n">${(last.seguidores||0).toLocaleString('pt-BR')}</div><div class="met-l">Seguidores</div>${prev?delta(last.seguidores,prev.seguidores):''}</div>
         <div class="met-card"><div class="met-n">${(last.alcance||0).toLocaleString('pt-BR')}</div><div class="met-l">Alcance</div>${prev?delta(last.alcance,prev.alcance):''}</div>
