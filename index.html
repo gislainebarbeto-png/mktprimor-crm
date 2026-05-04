@@ -532,6 +532,7 @@
       <div class="nav-section">Marketing</div>
       <div class="nav-item" onclick="Admin.tab('automacoes')" id="nav-automacoes"><span class="ni">⚡</span><span class="nl">Automações</span></div>
       <div class="nav-item" onclick="Admin.tab('metricas')" id="nav-metricas"><span class="ni">📊</span><span class="nl">Métricas</span></div>
+      <div class="nav-item" onclick="Admin.tab('comece')" id="nav-comece"><span class="ni">✦</span><span class="nl">Comece Aqui</span></div>
       <div class="nav-section">Colaboração</div>
       <div class="nav-item" onclick="Admin.tab('lab')" id="nav-lab"><span class="ni">💡</span><span class="nl">Ideias</span></div>
       <div class="nav-item" onclick="Admin.tab('info')" id="nav-info"><span class="ni">📋</span><span class="nl">Infos</span></div>
@@ -738,7 +739,7 @@ const Admin = {
 
   async tab(name) {
     this.currentTab = name;
-    ['leads','followup','posts','clientes','financeiro','arquivos','automacoes','metricas','lab','info','solicitacoes','chat'].forEach(t => {
+    ['leads','followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','chat'].forEach(t => {
       document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
     });
     this.closeDetail();
@@ -753,6 +754,7 @@ const Admin = {
       if (name === 'automacoes') await this.renderAutomacoes();
       if (name === 'metricas')   await this.renderMetricas();
       if (name === 'financeiro' && this.isEquipe) { document.getElementById('admin-main').innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-style:italic;">Acesso restrito.</p>'; return; }
+      if (name === 'comece')       await this.renderComece();
       if (name === 'lab')          await this.renderLab();
       if (name === 'info')         await this.renderInfoAdmin();
       if (name === 'solicitacoes') await this.renderSolicitacoesAdmin();
@@ -1749,6 +1751,170 @@ const Admin = {
       await this.loadArquivos();
     } catch(e) { alert('Erro: '+e.message); }
     finally { this.loader(false); }
+  },
+
+  async renderComece() {
+    const main = document.getElementById('admin-main');
+    main.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <h2 class="section-title" style="margin:0;">✦ Comece por Aqui</h2>
+        <button onclick="Admin.showAddComece()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;border:none;cursor:pointer;">+ Adicionar</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:20px;">Aparece para <strong>todas as clientes</strong> no topo do portal.</p>
+      <!-- Formulário de adição -->
+      <div id="comece-form" class="hidden" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;">
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <button onclick="Admin._comeceTipo='video';Admin._renderComeceTipoForm()" id="cfb-video" style="flex:1;padding:9px;border-radius:9px;border:2px solid var(--brown);background:var(--brown);color:#F5EDD8;font-size:12px;cursor:pointer;">▶ Vídeo</button>
+          <button onclick="Admin._comeceTipo='texto';Admin._renderComeceTipoForm()" id="cfb-texto" style="flex:1;padding:9px;border-radius:9px;border:2px solid var(--border);background:transparent;color:var(--text);font-size:12px;cursor:pointer;">📝 Texto</button>
+          <button onclick="Admin._comeceTipo='arquivo';Admin._renderComeceTipoForm()" id="cfb-arquivo" style="flex:1;padding:9px;border-radius:9px;border:2px solid var(--border);background:transparent;color:var(--text);font-size:12px;cursor:pointer;">📎 Arquivo/Link</button>
+        </div>
+        <div id="comece-tipo-form"></div>
+      </div>
+      <!-- Lista -->
+      <div id="comece-list"></div>`;
+    this._comeceTipo = 'video';
+    await this.loadComece();
+  },
+
+  _comeceTipo: 'video',
+
+  showAddComece() {
+    const f = document.getElementById('comece-form');
+    f.classList.toggle('hidden');
+    if (!f.classList.contains('hidden')) this._renderComeceTipoForm();
+  },
+
+  _renderComeceTipoForm() {
+    ['video','texto','arquivo'].forEach(t => {
+      const b = document.getElementById('cfb-'+t);
+      if (!b) return;
+      const active = t === this._comeceTipo;
+      b.style.background = active ? 'var(--brown)' : 'transparent';
+      b.style.color = active ? '#F5EDD8' : 'var(--text)';
+      b.style.borderColor = active ? 'var(--brown)' : 'var(--border)';
+    });
+    const el = document.getElementById('comece-tipo-form');
+    const inp = (id, ph, val='') => `<input id="${id}" type="text" value="${val}" placeholder="${ph}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;box-sizing:border-box;"/>`;
+    if (this._comeceTipo === 'video') {
+      el.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${inp('cf-titulo','Título do vídeo (ex: Como usar o portal)')}
+          ${inp('cf-url','Link do YouTube (https://www.youtube.com/watch?v=...)')}
+          <button onclick="Admin.saveComece()" style="align-self:flex-start;padding:9px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">Salvar vídeo</button>
+        </div>`;
+    } else if (this._comeceTipo === 'texto') {
+      el.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${inp('cf-titulo','Título (ex: Bem-vinda ao seu portal!)')}
+          <textarea id="cf-texto" rows="4" placeholder="Escreva aqui o texto que vai aparecer pra todas as clientes..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;"></textarea>
+          <button onclick="Admin.saveComece()" style="align-self:flex-start;padding:9px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">Salvar texto</button>
+        </div>`;
+    } else {
+      el.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <label style="background:var(--beige);border:2px dashed var(--brown);border-radius:10px;padding:20px;text-align:center;cursor:pointer;font-size:13px;color:var(--brown);">
+            📁 Clique para subir um arquivo
+            <input type="file" style="display:none" onchange="Admin.uploadComece(this)"/>
+          </label>
+          <div style="text-align:center;font-size:11px;color:var(--muted);">— ou cole um link —</div>
+          <div style="display:flex;gap:8px;">
+            ${inp('cf-link-nome','Nome do link (ex: Contrato, Briefing...)')}
+            ${inp('cf-link-url','https://drive.google.com/...')}
+          </div>
+          <button onclick="Admin.saveLinkComece()" style="align-self:flex-start;padding:9px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">Salvar link</button>
+        </div>`;
+    }
+  },
+
+  async saveComece() {
+    const titulo = document.getElementById('cf-titulo')?.value.trim();
+    if (!titulo) { alert('Informe um título.'); return; }
+    let nome, url;
+    if (this._comeceTipo === 'video') {
+      url = document.getElementById('cf-url')?.value.trim();
+      if (!url) { alert('Cole o link do YouTube.'); return; }
+      nome = 'VIDEO::' + titulo;
+    } else {
+      url = document.getElementById('cf-texto')?.value.trim();
+      if (!url) { alert('Escreva o texto.'); return; }
+      nome = 'TEXTO::' + titulo;
+    }
+    this.loader(true);
+    try {
+      await db.from('arquivos_cliente').insert([{client_email:'__comece__', nome, url, uploader:'admin'}]);
+      document.getElementById('comece-form').classList.add('hidden');
+      await this.loadComece();
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { this.loader(false); }
+  },
+
+  async saveLinkComece() {
+    const nome = document.getElementById('cf-link-nome')?.value.trim();
+    const url  = document.getElementById('cf-link-url')?.value.trim();
+    if (!nome) { alert('Informe um nome para o link.'); return; }
+    if (!url)  { alert('Cole o link.'); return; }
+    this.loader(true);
+    try {
+      await db.from('arquivos_cliente').insert([{client_email:'__comece__', nome, url, uploader:'admin'}]);
+      document.getElementById('comece-form').classList.add('hidden');
+      await this.loadComece();
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { this.loader(false); }
+  },
+
+  async uploadComece(input) {
+    const file = input.files[0]; if (!file) return;
+    this.loader(true);
+    try {
+      const safeName = file.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path = `arquivos/${Date.now()}-${safeName}`;
+      const { error } = await db.storage.from('posts-media').upload(path, file, {cacheControl:'3600',upsert:false});
+      if (error) throw error;
+      const { data: urlData } = db.storage.from('posts-media').getPublicUrl(path);
+      await db.from('arquivos_cliente').insert([{client_email:'__comece__', nome:file.name, url:urlData.publicUrl, uploader:'admin'}]);
+      document.getElementById('comece-form').classList.add('hidden');
+      await this.loadComece();
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { this.loader(false); }
+  },
+
+  async delComece(id) {
+    if (!confirm('Remover este item?')) return;
+    this.loader(true);
+    await db.from('arquivos_cliente').delete().eq('id',id);
+    await this.loadComece();
+    this.loader(false);
+  },
+
+  async loadComece() {
+    const { data } = await db.from('arquivos_cliente').select('*').eq('client_email','__comece__').order('created_at',{ascending:true});
+    const list = (data||[]).filter(r=>!['__video__','__titulo__','__desc__'].includes(r.nome));
+    const el = document.getElementById('comece-list'); if (!el) return;
+    if (!list.length) {
+      el.innerHTML = '<p style="color:var(--muted);font-style:italic;text-align:center;padding:40px;font-family:Cormorant Garamond,serif;font-size:18px;">Nenhum conteúdo ainda — clique em + Adicionar ✦</p>';
+      return;
+    }
+    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px;">${list.map(item => {
+      let icon, preview;
+      if (item.nome.startsWith('VIDEO::')) {
+        icon = '▶';
+        const titulo = item.nome.replace('VIDEO::','');
+        preview = `<div style="font-size:14px;color:var(--brown);font-weight:500;">${titulo}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${item.url}</div>`;
+      } else if (item.nome.startsWith('TEXTO::')) {
+        icon = '📝';
+        const titulo = item.nome.replace('TEXTO::','');
+        const trunc = item.url.length > 120 ? item.url.slice(0,120)+'…' : item.url;
+        preview = `<div style="font-size:14px;color:var(--brown);font-weight:500;">${titulo}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${trunc}</div>`;
+      } else {
+        icon = item.nome.match(/\.pdf$/i) ? '📄' : item.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i) ? '🖼️' : '📎';
+        preview = `<a href="${item.url}" target="_blank" style="font-size:14px;color:var(--brown);font-weight:500;text-decoration:none;">${item.nome} ↗</a>`;
+      }
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;">
+        <span style="font-size:22px;flex-shrink:0;">${icon}</span>
+        <div style="flex:1;min-width:0;">${preview}</div>
+        <button onclick="Admin.delComece(${item.id})" style="font-size:11px;padding:5px 12px;border-radius:7px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;cursor:pointer;flex-shrink:0;">✕</button>
+      </div>`;
+    }).join('')}</div>`;
   },
 
   async salvarConfigComece() {
@@ -2905,40 +3071,39 @@ const Client = {
     const el = document.getElementById('comece-por-aqui');
     if (!el) return;
     const { data } = await db.from('arquivos_cliente').select('*').eq('client_email','__comece__').order('created_at',{ascending:true});
-    const rows = data || [];
-    const cfg = {};
-    const files = [];
-    for (const r of rows) {
-      if (['__video__','__titulo__','__desc__'].includes(r.nome)) cfg[r.nome] = r.url;
-      else files.push(r);
-    }
-    const video = cfg['__video__'] || '';
-    const titulo = cfg['__titulo__'] || '';
-    const desc = cfg['__desc__'] || '';
-    if (!video && !titulo && !desc && !files.length) { el.classList.add('hidden'); return; }
+    const rows = (data||[]).filter(r=>!['__video__','__titulo__','__desc__'].includes(r.nome));
+    if (!rows.length) { el.classList.add('hidden'); return; }
     el.classList.remove('hidden');
     const toEmbed = url => {
       const m = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
       return m ? `https://www.youtube-nocookie.com/embed/${m[1]}?rel=0` : url;
     };
+    const items = rows.map(r => {
+      if (r.nome.startsWith('VIDEO::')) {
+        const titulo = r.nome.replace('VIDEO::','');
+        return `<div style="margin-bottom:16px;">
+          ${titulo ? `<div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--brown);margin-bottom:8px;">${titulo}</div>` : ''}
+          <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;">
+            <iframe src="${toEmbed(r.url)}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe>
+          </div>
+        </div>`;
+      } else if (r.nome.startsWith('TEXTO::')) {
+        const titulo = r.nome.replace('TEXTO::','');
+        return `<div style="margin-bottom:16px;">
+          ${titulo ? `<div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--brown);margin-bottom:6px;">${titulo}</div>` : ''}
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;white-space:pre-wrap;margin:0;">${r.url}</p>
+        </div>`;
+      } else {
+        const icon = r.nome.match(/\.pdf$/i) ? '📄' : r.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i) ? '🖼️' : '📎';
+        return `<a href="${r.url}" target="_blank" class="file-item" style="margin-bottom:8px;">${icon} ${r.nome}</a>`;
+      }
+    }).join('');
     el.innerHTML = `<div class="cpa-card">
       <div class="cpa-header" onclick="const b=this.nextElementSibling;b.classList.toggle('hidden');this.querySelector('.cpa-chev').style.transform=b.classList.contains('hidden')?'rotate(-90deg)':'';">
         <span class="cpa-title">✦ Comece por aqui</span>
         <span class="cpa-chev">▾</span>
       </div>
-      <div class="cpa-body">
-        ${video ? `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;${titulo||desc||files.length?'margin-bottom:16px;':''}">
-          <iframe src="${toEmbed(video)}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe>
-        </div>` : ''}
-        ${titulo||desc ? `<div${files.length?' style="margin-bottom:16px;"':''}>
-          ${titulo ? `<div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--brown);margin-bottom:6px;">${titulo}</div>` : ''}
-          ${desc ? `<p style="font-size:13px;color:var(--muted);line-height:1.7;white-space:pre-wrap;margin:0;">${desc}</p>` : ''}
-        </div>` : ''}
-        ${files.length ? `<div>
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Arquivos</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">${files.map(f=>`<a href="${f.url}" target="_blank" class="file-item">📄 ${f.nome}</a>`).join('')}</div>
-        </div>` : ''}
-      </div>
+      <div class="cpa-body">${items}</div>
     </div>`;
   },
 
