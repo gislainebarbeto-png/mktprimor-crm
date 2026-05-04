@@ -2598,7 +2598,7 @@ const Admin = {
         <div class="task-section-lbl">Cliente vinculado</div>
         <select id="mp-cliente" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
           <option value="">— Nenhum —</option>
-          ${(clientes||[]).map(c=>`<option value="${c.email}"${p.client_email===c.email?' selected':''}>${c.nome}</option>`).join('')}
+          ${(clientes||[]).map(c=>{const isSel=(p.client_email&&p.client_email===c.email)?'selected':'';return `<option value="${c.email||''}" ${isSel}>${c.nome||c.email||'Cliente Sem Nome'}</option>`;}).join('')}
         </select>
       </div>
       <div class="task-section">
