@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Marketing Primor · Portal</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="Logo.png">
+  <link rel="apple-touch-icon" href="Logo.png">
+  <meta name="theme-color" content="#4B2D22">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mkt Primor">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -69,6 +77,8 @@
     .nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .18s;letter-spacing:.02em;margin-bottom:2px;}
     .nav-item:hover{background:var(--bg);color:var(--text);}
     .nav-item.active{background:var(--beige);color:var(--brown);font-weight:400;}
+    .ni{font-size:14px;line-height:1;}
+    .nl{font-size:12px;}
     .nav-badge{margin-left:auto;background:rgba(196,150,122,.15);color:var(--copper);font-size:9px;padding:1px 7px;border-radius:8px;}
     .nav-section{font-size:9px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;padding:14px 11px 6px;opacity:.6;}
 
@@ -166,7 +176,7 @@
 
     /* Client posts grid */
     .client-layout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start;}
-    .client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px;}
+    .client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
     .ig-inline{background:#fff;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh);position:sticky;top:20px;}
     .ig-inline-hd{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #efefef;}
     /* Client boards in admin */
@@ -226,6 +236,128 @@
     .client-avatar{width:52px;height:52px;border-radius:50%;overflow:hidden;background:var(--beige);border:2px solid rgba(196,150,122,.3);display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:22px;color:var(--copper);flex-shrink:0;}
     .client-avatar img{width:100%;height:100%;object-fit:cover;}
     .client-header-row{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+    /* ── WELCOME BANNER ── */
+    .welcome-banner{background:linear-gradient(135deg,var(--brown) 0%,var(--brown2) 100%);color:#F5EDD8;border-radius:var(--r);padding:20px 24px;margin-bottom:20px;}
+    .welcome-banner h3{font-family:"Cormorant Garamond",serif;font-size:22px;font-style:italic;font-weight:300;margin-bottom:4px;}
+    .welcome-banner p{font-size:11px;opacity:.75;letter-spacing:.04em;}
+    /* ── PROGRESS BAR ── */
+    .progress-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:20px;}
+    .cpa-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:20px;}
+    .cpa-header{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;cursor:pointer;user-select:none;background:linear-gradient(135deg,#4B2D22 0%,#7a4b2f 100%);color:#F5EDD8;}
+    .cpa-title{font-family:"Cormorant Garamond",serif;font-size:18px;font-style:italic;letter-spacing:.08em;}
+    .cpa-chev{font-size:16px;transition:transform .3s;}
+    .cpa-body{padding:20px;}
+    .progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:8px;}
+    .progress-fill{height:6px;background:var(--beige);border-radius:3px;overflow:hidden;}
+    .progress-bar-inner{height:6px;background:linear-gradient(90deg,var(--copper),var(--brown));border-radius:3px;transition:width .6s;}
+    /* ── CALENDAR ── */
+    .cal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;}
+    .cal-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+    .cal-title{font-family:"Cormorant Garamond",serif;font-size:17px;font-style:italic;color:var(--brown);}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+    .cal-dlbl{font-size:8px;color:var(--muted);text-align:center;padding:2px 0;text-transform:uppercase;letter-spacing:.05em;}
+    .cal-day{min-height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text);position:relative;}
+    .cal-day.has-post{background:rgba(196,150,122,.18);color:var(--brown);cursor:pointer;font-weight:500;}
+    .cal-day.has-post:hover{background:rgba(196,150,122,.35);}
+    .cal-day.today{border:1px solid var(--copper);}
+    .cal-day.empty{opacity:.25;}
+    .cal-dot{width:3px;height:3px;background:var(--copper);border-radius:50%;position:absolute;bottom:2px;left:50%;transform:translateX(-50%);}
+    .cal-info{display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px;}
+    .cal-info-item{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border);}
+    .cal-info-item:last-child{border-bottom:none;}
+    /* ── NEXT POST ── */
+    .next-post-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px;box-shadow:var(--sh);}
+    .next-post-lbl{font-size:9px;color:var(--copper);letter-spacing:.14em;text-transform:uppercase;padding:12px 14px 0;}
+    .next-post-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;}
+    .next-post-body{padding:10px 14px 14px;}
+    .next-post-days{font-family:"Cormorant Garamond",serif;font-size:26px;color:var(--brown);line-height:1;}
+    .next-post-sub{font-size:10px;color:var(--muted);margin-bottom:6px;}
+    .next-post-cap{font-size:11px;color:var(--text);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    /* ── GI MESSAGE ── */
+    .gi-msg-card{background:linear-gradient(135deg,var(--beige),#EED5B7);border:1px solid rgba(196,150,122,.3);border-radius:var(--r);padding:16px;margin-bottom:14px;}
+    .gi-msg-lbl{font-size:9px;color:var(--copper);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;}
+    .gi-msg-text{font-family:"Cormorant Garamond",serif;font-size:16px;font-style:italic;color:var(--brown);line-height:1.65;}
+    .gi-msg-sig{font-size:10px;color:var(--muted);margin-top:8px;}
+    /* ── FILES ── */
+    .files-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px;}
+    .files-lbl{font-size:9px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;}
+    .file-item{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);transition:all .15s;}
+    .file-item:last-child{border-bottom:none;}
+    .file-item:hover .file-name{color:var(--copper);}
+    .file-name{font-size:12px;flex:1;}
+    /* ── AJUSTE MODAL ── */
+    .ajuste-modal{position:fixed;inset:0;background:rgba(44,24,16,.5);backdrop-filter:blur(6px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .ajuste-box{background:var(--surface);border-radius:var(--r);padding:28px;width:100%;max-width:420px;box-shadow:var(--sh2);animation:fadeIn .25s ease;}
+    .ajuste-box h3{font-family:"Cormorant Garamond",serif;font-size:22px;font-style:italic;color:var(--brown);margin-bottom:6px;}
+    .ajuste-box p{font-size:12px;color:var(--muted);margin-bottom:14px;}
+    .ajuste-box textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:9px;font-family:Poppins,sans-serif;font-size:13px;font-weight:300;background:var(--bg);resize:vertical;min-height:90px;transition:all .2s;}
+    .ajuste-box textarea:focus{border-color:var(--copper);outline:none;background:#fff;}
+    /* ── CLIENT TABS ── */
+    .client-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--border);}
+    .client-tab{padding:9px 16px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .18s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+    .client-tab:hover{color:var(--text);}
+    .client-tab.active{color:var(--brown);border-bottom-color:var(--brown);}
+    .ctab-badge{background:#C62828;color:#fff;font-size:8px;padding:1px 5px;border-radius:8px;animation:fadeIn .3s;}
+    /* ── FINANCEIRO ── */
+    .fin-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);transition:background .15s;}
+    .fin-row:last-child{border-bottom:none;}
+    .fin-row:hover{background:var(--bg);}
+    .fin-pago{background:#E8F5E9;color:#2E7D32;font-size:10px;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+    .fin-pendente{background:#FFF3E0;color:#E65100;font-size:10px;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+    .fin-atrasado{background:#FFEBEE;color:#C62828;font-size:10px;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+    /* ── ARQUIVOS ── */
+    .arq-item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);}
+    .arq-item:last-child{border-bottom:none;}
+    .arq-name{flex:1;font-size:12px;}
+    .arq-tag{font-size:10px;color:var(--muted);padding:2px 7px;border:1px solid var(--border);border-radius:12px;}
+    /* ── AUTOMAÇÕES ── */
+    .auto-tabs{display:flex;gap:6px;margin-bottom:16px;}
+    .auto-tab{padding:7px 16px;border-radius:8px;border:1px solid var(--border);font-size:12px;color:var(--muted);cursor:pointer;transition:all .18s;}
+    .auto-tab.active{background:var(--beige);color:var(--brown);border-color:transparent;}
+    .auto-post-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:all .18s;margin-bottom:8px;}
+    .auto-post-item:hover{border-color:var(--copper);}
+    .auto-post-item.marked{background:rgba(196,150,122,.08);border-color:rgba(196,150,122,.4);}
+    /* ── MÉTRICAS ── */
+    .met-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px;}
+    .met-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+    .met-n{font-family:"Cormorant Garamond",serif;font-size:26px;color:var(--brown);}
+    .met-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:2px;}
+    .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;overflow:hidden;}
+    .chart-title{font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;}
+    .top-post-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+    .top-post-item{background:var(--bg);border:1px solid var(--border);border-radius:9px;overflow:hidden;text-align:center;}
+    .top-post-thumb{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;}
+    /* ── LAB DE IDEIAS ── */
+    .idea-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;transition:all .18s;}
+    .idea-card:hover{box-shadow:var(--sh);}
+    .idea-titulo{font-size:15px;font-style:italic;font-family:"Cormorant Garamond",serif;color:var(--brown);margin-bottom:4px;}
+    .idea-desc{font-size:11px;color:var(--muted);line-height:1.6;}
+    .idea-meta{display:flex;align-items:center;gap:8px;margin-top:8px;}
+    .idea-ideia{font-size:10px;padding:2px 8px;border-radius:12px;background:rgba(196,150,122,.1);color:var(--copper);}
+    .idea-em_andamento{font-size:10px;padding:2px 8px;border-radius:12px;background:#FFF3E0;color:#E65100;}
+    .idea-implementado{font-size:10px;padding:2px 8px;border-radius:12px;background:#E8F5E9;color:#2E7D32;}
+    /* ── CHAT ── */
+    .chat-wrap{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--surface);}
+    .chat-msgs{height:380px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg);}
+    .chat-bubble{max-width:72%;padding:10px 14px;border-radius:14px;font-size:12px;line-height:1.6;}
+    .chat-bubble.admin{background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;align-self:flex-end;border-bottom-right-radius:4px;}
+    .chat-bubble.client{background:var(--surface);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-bottom-left-radius:4px;}
+    .chat-time{font-size:9px;opacity:.6;margin-top:4px;display:block;}
+    .chat-input-row{display:flex;gap:10px;padding:12px 14px;border-top:1px solid var(--border);background:var(--surface);}
+    .chat-input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-family:Poppins,sans-serif;font-size:12px;font-weight:300;background:var(--bg);resize:none;transition:border-color .2s;}
+    .chat-input:focus{border-color:var(--copper);outline:none;background:#fff;}
+    .chat-send{padding:9px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;flex-shrink:0;}
+    .chat-notif-hd{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;background:#FFEBEE;color:#C62828;font-size:11px;border:1px solid rgba(198,40,40,.2);cursor:pointer;margin-left:8px;font-weight:500;}
+    /* ── STARS ── */
+    .stars-modal{position:fixed;inset:0;background:rgba(44,24,16,.5);backdrop-filter:blur(6px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .stars-box{background:var(--surface);border-radius:var(--r);padding:28px;width:100%;max-width:380px;box-shadow:var(--sh2);animation:fadeIn .25s ease;text-align:center;}
+    .stars-box h3{font-family:"Cormorant Garamond",serif;font-size:22px;font-style:italic;color:var(--brown);margin-bottom:6px;}
+    .stars-box p{font-size:12px;color:var(--muted);margin-bottom:12px;}
+    .stars-row{display:flex;justify-content:center;gap:10px;margin:12px 0 16px;}
+    .star-btn{font-size:30px;cursor:pointer;transition:transform .15s;filter:grayscale(1);opacity:.4;line-height:1;}
+    .star-btn.on{filter:grayscale(0);opacity:1;}
+    .star-btn:hover{transform:scale(1.2);}
+    .stars-box textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-family:Poppins,sans-serif;font-size:12px;font-weight:300;background:var(--bg);resize:none;min-height:60px;margin-bottom:14px;}
     .cp-ph{width:100%;height:180px;background:var(--beige);display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:26px;color:var(--copper);}
     .cp-body{padding:16px;flex:1;display:flex;flex-direction:column;}
     .cp-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
@@ -304,9 +436,50 @@
     .tab-btn.active{background:var(--surface);color:var(--brown);box-shadow:0 1px 4px rgba(44,37,32,.08);}
     @media(max-width:640px){
       .app-header,.client-main{padding-left:16px;padding-right:16px;}
-      .admin-body{flex-direction:column;}
-      .sidebar{width:100%;height:auto;}
+      .admin-body{flex-direction:column;height:auto;min-height:0;overflow:visible;}
+      .admin-main{padding:16px;overflow-y:auto;height:calc(100svh - 73px - 72px);}
       .stats-row{grid-template-columns:1fr 1fr;}
+
+      /* Sidebar vira barra horizontal rolável no topo */
+      .sidebar{
+        width:100%;height:auto;
+        display:flex;flex-direction:row;
+        overflow-x:auto;overflow-y:hidden;
+        padding:8px 10px;gap:4px;
+        border-right:none;border-bottom:1px solid var(--border);
+        scrollbar-width:none;
+      }
+      .sidebar::-webkit-scrollbar{display:none;}
+      .nav-section{display:none;}
+      .nav-item{
+        flex-direction:column;flex-shrink:0;
+        padding:7px 10px;gap:3px;
+        font-size:9px;letter-spacing:.03em;
+        min-width:56px;text-align:center;margin-bottom:0;
+        border-radius:10px;
+      }
+      /* Esconde texto dos badges de notificação no mobile, mantém o badge */
+      .nav-badge{font-size:8px;padding:1px 5px;}
+      .ni{font-size:18px;}
+      .nl{font-size:9px;letter-spacing:.02em;}
+
+      /* Tabelas e cards */
+      .table-head{display:none;}
+      .table-row{flex-wrap:wrap;gap:4px;padding:10px 12px;}
+      .col-main{min-width:0;flex:1;}
+      .detail-panel{width:100%!important;right:0!important;left:0!important;top:auto!important;bottom:0!important;height:85vh!important;border-radius:20px 20px 0 0!important;}
+
+      /* Stats */
+      .stats-row{grid-template-columns:1fr 1fr;gap:8px;}
+      .stat-card{padding:12px;}
+
+      /* Modal */
+      .modal-box{width:95vw!important;max-height:90vh;overflow-y:auto;}
+
+      /* Cliente tabs */
+      .client-tabs{overflow-x:auto;scrollbar-width:none;}
+      .client-tabs::-webkit-scrollbar{display:none;}
+      .client-tab{white-space:nowrap;}
     }
   </style>
 </head>
@@ -349,11 +522,21 @@
     <!-- Sidebar -->
     <div class="sidebar">
       <div class="nav-section">Menu</div>
-      <div class="nav-item active" onclick="Admin.tab('forms')" id="nav-forms">◷ Formulários <span class="nav-badge" id="nb-forms" style="display:none">0</span></div>
-      <div class="nav-item" onclick="Admin.tab('leads')" id="nav-leads">◉ Leads</div>
-      <div class="nav-item" onclick="Admin.tab('followup')" id="nav-followup">↗ Follow-up <span class="nav-badge" id="nb-fu" style="display:none">0</span></div>
-      <div class="nav-item" onclick="Admin.tab('posts')" id="nav-posts">▦ Posts <span class="nav-badge" id="nb-posts" style="display:none">0</span></div>
-      <div class="nav-item" onclick="Admin.tab('clientes')" id="nav-clientes">◎ Clientes</div>
+      <div class="nav-item active" onclick="Admin.tab('leads')" id="nav-leads"><span class="ni">◉</span><span class="nl">Leads</span></div>
+      <div class="nav-item" onclick="Admin.tab('followup')" id="nav-followup"><span class="ni">↗</span><span class="nl">Follow-up <span class="nav-badge" id="nb-fu" style="display:none">0</span></span></div>
+      <div class="nav-item" onclick="Admin.tab('posts')" id="nav-posts"><span class="ni">▦</span><span class="nl">Posts <span class="nav-badge" id="nb-posts" style="display:none">0</span></span></div>
+      <div class="nav-item" onclick="Admin.tab('clientes')" id="nav-clientes"><span class="ni">◎</span><span class="nl">Clientes</span></div>
+      <div class="nav-section">Gestão</div>
+      <div class="nav-item" onclick="Admin.tab('financeiro')" id="nav-financeiro"><span class="ni">💰</span><span class="nl">Financeiro</span></div>
+      <div class="nav-item" onclick="Admin.tab('arquivos')" id="nav-arquivos"><span class="ni">📁</span><span class="nl">Arquivos</span></div>
+      <div class="nav-section">Marketing</div>
+      <div class="nav-item" onclick="Admin.tab('automacoes')" id="nav-automacoes"><span class="ni">⚡</span><span class="nl">Automações</span></div>
+      <div class="nav-item" onclick="Admin.tab('metricas')" id="nav-metricas"><span class="ni">📊</span><span class="nl">Métricas</span></div>
+      <div class="nav-section">Colaboração</div>
+      <div class="nav-item" onclick="Admin.tab('lab')" id="nav-lab"><span class="ni">💡</span><span class="nl">Ideias</span></div>
+      <div class="nav-item" onclick="Admin.tab('info')" id="nav-info"><span class="ni">📋</span><span class="nl">Infos</span></div>
+      <div class="nav-item" onclick="Admin.tab('solicitacoes')" id="nav-solicitacoes"><span class="ni">📅</span><span class="nl">Solic.</span></div>
+      <div class="nav-item" onclick="Admin.tab('chat')" id="nav-chat"><span class="ni">✉</span><span class="nl">Chat <span class="chat-badge hidden" id="nb-chat" style="background:#C62828;color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;"></span></span></div>
     </div>
     <!-- Main -->
     <div class="admin-main" id="admin-main">
@@ -386,14 +569,72 @@
         <div class="client-sub" style="margin-bottom:0;">Seus posts · Marketing Primor</div>
       </div>
     </div>
-    <div class="client-stats" style="margin-top:16px;">
-      <div class="c-stat"><div class="c-stat-n" id="cs-total">0</div><div class="c-stat-l">Posts</div></div>
-      <div class="c-stat"><div class="c-stat-n" id="cs-rev" style="color:#E65100">0</div><div class="c-stat-l">Aguardando você</div></div>
-      <div class="c-stat"><div class="c-stat-n" id="cs-pub" style="color:#6A1B9A">0</div><div class="c-stat-l">Publicados</div></div>
+    <!-- Welcome banner -->
+    <div class="welcome-banner">
+      <h3>Bem-vinda ao seu espaço exclusivo.</h3>
+      <p>Aqui, cada detalhe da sua marca é cuidado com intenção e primor.</p>
     </div>
-    <div class="client-layout">
-      <div id="client-posts" class="client-grid"></div>
-      <div id="ig-inline-feed" class="ig-inline"></div>
+    <!-- Stats / linha do tempo -->
+    <div class="client-stats" style="margin-top:0;margin-bottom:16px;flex-wrap:wrap;">
+      <div class="c-stat"><div class="c-stat-n" id="cs-rev" style="color:#E65100">0</div><div class="c-stat-l">Aguardando você</div></div>
+      <div class="c-stat"><div class="c-stat-n" id="cs-mes">0</div><div class="c-stat-l">Este mês</div></div>
+      <div class="c-stat"><div class="c-stat-n" id="cs-ant">0</div><div class="c-stat-l">Mês passado</div></div>
+      <div class="c-stat"><div class="c-stat-n" id="cs-pub" style="color:#6A1B9A">0</div><div class="c-stat-l">Publicados</div></div>
+      <div class="c-stat"><div class="c-stat-n" id="cs-growth" style="color:#2E7D32">—</div><div class="c-stat-l">Crescimento</div></div>
+    </div>
+    <!-- Barra de progresso -->
+    <div class="progress-wrap" id="client-progress"></div>
+    <!-- Comece por aqui -->
+    <div id="comece-por-aqui" class="hidden"></div>
+    <!-- Tabs do portal -->
+    <div class="client-tabs">
+      <div class="client-tab active" id="ctab-posts" onclick="Client.clientTab('posts')">Posts</div>
+      <div class="client-tab" id="ctab-onboarding" onclick="Client.clientTab('onboarding')">🌿 Onboarding</div>
+      <div class="client-tab" id="ctab-financeiro" onclick="Client.clientTab('financeiro')">💰 Financeiro</div>
+      <div class="client-tab" id="ctab-metricas" onclick="Client.clientTab('metricas')">📊 Métricas</div>
+      <div class="client-tab" id="ctab-arquivos" onclick="Client.clientTab('arquivos')">📁 Arquivos</div>
+      <div class="client-tab" id="ctab-ideias" onclick="Client.clientTab('ideias')">💡 Ideias</div>
+      <div class="client-tab" id="ctab-info" onclick="Client.clientTab('info')">📋 Informações</div>
+      <div class="client-tab" id="ctab-solicitacoes" onclick="Client.clientTab('solicitacoes')">📅 Solicitações <span class="ctab-badge hidden" id="ctab-sol-badge"></span></div>
+      <div class="client-tab" id="ctab-chat" onclick="Client.clientTab('chat')">✉ Chat <span class="ctab-badge hidden" id="ctab-chat-badge"></span></div>
+    </div>
+    <!-- Tab: Posts -->
+    <div id="ctab-content-posts">
+      <div class="client-layout">
+        <div>
+          <div class="cal-card" id="client-calendar"></div>
+          <div class="cal-info" id="cal-info"></div>
+          <div id="client-posts" class="client-grid"></div>
+        </div>
+        <div>
+          <div class="next-post-card hidden" id="client-next-post"></div>
+          <div class="gi-msg-card hidden" id="client-gi-msg"></div>
+          <div class="files-card hidden" id="client-files"></div>
+          <div id="ig-inline-feed" class="ig-inline"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Tab: Métricas -->
+    <div id="ctab-content-onboarding" class="hidden"></div>
+    <div id="ctab-content-financeiro" class="hidden"></div>
+    <div id="ctab-content-metricas" class="hidden"></div>
+    <!-- Tab: Arquivos -->
+    <div id="ctab-content-arquivos" class="hidden"></div>
+    <!-- Tab: Ideias -->
+    <div id="ctab-content-ideias" class="hidden"></div>
+    <!-- Tab: Informações -->
+    <div id="ctab-content-info" class="hidden"></div>
+    <!-- Tab: Solicitações -->
+    <div id="ctab-content-solicitacoes" class="hidden"></div>
+    <!-- Tab: Chat -->
+    <div id="ctab-content-chat" class="hidden">
+      <div class="chat-wrap">
+        <div id="chat-msgs-client" class="chat-msgs"></div>
+        <div class="chat-input-row">
+          <textarea id="chat-input-client" class="chat-input" placeholder="Escreva uma mensagem..." rows="2"></textarea>
+          <button class="chat-send" onclick="Client.sendMsg()">Enviar →</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -451,17 +692,28 @@ const App = {
     this.loader(false);
   },
 
-  route() {
+  async route() {
     if (this.user.email === ADMIN_EMAIL) {
       document.getElementById('admin-email').textContent = this.user.email;
       this.show('admin-view');
-      Admin.tab('forms');
+      Admin.isEquipe = false;
+      Admin.tab('leads');
     } else {
-      document.getElementById('client-email-display').textContent = this.user.email;
-      const name = this.user.user_metadata?.nome || this.user.email.split('@')[0];
-      document.getElementById('client-greeting').textContent = 'Olá, ' + name + '!';
-      this.show('client-view');
-      Client.load();
+      // Check if team member
+      const { data: equipe } = await db.from('equipe').select('email').ilike('email', this.user.email).maybeSingle();
+      if (equipe) {
+        document.getElementById('admin-email').textContent = this.user.email;
+        this.show('admin-view');
+        Admin.isEquipe = true;
+        document.getElementById('nav-financeiro').style.display = 'none';
+        Admin.tab('leads');
+      } else {
+        document.getElementById('client-email-display').textContent = this.user.email;
+        const name = this.user.user_metadata?.nome || this.user.email.split('@')[0];
+        document.getElementById('client-greeting').textContent = 'Olá, ' + name + '!';
+        this.show('client-view');
+        Client.load();
+      }
     }
   },
 
@@ -480,22 +732,31 @@ const App = {
 // ADMIN
 // ═══════════════════════════════════════
 const Admin = {
-  currentTab: 'forms',
-  leads: [], forms: [], followups: [], posts: [],
+  currentTab: 'leads',
+  isEquipe: false,
+  leads: [], followups: [], posts: [],
 
   async tab(name) {
     this.currentTab = name;
-    ['forms','leads','followup','posts','clientes'].forEach(t => {
-      document.getElementById('nav-'+t).classList.toggle('active', t === name);
+    ['leads','followup','posts','clientes','financeiro','arquivos','automacoes','metricas','lab','info','solicitacoes','chat'].forEach(t => {
+      document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
     });
     this.closeDetail();
     this.loader(true);
     try {
-      if (name === 'forms')    await this.renderForms();
-      if (name === 'leads')    await this.renderLeads();
-      if (name === 'followup') await this.renderFollowup();
-      if (name === 'posts')    await this.renderPosts();
-      if (name === 'clientes') await this.renderClientes();
+      if (name === 'leads')      await this.renderLeads();
+      if (name === 'followup')   await this.renderFollowup();
+      if (name === 'posts')      await this.renderPosts();
+      if (name === 'clientes')   await this.renderClientes();
+      if (name === 'financeiro') await this.renderFinanceiro();
+      if (name === 'arquivos')   await this.renderArquivos();
+      if (name === 'automacoes') await this.renderAutomacoes();
+      if (name === 'metricas')   await this.renderMetricas();
+      if (name === 'financeiro' && this.isEquipe) { document.getElementById('admin-main').innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-style:italic;">Acesso restrito.</p>'; return; }
+      if (name === 'lab')          await this.renderLab();
+      if (name === 'info')         await this.renderInfoAdmin();
+      if (name === 'solicitacoes') await this.renderSolicitacoesAdmin();
+      if (name === 'chat')         await this.renderChat();
     } finally { this.loader(false); }
   },
 
@@ -516,71 +777,34 @@ const Admin = {
   },
 
   // ── FORMS ──
-  async renderForms() {
-    const { data } = await db.from('formularios').select('*').order('created_at',{ascending:false});
-    this.forms = data || [];
-    const unread = this.forms.filter(f=>!f.lido).length;
-    const badge = document.getElementById('nb-forms');
-    badge.textContent = unread; badge.style.display = unread ? 'inline' : 'none';
-
-    const main = document.getElementById('admin-main');
-    if (!this.forms.length) {
-      main.innerHTML = `<h2 class="section-title">Formulários</h2><p style="color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:18px;margin-top:40px;text-align:center;">Nenhum formulário ainda ✦</p>`;
-      return;
-    }
-    main.innerHTML = `
-      <h2 class="section-title">Formulários <span style="font-size:14px;color:var(--muted);font-family:Poppins,sans-serif;">${this.forms.length}</span></h2>
-      <div id="forms-list"></div>`;
-    document.getElementById('forms-list').innerHTML = this.forms.map(f => `
-      <div class="form-card" onclick="Admin.openForm(${f.id})">
-        <div style="display:flex;align-items:flex-start;gap:10px;">
-          ${!f.lido ? '<div class="unread-dot"></div>' : '<div style="width:7px"></div>'}
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-              <span style="font-size:13px;color:var(--text);">${f.nome||'—'}</span>
-              <span style="font-size:10px;color:var(--muted);">${new Date(f.created_at).toLocaleDateString('pt-BR')}</span>
-            </div>
-            <div style="font-size:11px;color:var(--muted);">${f.marca||'—'} · ${f.servico||'—'}</div>
-          </div>
-          ${!f.lido ? '<span style="font-size:9px;color:var(--copper);background:rgba(196,150,122,.1);padding:2px 8px;border-radius:8px;flex-shrink:0;">NOVO</span>' : ''}
-        </div>
-      </div>`).join('');
+  abrirModalLead() {
+    document.getElementById('modal-new-lead').classList.remove('hidden');
   },
-
-  async openForm(id) {
-    const f = this.forms.find(x=>x.id===id); if(!f) return;
-    await db.from('formularios').update({lido:true}).eq('id',id);
-    this.openDetail(`
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <span class="dp-title">Formulário</span>
-        <button class="dp-close" onclick="Admin.closeDetail()">×</button>
-      </div>
-      <div style="background:var(--beige);border-radius:9px;padding:12px;margin-bottom:12px;">
-        <div style="font-size:14px;font-style:italic;font-family:'Cormorant Garamond',serif;color:var(--brown);">${f.nome}</div>
-        <div style="font-size:11px;color:var(--muted);">${f.marca||''}</div>
-      </div>
-      ${this.dpField('📱 WhatsApp', f.whatsapp)}
-      ${this.dpField('✉ E-mail', f.email)}
-      ${this.dpField('📸 Instagram', f.instagram)}
-      ${this.dpField('✦ Serviço', f.servico)}
-      ${this.dpField('⚡ Desafio', f.desafio)}
-      ${this.dpField('💰 Investimento', f.investimento)}
-      ${!f.virou_lead
-        ? `<button class="btn-advance" onclick="Admin.addLead(${f.id})">◉ Adicionar como Lead</button>`
-        : `<div style="padding:9px;border-radius:9px;background:#E8F5E9;border:1px solid rgba(46,125,50,.2);text-align:center;font-size:11px;color:#2E7D32;">✓ Já adicionado como lead</div>`}
-      ${f.whatsapp ? `<a href="https://wa.me/55${f.whatsapp.replace(/\D/g,'')}" target="_blank" class="btn-wpp" style="margin-top:8px;">💬 Responder no WhatsApp</a>` : ''}
-    `);
+  fecharModalLead() {
+    document.getElementById('modal-new-lead').classList.add('hidden');
+    ['mnl-nome','mnl-empresa','mnl-servico','mnl-whatsapp','mnl-email','mnl-instagram','mnl-obs'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   },
-
-  async addLead(formId) {
-    const f = this.forms.find(x=>x.id===formId); if(!f) return;
+  async salvarNovoLead() {
+    const nome = document.getElementById('mnl-nome').value.trim();
+    if (!nome) { alert('Informe o nome.'); return; }
     this.loader(true);
-    await db.from('leads').insert([{nome:f.nome,empresa:f.marca||'',segmento:f.segmento||'',servico:f.servico||'',whatsapp:f.whatsapp||'',email:f.email||'',instagram:f.instagram||'',stage:'novo',origem:'Formulário',obs:f.desafio||''}]);
-    await db.from('followups').insert([{cliente:f.nome,tipo:'whatsapp',tarefa:'Primeiro contato após formulário',msg:`Oi ${(f.nome||'').split(' ')[0]}! ✨\n\nRecebi seu formulário e adorei conhecer a ${f.marca||'sua marca'}.\n\nConsegue fazer uma call de 15 minutinhos essa semana?`,urgencia:'hoje',feito:false}]);
-    await db.from('formularios').update({virou_lead:true}).eq('id',formId);
-    this.loader(false);
-    this.closeDetail();
-    this.tab('leads');
+    try {
+      const { error } = await db.from('leads').insert([{
+        nome, empresa: document.getElementById('mnl-empresa').value.trim()||null,
+        segmento: document.getElementById('mnl-segmento').value||null,
+        servico: document.getElementById('mnl-servico').value.trim()||null,
+        whatsapp: document.getElementById('mnl-whatsapp').value.trim()||null,
+        email: document.getElementById('mnl-email').value.trim()||null,
+        instagram: document.getElementById('mnl-instagram').value.trim()||null,
+        stage: document.getElementById('mnl-stage').value||'novo',
+        origem: document.getElementById('mnl-origem').value||'Manual',
+        obs: document.getElementById('mnl-obs').value.trim()||null
+      }]);
+      if (error) throw error;
+      this.fecharModalLead();
+      this.tab('leads');
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { this.loader(false); }
   },
 
   // ── LEADS ──
@@ -589,13 +813,14 @@ const Admin = {
     this.leads = data || [];
     const STAGES = {novo:{l:'Novo',c:'tag-novo'},contato:{l:'Contato',c:'tag-contato'},proposta:{l:'Proposta',c:'tag-proposta'},fechado:{l:'Fechado ✦',c:'tag-fechado'},perdido:{l:'Perdido',c:'tag-perdido'}};
     const main = document.getElementById('admin-main');
-    if (!this.leads.length) {
-      main.innerHTML = `<h2 class="section-title">Leads</h2><p style="color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:18px;margin-top:40px;text-align:center;">Nenhum lead ainda ✦</p>`;
-      return;
-    }
     main.innerHTML = `
-      <h2 class="section-title">Leads <span style="font-size:14px;color:var(--muted);font-family:Poppins,sans-serif;">${this.leads.length}</span></h2>
-      <div class="table-wrap">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 class="section-title" style="margin:0;">Leads <span style="font-size:14px;color:var(--muted);font-family:Poppins,sans-serif;">${this.leads.length}</span></h2>
+        <button onclick="Admin.abrirModalLead()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;">+ Novo Lead</button>
+      </div>
+      ${!this.leads.length
+        ? `<p style="color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:18px;margin-top:40px;text-align:center;">Nenhum lead ainda ✦</p>`
+        : `<div class="table-wrap">
         <div class="table-row table-head"><div style="width:34px"></div><div class="col-main">Nome · Empresa</div><div style="width:90px">Serviço</div><div style="width:80px">Estágio</div><div style="width:80px">Data</div></div>
         ${this.leads.map(l => {
           const s = STAGES[l.stage]||STAGES.novo;
@@ -607,7 +832,7 @@ const Admin = {
             <div class="col-date" style="width:80px">${new Date(l.created_at).toLocaleDateString('pt-BR')}</div>
           </div>`;
         }).join('')}
-      </div>`;
+      </div>`}`;
   },
 
   async openLead(id) {
@@ -644,15 +869,94 @@ const Admin = {
 
   // ── FOLLOWUP ──
   async renderFollowup() {
-    const { data } = await db.from('followups').select('*').order('created_at',{ascending:false});
+    const [{ data }, { data: leads }, { data: clients }] = await Promise.all([
+      db.from('followups').select('*').order('created_at',{ascending:false}),
+      db.from('leads').select('nome,whatsapp').order('nome'),
+      db.from('clients').select('nome,whatsapp').order('nome')
+    ]);
     this.followups = data || [];
     const active = this.followups.filter(f=>!f.feito);
     const badge = document.getElementById('nb-fu');
     const atrasado = active.filter(f=>f.urgencia==='atrasado').length;
     badge.textContent = atrasado; badge.style.display = atrasado ? 'inline' : 'none';
 
+    const pessoas = [
+      ...(leads||[]).map(l=>({nome:l.nome,wpp:l.whatsapp,tipo:'Lead'})),
+      ...(clients||[]).map(c=>({nome:c.nome,wpp:c.whatsapp,tipo:'Cliente'}))
+    ].sort((a,b)=>a.nome.localeCompare(b.nome));
+
+    const modelos = [
+      {l:'Primeiro contato',msg:'Oi {nome}! 😊\n\nVi seu perfil e adorei o trabalho da {marca}.\n\nTenho algumas ideias que podem elevar muito sua presença digital. Consegue bater um papo rápido essa semana?'},
+      {l:'Proposta enviada',msg:'Oi {nome}! ✨\n\nEnviei a proposta no seu e-mail. Ficou com alguma dúvida?\n\nEstou à disposição para conversarmos!'},
+      {l:'Follow-up pós reunião',msg:'Oi {nome}! 🌿\n\nFoi um prazer falar com você hoje!\n\nConforme combinado, vou preparar a proposta e envio até amanhã. Qualquer dúvida, é só chamar!'},
+      {l:'Lembrete de pagamento',msg:'Oi {nome}! 💛\n\nPassando para lembrar que temos um pagamento em aberto.\n\nQuando puder, me confirma! Obrigada 🙏'},
+      {l:'Solicitar feedback',msg:'Oi {nome}! 😊\n\nO que achou dos posts dessa semana?\n\nSeu feedback é super importante para alinharmos cada vez mais o conteúdo com a sua marca!'},
+      {l:'Pedir fotos/material',msg:'Oi {nome}! 📸\n\nPreciso de algumas fotos novas para os posts dessa semana.\n\nConsegue me mandar até [data]? Pode ser pelo próprio WhatsApp mesmo!'},
+    ];
+
     const main = document.getElementById('admin-main');
-    main.innerHTML = `<h2 class="section-title">Follow-up</h2><div id="fu-list"></div>`;
+    main.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 class="section-title" style="margin:0;">Follow-up</h2>
+        <button onclick="Admin.abrirModalFU()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;">+ Novo</button>
+      </div>
+      <div id="fu-list"></div>
+      <!-- Modal FU -->
+      <div id="modal-fu" class="modal-bg hidden">
+        <div class="modal-box" style="max-width:500px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <span class="dp-title">Novo Follow-up</span>
+            <button onclick="document.getElementById('modal-fu').classList.add('hidden')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">×</button>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Para quem</div>
+            <select id="fu-pessoa" onchange="Admin.fuSelecionarPessoa()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
+              <option value="">Selecione ou digite abaixo...</option>
+              ${pessoas.map(p=>`<option value="${p.nome}|${p.wpp||''}">[${p.tipo}] ${p.nome}</option>`).join('')}
+            </select>
+            <input id="fu-cliente-custom" type="text" placeholder="Ou digite o nome manualmente" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;margin-top:6px;"/>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div>
+              <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Tipo</div>
+              <select id="fu-tipo" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
+                <option value="whatsapp">💬 WhatsApp</option>
+                <option value="instagram">📸 Instagram</option>
+                <option value="email">✉️ E-mail</option>
+                <option value="ligação">📞 Ligação</option>
+                <option value="reunião">📅 Reunião</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Urgência</div>
+              <select id="fu-urgencia" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
+                <option value="hoje">Hoje</option>
+                <option value="semana">Esta semana</option>
+                <option value="atrasado">Atrasado</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Tarefa</div>
+            <input id="fu-tarefa" type="text" placeholder="Ex: Enviar proposta, Ligar para fechar..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/>
+          </div>
+          <div style="margin-bottom:6px;">
+            <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">Modelo de mensagem</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+              ${modelos.map((m,i)=>`<button onclick="Admin.fuAplicarModelo(${i})" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:11px;cursor:pointer;color:var(--text);">${m.l}</button>`).join('')}
+            </div>
+            <textarea id="fu-msg" rows="4" placeholder="Mensagem pronta para copiar e enviar..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:12px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;"></textarea>
+          </div>
+          <div id="fu-wpp-link" style="display:none;margin-bottom:10px;">
+            <a id="fu-wpp-a" href="#" target="_blank" style="display:block;padding:9px;border-radius:9px;background:#E8F5E9;border:1px solid rgba(46,125,50,.2);text-align:center;font-size:12px;color:#2E7D32;text-decoration:none;">💬 Abrir no WhatsApp</a>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="document.getElementById('modal-fu').classList.add('hidden')" style="flex:1;padding:11px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;">Cancelar</button>
+            <button onclick="Admin.salvarFU()" style="flex:2;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;cursor:pointer;">Salvar →</button>
+          </div>
+        </div>
+      </div>`;
+    this._fuModelos = modelos;
     const list = document.getElementById('fu-list');
 
     if (!active.length) {
@@ -692,6 +996,52 @@ const Admin = {
     });
   },
 
+  abrirModalFU() {
+    document.getElementById('modal-fu').classList.remove('hidden');
+    document.getElementById('fu-cliente-custom').value='';
+    document.getElementById('fu-tarefa').value='';
+    document.getElementById('fu-msg').value='';
+    document.getElementById('fu-wpp-link').style.display='none';
+  },
+  fuSelecionarPessoa() {
+    const val = document.getElementById('fu-pessoa').value;
+    if (!val) return;
+    const [nome, wpp] = val.split('|');
+    document.getElementById('fu-cliente-custom').value = nome;
+    const wppLink = document.getElementById('fu-wpp-link');
+    const wppA = document.getElementById('fu-wpp-a');
+    if (wpp) {
+      const msg = encodeURIComponent(document.getElementById('fu-msg').value||'');
+      wppA.href = `https://wa.me/55${wpp.replace(/\D/g,'')}?text=${msg}`;
+      wppLink.style.display = 'block';
+    } else { wppLink.style.display='none'; }
+  },
+  fuAplicarModelo(i) {
+    const m = this._fuModelos[i]; if (!m) return;
+    const nome = document.getElementById('fu-cliente-custom').value.trim().split(' ')[0] || '{nome}';
+    document.getElementById('fu-msg').value = m.msg.replace(/{nome}/g, nome);
+    this.fuSelecionarPessoa();
+  },
+  async salvarFU() {
+    const cliente = document.getElementById('fu-cliente-custom').value.trim() || document.getElementById('fu-pessoa').value.split('|')[0];
+    const tarefa = document.getElementById('fu-tarefa').value.trim();
+    if (!cliente) { alert('Selecione ou informe o nome.'); return; }
+    if (!tarefa) { alert('Informe a tarefa.'); return; }
+    this.loader(true);
+    try {
+      const { error } = await db.from('followups').insert([{
+        cliente, tarefa,
+        tipo: document.getElementById('fu-tipo').value,
+        urgencia: document.getElementById('fu-urgencia').value,
+        msg: document.getElementById('fu-msg').value.trim()||null,
+        feito: false
+      }]);
+      if (error) throw error;
+      document.getElementById('modal-fu').classList.add('hidden');
+      this.tab('followup');
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { this.loader(false); }
+  },
   async doneFU(id) {
     this.loader(true);
     await db.from('followups').update({feito:true}).eq('id',id);
@@ -803,6 +1153,10 @@ const Admin = {
         ` : ''}
         ${p.status==='aprovado' ? `<button class="btn-advance" onclick="Admin.updatePost(${p.id},'publicado')">✦ Publicar no Instagram</button>` : ''}
         ${p.status==='publicado' ? `<div style="padding:9px;border-radius:9px;background:#F3E5F5;border:1px solid rgba(106,27,154,.15);text-align:center;font-size:11px;color:#6A1B9A;">✦ Publicado!</div>` : ''}
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button onclick="Admin.editarPost(${p.id})" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--surface);font-size:12px;cursor:pointer;color:var(--text);">✏ Editar</button>
+          <button onclick="Admin.excluirPost(${p.id})" style="flex:1;padding:9px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;font-size:12px;cursor:pointer;color:#C62828;">🗑 Excluir</button>
+        </div>
       </div>
     `);
   },
@@ -953,33 +1307,49 @@ const Admin = {
     const { data: posts } = await db.from('posts').select('*').eq('client_email',c.email);
     const total = posts?.length || 0;
     const rev = posts?.filter(p=>p.status==='revisao').length || 0;
+    const inp = (id,val,ph,type='text') => `<input type="${type}" id="${id}" value="${(val||'').replace(/"/g,'&quot;')}" placeholder="${ph}" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);margin-top:4px;"/>`;
+    const fld = (lbl,content) => `<div style="margin-bottom:10px;"><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;">${lbl}</div>${content}</div>`;
     this.openDetail(`
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <span class="dp-title">${c.nome}</span>
         <button class="dp-close" onclick="Admin.closeDetail()">×</button>
       </div>
-      <!-- Foto do cliente -->
-      <div style="display:flex;align-items:center;gap:14px;background:var(--beige);border-radius:9px;padding:12px;margin-bottom:12px;">
-        <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;background:#ddd;flex-shrink:0;border:2px solid rgba(196,150,122,.3);">
-          ${c.foto_url ? `<img src="${c.foto_url}" id="dp-foto-img" style="width:100%;height:100%;object-fit:cover;"/>` : `<div id="dp-foto-img" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;font-family:'Cormorant Garamond',serif;color:var(--copper);">${(c.nome||'?')[0].toUpperCase()}</div>`}
+      <!-- Foto -->
+      <div style="display:flex;align-items:center;gap:12px;background:var(--beige);border-radius:9px;padding:10px 12px;margin-bottom:16px;">
+        <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;background:#ddd;flex-shrink:0;border:2px solid rgba(196,150,122,.3);">
+          ${c.foto_url ? `<img src="${c.foto_url}" id="dp-foto-img" style="width:100%;height:100%;object-fit:cover;"/>` : `<div id="dp-foto-img" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;font-family:'Cormorant Garamond',serif;color:var(--copper);">${(c.nome||'?')[0].toUpperCase()}</div>`}
         </div>
-        <div style="flex:1;">
-          <div style="font-size:14px;font-style:italic;font-family:'Cormorant Garamond',serif;color:var(--brown);">${c.empresa||c.nome}</div>
-          <div style="font-size:11px;color:var(--muted);">${c.instagram||'—'}</div>
-        </div>
+        <div style="flex:1;font-size:12px;color:var(--muted);">${total} post${total!==1?'s':''} · ${rev} aguardando aprovação</div>
         <label style="font-size:11px;color:var(--copper);cursor:pointer;border:1px solid rgba(196,150,122,.4);padding:5px 10px;border-radius:20px;white-space:nowrap;">
-          📷 Foto
-          <input type="file" accept="image/*" style="display:none" onchange="Admin.uploadFotoCliente(this,${c.id})"/>
+          📷 Foto <input type="file" accept="image/*" style="display:none" onchange="Admin.uploadFotoCliente(this,${c.id})"/>
         </label>
       </div>
-      ${this.dpField('✉ E-mail / Login', c.email)}
-      ${this.dpField('🔑 Senha temporária', c.access_code||'—')}
-      ${this.dpField('📊 Posts', `${total} total · ${rev} aguardando aprovação`)}
-      <div style="margin-top:12px;padding:10px 12px;background:rgba(196,150,122,.08);border:1px solid rgba(196,150,122,.2);border-radius:9px;font-size:11px;color:var(--muted);line-height:1.7;">
-        <strong style="color:var(--brown);display:block;margin-bottom:4px;">Instruções pro cliente:</strong>
-        Acesse <strong>crm.gislainebarbeto.com.br</strong><br/>
-        E-mail: <strong>${c.email}</strong><br/>
-        Senha: <strong>${c.access_code||'Primor2026!'}</strong>
+      <!-- Dados editáveis -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
+        ${fld('Nome completo', inp('dp-nome',c.nome,'Nome do cliente'))}
+        ${fld('Empresa / Marca', inp('dp-empresa',c.empresa,'Nome da marca'))}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
+        ${fld('@ Instagram', inp('dp-ig',c.instagram,'@perfil'))}
+        ${fld('Nome do projeto', inp('dp-projeto',c.nome_projeto,'Ex: Projeto Primor'))}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
+        ${fld('Data de início', inp('dp-inicio',c.data_inicio,'','date'))}
+        ${fld('Senha de acesso', inp('dp-senha',c.access_code,'Primor2026!'))}
+      </div>
+      ${fld('✉ E-mail / Login (não editável)', `<div style="padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;background:var(--bg);color:var(--muted);margin-top:4px;">${c.email}</div>`)}
+      <!-- Mensagem da Gi -->
+      ${fld('Mensagem para a cliente', `<textarea id="dp-mensagem-gi" rows="2" placeholder="Ex: Essa semana trabalhamos muito no seu posicionamento 🌿" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);resize:none;margin-top:4px;">${c.mensagem_gi||''}</textarea>`)}
+      <!-- Arquivos (links) -->
+      ${fld('Arquivos do cliente (links)', `<textarea id="dp-arquivos" rows="2" placeholder='[{"nome":"Briefing","url":"https://...","icon":"📋"}]' style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:11px;font-family:monospace;background:var(--bg);resize:vertical;margin-top:4px;">${c.arquivos||''}</textarea><div style="font-size:10px;color:var(--muted);margin-top:3px;">Ícones sugeridos: 📋 📄 🎨 🖼️ 📁</div>`)}
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button onclick="Admin.salvarDadosCliente(${c.id})" style="flex:1;padding:10px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Salvar alterações →</button>
+        <button onclick="Admin.excluirCliente(${c.id})" style="padding:10px 14px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;font-size:12px;cursor:pointer;color:#C62828;" title="Excluir cliente">🗑</button>
+      </div>
+      <!-- Instruções acesso -->
+      <div style="margin-top:12px;padding:10px 12px;background:rgba(196,150,122,.06);border:1px solid rgba(196,150,122,.15);border-radius:9px;font-size:11px;color:var(--muted);line-height:1.8;">
+        <strong style="color:var(--brown);display:block;margin-bottom:3px;">Acesso da cliente:</strong>
+        crm.gislainebarbeto.com.br · <strong>${c.email}</strong> · <strong>${c.access_code||'Primor2026!'}</strong>
       </div>
     `);
   },
@@ -1070,37 +1440,49 @@ const Admin = {
         img_url = urls.length === 1 ? urls[0] : JSON.stringify(urls);
       }
 
-      // Save post
-      const { error } = await db.from('posts').insert([{
-        client_email: clientEmail,
-        legenda, hashtags, tipo,
-        data_post: data_post || null,
-        obs, obs_int,
-        img_url, status,
-      }]);
+      // Save or update post
+      const payload = { client_email: clientEmail, legenda, hashtags, tipo, data_post: data_post||null, obs, obs_int, status };
+      if (img_url) payload.img_url = img_url;
+      let error;
+      if (this._editPostId) {
+        ({ error } = await db.from('posts').update(payload).eq('id', this._editPostId));
+      } else {
+        ({ error } = await db.from('posts').insert([payload]));
+      }
       if (error) throw error;
 
+      this._editPostId = null;
       this.fecharModalPost();
       this.tab('posts');
     } catch(err) {
       errEl.style.display = 'block';
-      errEl.textContent = err.message.includes('posts-media')
-        ? 'Sem storage configurado — post salvo sem imagem. Configure o bucket "posts-media" no Supabase.'
-        : 'Erro: ' + err.message;
-      // Try without image
-      if (err.message.includes('posts-media') || err.message.includes('storage')) {
-        const { error } = await db.from('posts').insert([{
-          client_email: clientEmail,
-          legenda, hashtags, tipo,
-          data_post: data_post || null,
-          obs, status,
-        }]);
-        if (!error) { this.fecharModalPost(); this.tab('posts'); }
-      }
+      errEl.textContent = 'Erro: ' + err.message;
     } finally {
       this.loader(false);
-      btn.textContent = 'Criar post →';
+      btn.textContent = this._editPostId ? 'Salvar alterações →' : 'Criar post →';
     }
+  },
+
+  async salvarDadosCliente(id) {
+    const nome = document.getElementById('dp-nome')?.value.trim() || null;
+    const empresa = document.getElementById('dp-empresa')?.value.trim() || null;
+    const instagram = document.getElementById('dp-ig')?.value.trim() || null;
+    const nome_projeto = document.getElementById('dp-projeto')?.value.trim() || null;
+    const data_inicio = document.getElementById('dp-inicio')?.value || null;
+    const access_code = document.getElementById('dp-senha')?.value.trim() || null;
+    const mensagem_gi = document.getElementById('dp-mensagem-gi')?.value.trim() || null;
+    const arquivosRaw = document.getElementById('dp-arquivos')?.value.trim() || null;
+    if (arquivosRaw) {
+      try { JSON.parse(arquivosRaw); } catch { alert('JSON inválido no campo Arquivos. Verifique o formato.'); return; }
+    }
+    this.loader(true);
+    try {
+      const { error } = await db.from('clients').update({ nome, empresa, instagram, nome_projeto, data_inicio, access_code, mensagem_gi, arquivos: arquivosRaw }).eq('id', id);
+      if (error) throw error;
+      alert('Salvo com sucesso!');
+      this.renderClientes();
+    } catch(e) { alert('Erro: ' + e.message); }
+    finally { this.loader(false); }
   },
 
   async updatePost(id, status) {
@@ -1109,8 +1491,804 @@ const Admin = {
     this.loader(false);
     this.closeDetail();
     this.tab('posts');
+  },
+
+  _editPostId: null,
+  async editarPost(id) {
+    const p = this.posts.find(x=>x.id===id); if(!p) return;
+    await this.abrirModalPost();
+    this._editPostId = id;
+    // Pre-fill fields
+    document.getElementById('mp-cliente').value  = p.client_email||'';
+    document.getElementById('mp-legenda').value  = p.legenda||'';
+    document.getElementById('mp-hashtags').value = p.hashtags||'';
+    document.getElementById('mp-tipo').value     = p.tipo||'Feed';
+    document.getElementById('mp-data').value     = p.data_post||'';
+    document.getElementById('mp-obs-cli').value  = p.obs||'';
+    document.getElementById('mp-obs-int').value  = p.obs_int||'';
+    document.getElementById('mp-status').value   = p.status||'criacao';
+    const btn = document.getElementById('mp-btn');
+    btn.textContent = 'Salvar alterações →';
+    this.closeDetail();
+  },
+  async excluirPost(id) {
+    if (!confirm('Excluir este post? Esta ação não pode ser desfeita.')) return;
+    this.loader(true);
+    await db.from('posts').delete().eq('id',id);
+    this.loader(false);
+    this.closeDetail();
+    this.tab('posts');
+  },
+  async excluirCliente(id) {
+    if (!confirm('Excluir este cliente? Todos os dados vinculados a ele permanecerão no banco.')) return;
+    this.loader(true);
+    await db.from('clients').delete().eq('id',id);
+    this.loader(false);
+    this.closeDetail();
+    this.renderClientes();
+  },
+
+  // ── FINANCEIRO ──
+  _finEmail: '',
+  async renderFinanceiro() {
+    const { data: clients } = await db.from('clients').select('nome,email').order('nome');
+    const main = document.getElementById('admin-main');
+    main.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 class="section-title" style="margin:0;">Financeiro</h2>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;">
+        <select id="fin-sel" onchange="Admin.loadFin()" style="padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;min-width:220px;">
+          <option value="">Selecione o cliente...</option>
+          ${(clients||[]).map(c=>`<option value="${c.email}">${c.nome}</option>`).join('')}
+        </select>
+        <button onclick="Admin.abrirModalFin()" style="padding:10px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Lançamento</button>
+      </div>
+      <div id="fin-list"></div>`;
+  },
+  async loadFin() {
+    const email = document.getElementById('fin-sel').value.toLowerCase();
+    this._finEmail = email;
+    if (!email) { document.getElementById('fin-list').innerHTML = ''; return; }
+    const { data } = await db.from('financeiro').select('*').eq('client_email',email).order('vencimento',{ascending:true});
+    const list = data||[];
+    const total = list.reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+    const pago  = list.filter(r=>r.status==='pago').reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+    const el = document.getElementById('fin-list');
+    el.innerHTML = `
+      <div class="stats-row" style="margin-bottom:16px;">
+        <div class="stat-card"><div class="stat-n">R$ ${pago.toFixed(2)}</div><div class="stat-l">Recebido</div></div>
+        <div class="stat-card"><div class="stat-n">R$ ${(total-pago).toFixed(2)}</div><div class="stat-l">A Receber</div></div>
+        <div class="stat-card"><div class="stat-n">${list.filter(r=>r.status==='atrasado').length}</div><div class="stat-l">Atrasados</div></div>
+      </div>
+      <div class="table-wrap">${!list.length ? '<p style="padding:20px;color:var(--muted);text-align:center;font-style:italic;">Nenhum lançamento</p>' :
+        list.map(r=>`<div class="fin-row">
+          <div class="col-main"><div class="col-name">${r.servico}</div><div class="col-sub">${r.vencimento ? new Date(r.vencimento+'T12:00:00').toLocaleDateString('pt-BR') : '—'}${r.obs?` · ${r.obs}`:''}</div></div>
+          <div style="font-size:13px;font-weight:500;color:var(--text);">R$ ${parseFloat(r.valor||0).toFixed(2)}</div>
+          <span class="fin-${r.status}">${r.status==='pago'?'Pago':r.status==='atrasado'?'Atrasado':'Pendente'}</span>
+          <button onclick="Admin.toggleFinStatus(${r.id},'${r.status}')" style="font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;">Alterar</button>
+          <button onclick="Admin.delFin(${r.id})" style="font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;cursor:pointer;">✕</button>
+        </div>`).join('')
+      }</div>`;
+  },
+  abrirModalFin() {
+    ['mf-servico','mf-obs'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+    document.getElementById('mf-valor').value='';
+    document.getElementById('mf-vencimento').value='';
+    document.getElementById('mf-status').value='pendente';
+    document.getElementById('mf-err').style.display='none';
+    document.getElementById('modal-fin').classList.remove('hidden');
+  },
+  fecharModalFin() { document.getElementById('modal-fin').classList.add('hidden'); },
+  async salvarFinanceiro() {
+    const email = this._finEmail || document.getElementById('fin-sel')?.value;
+    const servico = document.getElementById('mf-servico').value.trim();
+    const errEl = document.getElementById('mf-err');
+    errEl.style.display = 'none';
+    if (!email) { errEl.style.display='block'; errEl.textContent='Selecione o cliente primeiro.'; return; }
+    if (!servico) { errEl.style.display='block'; errEl.textContent='Informe o serviço.'; return; }
+    this.loader(true);
+    try {
+      const { error } = await db.from('financeiro').insert([{
+        client_email: email,
+        servico,
+        valor: parseFloat(document.getElementById('mf-valor').value)||0,
+        vencimento: document.getElementById('mf-vencimento').value||null,
+        status: document.getElementById('mf-status').value,
+        obs: document.getElementById('mf-obs').value.trim()||null
+      }]);
+      if (error) throw error;
+      this.fecharModalFin();
+      await this.loadFin();
+    } catch(e) {
+      errEl.style.display = 'block';
+      errEl.textContent = e.message.includes('does not exist')
+        ? 'Tabela não encontrada. Rode o SQL no Supabase primeiro.'
+        : 'Erro: ' + e.message;
+    } finally { this.loader(false); }
+  },
+  async toggleFinStatus(id, current) {
+    const next = current==='pago'?'pendente':current==='pendente'?'atrasado':'pago';
+    this.loader(true);
+    await db.from('financeiro').update({status:next}).eq('id',id);
+    await this.loadFin();
+    this.loader(false);
+  },
+  async delFin(id) {
+    if (!confirm('Apagar este lançamento?')) return;
+    this.loader(true);
+    await db.from('financeiro').delete().eq('id',id);
+    await this.loadFin();
+    this.loader(false);
+  },
+
+  // ── ARQUIVOS ──
+  _arqEmail: '',
+  async renderArquivos() {
+    const { data: clients } = await db.from('clients').select('nome,email').order('nome');
+    const main = document.getElementById('admin-main');
+    main.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 class="section-title" style="margin:0;">Arquivos</h2>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;">
+        <select id="arq-sel" onchange="Admin.loadArquivos()" style="padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;min-width:220px;">
+          <option value="">Selecione o cliente...</option>
+          <option value="__comece__">✦ Comece por Aqui — vídeo e texto global (todos os clientes)</option>
+          <option value="__global__">🌿 Global — Onboarding &amp; Políticas (todos os clientes)</option>
+          ${(clients||[]).map(c=>`<option value="${c.email}">${c.nome}</option>`).join('')}
+        </select>
+      </div>
+      <div id="arq-upload-area" style="display:none;">
+        <label class="upload-area" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;margin-bottom:12px;">
+          <p>📁 Clique para fazer upload de arquivos</p>
+          <span style="font-size:11px;color:var(--muted);">PDF, imagem, qualquer formato</span>
+          <input type="file" id="arq-file" multiple style="display:none" onchange="Admin.uploadArquivo()"/>
+        </label>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;">
+          <input id="arq-link-nome" type="text" placeholder="Nome do link (ex: Pasta do Drive)" style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;"/>
+          <input id="arq-link-url" type="url" placeholder="https://drive.google.com/..." style="flex:2;padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;"/>
+          <button onclick="Admin.adicionarLink()" style="padding:10px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;white-space:nowrap;">+ Link</button>
+        </div>
+      </div>
+      <div id="arq-list"></div>`;
+  },
+  async loadArquivos() {
+    const email = document.getElementById('arq-sel').value;
+    this._arqEmail = email;
+    document.getElementById('arq-upload-area').style.display = email ? 'block' : 'none';
+    if (!email) { document.getElementById('arq-list').innerHTML=''; return; }
+    if (email === '__comece__') {
+      const { data } = await db.from('arquivos_cliente').select('*').eq('client_email','__comece__').order('created_at',{ascending:true});
+      const rows = data||[];
+      const cfg = {};
+      const files = [];
+      for (const r of rows) {
+        if (['__video__','__titulo__','__desc__'].includes(r.nome)) cfg[r.nome] = r.url;
+        else files.push(r);
+      }
+      document.getElementById('arq-list').innerHTML = `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;">
+          <div style="font-size:13px;font-weight:500;color:var(--brown);margin-bottom:14px;">✦ Configuração global — aparece pra todas as clientes</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div>
+              <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:4px;">Link do vídeo (YouTube)</label>
+              <input id="comece-video" type="url" value="${cfg['__video__']||''}" placeholder="https://www.youtube.com/watch?v=..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;box-sizing:border-box;"/>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:4px;">Título de boas-vindas</label>
+              <input id="comece-titulo" type="text" value="${cfg['__titulo__']||''}" placeholder="Ex: Bem-vinda ao seu espaço ✦" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;box-sizing:border-box;"/>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:4px;">Texto de descrição</label>
+              <textarea id="comece-desc" rows="3" placeholder="Explique como usar o portal, o que a cliente vai encontrar aqui..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${cfg['__desc__']||''}</textarea>
+            </div>
+            <button onclick="Admin.salvarConfigComece()" style="align-self:flex-start;padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;">Salvar configuração</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-style:italic;">Arquivos que aparecem no "Comece por Aqui" (${files.length}):</div>
+        <div class="table-wrap">${
+          !files.length ? '<p style="padding:20px;color:var(--muted);text-align:center;font-style:italic;">Nenhum arquivo ainda — use o upload acima.</p>' :
+          files.map(f=>`<div class="arq-item">
+            <span style="font-size:18px;">${f.nome.match(/\.(pdf)$/i)?'📄':f.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i)?'🖼️':'📎'}</span>
+            <a href="${f.url}" target="_blank" class="arq-name" style="color:var(--text);text-decoration:none;">${f.nome}</a>
+            <button onclick="Admin.delArquivo(${f.id})" style="font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;cursor:pointer;margin-left:auto;">✕</button>
+          </div>`).join('')
+        }</div>`;
+      return;
+    }
+    const { data } = await db.from('arquivos_cliente').select('*').eq('client_email',email).order('created_at',{ascending:false});
+    const list = data||[];
+    document.getElementById('arq-list').innerHTML = `<div class="table-wrap">${
+      !list.length ? '<p style="padding:20px;color:var(--muted);text-align:center;font-style:italic;">Nenhum arquivo</p>' :
+      list.map(f=>`<div class="arq-item">
+        <span style="font-size:18px;">${f.nome.match(/\.(pdf)$/i)?'📄':f.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i)?'🖼️':'📎'}</span>
+        <a href="${f.url}" target="_blank" class="arq-name" style="color:var(--text);text-decoration:none;">${f.nome}</a>
+        <span class="arq-tag">${f.uploader==='client'?'Cliente':'Admin'}</span>
+        <span style="font-size:10px;color:var(--muted);">${new Date(f.created_at).toLocaleDateString('pt-BR')}</span>
+        <button onclick="Admin.delArquivo(${f.id})" style="font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;cursor:pointer;margin-left:auto;">✕</button>
+      </div>`).join('')
+    }</div>`;
+  },
+  async uploadArquivo() {
+    const email = this._arqEmail; if(!email) return;
+    const files = [...document.getElementById('arq-file').files]; if(!files.length) return;
+    this.loader(true);
+    try {
+      for (const file of files) {
+        const safeName = file.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_');
+        const path = `arquivos/${Date.now()}-${safeName}`;
+        const { error } = await db.storage.from('posts-media').upload(path, file, {cacheControl:'3600',upsert:false});
+        if (error) throw error;
+        const { data: urlData } = db.storage.from('posts-media').getPublicUrl(path);
+        await db.from('arquivos_cliente').insert([{client_email:email,nome:file.name,url:urlData.publicUrl,uploader:'admin'}]);
+      }
+      await this.loadArquivos();
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { this.loader(false); }
+  },
+  async delArquivo(id) {
+    if (!confirm('Apagar arquivo?')) return;
+    this.loader(true);
+    await db.from('arquivos_cliente').delete().eq('id',id);
+    await this.loadArquivos();
+    this.loader(false);
+  },
+  async adicionarLink() {
+    const email = this._arqEmail; if (!email) return;
+    const nome = document.getElementById('arq-link-nome').value.trim();
+    const url  = document.getElementById('arq-link-url').value.trim();
+    if (!nome) { alert('Informe um nome para o link.'); return; }
+    if (!url)  { alert('Cole o link primeiro.'); return; }
+    this.loader(true);
+    try {
+      const { error } = await db.from('arquivos_cliente').insert([{client_email:email,nome,url,uploader:'admin'}]);
+      if (error) throw error;
+      document.getElementById('arq-link-nome').value = '';
+      document.getElementById('arq-link-url').value  = '';
+      await this.loadArquivos();
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { this.loader(false); }
+  },
+
+  async salvarConfigComece() {
+    const video  = document.getElementById('comece-video')?.value.trim() || '';
+    const titulo = document.getElementById('comece-titulo')?.value.trim() || '';
+    const desc   = document.getElementById('comece-desc')?.value.trim() || '';
+    this.loader(true);
+    try {
+      await db.from('arquivos_cliente').delete().eq('client_email','__comece__').in('nome',['__video__','__titulo__','__desc__']);
+      const rows = [];
+      if (video)  rows.push({client_email:'__comece__',nome:'__video__', url:video, uploader:'admin'});
+      if (titulo) rows.push({client_email:'__comece__',nome:'__titulo__',url:titulo,uploader:'admin'});
+      if (desc)   rows.push({client_email:'__comece__',nome:'__desc__',  url:desc,  uploader:'admin'});
+      if (rows.length) await db.from('arquivos_cliente').insert(rows);
+      alert('Configuração salva! ✦');
+      await this.loadArquivos();
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { this.loader(false); }
+  },
+
+  // ── INFORMAÇÕES ADMIN ──
+  _infoEmail: '',
+  async renderInfoAdmin() {
+    const { data: clients } = await db.from('clients').select('nome,email').order('nome');
+    const main = document.getElementById('admin-main');
+    main.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 class="section-title" style="margin:0;">Informações Importantes</h2>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;">
+        <select id="info-sel" onchange="Admin.loadInfoAdmin()" style="padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;min-width:220px;">
+          <option value="">Selecione o cliente...</option>
+          ${(clients||[]).map(c=>`<option value="${c.email}">${c.nome}</option>`).join('')}
+        </select>
+      </div>
+      <div id="info-form" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Título</div>
+            <input id="info-titulo" type="text" placeholder="Ex: Login do Instagram" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Categoria</div>
+            <select id="info-tipo" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
+              <option value="login">🔑 Login / Senha</option>
+              <option value="contrato">📜 Contrato</option>
+              <option value="briefing">📋 Briefing</option>
+              <option value="visual">🎨 Identidade Visual</option>
+              <option value="contato">📞 Contato</option>
+              <option value="outro">📌 Outro</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Conteúdo</div>
+          <textarea id="info-conteudo" rows="3" placeholder="Ex: usuário: @primor | senha: abc123" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;"></textarea>
+        </div>
+        <button onclick="Admin.salvarInfo()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Adicionar →</button>
+      </div>
+      <div id="info-list"></div>`;
+  },
+  async loadInfoAdmin() {
+    const email = document.getElementById('info-sel').value.toLowerCase();
+    this._infoEmail = email;
+    document.getElementById('info-form').style.display = email ? 'block' : 'none';
+    if (!email) { document.getElementById('info-list').innerHTML=''; return; }
+    await this._renderInfoList('info-list', email);
+  },
+  async _renderInfoList(elId, email) {
+    const { data } = await db.from('informacoes_cliente').select('*').eq('client_email',email).order('created_at',{ascending:true});
+    const icons = {login:'🔑',contrato:'📜',briefing:'📋',visual:'🎨',contato:'📞',outro:'📌'};
+    const el = document.getElementById(elId); if (!el) return;
+    el.innerHTML = !data?.length
+      ? '<p style="color:var(--muted);font-style:italic;text-align:center;padding:20px;">Nenhuma informação cadastrada ainda</p>'
+      : `<div style="display:flex;flex-direction:column;gap:10px;">${data.map(i=>`
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:16px;">${icons[i.tipo]||'📌'}</span>
+                <span style="font-size:13px;font-weight:500;color:var(--brown);">${i.titulo}</span>
+              </div>
+              ${elId==='info-list'?`<button onclick="Admin.delInfo('${i.id}')" style="font-size:11px;padding:3px 10px;border-radius:7px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;cursor:pointer;">✕</button>`:''}
+            </div>
+            <pre style="font-size:12px;color:var(--text);white-space:pre-wrap;word-break:break-word;margin:0;font-family:Poppins,sans-serif;line-height:1.6;">${i.conteudo||''}</pre>
+          </div>`).join('')}</div>`;
+  },
+  async salvarInfo() {
+    const email = this._infoEmail; if (!email) return;
+    const titulo = document.getElementById('info-titulo').value.trim();
+    const conteudo = document.getElementById('info-conteudo').value.trim();
+    if (!titulo) { alert('Informe o título.'); return; }
+    this.loader(true);
+    try {
+      const { error } = await db.from('informacoes_cliente').insert([{client_email:email,titulo,conteudo,tipo:document.getElementById('info-tipo').value}]);
+      if (error) throw error;
+      document.getElementById('info-titulo').value='';
+      document.getElementById('info-conteudo').value='';
+      await this._renderInfoList('info-list', email);
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { this.loader(false); }
+  },
+  async delInfo(id) {
+    if (!confirm('Excluir esta informação?')) return;
+    this.loader(true);
+    await db.from('informacoes_cliente').delete().eq('id',id);
+    await this._renderInfoList('info-list', this._infoEmail);
+    this.loader(false);
+  },
+
+  // ── SOLICITAÇÕES ADMIN ──
+  _solEmail: '',
+  async renderSolicitacoesAdmin() {
+    const { data: clients } = await db.from('clients').select('nome,email').order('nome');
+    const main = document.getElementById('admin-main');
+    main.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 class="section-title" style="margin:0;">Solicitações</h2>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;">
+        <select id="sol-sel" onchange="Admin.loadSolicitacoesAdmin()" style="padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;min-width:220px;">
+          <option value="">Selecione o cliente...</option>
+          ${(clients||[]).map(c=>`<option value="${c.email}">${c.nome}</option>`).join('')}
+        </select>
+      </div>
+      <div id="sol-form" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Título da solicitação</div>
+            <input id="sol-titulo" type="text" placeholder="Ex: Envie 3 fotos do produto" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Tipo</div>
+            <select id="sol-tipo" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
+              <option value="foto">📷 Foto</option>
+              <option value="video">🎥 Vídeo</option>
+              <option value="documento">📄 Documento</option>
+              <option value="feedback">💬 Feedback</option>
+              <option value="aprovacao">✅ Aprovação</option>
+              <option value="outro">📌 Outro</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Prazo</div>
+            <input id="sol-prazo" type="date" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Urgência</div>
+            <select id="sol-urgencia" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
+              <option value="normal">Normal</option>
+              <option value="urgente">🔴 Urgente</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Descrição / instruções</div>
+          <textarea id="sol-desc" rows="2" placeholder="Detalhes do que precisa..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;"></textarea>
+        </div>
+        <button onclick="Admin.salvarSolicitacao()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Solicitar →</button>
+      </div>
+      <div id="sol-list"></div>`;
+  },
+  async loadSolicitacoesAdmin() {
+    const email = document.getElementById('sol-sel').value.toLowerCase();
+    this._solEmail = email;
+    document.getElementById('sol-form').style.display = email ? 'block' : 'none';
+    if (!email) { document.getElementById('sol-list').innerHTML=''; return; }
+    await this._renderSolList('sol-list', email, true);
+  },
+  async _renderSolList(elId, email, isAdmin) {
+    const { data } = await db.from('solicitacoes').select('*').eq('client_email',email).order('prazo',{ascending:true});
+    const icons = {foto:'📷',video:'🎥',documento:'📄',feedback:'💬',aprovacao:'✅',outro:'📌'};
+    const el = document.getElementById(elId); if (!el) return;
+    const list = data||[];
+    const today = new Date().toISOString().slice(0,10);
+    if (!list.length) { el.innerHTML='<p style="color:var(--muted);font-style:italic;text-align:center;padding:20px;">Nenhuma solicitação ainda</p>'; return; }
+    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;">${list.map(s=>{
+      const atrasado = s.prazo && s.prazo < today && s.status==='pendente';
+      const urgBorder = s.urgencia==='urgente' ? 'border-color:#FFCDD2;' : atrasado ? 'border-color:#FFCDD2;' : '';
+      const prazoFmt = s.prazo ? new Date(s.prazo+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;${urgBorder}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">${icons[s.tipo]||'📌'}</span>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:${s.urgencia==='urgente'?'#C62828':'var(--brown)'};">${s.urgencia==='urgente'?'🔴 ':''} ${s.titulo}</div>
+              <div style="font-size:11px;color:var(--muted);">Prazo: ${prazoFmt} ${atrasado?'⚠ Atrasado':''}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:10px;padding:3px 10px;border-radius:20px;background:${s.status==='concluido'?'#E8F5E9':'#FFF3E0'};color:${s.status==='concluido'?'#2E7D32':'#E65100'};">${s.status==='concluido'?'✓ Concluído':'● Pendente'}</span>
+            ${isAdmin?`<button onclick="Admin.delSolicitacao('${s.id}')" style="font-size:11px;padding:3px 10px;border-radius:7px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;cursor:pointer;">✕</button>`:''}
+          </div>
+        </div>
+        ${s.descricao?`<p style="font-size:12px;color:var(--muted);margin:4px 0 0;">${s.descricao}</p>`:''}
+        ${s.resposta?`<div style="margin-top:8px;padding:8px 10px;background:rgba(196,150,122,.08);border-radius:8px;font-size:12px;color:var(--text);"><strong>Resposta:</strong> ${s.resposta}</div>`:''}
+        ${!isAdmin && s.status==='pendente'?`<div style="margin-top:8px;display:flex;gap:6px;">
+          <input id="resp-${s.id}" type="text" placeholder="Deixe sua resposta..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);font-family:Poppins,sans-serif;"/>
+          <button onclick="Client.concluirSolicitacao('${s.id}')" style="padding:8px 14px;border-radius:8px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;cursor:pointer;">Concluir →</button>
+        </div>`:''}
+      </div>`;
+    }).join('')}</div>`;
+  },
+  async salvarSolicitacao() {
+    const email = this._solEmail; if (!email) return;
+    const titulo = document.getElementById('sol-titulo').value.trim();
+    if (!titulo) { alert('Informe o título da solicitação.'); return; }
+    this.loader(true);
+    try {
+      const { error } = await db.from('solicitacoes').insert([{
+        client_email: email,
+        titulo,
+        descricao: document.getElementById('sol-desc').value.trim()||null,
+        tipo: document.getElementById('sol-tipo').value,
+        prazo: document.getElementById('sol-prazo').value||null,
+        urgencia: document.getElementById('sol-urgencia').value,
+        status: 'pendente'
+      }]);
+      if (error) throw error;
+      ['sol-titulo','sol-desc','sol-prazo'].forEach(id => { document.getElementById(id).value=''; });
+      await this._renderSolList('sol-list', email, true);
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { this.loader(false); }
+  },
+  async delSolicitacao(id) {
+    if (!confirm('Excluir esta solicitação?')) return;
+    this.loader(true);
+    await db.from('solicitacoes').delete().eq('id',id);
+    await this._renderSolList('sol-list', this._solEmail, true);
+    this.loader(false);
+  },
+
+  // ── AUTOMAÇÕES ──
+  _autoEmail: '',
+  _autoTipo: 'automatizado',
+  async renderAutomacoes() {
+    const { data: clients } = await db.from('clients').select('nome,email').order('nome');
+    const main = document.getElementById('admin-main');
+    main.innerHTML = `
+      <h2 class="section-title" style="margin-bottom:16px;">Automações</h2>
+      <div class="auto-tabs">
+        <div class="auto-tab active" id="autotab-automatizado" onclick="Admin.setAutoTipo('automatizado')">⚡ Automatizados</div>
+        <div class="auto-tab" id="autotab-turbinado" onclick="Admin.setAutoTipo('turbinado')">🚀 Turbinados</div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <select id="auto-sel" onchange="Admin.loadAutomacoes()" style="padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;min-width:220px;">
+          <option value="">Selecione o cliente...</option>
+          ${(clients||[]).map(c=>`<option value="${c.email}">${c.nome}</option>`).join('')}
+        </select>
+      </div>
+      <div id="auto-list"></div>`;
+  },
+  setAutoTipo(tipo) {
+    this._autoTipo = tipo;
+    ['automatizado','turbinado'].forEach(t => document.getElementById('autotab-'+t)?.classList.toggle('active',t===tipo));
+    this.loadAutomacoes();
+  },
+  async loadAutomacoes() {
+    const email = document.getElementById('auto-sel').value.toLowerCase();
+    this._autoEmail = email;
+    if (!email) { document.getElementById('auto-list').innerHTML=''; return; }
+    const [{ data: postsData }, { data: autoData }] = await Promise.all([
+      db.from('posts').select('*').eq('client_email',email).order('created_at',{ascending:false}),
+      db.from('automacoes').select('*').eq('client_email',email).eq('tipo',this._autoTipo)
+    ]);
+    const posts = postsData||[], autos = autoData||[];
+    const markedIds = new Set(autos.map(a=>a.post_id));
+    const parseFirst = raw => { try { const a=JSON.parse(raw); return Array.isArray(a)?a[0]:raw; } catch{return raw;} };
+    const el = document.getElementById('auto-list');
+    el.innerHTML = `<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Clique num post para marcar como ${this._autoTipo}. Clique novamente para desfazer.</div>` +
+      posts.map(p => {
+        const thumb = parseFirst(p.img_url);
+        const auto = autos.find(a=>a.post_id===p.id);
+        return `<div class="auto-post-item${markedIds.has(p.id)?' marked':''}" onclick="Admin.toggleAuto(${p.id})">
+          ${thumb ? `<img src="${thumb}" style="width:44px;height:44px;object-fit:cover;border-radius:7px;flex-shrink:0;"/>` : `<div style="width:44px;height:44px;background:var(--beige);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--copper);">✦</div>`}
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(p.legenda||'Post').substring(0,50)}</div>
+            <div style="font-size:10px;color:var(--muted);">${p.data_post||new Date(p.created_at).toLocaleDateString('pt-BR')}</div>
+            ${auto?.resultado ? `<div style="font-size:11px;color:var(--copper);font-style:italic;margin-top:2px;">${auto.resultado}</div>` : ''}
+          </div>
+          ${markedIds.has(p.id) ? `<span style="font-size:10px;background:rgba(196,150,122,.15);color:var(--copper);padding:3px 8px;border-radius:20px;">${this._autoTipo==='turbinado'?'🚀 Turbinado':'⚡ Automatizado'}</span>` : ''}
+        </div>`;
+      }).join('') || '<p style="color:var(--muted);font-style:italic;text-align:center;padding:20px;">Nenhum post para este cliente</p>';
+  },
+  async toggleAuto(postId) {
+    const email = this._autoEmail; if (!email) return;
+    const { data: existing } = await db.from('automacoes').select('id').eq('post_id',postId).eq('tipo',this._autoTipo).eq('client_email',email);
+    this.loader(true);
+    if (existing?.length) {
+      await db.from('automacoes').delete().eq('id',existing[0].id);
+    } else {
+      const res = prompt('Resultado obtido (opcional):');
+      await db.from('automacoes').insert([{post_id:postId,client_email:email,tipo:this._autoTipo,resultado:res||null}]);
+    }
+    await this.loadAutomacoes();
+    this.loader(false);
+  },
+
+  // ── MÉTRICAS ──
+  _metEmail: '',
+  async renderMetricas() {
+    const { data: clients } = await db.from('clients').select('nome,email').order('nome');
+    const main = document.getElementById('admin-main');
+    main.innerHTML = `
+      <h2 class="section-title" style="margin-bottom:16px;">Métricas</h2>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
+        <select id="met-sel" onchange="Admin.loadMetricas()" style="padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;min-width:220px;">
+          <option value="">Selecione o cliente...</option>
+          ${(clients||[]).map(c=>`<option value="${c.email}">${c.nome}</option>`).join('')}
+        </select>
+      </div>
+      <div id="met-form" style="display:none;"></div>
+      <div id="met-list"></div>`;
+  },
+  async loadMetricas() {
+    const email = document.getElementById('met-sel').value.toLowerCase();
+    this._metEmail = email;
+    if (!email) { document.getElementById('met-form').style.display='none'; document.getElementById('met-list').innerHTML=''; return; }
+    const { data: posts } = await db.from('posts').select('id,legenda,img_url').eq('client_email',email).order('created_at',{ascending:false}).limit(20);
+    const pList = posts||[];
+    const parseFirst = raw => { try { const a=JSON.parse(raw); return Array.isArray(a)?a[0]:raw; } catch{return raw;} };
+    const now = new Date(); const mesAtual = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    document.getElementById('met-form').style.display='block';
+    document.getElementById('met-form').innerHTML = `
+      <div class="table-wrap" style="margin-bottom:20px;padding:16px;">
+        <div style="font-size:12px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;">Inserir métricas</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;">
+          <div class="modal-field" style="margin:0;"><label>Mês (AAAA-MM)</label><input type="month" id="met-mes" value="${mesAtual}" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/></div>
+          <div class="modal-field" style="margin:0;"><label>Seguidores</label><input type="number" id="met-seg" placeholder="0" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/></div>
+          <div class="modal-field" style="margin:0;"><label>Alcance</label><input type="number" id="met-alc" placeholder="0" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/></div>
+          <div class="modal-field" style="margin:0;"><label>Engajamento (%)</label><input type="number" id="met-eng" placeholder="0.00" step="0.01" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/></div>
+          <div class="modal-field" style="margin:0;"><label>Impressões</label><input type="number" id="met-imp" placeholder="0" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Top 3 posts do mês (clique para selecionar)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="met-post-sel">
+          ${pList.map(p=>`<div class="met-post-opt" data-id="${p.id}" onclick="Admin.toggleMetPost(this)" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:11px;background:var(--bg);">
+            ${parseFirst(p.img_url)?`<img src="${parseFirst(p.img_url)}" style="width:22px;height:22px;border-radius:4px;object-fit:cover;"/>`:''} ${(p.legenda||'Post').substring(0,20)}
+          </div>`).join('')}
+        </div>
+        <button onclick="Admin.salvarMetrica()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Salvar métricas →</button>
+      </div>`;
+    const { data } = await db.from('metricas').select('*').eq('client_email',email).order('mes',{ascending:true});
+    this.renderMetList(data||[], pList);
+  },
+  toggleMetPost(el) {
+    const selected = document.querySelectorAll('.met-post-opt.sel');
+    if (!el.classList.contains('sel') && selected.length >= 3) { alert('Máximo 3 posts.'); return; }
+    el.classList.toggle('sel');
+    el.style.background = el.classList.contains('sel') ? 'rgba(196,150,122,.15)' : 'var(--bg)';
+    el.style.borderColor = el.classList.contains('sel') ? 'var(--copper)' : 'var(--border)';
+  },
+  async salvarMetrica() {
+    const email = this._metEmail; if (!email) return;
+    const mes = document.getElementById('met-mes').value; if (!mes) { alert('Informe o mês.'); return; }
+    const topPosts = [...document.querySelectorAll('.met-post-opt.sel')].map(el=>el.dataset.id);
+    this.loader(true);
+    const payload = {
+      client_email: email, mes,
+      seguidores: parseInt(document.getElementById('met-seg').value)||0,
+      alcance: parseInt(document.getElementById('met-alc').value)||0,
+      engajamento: parseFloat(document.getElementById('met-eng').value)||0,
+      impressoes: parseInt(document.getElementById('met-imp').value)||0,
+      top_posts: JSON.stringify(topPosts)
+    };
+    // Upsert by client_email + mes
+    const { data: ex } = await db.from('metricas').select('id').eq('client_email',email).eq('mes',mes);
+    if (ex?.length) await db.from('metricas').update(payload).eq('id',ex[0].id);
+    else await db.from('metricas').insert([payload]);
+    await this.loadMetricas();
+    this.loader(false);
+  },
+  renderMetList(data, posts) {
+    const el = document.getElementById('met-list'); if (!el) return;
+    if (!data.length) { el.innerHTML = '<p style="color:var(--muted);font-style:italic;text-align:center;padding:20px;">Nenhuma métrica registrada ainda</p>'; return; }
+    const parseFirst = raw => { try { const a=JSON.parse(raw); return Array.isArray(a)?a[0]:raw; } catch{return raw;} };
+    el.innerHTML = `
+      <div class="chart-wrap"><div class="chart-title">Crescimento de Seguidores</div>${svgLine(data.map(d=>({l:d.mes.substring(5),v:d.seguidores})),'#C4967A')}</div>
+      <div class="chart-wrap"><div class="chart-title">Alcance</div>${svgLine(data.map(d=>({l:d.mes.substring(5),v:d.alcance})),'#4B2D22')}</div>
+      <div style="margin-top:8px;">
+        ${data.slice(-1).map(d => {
+          let tops = []; try { tops=JSON.parse(d.top_posts||'[]'); } catch{}
+          const topPostsHtml = tops.map((pid,i)=>{
+            const p = posts.find(x=>String(x.id)===String(pid));
+            return p ? `<div class="top-post-item">${parseFirst(p.img_url)?`<img src="${parseFirst(p.img_url)}" class="top-post-thumb"/>`:`<div style="aspect-ratio:1/1;background:var(--beige);display:flex;align-items:center;justify-content:center;color:var(--copper);">✦</div>`}<div style="font-size:11px;padding:4px 6px;color:var(--brown);">${['🥇','🥈','🥉'][i]}</div><div style="font-size:10px;color:var(--muted);padding:0 6px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(p.legenda||'').substring(0,20)}</div></div>` : '';
+          }).join('');
+          return topPostsHtml ? `<div class="chart-wrap"><div class="chart-title">Top Posts do Mês</div><div class="top-post-grid">${topPostsHtml}</div></div>` : '';
+        }).join('')}
+      </div>`;
+  },
+
+  // ── LAB DE IDEIAS ──
+  _labEmail: '',
+  async renderLab() {
+    const { data: clients } = await db.from('clients').select('nome,email').order('nome');
+    const main = document.getElementById('admin-main');
+    main.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 class="section-title" style="margin:0;">Lab de Ideias</h2>
+        <button onclick="Admin.abrirModalIdeia()" style="padding:10px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Nova Ideia</button>
+      </div>
+      <div style="margin-bottom:16px;">
+        <select id="lab-sel" onchange="Admin.loadLab()" style="padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;min-width:220px;">
+          <option value="">Todas as ideias</option>
+          ${(clients||[]).map(c=>`<option value="${c.email}">${c.nome}</option>`).join('')}
+        </select>
+      </div>
+      <div id="lab-list"></div>`;
+    await this.loadLab();
+  },
+  async loadLab() {
+    const email = document.getElementById('lab-sel')?.value||'';
+    this._labEmail = email;
+    let q = db.from('ideias').select('*').order('created_at',{ascending:false});
+    if (email) q = q.eq('client_email',email);
+    const { data } = await q;
+    const list = data||[];
+    const el = document.getElementById('lab-list');
+    el.innerHTML = !list.length ? '<p style="color:var(--muted);font-style:italic;text-align:center;padding:20px;">Nenhuma ideia ainda</p>' :
+      list.map(i=>`<div class="idea-card">
+        <div class="idea-titulo">${i.titulo}</div>
+        <div class="idea-desc">${i.descricao||''}</div>
+        <div class="idea-meta">
+          <span class="idea-${i.status}">${i.status==='ideia'?'Ideia':i.status==='em_andamento'?'Em andamento':'Implementado'}</span>
+          <span style="font-size:10px;color:var(--muted);">${i.autor==='admin'?'Gi':'Cliente'}</span>
+          <span style="font-size:10px;color:var(--muted);">${new Date(i.created_at).toLocaleDateString('pt-BR')}</span>
+          <select onchange="Admin.updateIdeiaStatus(${i.id},this.value)" style="margin-left:auto;padding:4px 8px;border:1px solid var(--border);border-radius:7px;font-size:11px;background:var(--bg);cursor:pointer;">
+            <option value="ideia"${i.status==='ideia'?' selected':''}>Ideia</option>
+            <option value="em_andamento"${i.status==='em_andamento'?' selected':''}>Em andamento</option>
+            <option value="implementado"${i.status==='implementado'?' selected':''}>Implementado</option>
+          </select>
+          <button onclick="Admin.delIdeia(${i.id})" style="font-size:10px;padding:3px 8px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;border-radius:7px;cursor:pointer;">✕</button>
+        </div>
+      </div>`).join('');
+  },
+  abrirModalIdeia() {
+    document.getElementById('mi-titulo').value='';
+    document.getElementById('mi-desc').value='';
+    document.getElementById('mi-status').value='ideia';
+    document.getElementById('mi-err').style.display='none';
+    document.getElementById('mi-btn').onclick = ()=>Admin.salvarIdeia();
+    document.getElementById('modal-ideia').classList.remove('hidden');
+  },
+  fecharModalIdeia() { document.getElementById('modal-ideia').classList.add('hidden'); },
+  async salvarIdeia() {
+    const email = this._labEmail || '';
+    const titulo = document.getElementById('mi-titulo').value.trim();
+    if (!titulo) { document.getElementById('mi-err').style.display='block'; document.getElementById('mi-err').textContent='Informe o título.'; return; }
+    this.loader(true);
+    await db.from('ideias').insert([{client_email:email,autor:'admin',titulo,descricao:document.getElementById('mi-desc').value.trim()||null,status:document.getElementById('mi-status').value}]);
+    this.fecharModalIdeia();
+    await this.loadLab();
+    this.loader(false);
+  },
+  async updateIdeiaStatus(id, status) {
+    await db.from('ideias').update({status}).eq('id',id);
+  },
+  async delIdeia(id) {
+    if (!confirm('Apagar ideia?')) return;
+    this.loader(true);
+    await db.from('ideias').delete().eq('id',id);
+    await this.loadLab();
+    this.loader(false);
+  },
+
+  // ── CHAT (ADMIN) ──
+  _chatEmail: '',
+  _chatInterval: null,
+  async renderChat() {
+    const { data: clients } = await db.from('clients').select('nome,email').order('nome');
+    const main = document.getElementById('admin-main');
+    main.innerHTML = `
+      <h2 class="section-title" style="margin-bottom:16px;">Chat com Clientes</h2>
+      <div style="margin-bottom:16px;">
+        <select id="chat-sel" onchange="Admin.loadChat()" style="padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;min-width:220px;">
+          <option value="">Selecione o cliente...</option>
+          ${(clients||[]).map(c=>`<option value="${c.email}">${c.nome}</option>`).join('')}
+        </select>
+      </div>
+      <div id="chat-admin-wrap" style="display:none;">
+        <div class="chat-wrap">
+          <div id="chat-msgs-admin" class="chat-msgs"></div>
+          <div class="chat-input-row">
+            <textarea id="chat-input-admin" class="chat-input" placeholder="Escreva uma mensagem..." rows="2"></textarea>
+            <button class="chat-send" onclick="Admin.sendChatMsg()">Enviar →</button>
+          </div>
+        </div>
+      </div>`;
+  },
+  async loadChat() {
+    const email = document.getElementById('chat-sel').value.toLowerCase();
+    this._chatEmail = email;
+    document.getElementById('chat-admin-wrap').style.display = email ? 'block' : 'none';
+    if (!email) return;
+    // Mark admin's unread (from client) as read
+    await db.from('mensagens').update({lida:true}).eq('client_email',email).eq('de','client').eq('lida',false);
+    const { data } = await db.from('mensagens').select('*').eq('client_email',email).order('created_at',{ascending:true});
+    this.renderMsgs('chat-msgs-admin', data||[], 'admin');
+    await this.refreshChatBadge();
+  },
+  renderMsgs(containerId, msgs, pov) {
+    const el = document.getElementById(containerId); if (!el) return;
+    el.innerHTML = !msgs.length ? '<p style="color:var(--muted);font-size:12px;text-align:center;padding:20px;font-style:italic;">Nenhuma mensagem ainda</p>' :
+      msgs.map(m=>`<div class="chat-bubble ${m.de}">
+        ${m.texto}
+        <span class="chat-time">${new Date(m.created_at).toLocaleString('pt-BR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+      </div>`).join('');
+    el.scrollTop = el.scrollHeight;
+  },
+  async sendChatMsg() {
+    const email = this._chatEmail; if (!email) return;
+    const text = document.getElementById('chat-input-admin').value.trim(); if (!text) return;
+    document.getElementById('chat-input-admin').value='';
+    await db.from('mensagens').insert([{client_email:email,de:'admin',texto:text,lida:false}]);
+    await this.loadChat();
+  },
+  async refreshChatBadge() {
+    const { count } = await db.from('mensagens').select('*',{count:'exact',head:true}).eq('de','client').eq('lida',false);
+    const badge = document.getElementById('nb-chat');
+    if (badge) { badge.textContent = count||''; badge.classList.toggle('hidden', !count); }
   }
 };
+
+// ── SVG CHART HELPER ──
+function svgLine(data, color) {
+  if (!data || !data.length) return '<p style="color:var(--muted);font-size:12px;text-align:center;padding:20px;font-style:italic;">Sem dados ainda</p>';
+  const W=340,H=130,pL=44,pR=10,pT=12,pB=26;
+  const max=Math.max(...data.map(d=>d.v),1);
+  const cW=W-pL-pR,cH=H-pT-pB;
+  const xs=data.length>1?cW/(data.length-1):0;
+  const pts=data.map((d,i)=>`${pL+i*xs},${pT+cH-(d.v/max)*cH}`);
+  const id='g'+color.replace('#','');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;overflow:visible;">
+    <defs><linearGradient id="${id}" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity=".18"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+    ${[.25,.5,.75,1].map(f=>{const y=pT+cH-f*cH;return `<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="#E2D4C0" stroke-width="1"/><text x="${pL-4}" y="${y+3}" text-anchor="end" font-size="8" fill="#786C60">${Math.round(f*max).toLocaleString('pt-BR')}</text>`;}).join('')}
+    <path d="M${pL},${pT+cH} ${pts.map(p=>`L${p}`).join(' ')} L${pL+(data.length-1)*xs},${pT+cH} Z" fill="url(#${id})"/>
+    <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${pts.map((p,i)=>`<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="3" fill="${color}"/><text x="${p.split(',')[0]}" y="${H-4}" text-anchor="middle" font-size="8" fill="#786C60">${data[i].l}</text>`).join('')}
+  </svg>`;
+}
 
 // ═══════════════════════════════════════
 // CLIENT
@@ -1121,10 +2299,13 @@ const Client = {
     try {
       const [{ data }, { data: clientData }] = await Promise.all([
         db.from('posts').select('*').eq('client_email', App.user.email).order('created_at',{ascending:false}),
-        db.from('clients').select('instagram,foto_url,nome').eq('email', App.user.email).single()
+        db.from('clients').select('instagram,foto_url,nome,mensagem_gi,arquivos').eq('email', App.user.email).single()
       ]);
       this._igHandle = (clientData?.instagram || '').replace('@','');
       this._fotoUrl = clientData?.foto_url || '';
+      this._mensagemGi = clientData?.mensagem_gi || '';
+      this._arquivos = clientData?.arquivos || '[]';
+      await this.renderComecePorAqui();
       // Avatar no portal
       const av = document.getElementById('client-avatar');
       if (this._fotoUrl) {
@@ -1133,16 +2314,31 @@ const Client = {
         av.textContent = (clientData?.nome || App.user.email)[0].toUpperCase();
       }
       const posts = data || [];
-      document.getElementById('cs-total').textContent = posts.length;
+      // Stats — linha do tempo
+      const now = new Date();
+      const m = now.getMonth(), y = now.getFullYear();
+      const lastM = m === 0 ? 11 : m - 1, lastY = m === 0 ? y - 1 : y;
+      const thisMes = posts.filter(p => { const d=new Date(p.created_at); return d.getMonth()===m && d.getFullYear()===y; }).length;
+      const antMes  = posts.filter(p => { const d=new Date(p.created_at); return d.getMonth()===lastM && d.getFullYear()===lastY; }).length;
+      const growth = antMes > 0 ? Math.round((thisMes-antMes)/antMes*100) : (thisMes > 0 ? 100 : 0);
       document.getElementById('cs-rev').textContent = posts.filter(p=>p.status==='revisao').length;
+      document.getElementById('cs-mes').textContent = thisMes;
+      document.getElementById('cs-ant').textContent = antMes;
       document.getElementById('cs-pub').textContent = posts.filter(p=>p.status==='publicado').length;
+      document.getElementById('cs-growth').textContent = (growth >= 0 ? '+' : '') + growth + '%';
+      document.getElementById('cs-growth').style.color = growth >= 0 ? '#2E7D32' : '#C62828';
       this.render(posts);
+      this.checkChatBadge();
+      Admin.refreshChatBadge();
     } finally { App.loader(false); }
   },
 
   _posts: [],
   _igHandle: '',
   _fotoUrl: '',
+  _mensagemGi: '',
+  _arquivos: '[]',
+  _ajusteId: null,
 
   parseImgs(raw) {
     if (!raw) return [];
@@ -1150,6 +2346,13 @@ const Client = {
     catch { return [raw]; }
   },
 
+  async excluirPost(id) {
+    if (!confirm('Excluir este post?')) return;
+    App.loader(true);
+    await db.from('posts').delete().eq('id',id);
+    App.loader(false);
+    await this.load();
+  },
   carNav(id, dir) {
     const car = document.getElementById('car-' + id);
     const slides = car.querySelectorAll('.car-slide');
@@ -1278,9 +2481,15 @@ const Client = {
 
   render(posts) {
     this._posts = posts;
+    this.renderProgress(posts);
+    this.renderCalendar(posts);
+    this.renderNextPost(posts);
+    this.renderGiMessage();
+    this.renderFiles();
     const c = document.getElementById('client-posts');
     if (!posts.length) {
       c.innerHTML = `<p style="color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:18px;grid-column:1/-1;">Nenhum post encontrado ✦</p>`;
+      this.renderInlineFeed();
       return;
     }
     const labels = {revisao:'Em Revisão',aprovado:'Aprovado',publicado:'Publicado',criacao:'Em Criação'};
@@ -1290,7 +2499,7 @@ const Client = {
       if (imgs.length === 0) {
         mediaBlock = `<div class="cp-ph">✦</div>`;
       } else if (imgs.length === 1) {
-        mediaBlock = `<img src="${imgs[0]}" class="car-slide" alt="" data-lightbox="${imgs[0]}"/>`;
+        mediaBlock = `<img src="${imgs[0]}" class="car-slide" alt="" data-lightbox="${imgs[0]}" style="aspect-ratio:1/1;object-fit:cover;width:100%;display:block;cursor:zoom-in;"/>`;
       } else {
         const slides = imgs.map((u,i) => `<img src="${u}" class="car-slide" alt="" data-lightbox="${u}" style="${i>0?'display:none':''}"/>`).join('');
         const dots = imgs.map((_,i) => `<span class="car-dot${i===0?' active':''}"></span>`).join('');
@@ -1301,10 +2510,10 @@ const Client = {
           <div class="car-dots">${dots}</div>
         </div>`;
       }
-      const date = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '';
+      const date = p.data_post ? new Date(p.data_post+'T12:00:00').toLocaleDateString('pt-BR') : (p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '');
       let actions = '';
       if (p.status === 'revisao') {
-        actions = `<button class="cp-btn-ok" onclick="Client.changeStatus(${p.id},'aprovado')">✓ Aprovar este post</button><button class="cp-btn-adj" onclick="Client.changeStatus(${p.id},'criacao')">← Solicitar ajuste</button>`;
+        actions = `<button class="cp-btn-ok" onclick="Client.abrirAprovacao(${p.id})">✓ Aprovar este post</button><button class="cp-btn-adj" onclick="Client.solicitarAjuste(${p.id})">← Solicitar ajuste</button>`;
       } else if (p.status === 'aprovado') {
         actions = `<div class="status-msg msg-ap">✓ Aprovado — aguardando publicação</div>`;
       } else if (p.status === 'publicado') {
@@ -1314,17 +2523,149 @@ const Client = {
       }
       return `<div class="cp-card">
         ${mediaBlock}
-        <div class="cp-body">
+        <div class="cp-body" style="padding:10px;">
           <div class="cp-top">
-            <div><div class="cp-title">${(p.legenda||'Post').substring(0,35)}...</div><div class="cp-date">${date} · ${p.tipo||'Feed'}</div></div>
+            <div><div class="cp-title" style="font-size:13px;">${(p.legenda||'Post').substring(0,30)}...</div><div class="cp-date">${date} · ${p.tipo||'Feed'}</div></div>
             <span class="badge badge-${p.status}">${labels[p.status]||p.status}</span>
           </div>
-          <p class="cp-desc">${p.legenda||'—'}</p>
-          <div class="cp-actions">${actions}</div>
+          <div class="cp-actions" style="padding-top:8px;">${actions}</div>
+          <button onclick="Client.excluirPost(${p.id})" style="margin-top:8px;width:100%;padding:7px;border-radius:8px;border:1px solid #FFCDD2;background:#FFEBEE;font-size:11px;cursor:pointer;color:#C62828;">🗑 Excluir post</button>
         </div>
       </div>`;
     }).join('');
     this.renderInlineFeed();
+  },
+
+  renderProgress(posts) {
+    const el = document.getElementById('client-progress');
+    if (!el) return;
+    const now = new Date();
+    const m = now.getMonth(), y = now.getFullYear();
+    const monthPosts = posts.filter(p => { const d=new Date(p.created_at); return d.getMonth()===m && d.getFullYear()===y; });
+    const approved = monthPosts.filter(p => p.status==='aprovado' || p.status==='publicado').length;
+    const total = monthPosts.length;
+    const pct = total ? Math.round(approved/total*100) : 0;
+    el.innerHTML = `
+      <div class="progress-label">
+        <span>${approved} de ${total} posts aprovados este mês</span>
+        <span style="color:var(--brown);font-weight:500;">${pct}%</span>
+      </div>
+      <div class="progress-fill"><div class="progress-bar-inner" style="width:${pct}%"></div></div>`;
+  },
+
+  renderCalendar(posts) {
+    const el = document.getElementById('client-calendar');
+    if (!el) return;
+    const now = new Date();
+    const year = now.getFullYear(), month = now.getMonth();
+    const scheduled = {};
+    posts.forEach(p => {
+      if (p.data_post) {
+        const d = p.data_post.substring(0,10);
+        if (!scheduled[d]) scheduled[d] = [];
+        scheduled[d].push(p);
+      }
+    });
+    const today = now.toISOString().substring(0,10);
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const monthName = now.toLocaleString('pt-BR',{month:'long',year:'numeric'});
+    const dlbls = ['D','S','T','Q','Q','S','S'].map(d=>`<div class="cal-dlbl">${d}</div>`).join('');
+    let cells = '';
+    for (let i=0; i<firstDay; i++) cells += `<div class="cal-day empty"></div>`;
+    for (let d=1; d<=daysInMonth; d++) {
+      const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const hp = scheduled[ds];
+      const cls = `cal-day${hp?' has-post':''}${ds===today?' today':''}`;
+      const dot = hp ? `<span class="cal-dot"></span>` : '';
+      const onclick = hp ? `onclick="Client.calDay('${ds}')"` : '';
+      cells += `<div class="${cls}" ${onclick}>${d}${dot}</div>`;
+    }
+    el.innerHTML = `
+      <div class="cal-hd"><div class="cal-title">${monthName.charAt(0).toUpperCase()+monthName.slice(1)}</div></div>
+      <div class="cal-grid">${dlbls}${cells}</div>`;
+  },
+
+  calDay(dateStr) {
+    const posts = this._posts.filter(p => p.data_post && p.data_post.substring(0,10)===dateStr);
+    const el = document.getElementById('cal-info');
+    if (!el) return;
+    if (!posts.length) { el.style.display='none'; return; }
+    const fmt = new Date(dateStr+'T12:00:00').toLocaleDateString('pt-BR',{day:'numeric',month:'long'});
+    el.style.display = 'block';
+    el.innerHTML = `<div style="font-size:10px;color:var(--copper);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Posts em ${fmt}</div>` +
+      posts.map(p => {
+        const imgs = this.parseImgs(p.img_url);
+        const th = imgs[0] ? `<img src="${imgs[0]}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0;"/>` : `<div style="width:36px;height:36px;background:var(--beige);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--copper);">✦</div>`;
+        return `<div class="cal-info-item">${th}<div><div style="font-size:11px;color:var(--text);">${(p.legenda||'Post').substring(0,45)}...</div><div style="font-size:10px;color:var(--muted);">${p.tipo||'Feed'}</div></div></div>`;
+      }).join('');
+  },
+
+  renderNextPost(posts) {
+    const el = document.getElementById('client-next-post');
+    if (!el) return;
+    const today = new Date().toISOString().substring(0,10);
+    const upcoming = posts.filter(p => p.data_post && p.data_post >= today && p.status !== 'publicado')
+      .sort((a,b) => a.data_post.localeCompare(b.data_post))[0];
+    if (!upcoming) { el.classList.add('hidden'); return; }
+    const daysUntil = Math.max(0, Math.ceil((new Date(upcoming.data_post+'T12:00:00') - new Date()) / (1000*60*60*24)));
+    const imgs = this.parseImgs(upcoming.img_url);
+    el.classList.remove('hidden');
+    el.innerHTML = `
+      <div class="next-post-lbl">Próximo post</div>
+      ${imgs[0] ? `<img src="${imgs[0]}" class="next-post-img" alt=""/>` : `<div style="height:100px;background:var(--beige);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--copper);">✦</div>`}
+      <div class="next-post-body">
+        <div class="next-post-days">${daysUntil === 0 ? 'Hoje' : daysUntil}</div>
+        <div class="next-post-sub">${daysUntil === 0 ? 'vai ao ar hoje!' : `dia${daysUntil!==1?'s':''} para o próximo post`}</div>
+        <div class="next-post-cap">${upcoming.legenda||''}</div>
+      </div>`;
+  },
+
+  renderGiMessage() {
+    const el = document.getElementById('client-gi-msg');
+    if (!el || !this._mensagemGi) { el?.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    el.innerHTML = `
+      <div class="gi-msg-lbl">Mensagem da Gi</div>
+      <div class="gi-msg-text">"${this._mensagemGi}"</div>
+      <div class="gi-msg-sig">— Gislaine Barbeto · Marketing Primor</div>`;
+  },
+
+  renderFiles() {
+    const el = document.getElementById('client-files');
+    if (!el) return;
+    let arquivos = [];
+    try { arquivos = JSON.parse(this._arquivos || '[]'); } catch {}
+    if (!arquivos.length) { el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    el.innerHTML = `<div class="files-lbl">Seus arquivos</div>` +
+      arquivos.map(f => `<a href="${f.url}" target="_blank" class="file-item">
+        <span style="font-size:16px;">${f.icon||'📄'}</span>
+        <span class="file-name">${f.nome}</span>
+        <span style="font-size:12px;color:var(--muted);">↗</span>
+      </a>`).join('');
+  },
+
+  solicitarAjuste(id) {
+    this._ajusteId = id;
+    document.getElementById('ajuste-text').value = '';
+    document.getElementById('modal-ajuste').classList.remove('hidden');
+  },
+
+  fecharAjuste() {
+    document.getElementById('modal-ajuste').classList.add('hidden');
+  },
+
+  async confirmarAjuste() {
+    const id = this._ajusteId;
+    const text = document.getElementById('ajuste-text').value.trim();
+    if (!text) { document.getElementById('ajuste-text').focus(); return; }
+    App.loader(true);
+    try {
+      await db.from('posts').update({ status: 'criacao', obs: text }).eq('id', id);
+      this.fecharAjuste();
+      await this.load();
+    } catch(e) { alert('Erro: '+e.message); App.loader(false); }
   },
 
   _lbUrls: [],
@@ -1359,12 +2700,395 @@ const Client = {
       await db.from('posts').update({status}).eq('id',id);
       await this.load();
     } catch(e) { alert('Erro: '+e.message); App.loader(false); }
+  },
+
+  // ── STARS ──
+  _starsId: null,
+  _starsVal: 0,
+  abrirAprovacao(id) {
+    this._starsId = id;
+    this._starsVal = 0;
+    document.getElementById('stars-comentario').value = '';
+    document.querySelectorAll('.star-btn').forEach(s => s.classList.remove('on'));
+    document.getElementById('modal-stars').classList.remove('hidden');
+  },
+  setStar(v) {
+    this._starsVal = v;
+    document.querySelectorAll('.star-btn').forEach((s,i) => s.classList.toggle('on', i < v));
+  },
+  fecharStars() { document.getElementById('modal-stars').classList.add('hidden'); },
+  async confirmarAprovacao() {
+    const id = this._starsId;
+    const comentario = document.getElementById('stars-comentario').value.trim();
+    App.loader(true);
+    try {
+      await db.from('posts').update({status:'aprovado', avaliacao:this._starsVal||null, comentario:comentario||null}).eq('id',id);
+      this.fecharStars();
+      await this.load();
+    } catch(e) { alert('Erro: '+e.message); App.loader(false); }
+  },
+
+  // ── CLIENT TABS ──
+  _activeTab: 'posts',
+  clientTab(name) {
+    this._activeTab = name;
+    ['posts','onboarding','financeiro','metricas','arquivos','ideias','info','solicitacoes','chat'].forEach(t => {
+      document.getElementById('ctab-'+t)?.classList.toggle('active', t===name);
+      const c = document.getElementById('ctab-content-'+t);
+      if (c) c.classList.toggle('hidden', t!==name);
+    });
+    if (name==='onboarding')    this.renderOnboardingTab();
+    if (name==='financeiro')    this.renderFinanceiroTab();
+    if (name==='metricas')      this.renderMetricasTab();
+    if (name==='arquivos')      this.renderArquivosTab();
+    if (name==='ideias')        this.renderIdeiasTab();
+    if (name==='info')          this.renderInfoTab();
+    if (name==='solicitacoes')  this.renderSolicitacoesTab();
+    if (name==='chat')        this.renderChatTab();
+  },
+
+  async renderOnboardingTab() {
+    const el = document.getElementById('ctab-content-onboarding'); if (!el) return;
+    const { data } = await db.from('arquivos_cliente').select('*').eq('client_email','__global__').order('created_at',{ascending:true});
+    const list = data||[];
+    if (!list.length) {
+      el.innerHTML = `<div style="text-align:center;padding:60px 20px;"><div style="font-size:48px;margin-bottom:12px;">🌿</div><p style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--brown);">Material de onboarding em breve</p><p style="font-size:12px;color:var(--muted);margin-top:6px;">Aguarde — a Gi vai disponibilizar os documentos aqui.</p></div>`;
+      return;
+    }
+    el.innerHTML = `
+      <div style="margin-bottom:20px;">
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-style:italic;color:var(--brown);margin-bottom:6px;">Bem-vinda ao seu onboarding ✦</h2>
+        <p style="font-size:12px;color:var(--muted);">Aqui estão os documentos essenciais para o início da nossa parceria.</p>
+      </div>
+      ${list.map(f => {
+        const isPdf = f.nome.match(/\.pdf$/i);
+        const isImg = f.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i);
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px;box-shadow:var(--sh);">
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);">
+            <span style="font-size:22px;">${isPdf?'📄':isImg?'🖼️':'📎'}</span>
+            <div style="flex:1;"><div style="font-size:14px;font-style:italic;font-family:'Cormorant Garamond',serif;color:var(--brown);">${f.nome.replace(/\.[^.]+$/,'')}</div></div>
+            <a href="${f.url}" target="_blank" style="padding:7px 14px;border-radius:8px;background:var(--beige);color:var(--brown);font-size:11px;text-decoration:none;letter-spacing:.06em;text-transform:uppercase;">Abrir ↗</a>
+          </div>
+          ${isPdf ? `<iframe src="${f.url}" style="width:100%;height:500px;border:none;display:block;"></iframe>` : ''}
+          ${isImg ? `<img src="${f.url}" style="width:100%;display:block;"/>` : ''}
+        </div>`;
+      }).join('')}`;
+  },
+
+  async renderFinanceiroTab() {
+    const el = document.getElementById('ctab-content-financeiro'); if (!el) return;
+    el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Carregando...</p>';
+    try {
+      const { data, error } = await db.from('financeiro').select('*').eq('client_email', App.user.email).order('vencimento',{ascending:true});
+      if (error) throw error;
+      console.log('[financeiro] email:', App.user.email, '| registros:', (data||[]).length);
+      const list = data||[];
+      const total  = list.reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+      const pago   = list.filter(r=>r.status==='ppago').reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+      const pagoV  = list.filter(r=>r.status==='pago').reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+      const pendente = list.filter(r=>r.status==='pendente').reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+      const atrasado = list.filter(r=>r.status==='atrasado').reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+      el.innerHTML = `
+        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+          <div class="c-stat"><div class="c-stat-n" style="color:#2E7D32;">R$ ${pagoV.toFixed(2)}</div><div class="c-stat-l">Pago</div></div>
+          <div class="c-stat"><div class="c-stat-n" style="color:#E65100;">R$ ${pendente.toFixed(2)}</div><div class="c-stat-l">Pendente</div></div>
+          ${atrasado>0?`<div class="c-stat"><div class="c-stat-n" style="color:#C62828;">R$ ${atrasado.toFixed(2)}</div><div class="c-stat-l">Atrasado</div></div>`:''}
+        </div>
+        <div class="table-wrap">${
+          !list.length ? '<p style="padding:24px;color:var(--muted);text-align:center;font-style:italic;">Nenhum lançamento registrado ainda</p>' :
+          list.map(r => `<div class="fin-row">
+            <div class="col-main">
+              <div class="col-name">${r.servico}</div>
+              <div class="col-sub">${r.vencimento ? 'Vence em '+new Date(r.vencimento+'T12:00:00').toLocaleDateString('pt-BR') : ''}${r.obs?' · '+r.obs:''}</div>
+            </div>
+            <div style="font-size:14px;font-weight:500;color:var(--text);">R$ ${parseFloat(r.valor||0).toFixed(2)}</div>
+            <span class="fin-${r.status}">${r.status==='pago'?'✓ Pago':r.status==='atrasado'?'⚠ Atrasado':'● Pendente'}</span>
+          </div>`).join('')
+        }</div>`;
+    } catch(e) {
+      el.innerHTML = `<p style="color:#C62828;text-align:center;padding:40px;font-style:italic;">Erro: ${e.message}</p>`;
+    }
+  },
+
+  async renderMetricasTab() {
+    const el = document.getElementById('ctab-content-metricas'); if (!el) return;
+    el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;font-style:italic;">Carregando...</p>';
+    const [{ data: mets }, { data: posts }] = await Promise.all([
+      db.from('metricas').select('*').eq('client_email', App.user.email).order('mes',{ascending:true}),
+      db.from('posts').select('id,legenda,img_url').eq('client_email', App.user.email)
+    ]);
+    const list = mets||[], pList = posts||[];
+    if (!list.length) { el.innerHTML='<p style="color:var(--muted);font-size:14px;text-align:center;padding:40px;font-style:italic;font-family:Cormorant Garamond,serif;">Métricas ainda não disponíveis ✦</p>'; return; }
+    const last = list[list.length-1];
+    const prev = list[list.length-2];
+    const delta = (cur,ant) => ant>0 ? `<span style="color:${cur>=ant?'#2E7D32':'#C62828'};font-size:11px;">${cur>=ant?'↑':'↓'}${Math.abs(Math.round((cur-ant)/ant*100))}%</span>` : '';
+    const parseFirst = raw => { try { const a=JSON.parse(raw); return Array.isArray(a)?a[0]:raw; } catch{return raw;} };
+    let tops=[]; try { tops=JSON.parse(last.top_posts||'[]'); } catch{}
+    const topHtml = tops.map((pid,i)=>{
+      const p=pList.find(x=>String(x.id)===String(pid));
+      return p ? `<div class="top-post-item">${parseFirst(p.img_url)?`<img src="${parseFirst(p.img_url)}" class="top-post-thumb"/>`:`<div style="aspect-ratio:1/1;background:var(--beige);display:flex;align-items:center;justify-content:center;color:var(--copper);">✦</div>`}<div style="font-size:14px;padding:4px;">${['🥇','🥈','🥉'][i]}</div><div style="font-size:10px;color:var(--muted);padding:0 6px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(p.legenda||'').substring(0,20)}</div></div>` : '';
+    }).join('');
+    el.innerHTML = `
+      <div class="met-grid">
+        <div class="met-card"><div class="met-n">${(last.seguidores||0).toLocaleString('pt-BR')}</div><div class="met-l">Seguidores</div>${prev?delta(last.seguidores,prev.seguidores):''}</div>
+        <div class="met-card"><div class="met-n">${(last.alcance||0).toLocaleString('pt-BR')}</div><div class="met-l">Alcance</div>${prev?delta(last.alcance,prev.alcance):''}</div>
+        <div class="met-card"><div class="met-n">${(last.engajamento||0).toFixed(1)}%</div><div class="met-l">Engajamento</div>${prev?delta(last.engajamento,prev.engajamento):''}</div>
+        <div class="met-card"><div class="met-n">${(last.impressoes||0).toLocaleString('pt-BR')}</div><div class="met-l">Impressões</div>${prev?delta(last.impressoes,prev.impressoes):''}</div>
+      </div>
+      <div class="chart-wrap"><div class="chart-title">Crescimento de Seguidores</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.seguidores})),'#C4967A')}</div>
+      <div class="chart-wrap"><div class="chart-title">Alcance por Mês</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.alcance})),'#4B2D22')}</div>
+      <div class="chart-wrap"><div class="chart-title">Impressões</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.impressoes})),'#6B3E28')}</div>
+      ${topHtml ? `<div class="chart-wrap"><div class="chart-title">Top Posts do Mês</div><div class="top-post-grid">${topHtml}</div></div>` : ''}`;
+  },
+
+  async renderArquivosTab() {
+    const el = document.getElementById('ctab-content-arquivos'); if (!el) return;
+    el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Carregando...</p>';
+    const { data } = await db.from('arquivos_cliente').select('*').eq('client_email',App.user.email).order('created_at',{ascending:false});
+    const list = data||[];
+    el.innerHTML = `
+      <div style="margin-bottom:16px;">
+        <label style="display:flex;flex-direction:column;align-items:center;padding:20px;border:2px dashed var(--border);border-radius:var(--r);cursor:pointer;background:var(--surface);transition:all .2s;" onmouseover="this.style.borderColor='var(--copper)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:28px;margin-bottom:6px;">📁</span>
+          <span style="font-size:12px;color:var(--muted);">Clique para subir arquivos</span>
+          <input type="file" multiple style="display:none" onchange="Client.uploadArquivo(this)"/>
+        </label>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:10px;">
+          <input id="cl-link-nome" type="text" placeholder="Nome do link" style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;"/>
+          <input id="cl-link-url" type="url" placeholder="https://..." style="flex:2;padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;"/>
+          <button onclick="Client.adicionarLink()" style="padding:10px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;white-space:nowrap;">+ Link</button>
+        </div>
+      </div>
+      <div class="table-wrap">${
+        !list.length ? '<p style="padding:20px;color:var(--muted);text-align:center;font-style:italic;">Nenhum arquivo ainda</p>' :
+        list.map(f=>`<div class="arq-item">
+          <span style="font-size:18px;">${f.nome.match(/\.(pdf)$/i)?'📄':f.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i)?'🖼️':'📎'}</span>
+          <a href="${f.url}" target="_blank" class="arq-name" style="color:var(--text);text-decoration:none;">${f.nome}</a>
+          <span class="arq-tag">${f.uploader==='client'?'Você':'Gi'}</span>
+          <span style="font-size:10px;color:var(--muted);">${new Date(f.created_at).toLocaleDateString('pt-BR')}</span>
+        </div>`).join('')
+      }</div>`;
+  },
+  async uploadArquivo(input) {
+    const files = [...input.files]; if (!files.length) return;
+    App.loader(true);
+    try {
+      for (const file of files) {
+        const safeName = file.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_');
+        const path = `arquivos/${Date.now()}-${safeName}`;
+        const { error } = await db.storage.from('posts-media').upload(path, file, {cacheControl:'3600',upsert:false});
+        if (error) throw error;
+        const { data: urlData } = db.storage.from('posts-media').getPublicUrl(path);
+        await db.from('arquivos_cliente').insert([{client_email:App.user.email,nome:file.name,url:urlData.publicUrl,uploader:'client'}]);
+      }
+      await this.renderArquivosTab();
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { App.loader(false); }
+  },
+  async adicionarLink() {
+    const nome = document.getElementById('cl-link-nome').value.trim();
+    const url  = document.getElementById('cl-link-url').value.trim();
+    if (!nome) { alert('Informe um nome para o link.'); return; }
+    if (!url)  { alert('Cole o link primeiro.'); return; }
+    App.loader(true);
+    try {
+      const { error } = await db.from('arquivos_cliente').insert([{client_email:App.user.email,nome,url,uploader:'client'}]);
+      if (error) throw error;
+      document.getElementById('cl-link-nome').value = '';
+      document.getElementById('cl-link-url').value  = '';
+      await this.renderArquivosTab();
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { App.loader(false); }
+  },
+
+  async renderComecePorAqui() {
+    const el = document.getElementById('comece-por-aqui');
+    if (!el) return;
+    const { data } = await db.from('arquivos_cliente').select('*').eq('client_email','__comece__').order('created_at',{ascending:true});
+    const rows = data || [];
+    const cfg = {};
+    const files = [];
+    for (const r of rows) {
+      if (['__video__','__titulo__','__desc__'].includes(r.nome)) cfg[r.nome] = r.url;
+      else files.push(r);
+    }
+    const video = cfg['__video__'] || '';
+    const titulo = cfg['__titulo__'] || '';
+    const desc = cfg['__desc__'] || '';
+    if (!video && !titulo && !desc && !files.length) { el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    const toEmbed = url => {
+      const m = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+      return m ? `https://www.youtube-nocookie.com/embed/${m[1]}?rel=0` : url;
+    };
+    el.innerHTML = `<div class="cpa-card">
+      <div class="cpa-header" onclick="const b=this.nextElementSibling;b.classList.toggle('hidden');this.querySelector('.cpa-chev').style.transform=b.classList.contains('hidden')?'rotate(-90deg)':'';">
+        <span class="cpa-title">✦ Comece por aqui</span>
+        <span class="cpa-chev">▾</span>
+      </div>
+      <div class="cpa-body">
+        ${video ? `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;${titulo||desc||files.length?'margin-bottom:16px;':''}">
+          <iframe src="${toEmbed(video)}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe>
+        </div>` : ''}
+        ${titulo||desc ? `<div${files.length?' style="margin-bottom:16px;"':''}>
+          ${titulo ? `<div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--brown);margin-bottom:6px;">${titulo}</div>` : ''}
+          ${desc ? `<p style="font-size:13px;color:var(--muted);line-height:1.7;white-space:pre-wrap;margin:0;">${desc}</p>` : ''}
+        </div>` : ''}
+        ${files.length ? `<div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Arquivos</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">${files.map(f=>`<a href="${f.url}" target="_blank" class="file-item">📄 ${f.nome}</a>`).join('')}</div>
+        </div>` : ''}
+      </div>
+    </div>`;
+  },
+
+  async renderInfoTab() {
+    const el = document.getElementById('ctab-content-info'); if (!el) return;
+    el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Carregando...</p>';
+    const { data } = await db.from('informacoes_cliente').select('*').eq('client_email',App.user.email).order('created_at',{ascending:true});
+    const icons = {login:'🔑',contrato:'📜',briefing:'📋',visual:'🎨',contato:'📞',outro:'📌'};
+    const list = data||[];
+    if (!list.length) { el.innerHTML='<p style="color:var(--muted);font-style:italic;text-align:center;padding:40px;font-family:Cormorant Garamond,serif;font-size:18px;">Nenhuma informação disponível ainda ✦</p>'; return; }
+    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px;">${list.map(i=>`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span style="font-size:20px;">${icons[i.tipo]||'📌'}</span>
+          <span style="font-size:14px;font-weight:500;color:var(--brown);">${i.titulo}</span>
+        </div>
+        <pre style="font-size:13px;color:var(--text);white-space:pre-wrap;word-break:break-word;margin:0;font-family:Poppins,sans-serif;line-height:1.7;">${i.conteudo||''}</pre>
+      </div>`).join('')}</div>`;
+  },
+
+  async renderSolicitacoesTab() {
+    const el = document.getElementById('ctab-content-solicitacoes'); if (!el) return;
+    el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Carregando...</p>';
+    const { data } = await db.from('solicitacoes').select('*').eq('client_email',App.user.email).order('prazo',{ascending:true});
+    const list = data||[];
+    // Update badge
+    const pending = list.filter(s=>s.status==='pendente').length;
+    const badge = document.getElementById('ctab-sol-badge');
+    if (badge) { badge.textContent = pending||''; badge.classList.toggle('hidden', !pending); }
+    if (!list.length) { el.innerHTML='<p style="color:var(--muted);font-style:italic;text-align:center;padding:40px;font-family:Cormorant Garamond,serif;font-size:18px;">Nenhuma solicitação no momento ✦</p>'; return; }
+    // Calendar
+    const today = new Date();
+    const year = today.getFullYear(), month = today.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const solDates = list.filter(s=>s.prazo).map(s=>s.prazo.slice(0,10));
+    const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    let calDays = '';
+    for (let i=0; i<firstDay; i++) calDays += `<div></div>`;
+    for (let d=1; d<=daysInMonth; d++) {
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const hasSol = solDates.includes(dateStr);
+      const isToday = d===today.getDate();
+      calDays += `<div style="aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;cursor:default;${hasSol?'background:var(--brown);color:#F5EDD8;font-weight:600;':''}${isToday&&!hasSol?'border:1px solid var(--copper);color:var(--copper);':''}">${d}</div>`;
+    }
+    const icons = {foto:'📷',video:'🎥',documento:'📄',feedback:'💬',aprovacao:'✅',outro:'📌'};
+    const todayStr = today.toISOString().slice(0,10);
+    el.innerHTML = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:500;color:var(--brown);margin-bottom:12px;text-align:center;">${monthNames[month]} ${year}</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;">
+          ${['D','S','T','Q','Q','S','S'].map(d=>`<div style="font-size:10px;color:var(--muted);padding-bottom:4px;">${d}</div>`).join('')}
+          ${calDays}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">${list.map(s=>{
+        const atrasado = s.prazo && s.prazo < todayStr && s.status==='pendente';
+        const prazoFmt = s.prazo ? new Date(s.prazo+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;${s.urgencia==='urgente'||atrasado?'border-color:#FFCDD2;':''}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:18px;">${icons[s.tipo]||'📌'}</span>
+              <div>
+                <div style="font-size:13px;font-weight:500;color:${s.urgencia==='urgente'||atrasado?'#C62828':'var(--brown)'};">${s.urgencia==='urgente'?'🔴 ':''}${s.titulo}</div>
+                <div style="font-size:11px;color:var(--muted);">Prazo: ${prazoFmt}${atrasado?' ⚠ Atrasado':''}</div>
+              </div>
+            </div>
+            <span style="font-size:10px;padding:3px 10px;border-radius:20px;background:${s.status==='concluido'?'#E8F5E9':'#FFF3E0'};color:${s.status==='concluido'?'#2E7D32':'#E65100'};">${s.status==='concluido'?'✓ Concluído':'● Pendente'}</span>
+          </div>
+          ${s.descricao?`<p style="font-size:12px;color:var(--muted);margin:4px 0 6px;">${s.descricao}</p>`:''}
+          ${s.resposta?`<div style="padding:8px 10px;background:rgba(196,150,122,.08);border-radius:8px;font-size:12px;color:var(--text);"><strong>Sua resposta:</strong> ${s.resposta}</div>`:''}
+          ${s.status==='pendente'?`<div style="margin-top:10px;display:flex;gap:6px;">
+            <input id="resp-${s.id}" type="text" placeholder="Deixe uma resposta ou observação..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);font-family:Poppins,sans-serif;"/>
+            <button onclick="Client.concluirSolicitacao('${s.id}')" style="padding:8px 14px;border-radius:8px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;cursor:pointer;white-space:nowrap;">Concluir →</button>
+          </div>`:''}
+        </div>`;
+      }).join('')}</div>`;
+  },
+  async concluirSolicitacao(id) {
+    const resposta = document.getElementById('resp-'+id)?.value.trim()||null;
+    App.loader(true);
+    await db.from('solicitacoes').update({status:'concluido',resposta}).eq('id',id);
+    App.loader(false);
+    await this.renderSolicitacoesTab();
+  },
+
+  async renderIdeiasTab() {
+    const el = document.getElementById('ctab-content-ideias'); if (!el) return;
+    el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Carregando...</p>';
+    const { data } = await db.from('ideias').select('*').eq('client_email',App.user.email).order('created_at',{ascending:false});
+    const list = data||[];
+    el.innerHTML = `
+      <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:var(--muted);">${list.length} ideia${list.length!==1?'s':''} no laboratório</span>
+        <button onclick="Client.abrirNovaIdeia()" style="padding:9px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Nova Ideia</button>
+      </div>
+      ${!list.length ? '<p style="color:var(--muted);font-size:14px;text-align:center;padding:40px;font-style:italic;font-family:Cormorant Garamond,serif;">O laboratório está vazio — adicione a primeira ideia! ✦</p>' :
+        list.map(i=>`<div class="idea-card">
+          <div class="idea-titulo">${i.titulo}</div>
+          <div class="idea-desc">${i.descricao||''}</div>
+          <div class="idea-meta">
+            <span class="idea-${i.status}">${i.status==='ideia'?'Ideia':i.status==='em_andamento'?'Em andamento':'✓ Implementado'}</span>
+            <span style="font-size:10px;color:var(--muted);">${i.autor==='client'?'Você':'Gi'} · ${new Date(i.created_at).toLocaleDateString('pt-BR')}</span>
+          </div>
+        </div>`).join('')}`;
+  },
+  abrirNovaIdeia() {
+    document.getElementById('mi-titulo').value='';
+    document.getElementById('mi-desc').value='';
+    document.getElementById('mi-status').value='ideia';
+    document.getElementById('mi-err').style.display='none';
+    document.getElementById('mi-btn').onclick = ()=>Client.salvarIdeia();
+    document.getElementById('modal-ideia').classList.remove('hidden');
+  },
+  async salvarIdeia() {
+    const titulo = document.getElementById('mi-titulo').value.trim();
+    if (!titulo) { document.getElementById('mi-err').style.display='block'; document.getElementById('mi-err').textContent='Informe o título.'; return; }
+    App.loader(true);
+    await db.from('ideias').insert([{client_email:App.user.email,autor:'client',titulo,descricao:document.getElementById('mi-desc').value.trim()||null,status:'ideia'}]);
+    document.getElementById('modal-ideia').classList.add('hidden');
+    await this.renderIdeiasTab();
+    App.loader(false);
+  },
+
+  async renderChatTab() {
+    const el = document.getElementById('ctab-content-chat'); if (!el) return;
+    // Mark as read (client reading admin messages)
+    await db.from('mensagens').update({lida:true}).eq('client_email',App.user.email).eq('de','admin').eq('lida',false);
+    const { data } = await db.from('mensagens').select('*').eq('client_email',App.user.email).order('created_at',{ascending:true});
+    Admin.renderMsgs('chat-msgs-client', data||[], 'client');
+    // Update badge
+    const badge = document.getElementById('ctab-chat-badge');
+    if (badge) { badge.classList.add('hidden'); }
+  },
+  async sendMsg() {
+    const text = document.getElementById('chat-input-client').value.trim(); if (!text) return;
+    document.getElementById('chat-input-client').value='';
+    await db.from('mensagens').insert([{client_email:App.user.email,de:'client',texto:text,lida:false}]);
+    await this.renderChatTab();
+  },
+  async checkChatBadge() {
+    const { count } = await db.from('mensagens').select('*',{count:'exact',head:true}).eq('client_email',App.user.email).eq('de','admin').eq('lida',false);
+    const badge = document.getElementById('ctab-chat-badge');
+    if (badge) { badge.textContent=count||''; badge.classList.toggle('hidden',!count); }
   }
 };
 
 document.addEventListener('DOMContentLoaded', () => App.init());
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { Client.closeLightbox(); Client.closePreview(); }
+  if (e.key === 'Escape') { Client.closeLightbox(); Client.closePreview(); Client.fecharAjuste(); Client.fecharStars(); }
 });
 document.addEventListener('click', e => {
   if (!e.target.dataset.lightbox) return;
@@ -1381,6 +3105,85 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight') Client.lbNav(1);
   if (e.key === 'ArrowLeft') Client.lbNav(-1);
 });</script>
+
+  <!-- MODAL AVALIAÇÃO ESTRELAS -->
+  <div id="modal-stars" class="stars-modal hidden">
+    <div class="stars-box">
+      <h3>Aprovar post</h3>
+      <p>Como você avalia este conteúdo?</p>
+      <div class="stars-row" id="stars-row">
+        <span class="star-btn" data-v="1" onclick="Client.setStar(1)">⭐</span>
+        <span class="star-btn" data-v="2" onclick="Client.setStar(2)">⭐</span>
+        <span class="star-btn" data-v="3" onclick="Client.setStar(3)">⭐</span>
+        <span class="star-btn" data-v="4" onclick="Client.setStar(4)">⭐</span>
+        <span class="star-btn" data-v="5" onclick="Client.setStar(5)">⭐</span>
+      </div>
+      <textarea id="stars-comentario" placeholder="Deixe um comentário opcional..." rows="2"></textarea>
+      <div style="display:flex;gap:10px;">
+        <button onclick="Client.confirmarAprovacao()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">✓ Confirmar aprovação</button>
+        <button onclick="Client.fecharStars()" style="padding:11px 16px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL FINANCEIRO (admin) -->
+  <div id="modal-fin" class="modal-bg hidden">
+    <div class="modal-box" style="max-width:440px;">
+      <h3>Lançamento Financeiro</h3>
+      <div class="modal-field"><label>Serviço / Descrição</label><input type="text" id="mf-servico" placeholder="Ex: Gestão de redes — Maio/2026"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="modal-field"><label>Valor (R$)</label><input type="number" id="mf-valor" placeholder="0.00" step="0.01"/></div>
+        <div class="modal-field"><label>Vencimento</label><input type="date" id="mf-vencimento"/></div>
+      </div>
+      <div class="modal-field"><label>Status</label>
+        <select id="mf-status" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
+          <option value="pendente">Pendente</option>
+          <option value="pago">Pago</option>
+          <option value="atrasado">Atrasado</option>
+        </select>
+      </div>
+      <div class="modal-field"><label>Observação (opcional)</label><input type="text" id="mf-obs" placeholder="Ex: Pago via Pix"/></div>
+      <div class="modal-err" id="mf-err"></div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="Admin.salvarFinanceiro()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Salvar →</button>
+        <button onclick="Admin.fecharModalFin()" style="padding:11px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NOVA IDEIA -->
+  <div id="modal-ideia" class="modal-bg hidden">
+    <div class="modal-box" style="max-width:440px;">
+      <h3>Nova Ideia</h3>
+      <div class="modal-field"><label>Título</label><input type="text" id="mi-titulo" placeholder="Nome da ideia"/></div>
+      <div class="modal-field"><label>Descrição</label><textarea id="mi-desc" rows="4" placeholder="Descreva a ideia..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;font-family:Poppins,sans-serif;font-weight:300;line-height:1.65;"></textarea></div>
+      <div class="modal-field"><label>Status</label>
+        <select id="mi-status" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
+          <option value="ideia">Ideia</option>
+          <option value="em_andamento">Em andamento</option>
+          <option value="implementado">Implementado</option>
+        </select>
+      </div>
+      <div class="modal-err" id="mi-err"></div>
+      <div style="display:flex;gap:10px;">
+        <button id="mi-btn" onclick="Admin.salvarIdeia()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Salvar →</button>
+        <button onclick="Admin.fecharModalIdeia()" style="padding:11px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SOLICITAR AJUSTE -->
+  <div id="modal-ajuste" class="ajuste-modal hidden">
+    <div class="ajuste-box">
+      <h3>Solicitar ajuste</h3>
+      <p>Descreva o que você gostaria de ajustar neste post.</p>
+      <textarea id="ajuste-text" rows="4" placeholder="Ex: Mudar a cor do texto, ajustar a legenda para mencionar a promoção de maio..."></textarea>
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <button onclick="Client.confirmarAjuste()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Enviar pedido →</button>
+        <button onclick="Client.fecharAjuste()" style="padding:11px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;">Cancelar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- INSTAGRAM PREVIEW -->
   <div id="ig-preview" class="ig-modal-bg hidden" onclick="Client.closePreview()">
@@ -1539,5 +3342,50 @@ document.addEventListener('keydown', e => {
       </div>
     </div>
   </div>
+
+  <!-- Modal: Novo Formulário -->
+
+  <!-- Modal: Novo Lead -->
+  <div id="modal-new-lead" class="modal-bg hidden">
+    <div class="modal-box" style="max-width:480px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <span class="dp-title">Novo Lead</span>
+        <button onclick="Admin.fecharModalLead()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">×</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Nome *</div><input id="mnl-nome" type="text" placeholder="Nome completo" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/></div>
+        <div><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Empresa / Marca</div><input id="mnl-empresa" type="text" placeholder="Nome da marca" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">WhatsApp</div><input id="mnl-whatsapp" type="text" placeholder="(11) 99999-9999" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/></div>
+        <div><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">E-mail</div><input id="mnl-email" type="email" placeholder="email@exemplo.com" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Instagram</div><input id="mnl-instagram" type="text" placeholder="@perfil" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Serviço</div><input id="mnl-servico" type="text" placeholder="Ex: Gestão de redes" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/></div>
+        <div><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Origem</div>
+          <select id="mnl-origem" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
+            <option>Instagram</option><option>Indicação</option><option>WhatsApp</option><option>Site</option><option>Manual</option><option>Outro</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Estágio</div>
+          <select id="mnl-stage" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
+            <option value="novo">Novo</option><option value="contato">Contato</option><option value="proposta">Proposta</option><option value="fechado">Fechado</option>
+          </select>
+        </div>
+        <div><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Segmento</div><input id="mnl-segmento" type="text" placeholder="Ex: Moda, Saúde..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/></div>
+      </div>
+      <div style="margin-bottom:16px;"><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Observações</div><textarea id="mnl-obs" rows="2" placeholder="Notas sobre o lead..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:none;"></textarea></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="Admin.fecharModalLead()" style="flex:1;padding:11px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;">Cancelar</button>
+        <button onclick="Admin.salvarNovoLead()" style="flex:2;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;cursor:pointer;">Salvar lead →</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
