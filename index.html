@@ -553,6 +553,10 @@
       .client-tabs{overflow-x:auto;scrollbar-width:none;}
       .client-tabs::-webkit-scrollbar{display:none;}
       .client-tab{white-space:nowrap;}
+      /* Cliente main mobile */
+      .client-main{padding:16px!important;max-width:100%!important;}
+      #client-view{width:100%;overflow-x:hidden;}
+      .client-main>*{max-width:100%;box-sizing:border-box;}
     }
   </style>
 </head>
@@ -2615,10 +2619,11 @@ const Admin = {
     const client_email = document.getElementById('mp-cliente')?.value || null;
     this.loader(true);
     try {
-      let err;
-      if (id) { const r = await db.from('projetos').update({nome,cor,client_email}).eq('id',id); err = r.error; }
-      else     { const r = await db.from('projetos').insert([{nome,cor,client_email}]);             err = r.error; }
+      let err, rows;
+      if (id) { const r = await db.from('projetos').update({nome,cor,client_email}).eq('id',id).select(); err = r.error; rows = r.data; }
+      else     { const r = await db.from('projetos').insert([{nome,cor,client_email}]).select();             err = r.error; rows = r.data; }
       if (err) { alert('Erro ao salvar: '+err.message); return; }
+      if (!rows || rows.length===0) { alert('Nenhuma linha atualizada. Verifique as permissões da tabela projetos no Supabase (RLS).'); return; }
       document.getElementById('modal-proj')?.remove();
       document.getElementById('modal-projeto-detalhe')?.remove();
       await this.loadTarefas();
@@ -3025,6 +3030,8 @@ const Client = {
       this.render(posts);
       this.checkChatBadge();
       Admin.refreshChatBadge();
+      const savedTab = localStorage.getItem('clientTab') || 'posts';
+      if (savedTab !== 'posts') this.clientTab(savedTab);
     } finally { App.loader(false); }
   },
 
@@ -3427,6 +3434,7 @@ const Client = {
   _activeTab: 'posts',
   clientTab(name) {
     this._activeTab = name;
+    localStorage.setItem('clientTab', name);
     ['posts','onboarding','financeiro','metricas','arquivos','ideias','info','solicitacoes','tarefas','chat'].forEach(t => {
       document.getElementById('ctab-'+t)?.classList.toggle('active', t===name);
       const c = document.getElementById('ctab-content-'+t);
@@ -3843,10 +3851,10 @@ const Theme = {
     this.apply(mode);
   },
   init() {
-    const saved = localStorage.getItem('theme') || 'auto';
+    const saved = localStorage.getItem('theme') || 'light';
     this.apply(saved);
     this._mq.addEventListener('change', () => {
-      if ((localStorage.getItem('theme') || 'auto') === 'auto') this.apply('auto');
+      if ((localStorage.getItem('theme') || 'light') === 'auto') this.apply('auto');
     });
   }
 };
