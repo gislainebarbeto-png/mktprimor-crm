@@ -335,9 +335,13 @@
     .task-modal-body{padding:20px 24px 28px;}
     .task-section{margin-bottom:20px;}
     .task-section-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-    .days-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
-    .day-btn{padding:8px 4px;border-radius:8px;border:1px solid var(--border);background:var(--bg);font-size:11px;cursor:pointer;text-align:center;transition:all .15s;}
-    .day-btn.active{background:var(--brown);color:#F5EDD8;border-color:var(--brown);}
+    .days-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;}
+    .days-grid-row2{display:grid;grid-template-columns:1fr 1fr 2fr;gap:5px;margin-top:5px;}
+    .day-col{border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+    .day-col-head{background:var(--beige);padding:5px 4px;text-align:center;font-size:10px;font-weight:500;letter-spacing:.07em;color:var(--brown);text-transform:uppercase;}
+    .day-col-head.dark{background:var(--brown);color:#F5EDD8;}
+    .day-col textarea{width:100%;min-height:80px;border:none;padding:6px 8px;font-size:12px;resize:none;background:var(--bg);font-family:Poppins,sans-serif;line-height:1.5;box-sizing:border-box;}
+    .day-col textarea:focus{outline:none;background:#fffdf9;}
     /* Checklist */
     .chk-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
     .chk-item:last-child{border-bottom:none;}
@@ -2667,11 +2671,20 @@ const Admin = {
 
   async abrirTarefa(tarefaId, projetoId) {
     document.getElementById('modal-projeto-detalhe')?.remove();
-    let t = {titulo:'',status:'pendente',prazo:'',horario:'',dias_semana:[],anotacoes:'',links:''};
+    let t = {titulo:'',status:'pendente',prazo:'',horario:'',dias_semana:{},anotacoes:'',links:''};
     if (tarefaId) { const {data} = await db.from('tarefas').select('*').eq('id',tarefaId).single(); t=data||t; }
     this._tarefaId = tarefaId;
     this._projetoId = projetoId;
-    try { this._tarefaDias = Array.isArray(t.dias_semana) ? t.dias_semana : JSON.parse(t.dias_semana||'[]'); } catch { this._tarefaDias=[]; }
+    let diasObj = {};
+    try {
+      const raw = t.dias_semana;
+      if (Array.isArray(raw)) raw.forEach(k => diasObj[k]='');
+      else if (typeof raw === 'object' && raw !== null) diasObj = raw;
+      else diasObj = JSON.parse(raw||'{}');
+    } catch { diasObj = {}; }
+    // load attachments
+    let anexos = [];
+    if (tarefaId) { const {data:ax} = await db.from('arquivos_cliente').select('*').eq('client_email','__tarefa_'+tarefaId).order('created_at'); anexos = ax||[]; }
     const dias = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
     const diasKeys = ['segunda','terca','quarta','quinta','sexta','sabado','domingo'];
     const overlay = document.createElement('div');
@@ -2704,17 +2717,31 @@ const Admin = {
         </div>
         <div class="task-section">
           <div class="task-section-lbl">✦ Planejamento da semana</div>
-          <div class="days-grid" id="days-grid">
-            ${diasKeys.map((k,i)=>`<button type="button" class="day-btn${this._tarefaDias.includes(k)?' active':''}" onclick="Admin.toggleDia('${k}',this)">${dias[i]}</button>`).join('')}
+          <div class="days-grid">
+            ${diasKeys.slice(0,5).map((k,i)=>`<div class="day-col"><div class="day-col-head">${dias[i]}</div><textarea id="dia-${k}" placeholder="...">${diasObj[k]||''}</textarea></div>`).join('')}
           </div>
-        </div>
-        <div class="task-section">
-          <div class="task-section-lbl">📝 Anotações gerais</div>
-          <textarea id="tf-anotacoes" rows="3" placeholder="Rascunhos, lembretes..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${t.anotacoes||''}</textarea>
+          <div class="days-grid-row2">
+            ${diasKeys.slice(5).map((k,i)=>`<div class="day-col"><div class="day-col-head">${dias[5+i]}</div><textarea id="dia-${k}" placeholder="...">${diasObj[k]||''}</textarea></div>`).join('')}
+            <div class="day-col"><div class="day-col-head dark">Anotações Gerais</div><textarea id="tf-anotacoes" placeholder="Rascunhos, lembretes...">${t.anotacoes||''}</textarea></div>
+          </div>
         </div>
         <div class="task-section">
           <div class="task-section-lbl">🔗 Links e referências</div>
           <textarea id="tf-links" rows="2" placeholder="Cole links ou anotações rápidas..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${t.links||''}</textarea>
+        </div>
+        <div class="task-section">
+          <div class="task-section-lbl">📎 Anexos e imagens</div>
+          ${tarefaId ? `
+            <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:13px;color:var(--muted);background:var(--bg);margin-bottom:8px;">
+              + Anexar fotos ou arquivos
+              <input type="file" multiple style="display:none" onchange="Admin.uploadAnexoTarefa(this,${tarefaId})"/>
+            </label>
+            <div id="anexos-list">${anexos.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;">
+              <span>${a.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i)?'🖼️':a.nome.match(/\.pdf$/i)?'📄':'📎'}</span>
+              <a href="${a.url}" target="_blank" style="flex:1;color:var(--text);text-decoration:none;">${a.nome}</a>
+              <button onclick="Admin.delAnexoTarefa(${a.id},${tarefaId})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;">×</button>
+            </div>`).join('')}</div>
+          ` : `<p style="font-size:12px;color:var(--muted);font-style:italic;padding:10px 0;">Salve a tarefa primeiro para adicionar anexos.</p>`}
         </div>
         <div style="display:flex;gap:8px;">
           <button onclick="Admin.salvarTarefa()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:13px;border:none;cursor:pointer;">Salvar</button>
@@ -2726,22 +2753,19 @@ const Admin = {
     overlay.addEventListener('click', e => { if(e.target===overlay){ overlay.remove(); this.abrirProjeto(projetoId); }});
   },
 
-  toggleDia(key, btn) {
-    if (this._tarefaDias.includes(key)) this._tarefaDias = this._tarefaDias.filter(d=>d!==key);
-    else this._tarefaDias.push(key);
-    btn.classList.toggle('active', this._tarefaDias.includes(key));
-  },
-
   async salvarTarefa() {
     const titulo = document.getElementById('tf-titulo')?.value.trim();
     if (!titulo) { alert('Informe o nome da tarefa.'); return; }
+    const diasKeys = ['segunda','terca','quarta','quinta','sexta','sabado','domingo'];
+    const diasObj = {};
+    diasKeys.forEach(k => { const v = document.getElementById('dia-'+k)?.value||''; if(v) diasObj[k]=v; });
     const payload = {
       projeto_id: this._projetoId,
       titulo,
       status: document.getElementById('tf-status')?.value || 'pendente',
       prazo: document.getElementById('tf-prazo')?.value || null,
       horario: document.getElementById('tf-horario')?.value || null,
-      dias_semana: this._tarefaDias,
+      dias_semana: diasObj,
       anotacoes: document.getElementById('tf-anotacoes')?.value.trim() || null,
       links: document.getElementById('tf-links')?.value.trim() || null,
     };
@@ -2764,6 +2788,41 @@ const Admin = {
     await this.loadTarefas();
     await this.abrirProjeto(this._projetoId);
     this.loader(false);
+  },
+
+  async uploadAnexoTarefa(input, tarefaId) {
+    const files = [...input.files]; if (!files.length) return;
+    this.loader(true);
+    try {
+      for (const file of files) {
+        const safe = file.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_');
+        const path = `tarefas/${Date.now()}-${safe}`;
+        const {error} = await db.storage.from('posts-media').upload(path,file,{cacheControl:'3600',upsert:false});
+        if (error) throw error;
+        const {data:u} = db.storage.from('posts-media').getPublicUrl(path);
+        await db.from('arquivos_cliente').insert([{client_email:'__tarefa_'+tarefaId,nome:file.name,url:u.publicUrl,uploader:'admin'}]);
+      }
+      // Reload attachment list in modal
+      const {data:ax} = await db.from('arquivos_cliente').select('*').eq('client_email','__tarefa_'+tarefaId).order('created_at');
+      const el = document.getElementById('anexos-list'); if (!el) return;
+      el.innerHTML = (ax||[]).map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;">
+        <span>${a.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i)?'🖼️':a.nome.match(/\.pdf$/i)?'📄':'📎'}</span>
+        <a href="${a.url}" target="_blank" style="flex:1;color:var(--text);text-decoration:none;">${a.nome}</a>
+        <button onclick="Admin.delAnexoTarefa(${a.id},${tarefaId})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;">×</button>
+      </div>`).join('');
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { this.loader(false); }
+  },
+
+  async delAnexoTarefa(anexoId, tarefaId) {
+    await db.from('arquivos_cliente').delete().eq('id',anexoId);
+    const {data:ax} = await db.from('arquivos_cliente').select('*').eq('client_email','__tarefa_'+tarefaId).order('created_at');
+    const el = document.getElementById('anexos-list'); if (!el) return;
+    el.innerHTML = (ax||[]).map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <span>${a.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i)?'🖼️':a.nome.match(/\.pdf$/i)?'📄':'📎'}</span>
+      <a href="${a.url}" target="_blank" style="flex:1;color:var(--text);text-decoration:none;">${a.nome}</a>
+      <button onclick="Admin.delAnexoTarefa(${a.id},${tarefaId})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;">×</button>
+    </div>`).join('');
   },
 
   async loadChecklist() {
@@ -3673,14 +3732,14 @@ const Client = {
       const tarefasHtml = pts.map(t => {
         const atrasada = t.status!=='concluido' && t.prazo && new Date(t.prazo+(t.horario?'T'+t.horario:''))<now;
         const diasNomes = {segunda:'Seg',terca:'Ter',quarta:'Qua',quinta:'Qui',sexta:'Sex',sabado:'Sáb',domingo:'Dom'};
-        let dias = []; try { dias = Array.isArray(t.dias_semana)?t.dias_semana:JSON.parse(t.dias_semana||'[]'); } catch{}
+        let dias = {}; try { const r=t.dias_semana; dias=Array.isArray(r)?Object.fromEntries(r.map(k=>[k,''])):(typeof r==='object'&&r?r:JSON.parse(r||'{}')); } catch{}
         return `<div style="padding:12px;border-radius:10px;background:${atrasada?'#FFEBEE':'var(--bg)'};border:1px solid ${atrasada?'#EF9A9A':'var(--border)'};margin-bottom:8px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
             <span class="pbadge ${atrasada?'atrasado':t.status}">${atrasada?'⚠ ATRASADO':statusLabel[t.status]||t.status}</span>
             <span style="font-size:14px;font-weight:500;">${t.titulo}</span>
           </div>
           ${t.prazo?`<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">📅 ${new Date(t.prazo+'T12:00').toLocaleDateString('pt-BR')}${t.horario?' às '+t.horario:''}</div>`:''}
-          ${dias.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;">${dias.map(d=>`<span style="font-size:10px;background:var(--beige);color:var(--brown);padding:2px 7px;border-radius:10px;">${diasNomes[d]||d}</span>`).join('')}</div>`:''}
+          ${Object.keys(dias).length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;">${Object.entries(dias).map(([d,n])=>`<span style="font-size:10px;background:var(--beige);color:var(--brown);padding:2px 7px;border-radius:10px;">${diasNomes[d]||d}${n?' · '+n:''}</span>`).join('')}</div>`:''}
           ${t.anotacoes?`<div style="font-size:12px;color:var(--muted);white-space:pre-wrap;margin-top:6px;">${t.anotacoes}</div>`:''}
           ${t.links?`<div style="font-size:12px;margin-top:6px;"><a href="${t.links}" target="_blank" style="color:var(--copper);">🔗 Ver link</a></div>`:''}
         </div>`;
