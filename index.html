@@ -2492,76 +2492,68 @@ const Admin = {
   // ── TAREFAS ──
   _tarefaId: null,
   _projetoId: null,
-  _tarefaDias: [],
+  _clientes: [],
 
   async renderTarefas() {
     const main = document.getElementById('admin-main');
+    if (!main) return;
     main.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <h2 class="section-title" style="margin:0;">Tarefas</h2>
-        <div style="display:flex;gap:8px;">
-          <button onclick="Admin.toggleChecklist()" id="btn-toggle-chk" style="padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface);font-size:12px;cursor:pointer;">☑ Checklist</button>
-          <button onclick="Admin.abrirModalProjeto()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">+ Novo Projeto</button>
-        </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 class="section-title" style="margin:0;">Projetos & Tarefas</h2>
+        <button onclick="Admin.abrirModalProjeto()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">+ Novo Projeto</button>
       </div>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:4px;">Projetos visíveis para todos. Checklist só para você e a equipe.</p>
-      <!-- Checklist -->
-      <div id="chk-section" class="hidden" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin:16px 0;">
-        <div style="font-size:12px;font-weight:500;color:var(--brown);margin-bottom:12px;">☑ Lista rápida</div>
-        <div id="chk-list"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;">
-          <input id="chk-input" type="text" placeholder="Nova tarefa..." onkeydown="if(event.key==='Enter')Admin.addCheckItem()" style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/>
-          <button onclick="Admin.addCheckItem()" style="padding:9px 16px;border-radius:9px;background:var(--brown);color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">+</button>
-        </div>
-      </div>
-      <!-- Cards -->
-      <div class="proj-grid" id="proj-grid"></div>`;
-    await this.loadTarefas();
-    await this.loadChecklist();
+      <div class="proj-grid" id="proj-grid"><p style="color:var(--muted);text-align:center;padding:40px;font-style:italic;">Carregando...</p></div>`;
+    await this.carregarProjetos();
   },
 
-  toggleChecklist() {
-    const s = document.getElementById('chk-section');
-    s.classList.toggle('hidden');
-    document.getElementById('btn-toggle-chk').style.background = s.classList.contains('hidden') ? 'var(--surface)' : 'var(--beige)';
-  },
-
-  async loadTarefas() {
-    const { data: clientes } = await db.from('clients').select('email,nome');
-    const { data: projetos } = await db.from('projetos').select('*').order('created_at',{ascending:false});
-    const { data: tarefas } = await db.from('tarefas').select('*');
-    const grid = document.getElementById('proj-grid'); if (!grid) return;
+  async carregarProjetos() {
+    const grid = document.getElementById('proj-grid');
+    if (!grid) return;
+    const [r1, r2, r3] = await Promise.all([
+      db.from('clients').select('email,nome').order('nome'),
+      db.from('projetos').select('*').order('created_at', {ascending: false}),
+      db.from('tarefas').select('id,projeto_id,titulo,status,prazo,client_email')
+    ]);
+    if (r2.error) {
+      grid.innerHTML = `<p style="color:#C62828;padding:20px;">Erro ao carregar projetos: ${r2.error.message}</p>`;
+      return;
+    }
+    this._clientes = r1.data || [];
     const cliMap = {};
-    (clientes||[]).forEach(c => cliMap[c.email] = c.nome);
+    this._clientes.forEach(c => { cliMap[c.email] = c.nome; });
+    const projetos = r2.data || [];
+    const tarefas = r3.data || [];
     const now = new Date();
-    const list = projetos||[];
-    if (!list.length) { grid.innerHTML = '<p style="color:var(--muted);font-style:italic;text-align:center;padding:40px;font-family:Cormorant Garamond,serif;font-size:18px;grid-column:1/-1;">Nenhum projeto ainda — clique em + Novo Projeto ✦</p>'; return; }
-    grid.innerHTML = list.map(p => {
-      const pts = (tarefas||[]).filter(t => t.projeto_id === p.id);
-      const atrasadas = pts.filter(t => t.status !== 'concluido' && t.prazo && new Date(t.prazo+(t.horario?'T'+t.horario:'')) < now);
-      const counts = {pendente:0,andamento:0,concluido:0,urgente:0};
-      pts.forEach(t => { if(counts[t.status]!==undefined) counts[t.status]++; });
+    if (!projetos.length) {
+      grid.innerHTML = '<p style="color:var(--muted);font-style:italic;text-align:center;padding:40px;font-family:Cormorant Garamond,serif;font-size:18px;grid-column:1/-1;">Nenhum projeto ainda — clique em + Novo Projeto ✦</p>';
+      return;
+    }
+    grid.innerHTML = projetos.map(p => {
+      const pts = tarefas.filter(t => t.projeto_id === p.id);
+      const atrasadas = pts.filter(t => t.status !== 'concluido' && t.prazo && new Date(t.prazo+'T12:00') < now);
+      const counts = {pendente:0, andamento:0, concluido:0, urgente:0};
+      pts.forEach(t => { if (counts[t.status] !== undefined) counts[t.status]++; });
       const badges = [
         atrasadas.length ? `<span class="pbadge atrasado">⚠ ${atrasadas.length} atrasada${atrasadas.length>1?'s':''}</span>` : '',
-        counts.urgente ? `<span class="pbadge urgente">🔴 ${counts.urgente} urgente${counts.urgente>1?'s':''}</span>` : '',
+        counts.urgente   ? `<span class="pbadge urgente">🔴 ${counts.urgente} urgente${counts.urgente>1?'s':''}</span>` : '',
         counts.andamento ? `<span class="pbadge andamento">${counts.andamento} em andamento</span>` : '',
-        counts.pendente ? `<span class="pbadge pendente">${counts.pendente} pendente${counts.pendente>1?'s':''}</span>` : '',
+        counts.pendente  ? `<span class="pbadge pendente">${counts.pendente} pendente${counts.pendente>1?'s':''}</span>` : '',
         counts.concluido ? `<span class="pbadge concluido">✓ ${counts.concluido}</span>` : '',
       ].filter(Boolean).join('');
       const coverStyle = p.capa_url
         ? `background-image:url('${p.capa_url}');background-size:cover;background-position:center ${p.capa_posicao||50}%;`
         : `background:${p.cor||'#E8E0F0'};`;
+      const cliNome = p.client_email && cliMap[p.client_email] ? cliMap[p.client_email] : '';
       return `<div class="proj-card${atrasadas.length?' atrasado-card':''}" onclick="Admin.abrirProjeto(${p.id})">
         <div class="proj-cover" style="${coverStyle}">
           <div class="proj-cover-pos" onclick="event.stopPropagation()">
             <label class="proj-cover-btn" title="Trocar foto">📷<input type="file" accept="image/*" style="display:none" onchange="Admin.uploadCapaProjeto(this,${p.id})"/></label>
             <button class="proj-cover-btn" onclick="Admin.escolherCorProjeto(${p.id})" title="Cor">🎨</button>
-            ${p.capa_url?`<button class="proj-cover-btn" onmousedown="Admin.iniciarReposicao(event,${p.id})" ontouchstart="Admin.iniciarReposicao(event,${p.id})" title="Reposicionar">↕ Reposicionar</button>`:''}
           </div>
         </div>
         <div class="proj-body">
           <div class="proj-nome">${p.nome}</div>
-          <div class="proj-cliente">${p.client_email&&cliMap[p.client_email]?'👤 '+cliMap[p.client_email]:p.client_email?'👤 '+p.client_email:'Sem cliente vinculado'}</div>
+          <div class="proj-cliente">${cliNome ? '👤 '+cliNome : '<span style="font-size:11px;color:var(--muted);">Sem cliente vinculado</span>'}</div>
           <div class="proj-badges">${badges||'<span style="font-size:11px;color:var(--muted);">Sem tarefas</span>'}</div>
         </div>
       </div>`;
@@ -2569,76 +2561,72 @@ const Admin = {
   },
 
   abrirModalProjeto(id) {
-    const isEdit = !!id;
+    document.getElementById('modal-proj-overlay')?.remove();
+    const cliOptions = '<option value="">— Nenhum —</option>' +
+      this._clientes.map(c => `<option value="${c.email}">${c.nome||c.email}</option>`).join('');
     const overlay = document.createElement('div');
     overlay.className = 'task-modal-overlay';
-    overlay.id = 'modal-proj';
+    overlay.id = 'modal-proj-overlay';
     overlay.innerHTML = `<div class="task-modal">
       <div class="task-modal-head">
-        <span style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--brown);">${isEdit?'Editar':'Novo'} Projeto</span>
-        <button onclick="document.getElementById('modal-proj').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);">×</button>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--brown);">${id?'Editar':'Novo'} Projeto</span>
+        <button onclick="document.getElementById('modal-proj-overlay').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);">×</button>
       </div>
-      <div class="task-modal-body" id="modal-proj-body">Carregando...</div>
+      <div class="task-modal-body">
+        <div class="task-section">
+          <div class="task-section-lbl">Nome do projeto</div>
+          <input id="proj-nome-inp" type="text" placeholder="Ex: Identidade Visual — Marca X" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:14px;background:var(--bg);font-family:Poppins,sans-serif;box-sizing:border-box;"/>
+        </div>
+        <div class="task-section">
+          <div class="task-section-lbl">👤 Cliente vinculado</div>
+          <select id="proj-cli-inp" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">${cliOptions}</select>
+        </div>
+        <div id="proj-err" style="color:#C62828;font-size:12px;margin-top:4px;display:none;"></div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+          <button onclick="Admin.salvarProjeto(${id||'null'})" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:13px;border:none;cursor:pointer;">Salvar projeto</button>
+          ${id ? `<button onclick="Admin.delProjeto(${id})" style="padding:11px 14px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;font-size:13px;cursor:pointer;">🗑</button>` : ''}
+        </div>
+      </div>
     </div>`;
     document.body.appendChild(overlay);
-    this._carregarFormProjeto(id);
-  },
-
-  async _carregarFormProjeto(id) {
-    const { data: clientes } = await db.from('clients').select('email,nome').order('nome');
-    let p = {nome:'',cor:'#E8E0F0',client_email:''};
-    if (id) { const {data} = await db.from('projetos').select('*').eq('id',id).single(); p = data||p; }
-    const cores = ['#E8E0F0','#FFF8E1','#E8F5E9','#E3F2FD','#FCE4EC','#F3E5F5','#E0F2F1','#FBE9E7'];
-    document.getElementById('modal-proj-body').innerHTML = `
-      <div class="task-section">
-        <div class="task-section-lbl">Nome do projeto</div>
-        <input id="mp-nome" type="text" value="${p.nome||''}" placeholder="Ex: Identidade Visual — Marca X" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:14px;background:var(--bg);font-family:Poppins,sans-serif;box-sizing:border-box;"/>
-      </div>
-      <div class="task-section">
-        <div class="task-section-lbl">Cliente vinculado</div>
-        <select id="mp-cliente" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
-          <option value="">— Nenhum —</option>
-          ${(clientes||[]).map(c=>{const isSel=(p.client_email&&p.client_email===c.email)?'selected':'';return `<option value="${c.email||''}" ${isSel}>${c.nome||c.email||'Cliente Sem Nome'}</option>`;}).join('')}
-        </select>
-      </div>
-      <div class="task-section">
-        <div class="task-section-lbl">Cor de capa</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">${cores.map(c=>`<div onclick="document.querySelectorAll('.cor-opt').forEach(x=>x.style.outline='none');this.style.outline='3px solid #4B2D22';document.getElementById('mp-cor').value='${c}'" class="cor-opt" style="width:32px;height:32px;border-radius:50%;background:${c};cursor:pointer;outline:${p.cor===c?'3px solid #4B2D22':'none'};"></div>`).join('')}</div>
-        <input type="hidden" id="mp-cor" value="${p.cor||'#E8E0F0'}"/>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:4px;">
-        <button onclick="Admin.salvarProjeto(${id||'null'})" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:13px;border:none;cursor:pointer;">Salvar projeto</button>
-        ${id?`<button onclick="Admin.delProjeto(${id})" style="padding:11px 14px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;font-size:13px;cursor:pointer;">🗑</button>`:''}
-      </div>`;
+    overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+    if (id) {
+      db.from('projetos').select('*').eq('id',id).single().then(({data:p}) => {
+        if (!p) return;
+        const ni = document.getElementById('proj-nome-inp');
+        const si = document.getElementById('proj-cli-inp');
+        if (ni) ni.value = p.nome || '';
+        if (si && p.client_email) si.value = p.client_email;
+      });
+    }
   },
 
   async salvarProjeto(id) {
-    const nome = document.getElementById('mp-nome')?.value.trim();
-    if (!nome) { alert('Informe o nome do projeto.'); return; }
-    const cor = document.getElementById('mp-cor')?.value || '#E8E0F0';
-    const client_email = document.getElementById('mp-cliente')?.value || null;
+    const nome = document.getElementById('proj-nome-inp')?.value.trim();
+    const errEl = document.getElementById('proj-err');
+    if (!nome) { if(errEl){errEl.style.display='block';errEl.textContent='Informe o nome do projeto.';} return; }
+    const client_email = document.getElementById('proj-cli-inp')?.value || null;
     this.loader(true);
-    try {
-      let err, rows;
-      if (id) { const r = await db.from('projetos').update({nome,cor,client_email}).eq('id',id).select(); err = r.error; rows = r.data; }
-      else     { const r = await db.from('projetos').insert([{nome,cor,client_email}]).select();             err = r.error; rows = r.data; }
-      if (err) { alert('Erro ao salvar: '+err.message); return; }
-      if (!rows || rows.length===0) { alert('Nenhuma linha atualizada. Verifique as permissões da tabela projetos no Supabase (RLS).'); return; }
-      document.getElementById('modal-proj')?.remove();
-      document.getElementById('modal-projeto-detalhe')?.remove();
-      await this.loadTarefas();
-      if (id) await this.abrirProjeto(id);
-    } catch(e) { alert('Erro: '+e.message); }
-    finally { this.loader(false); }
+    const payload = {nome, client_email};
+    const result = id
+      ? await db.from('projetos').update(payload).eq('id',id).select()
+      : await db.from('projetos').insert([payload]).select();
+    this.loader(false);
+    if (result.error) { alert('Erro ao salvar projeto: '+result.error.message); return; }
+    document.getElementById('modal-proj-overlay')?.remove();
+    await this.carregarProjetos();
+    if (id) await this.abrirProjeto(id);
   },
 
   async delProjeto(id) {
     if (!confirm('Excluir este projeto e todas as tarefas?')) return;
     this.loader(true);
+    await db.from('tarefas').delete().eq('projeto_id',id);
     await db.from('projetos').delete().eq('id',id);
-    document.getElementById('modal-proj')?.remove();
-    await this.loadTarefas();
     this.loader(false);
+    document.getElementById('modal-proj-overlay')?.remove();
+    document.getElementById('modal-projeto-detalhe')?.remove();
+    await this.carregarProjetos();
   },
 
   async uploadCapaProjeto(input, id) {
@@ -2651,74 +2639,60 @@ const Admin = {
       if (error) throw error;
       const {data:u} = db.storage.from('posts-media').getPublicUrl(path);
       await db.from('projetos').update({capa_url:u.publicUrl,capa_posicao:50}).eq('id',id);
-      await this.loadTarefas();
-    } catch(e) { alert('Erro: '+e.message); }
+      await this.carregarProjetos();
+    } catch(e) { alert('Erro ao enviar imagem: '+e.message); }
     finally { this.loader(false); }
   },
 
   escolherCorProjeto(id) {
-    const cor = prompt('Cole um código de cor (ex: #E8E0F0 ou #4B2D22):');
+    const cor = prompt('Cole um código de cor (ex: #E8E0F0):');
     if (!cor) return;
     this.loader(true);
-    db.from('projetos').update({cor,capa_url:null}).eq('id',id).then(()=>{ this.loadTarefas(); this.loader(false); });
-  },
-
-  iniciarReposicao(e, id) {
-    e.stopPropagation();
-    e.preventDefault();
-    const cover = e.currentTarget.closest('.proj-cover');
-    if (!cover) return;
-    const posMatch = (cover.style.backgroundPosition||'').match(/(\d+)%/);
-    let pos = posMatch ? parseInt(posMatch[1]) : 50;
-    const startY = e.touches ? e.touches[0].clientY : e.clientY;
-    cover.style.cursor = 'grabbing';
-    const onMove = mv => {
-      const y = mv.touches ? mv.touches[0].clientY : mv.clientY;
-      pos = Math.max(0, Math.min(100, pos - (y - startY) * 0.3));
-      cover.style.backgroundPosition = `center ${pos}%`;
-    };
-    const onUp = () => {
-      cover.style.cursor = '';
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      document.removeEventListener('touchmove', onMove);
-      document.removeEventListener('touchend', onUp);
-      db.from('projetos').update({capa_posicao: Math.round(pos)}).eq('id', id);
-    };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-    document.addEventListener('touchmove', onMove, {passive:false});
-    document.addEventListener('touchend', onUp);
+    db.from('projetos').update({cor,capa_url:null}).eq('id',id).then(() => { this.carregarProjetos(); this.loader(false); });
   },
 
   async abrirProjeto(id) {
-    const {data:p} = await db.from('projetos').select('*').eq('id',id).single();
-    const {data:tarefas} = await db.from('tarefas').select('*').eq('projeto_id',id).order('created_at');
-    const {data:clientes} = await db.from('clients').select('email,nome');
-    if (!p) return;
-    const cliNome = (clientes||[]).find(c=>c.email===p.client_email)?.nome || p.client_email || '';
+    document.getElementById('modal-projeto-detalhe')?.remove();
+    this.loader(true);
+    const [rp, rt] = await Promise.all([
+      db.from('projetos').select('*').eq('id',id).single(),
+      db.from('tarefas').select('*').eq('projeto_id',id).order('created_at')
+    ]);
+    this.loader(false);
+    if (rp.error || !rp.data) { alert('Projeto não encontrado.'); return; }
+    const p = rp.data;
+    const tarefas = rt.data || [];
+    const cliMap = {};
+    this._clientes.forEach(c => { cliMap[c.email] = c.nome; });
+    const cliNome = p.client_email && cliMap[p.client_email] ? cliMap[p.client_email] : (p.client_email||'');
     const now = new Date();
     const statusLabel = {pendente:'Pendente',andamento:'Em andamento',concluido:'Concluído',urgente:'Urgente'};
+    const coverStyle = p.capa_url
+      ? `background-image:url('${p.capa_url}');background-size:cover;background-position:center ${p.capa_posicao||50}%;`
+      : `background:${p.cor||'#E8E0F0'};`;
+    const lista = tarefas.map(t => {
+      const atrasada = t.status!=='concluido' && t.prazo && new Date(t.prazo+'T12:00') < now;
+      const tCli = t.client_email && cliMap[t.client_email] ? cliMap[t.client_email] : '';
+      return `<div onclick="Admin.abrirTarefa(${t.id},${id})" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:9px;background:${atrasada?'#FFEBEE':'var(--bg)'};border:1px solid ${atrasada?'#EF9A9A':'var(--border)'};cursor:pointer;margin-bottom:6px;">
+        <span class="pbadge ${atrasada?'atrasado':t.status}" style="flex-shrink:0;">${statusLabel[t.status]||t.status}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;">${t.titulo}</div>
+          ${tCli ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">👤 ${tCli}</div>` : ''}
+        </div>
+        <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${t.prazo ? new Date(t.prazo+'T12:00').toLocaleDateString('pt-BR') : ''}</span>
+      </div>`;
+    }).join('');
     const overlay = document.createElement('div');
     overlay.className = 'task-modal-overlay';
     overlay.id = 'modal-projeto-detalhe';
-    const coverStyle = p.capa_url ? `background-image:url('${p.capa_url}');background-size:cover;background-position:center ${p.capa_posicao||50}%;` : `background:${p.cor||'#E8E0F0'};`;
-    const lista = (tarefas||[]).map(t => {
-      const atrasada = t.status!=='concluido' && t.prazo && new Date(t.prazo+(t.horario?'T'+t.horario:''))<now;
-      return `<div onclick="Admin.abrirTarefa(${t.id},${id})" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:${atrasada?'#FFEBEE':'var(--bg)'};border:1px solid ${atrasada?'#EF9A9A':'var(--border)'};cursor:pointer;margin-bottom:6px;">
-        <span class="pbadge ${atrasada?'atrasado':t.status}">${atrasada?'⚠ ATRASADO':statusLabel[t.status]||t.status}</span>
-        <span style="flex:1;font-size:13px;">${t.titulo}</span>
-        <span style="font-size:11px;color:var(--muted);">${t.prazo?new Date(t.prazo+'T12:00').toLocaleDateString('pt-BR'):''}</span>
-      </div>`;
-    }).join('');
     overlay.innerHTML = `<div class="task-modal">
-      <div style="${coverStyle}height:80px;position:relative;">
-        <button onclick="document.getElementById('modal-projeto-detalhe').remove()" style="position:absolute;top:8px;right:10px;background:rgba(0,0,0,.4);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:16px;cursor:pointer;backdrop-filter:blur(4px);">×</button>
-        <button onclick="Admin.abrirModalProjeto(${id})" style="position:absolute;top:8px;left:10px;background:rgba(0,0,0,.4);border:none;color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;backdrop-filter:blur(4px);">✏ Editar</button>
+      <div style="${coverStyle}height:80px;position:relative;border-radius:16px 16px 0 0;">
+        <button onclick="document.getElementById('modal-projeto-detalhe').remove()" style="position:absolute;top:8px;right:10px;background:rgba(0,0,0,.4);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:16px;cursor:pointer;">×</button>
+        <button onclick="Admin.abrirModalProjeto(${id})" style="position:absolute;top:8px;left:10px;background:rgba(0,0,0,.4);border:none;color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">✏ Editar</button>
       </div>
       <div class="task-modal-body">
         <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--brown);margin-bottom:4px;">${p.nome}</div>
-        ${cliNome?`<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">👤 ${cliNome}</div>`:''}
+        ${cliNome ? `<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">👤 ${cliNome}</div>` : '<div style="margin-bottom:16px;"></div>'}
         <div style="margin-bottom:12px;">${lista||'<p style="color:var(--muted);font-style:italic;font-size:13px;">Nenhuma tarefa ainda.</p>'}</div>
         <button onclick="Admin.abrirTarefa(null,${id})" style="width:100%;padding:10px;border-radius:9px;border:2px dashed var(--border);background:transparent;font-size:13px;color:var(--muted);cursor:pointer;">+ Nova tarefa</button>
       </div>
@@ -2729,22 +2703,20 @@ const Admin = {
 
   async abrirTarefa(tarefaId, projetoId) {
     document.getElementById('modal-projeto-detalhe')?.remove();
-    let t = {titulo:'',status:'pendente',prazo:'',horario:'',dias_semana:{},anotacoes:'',links:''};
-    if (tarefaId) { const {data} = await db.from('tarefas').select('*').eq('id',tarefaId).single(); t=data||t; }
+    document.getElementById('modal-tarefa')?.remove();
+    let t = {titulo:'',status:'pendente',prazo:'',horario:'',client_email:'',anotacoes:'',links:''};
+    if (tarefaId) {
+      const {data, error} = await db.from('tarefas').select('*').eq('id',tarefaId).single();
+      if (error) { alert('Erro ao carregar tarefa: '+error.message); return; }
+      t = data || t;
+    }
     this._tarefaId = tarefaId;
     this._projetoId = projetoId;
-    let diasObj = {};
-    try {
-      const raw = t.dias_semana;
-      if (Array.isArray(raw)) raw.forEach(k => diasObj[k]='');
-      else if (typeof raw === 'object' && raw !== null) diasObj = raw;
-      else diasObj = JSON.parse(raw||'{}');
-    } catch { diasObj = {}; }
-    // load attachments
-    let anexos = [];
-    if (tarefaId) { const {data:ax} = await db.from('arquivos_cliente').select('*').eq('client_email','__tarefa_'+tarefaId).order('created_at'); anexos = ax||[]; }
-    const dias = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
-    const diasKeys = ['segunda','terca','quarta','quinta','sexta','sabado','domingo'];
+    const cliOptions = '<option value="">— Nenhum —</option>' +
+      this._clientes.map(c => {
+        const sel = t.client_email === c.email ? ' selected' : '';
+        return `<option value="${c.email}"${sel}>${c.nome||c.email}</option>`;
+      }).join('');
     const overlay = document.createElement('div');
     overlay.className = 'task-modal-overlay';
     overlay.id = 'modal-tarefa';
@@ -2754,7 +2726,7 @@ const Admin = {
         <button onclick="document.getElementById('modal-tarefa').remove();Admin.abrirProjeto(${projetoId})" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);flex-shrink:0;">×</button>
       </div>
       <div class="task-modal-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
           <div class="task-section">
             <div class="task-section-lbl">📅 Prazo</div>
             <input id="tf-prazo" type="date" value="${t.prazo||''}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/>
@@ -2765,7 +2737,7 @@ const Admin = {
           </div>
         </div>
         <div class="task-section">
-          <div class="task-section-lbl">✦ Status da tarefa</div>
+          <div class="task-section-lbl">✦ Status</div>
           <select id="tf-status" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
             <option value="pendente"${t.status==='pendente'?' selected':''}>🟡 Pendente</option>
             <option value="andamento"${t.status==='andamento'?' selected':''}>🔵 Em andamento</option>
@@ -2774,36 +2746,21 @@ const Admin = {
           </select>
         </div>
         <div class="task-section">
-          <div class="task-section-lbl">✦ Planejamento da semana</div>
-          <div class="days-grid">
-            ${diasKeys.slice(0,5).map((k,i)=>`<div class="day-col"><div class="day-col-head">${dias[i]}</div><textarea id="dia-${k}" placeholder="...">${diasObj[k]||''}</textarea></div>`).join('')}
-          </div>
-          <div class="days-grid-row2">
-            ${diasKeys.slice(5).map((k,i)=>`<div class="day-col"><div class="day-col-head">${dias[5+i]}</div><textarea id="dia-${k}" placeholder="...">${diasObj[k]||''}</textarea></div>`).join('')}
-            <div class="day-col"><div class="day-col-head dark">Anotações Gerais</div><textarea id="tf-anotacoes" placeholder="Rascunhos, lembretes...">${t.anotacoes||''}</textarea></div>
-          </div>
+          <div class="task-section-lbl">👤 Cliente vinculado</div>
+          <select id="tf-cliente" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">${cliOptions}</select>
+        </div>
+        <div class="task-section">
+          <div class="task-section-lbl">📝 Anotações</div>
+          <textarea id="tf-anotacoes" rows="3" placeholder="Rascunhos, lembretes..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${t.anotacoes||''}</textarea>
         </div>
         <div class="task-section">
           <div class="task-section-lbl">🔗 Links e referências</div>
           <textarea id="tf-links" rows="2" placeholder="Cole links ou anotações rápidas..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${t.links||''}</textarea>
         </div>
-        <div class="task-section">
-          <div class="task-section-lbl">📎 Anexos e imagens</div>
-          ${tarefaId ? `
-            <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:13px;color:var(--muted);background:var(--bg);margin-bottom:8px;">
-              + Anexar fotos ou arquivos
-              <input type="file" multiple style="display:none" onchange="Admin.uploadAnexoTarefa(this,${tarefaId})"/>
-            </label>
-            <div id="anexos-list">${anexos.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;">
-              <span>${a.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i)?'🖼️':a.nome.match(/\.pdf$/i)?'📄':'📎'}</span>
-              <a href="${a.url}" target="_blank" style="flex:1;color:var(--text);text-decoration:none;">${a.nome}</a>
-              <button onclick="Admin.delAnexoTarefa(${a.id},${tarefaId})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;">×</button>
-            </div>`).join('')}</div>
-          ` : `<p style="font-size:12px;color:var(--muted);font-style:italic;padding:10px 0;">Salve a tarefa primeiro para adicionar anexos.</p>`}
-        </div>
-        <div style="display:flex;gap:8px;">
+        <div id="tf-err" style="color:#C62828;font-size:12px;margin-top:4px;display:none;"></div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
           <button onclick="Admin.salvarTarefa()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:13px;border:none;cursor:pointer;">Salvar</button>
-          ${tarefaId?`<button onclick="Admin.delTarefa(${tarefaId})" style="padding:11px 14px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;font-size:13px;cursor:pointer;">🗑</button>`:''}
+          ${tarefaId ? `<button onclick="Admin.delTarefa(${tarefaId})" style="padding:11px 14px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;font-size:13px;cursor:pointer;">🗑</button>` : ''}
         </div>
       </div>
     </div>`;
@@ -2813,104 +2770,40 @@ const Admin = {
 
   async salvarTarefa() {
     const titulo = document.getElementById('tf-titulo')?.value.trim();
-    if (!titulo) { alert('Informe o nome da tarefa.'); return; }
-    const diasKeys = ['segunda','terca','quarta','quinta','sexta','sabado','domingo'];
-    const diasObj = {};
-    diasKeys.forEach(k => { const v = document.getElementById('dia-'+k)?.value||''; if(v) diasObj[k]=v; });
+    const errEl = document.getElementById('tf-err');
+    if (!titulo) { if(errEl){errEl.style.display='block';errEl.textContent='Informe o nome da tarefa.';} return; }
     const payload = {
       projeto_id: this._projetoId,
       titulo,
-      status: document.getElementById('tf-status')?.value || 'pendente',
-      prazo: document.getElementById('tf-prazo')?.value || null,
-      horario: document.getElementById('tf-horario')?.value || null,
-      dias_semana: diasObj,
-      anotacoes: document.getElementById('tf-anotacoes')?.value.trim() || null,
-      links: document.getElementById('tf-links')?.value.trim() || null,
+      status:       document.getElementById('tf-status')?.value || 'pendente',
+      prazo:        document.getElementById('tf-prazo')?.value || null,
+      horario:      document.getElementById('tf-horario')?.value || null,
+      client_email: document.getElementById('tf-cliente')?.value || null,
+      anotacoes:    document.getElementById('tf-anotacoes')?.value.trim() || null,
+      links:        document.getElementById('tf-links')?.value.trim() || null,
     };
     this.loader(true);
-    try {
-      if (this._tarefaId) await db.from('tarefas').update(payload).eq('id',this._tarefaId);
-      else await db.from('tarefas').insert([payload]);
-      document.getElementById('modal-tarefa')?.remove();
-      await this.loadTarefas();
-      await this.abrirProjeto(this._projetoId);
-    } catch(e) { alert('Erro: '+e.message); }
-    finally { this.loader(false); }
+    const result = this._tarefaId
+      ? await db.from('tarefas').update(payload).eq('id',this._tarefaId).select()
+      : await db.from('tarefas').insert([payload]).select();
+    this.loader(false);
+    if (result.error) {
+      if(errEl){errEl.style.display='block';errEl.textContent='Erro ao salvar: '+result.error.message;}
+      return;
+    }
+    document.getElementById('modal-tarefa')?.remove();
+    await this.carregarProjetos();
+    await this.abrirProjeto(this._projetoId);
   },
 
   async delTarefa(id) {
     if (!confirm('Excluir esta tarefa?')) return;
     this.loader(true);
     await db.from('tarefas').delete().eq('id',id);
-    document.getElementById('modal-tarefa')?.remove();
-    await this.loadTarefas();
-    await this.abrirProjeto(this._projetoId);
     this.loader(false);
-  },
-
-  async uploadAnexoTarefa(input, tarefaId) {
-    const files = [...input.files]; if (!files.length) return;
-    this.loader(true);
-    try {
-      for (const file of files) {
-        const safe = file.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_');
-        const path = `tarefas/${Date.now()}-${safe}`;
-        const {error} = await db.storage.from('posts-media').upload(path,file,{cacheControl:'3600',upsert:false});
-        if (error) throw error;
-        const {data:u} = db.storage.from('posts-media').getPublicUrl(path);
-        await db.from('arquivos_cliente').insert([{client_email:'__tarefa_'+tarefaId,nome:file.name,url:u.publicUrl,uploader:'admin'}]);
-      }
-      // Reload attachment list in modal
-      const {data:ax} = await db.from('arquivos_cliente').select('*').eq('client_email','__tarefa_'+tarefaId).order('created_at');
-      const el = document.getElementById('anexos-list'); if (!el) return;
-      el.innerHTML = (ax||[]).map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;">
-        <span>${a.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i)?'🖼️':a.nome.match(/\.pdf$/i)?'📄':'📎'}</span>
-        <a href="${a.url}" target="_blank" style="flex:1;color:var(--text);text-decoration:none;">${a.nome}</a>
-        <button onclick="Admin.delAnexoTarefa(${a.id},${tarefaId})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;">×</button>
-      </div>`).join('');
-    } catch(e) { alert('Erro: '+e.message); }
-    finally { this.loader(false); }
-  },
-
-  async delAnexoTarefa(anexoId, tarefaId) {
-    await db.from('arquivos_cliente').delete().eq('id',anexoId);
-    const {data:ax} = await db.from('arquivos_cliente').select('*').eq('client_email','__tarefa_'+tarefaId).order('created_at');
-    const el = document.getElementById('anexos-list'); if (!el) return;
-    el.innerHTML = (ax||[]).map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;">
-      <span>${a.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i)?'🖼️':a.nome.match(/\.pdf$/i)?'📄':'📎'}</span>
-      <a href="${a.url}" target="_blank" style="flex:1;color:var(--text);text-decoration:none;">${a.nome}</a>
-      <button onclick="Admin.delAnexoTarefa(${a.id},${tarefaId})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;">×</button>
-    </div>`).join('');
-  },
-
-  async loadChecklist() {
-    const {data} = await db.from('checklist_interno').select('*').order('created_at');
-    const el = document.getElementById('chk-list'); if (!el) return;
-    const list = data||[];
-    el.innerHTML = !list.length ? '<p style="color:var(--muted);font-size:12px;font-style:italic;padding:8px 0;">Nenhum item ainda.</p>' :
-      list.map(i=>`<div class="chk-item">
-        <div class="chk-box${i.feito?' done':''}" onclick="Admin.toggleCheck(${i.id},${!i.feito})">${i.feito?'✓':''}</div>
-        <span class="chk-txt${i.feito?' done':''}">${i.texto}</span>
-        <button onclick="Admin.delCheck(${i.id})" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 4px;">×</button>
-      </div>`).join('');
-  },
-
-  async addCheckItem() {
-    const inp = document.getElementById('chk-input');
-    const texto = inp?.value.trim(); if (!texto) return;
-    await db.from('checklist_interno').insert([{texto}]);
-    inp.value = '';
-    await this.loadChecklist();
-  },
-
-  async toggleCheck(id, feito) {
-    await db.from('checklist_interno').update({feito}).eq('id',id);
-    await this.loadChecklist();
-  },
-
-  async delCheck(id) {
-    await db.from('checklist_interno').delete().eq('id',id);
-    await this.loadChecklist();
+    document.getElementById('modal-tarefa')?.remove();
+    await this.carregarProjetos();
+    await this.abrirProjeto(this._projetoId);
   },
 
   // ── FIM TAREFAS ──
