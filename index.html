@@ -31,32 +31,34 @@
       --sh:      0 4px 20px rgba(44,37,32,0.06);
       --sh2:     0 12px 40px rgba(44,37,32,0.12);
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg:      #1A1210;
-        --surface: #231815;
-        --beige:   #2A1E17;
-        --brown:   #C4967A;
-        --brown2:  #A67055;
-        --copper:  #D4A882;
-        --text:    #F0E6D3;
-        --muted:   #9B8472;
-        --border:  #3A2820;
-        --sh:      0 4px 20px rgba(0,0,0,.3);
-        --sh2:     0 12px 40px rgba(0,0,0,.4);
-      }
-      .login-box{background:#231815;}
-      .sidebar{background:#1E1410;}
-      .app-header{background:#1E1410;}
-      .admin-main,.client-main{background:#1A1210;}
-      .cpa-header{background:linear-gradient(135deg,#3A2418 0%,#5a3822 100%)!important;}
-      .day-col-head{background:#2A1E17!important;}
-      .day-col-head.dark{background:#4B2D22!important;}
-      .day-col textarea{background:#1A1210!important;color:var(--text)!important;}
-      input,textarea,select{background:var(--bg)!important;color:var(--text)!important;border-color:var(--border)!important;}
-      .task-modal,.proj-card{background:var(--surface)!important;border-color:var(--border)!important;}
-      .task-modal-overlay{background:rgba(0,0,0,.65)!important;}
+    html.dark :root {
+      --bg:      #1A1210;
+      --surface: #231815;
+      --beige:   #2A1E17;
+      --brown:   #C4967A;
+      --brown2:  #A67055;
+      --copper:  #D4A882;
+      --text:    #F0E6D3;
+      --muted:   #9B8472;
+      --border:  #3A2820;
+      --sh:      0 4px 20px rgba(0,0,0,.3);
+      --sh2:     0 12px 40px rgba(0,0,0,.4);
     }
+    html.dark .login-box{background:#231815;}
+    html.dark .sidebar{background:#1E1410;}
+    html.dark .app-header{background:#1E1410;}
+    html.dark .admin-main,html.dark .client-main{background:#1A1210;}
+    html.dark .cpa-header{background:linear-gradient(135deg,#3A2418 0%,#5a3822 100%)!important;}
+    html.dark .day-col-head{background:#2A1E17!important;}
+    html.dark .day-col-head.dark{background:#4B2D22!important;}
+    html.dark .day-col textarea{background:#1A1210!important;color:var(--text)!important;}
+    html.dark input,html.dark textarea,html.dark select{background:var(--bg)!important;color:var(--text)!important;border-color:var(--border)!important;}
+    html.dark .task-modal,html.dark .proj-card{background:var(--surface)!important;border-color:var(--border)!important;}
+    html.dark .task-modal-overlay{background:rgba(0,0,0,.65)!important;}
+    /* Theme switcher */
+    .theme-switcher{display:flex;background:var(--beige);border-radius:20px;padding:2px;gap:1px;}
+    .theme-btn{background:transparent;border:none;border-radius:16px;padding:5px 8px;font-size:13px;cursor:pointer;color:var(--muted);transition:all .2s;line-height:1;}
+    .theme-btn.active{background:var(--surface);color:var(--brown);box-shadow:0 1px 4px rgba(0,0,0,.15);}
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:"Poppins",sans-serif;font-weight:300;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
     h1,h2,h3{font-family:"Cormorant Garamond",serif;font-weight:400;}
@@ -583,6 +585,11 @@
       <span>Portal Interno</span>
     </div>
     <div class="header-right">
+      <div class="theme-switcher">
+        <button class="theme-btn" data-mode="light" title="Claro" onclick="Theme.set('light')">☀️</button>
+        <button class="theme-btn" data-mode="auto" title="Seguir PC" onclick="Theme.set('auto')">⚙️</button>
+        <button class="theme-btn" data-mode="dark" title="Escuro" onclick="Theme.set('dark')">🌙</button>
+      </div>
       <span class="header-user" id="admin-email"></span>
       <button class="btn-out" onclick="App.logout()">Sair</button>
     </div>
@@ -628,6 +635,11 @@
       <span>Portal do Cliente</span>
     </div>
     <div class="header-right">
+      <div class="theme-switcher">
+        <button class="theme-btn" data-mode="light" title="Claro" onclick="Theme.set('light')">☀️</button>
+        <button class="theme-btn" data-mode="auto" title="Seguir PC" onclick="Theme.set('auto')">⚙️</button>
+        <button class="theme-btn" data-mode="dark" title="Escuro" onclick="Theme.set('dark')">🌙</button>
+      </div>
       <span class="header-user" id="client-email-display"></span>
       <button class="btn-out" onclick="App.logout()">Sair</button>
     </div>
@@ -3812,6 +3824,27 @@ const Client = {
     if (badge) { badge.textContent=count||''; badge.classList.toggle('hidden',!count); }
   }
 };
+
+const Theme = {
+  _mq: window.matchMedia('(prefers-color-scheme: dark)'),
+  apply(mode) {
+    const isDark = mode === 'dark' || (mode === 'auto' && this._mq.matches);
+    document.documentElement.classList.toggle('dark', isDark);
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  },
+  set(mode) {
+    localStorage.setItem('theme', mode);
+    this.apply(mode);
+  },
+  init() {
+    const saved = localStorage.getItem('theme') || 'auto';
+    this.apply(saved);
+    this._mq.addEventListener('change', () => {
+      if ((localStorage.getItem('theme') || 'auto') === 'auto') this.apply('auto');
+    });
+  }
+};
+Theme.init();
 
 document.addEventListener('DOMContentLoaded', () => App.init());
 document.addEventListener('keydown', e => {
