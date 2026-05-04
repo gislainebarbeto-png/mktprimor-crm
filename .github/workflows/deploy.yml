@@ -17,7 +17,7 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /public_html/crm/
+          server-dir: domains/gislainebarbeto.com.br/public_html/crm/
           exclude: |
             **/.git*
             **/.git*/**
