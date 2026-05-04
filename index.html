@@ -2613,8 +2613,10 @@ const Admin = {
     const client_email = document.getElementById('mp-cliente')?.value || null;
     this.loader(true);
     try {
-      if (id) await db.from('projetos').update({nome,cor,client_email}).eq('id',id);
-      else await db.from('projetos').insert([{nome,cor,client_email}]);
+      let err;
+      if (id) { const r = await db.from('projetos').update({nome,cor,client_email}).eq('id',id); err = r.error; }
+      else     { const r = await db.from('projetos').insert([{nome,cor,client_email}]);             err = r.error; }
+      if (err) { alert('Erro ao salvar: '+err.message); return; }
       document.getElementById('modal-proj')?.remove();
       await this.loadTarefas();
     } catch(e) { alert('Erro: '+e.message); }
