@@ -1833,6 +1833,9 @@ const Admin = {
     if (this._comeceTipo === 'video') {
       url = document.getElementById('cf-url')?.value.trim();
       if (!url) { alert('Cole o link do YouTube.'); return; }
+      if (!url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/)) {
+        alert('Link inválido. Use o link completo do vídeo:\nhttps://www.youtube.com/watch?v=XXXXXXXXXXX'); return;
+      }
       nome = 'VIDEO::' + titulo;
     } else {
       url = document.getElementById('cf-texto')?.value.trim();
@@ -3081,10 +3084,12 @@ const Client = {
     const items = rows.map(r => {
       if (r.nome.startsWith('VIDEO::')) {
         const titulo = r.nome.replace('VIDEO::','');
+        const embedUrl = toEmbed(r.url);
+        if (!embedUrl.includes('embed/')) return '';
         return `<div style="margin-bottom:16px;">
           ${titulo ? `<div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--brown);margin-bottom:8px;">${titulo}</div>` : ''}
           <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;">
-            <iframe src="${toEmbed(r.url)}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe>
+            <iframe src="${embedUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe>
           </div>
         </div>`;
       } else if (r.nome.startsWith('TEXTO::')) {
