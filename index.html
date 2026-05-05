@@ -2734,7 +2734,7 @@ const Admin = {
   async abrirTarefa(tarefaId, projetoId) {
     document.getElementById('modal-projeto-detalhe')?.remove();
     document.getElementById('modal-tarefa')?.remove();
-    let t = {titulo:'',status:'pendente',prazo:'',horario:'',client_email:'',anotacoes:'',links:''};
+    let t = {titulo:'',status:'pendente',prazo:'',horario:'',client_email:'',anotacoes:'',links:'',checklist:'',etiquetas:'',capa_url:''};
     if (tarefaId) {
       const {data, error} = await db.from('tarefas').select('*').eq('id',tarefaId).single();
       if (error) { alert('Erro ao carregar tarefa: '+error.message); return; }
@@ -2742,21 +2742,67 @@ const Admin = {
     }
     this._tarefaId = tarefaId;
     this._projetoId = projetoId;
+
+    // parse checklist
+    let chkItems = [];
+    try { chkItems = JSON.parse(t.checklist||'[]'); } catch { chkItems = []; }
+    this._chkItems = chkItems;
+
+    // etiquetas disponiveis
+    const etiqOpts = ['🔴 Urgente','🟡 Atenção','🟢 OK','🔵 Em revisão','🟣 Criativo','⚫ Bloqueado'];
+    const etiqSel = (t.etiquetas||'').split(',').filter(Boolean);
+
     const cliOptions = '<option value="">— Nenhum —</option>' +
       this._clientes.map(c => {
         const sel = t.client_email === c.email ? ' selected' : '';
         return `<option value="${c.email}"${sel}>${c.nome||c.email}</option>`;
       }).join('');
+
+    const capaHtml = t.capa_url
+      ? `<div style="position:relative;height:120px;background-image:url('${t.capa_url}');background-size:cover;background-position:center;border-radius:12px 12px 0 0;">
+           <label style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.45);color:#fff;font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;">
+             ✏ Trocar foto<input type="file" accept="image/*" style="display:none" onchange="Admin.uploadCapaTarefa(this,${tarefaId||'null'})"/>
+           </label>
+         </div>`
+      : `<div style="padding:10px 0 4px;">
+           <label style="display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px dashed var(--border);border-radius:9px;cursor:pointer;font-size:12px;color:var(--muted);">
+             🖼 Adicionar foto de capa<input type="file" accept="image/*" style="display:none" onchange="Admin.uploadCapaTarefa(this,${tarefaId||'null'})"/>
+           </label>
+         </div>`;
+
+    const chkHtml = chkItems.map((item,i) =>
+      `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">
+        <input type="checkbox" id="chk-${i}" ${item.feito?'checked':''} onchange="Admin.toggleChkItem(${i})" style="width:15px;height:15px;cursor:pointer;accent-color:var(--brown);"/>
+        <span style="flex:1;font-size:13px;${item.feito?'text-decoration:line-through;color:var(--muted);':''}">${item.texto}</span>
+        <button onclick="Admin.delChkItem(${i})" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0 4px;">×</button>
+      </div>`
+    ).join('');
+
     const overlay = document.createElement('div');
     overlay.className = 'task-modal-overlay';
     overlay.id = 'modal-tarefa';
-    overlay.innerHTML = `<div class="task-modal">
-      <div class="task-modal-head">
+    overlay.innerHTML = `<div class="task-modal" style="max-width:680px;">
+      ${capaHtml}
+      <div class="task-modal-head" style="${t.capa_url?'border-radius:0;':''}">
         <input id="tf-titulo" type="text" value="${(t.titulo||'').replace(/"/g,'&quot;')}" placeholder="Nome da tarefa..." style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--brown);border:none;background:transparent;width:100%;outline:none;"/>
         <button onclick="document.getElementById('modal-tarefa').remove();Admin.abrirProjeto(${projetoId})" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);flex-shrink:0;">×</button>
       </div>
       <div class="task-modal-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+
+        <!-- Etiquetas -->
+        <div class="task-section">
+          <div class="task-section-lbl">🏷 Etiquetas</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${etiqOpts.map(e => {
+              const active = etiqSel.includes(e);
+              return `<span onclick="Admin.toggleEtiq('${e}')" id="etq-${e.replace(/[^a-z]/gi,'')}" style="padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:${active?'var(--beige)':'transparent'};color:${active?'var(--brown)':'var(--muted)'};user-select:none;">${e}</span>`;
+            }).join('')}
+          </div>
+          <input type="hidden" id="tf-etiquetas" value="${t.etiquetas||''}"/>
+        </div>
+
+        <!-- Prazo + Horário + Status -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:4px;">
           <div class="task-section">
             <div class="task-section-lbl">📅 Prazo</div>
             <input id="tf-prazo" type="date" value="${t.prazo||''}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/>
@@ -2765,28 +2811,45 @@ const Admin = {
             <div class="task-section-lbl">⏰ Horário</div>
             <input id="tf-horario" type="time" value="${t.horario||''}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/>
           </div>
+          <div class="task-section">
+            <div class="task-section-lbl">✦ Status</div>
+            <select id="tf-status" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
+              <option value="pendente"${t.status==='pendente'?' selected':''}>🟡 Pendente</option>
+              <option value="andamento"${t.status==='andamento'?' selected':''}>🔵 Andamento</option>
+              <option value="concluido"${t.status==='concluido'?' selected':''}>🟢 Concluído</option>
+              <option value="urgente"${t.status==='urgente'?' selected':''}>🔴 Urgente</option>
+            </select>
+          </div>
         </div>
-        <div class="task-section">
-          <div class="task-section-lbl">✦ Status</div>
-          <select id="tf-status" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
-            <option value="pendente"${t.status==='pendente'?' selected':''}>🟡 Pendente</option>
-            <option value="andamento"${t.status==='andamento'?' selected':''}>🔵 Em andamento</option>
-            <option value="concluido"${t.status==='concluido'?' selected':''}>🟢 Concluído</option>
-            <option value="urgente"${t.status==='urgente'?' selected':''}>🔴 Urgente</option>
-          </select>
-        </div>
+
+        <!-- Cliente -->
         <div class="task-section">
           <div class="task-section-lbl">👤 Cliente vinculado</div>
           <select id="tf-cliente" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">${cliOptions}</select>
         </div>
+
+        <!-- Checklist -->
+        <div class="task-section">
+          <div class="task-section-lbl">☑ Checklist</div>
+          <div id="tf-chk-list">${chkHtml||'<p style="font-size:12px;color:var(--muted);font-style:italic;padding:4px 0;">Nenhum item ainda.</p>'}</div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <input id="tf-chk-inp" type="text" placeholder="Novo item..." onkeydown="if(event.key==='Enter'){event.preventDefault();Admin.addChkItem();}" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/>
+            <button onclick="Admin.addChkItem()" style="padding:8px 14px;border-radius:9px;background:var(--beige);border:none;color:var(--brown);font-size:12px;cursor:pointer;">+ Add</button>
+          </div>
+        </div>
+
+        <!-- Anotações -->
         <div class="task-section">
           <div class="task-section-lbl">📝 Anotações</div>
           <textarea id="tf-anotacoes" rows="3" placeholder="Rascunhos, lembretes..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${t.anotacoes||''}</textarea>
         </div>
+
+        <!-- Links -->
         <div class="task-section">
           <div class="task-section-lbl">🔗 Links e referências</div>
           <textarea id="tf-links" rows="2" placeholder="Cole links ou anotações rápidas..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${t.links||''}</textarea>
         </div>
+
         <div id="tf-err" style="color:#C62828;font-size:12px;margin-top:4px;display:none;"></div>
         <div style="display:flex;gap:8px;margin-top:4px;">
           <button onclick="Admin.salvarTarefa()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:13px;border:none;cursor:pointer;">Salvar</button>
@@ -2798,12 +2861,83 @@ const Admin = {
     overlay.addEventListener('click', e => { if(e.target===overlay){ overlay.remove(); this.abrirProjeto(projetoId); }});
   },
 
+  _chkItems: [],
+
+  toggleEtiq(e) {
+    const inp = document.getElementById('tf-etiquetas');
+    let sels = (inp.value||'').split(',').filter(Boolean);
+    const idx = sels.indexOf(e);
+    if (idx >= 0) sels.splice(idx,1); else sels.push(e);
+    inp.value = sels.join(',');
+    const el = document.getElementById('etq-'+e.replace(/[^a-z]/gi,''));
+    if (el) {
+      el.style.background = sels.includes(e) ? 'var(--beige)' : 'transparent';
+      el.style.color = sels.includes(e) ? 'var(--brown)' : 'var(--muted)';
+    }
+  },
+
+  addChkItem() {
+    const inp = document.getElementById('tf-chk-inp');
+    const txt = inp?.value.trim(); if (!txt) return;
+    this._chkItems.push({texto: txt, feito: false});
+    inp.value = '';
+    this._renderChkList();
+  },
+
+  toggleChkItem(i) {
+    if (this._chkItems[i]) this._chkItems[i].feito = !this._chkItems[i].feito;
+    this._renderChkList();
+  },
+
+  delChkItem(i) {
+    this._chkItems.splice(i,1);
+    this._renderChkList();
+  },
+
+  _renderChkList() {
+    const el = document.getElementById('tf-chk-list'); if (!el) return;
+    if (!this._chkItems.length) { el.innerHTML = '<p style="font-size:12px;color:var(--muted);font-style:italic;padding:4px 0;">Nenhum item ainda.</p>'; return; }
+    el.innerHTML = this._chkItems.map((item,i) =>
+      `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">
+        <input type="checkbox" ${item.feito?'checked':''} onchange="Admin.toggleChkItem(${i})" style="width:15px;height:15px;cursor:pointer;accent-color:var(--brown);"/>
+        <span style="flex:1;font-size:13px;${item.feito?'text-decoration:line-through;color:var(--muted);':''}">${item.texto}</span>
+        <button onclick="Admin.delChkItem(${i})" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0 4px;">×</button>
+      </div>`
+    ).join('');
+  },
+
+  async uploadCapaTarefa(input, tarefaId) {
+    const file = input.files[0]; if (!file) return;
+    this.loader(true);
+    try {
+      const safe = file.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path = `tarefas/capas/${Date.now()}-${safe}`;
+      const {error} = await db.storage.from('posts-media').upload(path,file,{cacheControl:'3600',upsert:false});
+      if (error) throw error;
+      const {data:u} = db.storage.from('posts-media').getPublicUrl(path);
+      if (tarefaId && tarefaId !== 'null') {
+        await db.from('tarefas').update({capa_url:u.publicUrl}).eq('id',tarefaId);
+        await this.abrirTarefa(tarefaId, this._projetoId);
+      } else {
+        // nova tarefa: salva URL temporariamente
+        document.getElementById('tf-capa-url-tmp')?.remove();
+        const inp = document.createElement('input');
+        inp.type='hidden'; inp.id='tf-capa-url-tmp'; inp.value=u.publicUrl;
+        document.querySelector('.task-modal-body')?.appendChild(inp);
+        // mostra preview
+        const capaEl = document.querySelector('#modal-tarefa .task-modal > div:first-child');
+        if (capaEl) capaEl.style.cssText = `height:120px;background-image:url('${u.publicUrl}');background-size:cover;background-position:center;border-radius:12px 12px 0 0;`;
+      }
+    } catch(e) { alert('Erro ao enviar imagem: '+e.message); }
+    finally { this.loader(false); }
+  },
+
   async salvarTarefa() {
     const titulo = document.getElementById('tf-titulo')?.value.trim();
     const errEl = document.getElementById('tf-err');
     if (!titulo) { if(errEl){errEl.style.display='block';errEl.textContent='Informe o nome da tarefa.';} return; }
     const payload = {
-      projeto_id: this._projetoId,
+      projeto_id:   this._projetoId,
       titulo,
       status:       document.getElementById('tf-status')?.value || 'pendente',
       prazo:        document.getElementById('tf-prazo')?.value || null,
@@ -2811,6 +2945,9 @@ const Admin = {
       client_email: document.getElementById('tf-cliente')?.value || null,
       anotacoes:    document.getElementById('tf-anotacoes')?.value.trim() || null,
       links:        document.getElementById('tf-links')?.value.trim() || null,
+      checklist:    JSON.stringify(this._chkItems),
+      etiquetas:    document.getElementById('tf-etiquetas')?.value || null,
+      capa_url:     document.getElementById('tf-capa-url-tmp')?.value || null,
     };
     this.loader(true);
     const result = this._tarefaId
