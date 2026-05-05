@@ -596,8 +596,10 @@
       .cp-expand{display:none;}
       .cp-card.open .cp-expand{display:block;}
       .cp-card{cursor:default;}
-      .client-stats{gap:8px!important;justify-content:space-between;}
-      .c-stat{min-width:60px;flex:1;}
+      .client-stats{display:grid!important;grid-template-columns:repeat(3,1fr);gap:8px!important;}
+      .c-stat{padding:10px 10px!important;}
+      .c-stat-n{font-size:20px!important;}
+      .header-logo span{display:none!important;}
       .client-header-row{margin-bottom:8px;}
       .welcome-banner{padding:14px!important;margin-bottom:12px!important;}
       .welcome-banner h3{font-size:16px!important;}
