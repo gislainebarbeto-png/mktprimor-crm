@@ -213,7 +213,11 @@
 
     /* ── CLIENT PORTAL ── */
     #client-view{min-height:100vh;display:flex;flex-direction:column;}
-    .client-main{padding:28px 32px;max-width:960px;margin:0 auto;width:100%;box-sizing:border-box;}
+    .client-main{padding:28px 32px;max-width:1280px;margin:0 auto;width:100%;box-sizing:border-box;}
+    /* Nav full-width */
+    .portal-nav{background:var(--surface);border-bottom:2px solid var(--border);position:relative;}
+    .portal-hamburger{display:none;}
+    .portal-nav .client-tabs{border-bottom:none;margin-bottom:0;padding:0 32px;max-width:1280px;margin-left:auto;margin-right:auto;}
     .client-main h2{font-size:28px;font-style:italic;color:var(--brown);margin-bottom:4px;}
     .client-sub{font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:24px;}
     .client-stats{display:flex;gap:12px;margin-bottom:24px;}
@@ -598,9 +602,14 @@
       .welcome-banner{padding:14px!important;margin-bottom:12px!important;}
       .welcome-banner h3{font-size:16px!important;}
       .welcome-banner p{font-size:11px!important;}
-      /* Cliente tabs sticky no mobile */
-      .client-tabs{position:sticky;top:0;z-index:150;background:var(--bg);gap:0!important;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-left:-14px;margin-right:-14px;padding-left:14px;padding-right:14px;box-shadow:0 2px 8px rgba(44,37,32,.06);}
-      .client-tab{white-space:nowrap;padding:8px 12px!important;font-size:11px!important;}
+      /* Hamburger mobile */
+      .portal-hamburger{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--brown);letter-spacing:.04em;text-transform:uppercase;}
+      .ph-icon{font-size:22px;color:var(--muted);}
+      .portal-nav .client-tabs{display:none;flex-direction:column;position:absolute;top:100%;left:0;right:0;z-index:300;background:var(--surface);box-shadow:0 8px 28px rgba(44,37,32,.15);padding:0!important;margin:0!important;border-top:1px solid var(--border);}
+      .portal-nav.open .client-tabs{display:flex;}
+      .portal-nav .client-tab{padding:14px 20px!important;font-size:13px!important;border-bottom:1px solid var(--border);white-space:normal;border-left:none;}
+      .portal-nav .client-tab:last-child{border-bottom:none;}
+      .portal-nav .client-tab.active{background:var(--bg);color:var(--brown);border-bottom-color:var(--border);}
       #client-view .app-header{justify-content:space-between;}
       .app-header{padding:0 12px!important;}
     }
@@ -699,8 +708,12 @@
       <button class="btn-out" onclick="App.logout()">Sair</button>
     </div>
   </div>
-  <div class="client-main">
-    <!-- Tabs do portal -->
+  <!-- Navegação full-width -->
+  <div class="portal-nav" id="portal-nav">
+    <div class="portal-hamburger" onclick="Client.toggleNav()">
+      <span id="portal-active-name">Posts</span>
+      <span class="ph-icon">☰</span>
+    </div>
     <div class="client-tabs">
       <div class="client-tab active" id="ctab-posts" onclick="Client.clientTab('posts')">Posts</div>
       <div class="client-tab" id="ctab-comece" onclick="Client.clientTab('comece')">🌱 Início</div>
@@ -714,6 +727,8 @@
       <div class="client-tab" id="ctab-tarefas" onclick="Client.clientTab('tarefas')">✅ Tarefas</div>
       <div class="client-tab" id="ctab-chat" onclick="Client.clientTab('chat')">✉ Chat <span class="ctab-badge hidden" id="ctab-chat-badge"></span></div>
     </div>
+  </div>
+  <div class="client-main">
     <div class="client-header-row">
       <div class="client-avatar" id="client-avatar">✦</div>
       <div>
@@ -3228,6 +3243,10 @@ const Client = {
     document.getElementById('cpcard-'+id)?.classList.toggle('open');
   },
 
+  toggleNav() {
+    document.getElementById('portal-nav')?.classList.toggle('open');
+  },
+
   igNav(dir) {
     const wrap = document.getElementById('ig-car-wrap');
     const imgs = wrap.querySelectorAll('.ig-car-img');
@@ -3549,6 +3568,9 @@ const Client = {
   clientTab(name) {
     this._activeTab = name;
     localStorage.setItem('clientTab', name);
+    document.getElementById('portal-nav')?.classList.remove('open');
+    const activeEl = document.getElementById('ctab-'+name);
+    if (activeEl) document.getElementById('portal-active-name').textContent = activeEl.textContent.trim();
     ['posts','comece','onboarding','financeiro','metricas','arquivos','ideias','info','solicitacoes','tarefas','chat'].forEach(t => {
       document.getElementById('ctab-'+t)?.classList.toggle('active', t===name);
       const c = document.getElementById('ctab-content-'+t);
