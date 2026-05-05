@@ -2544,6 +2544,19 @@ const Admin = {
         ? `background-image:url('${p.capa_url}');background-size:cover;background-position:center ${p.capa_posicao||50}%;`
         : `background:${p.cor||'#E8E0F0'};`;
       const cliNome = p.client_email && cliMap[p.client_email] ? cliMap[p.client_email] : '';
+      const statusIcon = {pendente:'🟡',andamento:'🔵',concluido:'🟢',urgente:'🔴'};
+      const listaCards = pts.length ? pts.map(t => {
+        const atrasada = t.status!=='concluido' && t.prazo && new Date(t.prazo+'T12:00') < now;
+        const tCli = t.client_email && cliMap[t.client_email] ? cliMap[t.client_email] : '';
+        return `<div onclick="event.stopPropagation();Admin.abrirTarefa(${t.id},${p.id})" style="display:flex;align-items:flex-start;gap:7px;padding:7px 10px;border-radius:8px;background:${atrasada?'#FFEBEE':'var(--bg)'};border:1px solid ${atrasada?'#EF9A9A':'var(--border)'};margin-bottom:5px;cursor:pointer;">
+          <span style="font-size:12px;flex-shrink:0;margin-top:1px;">${atrasada?'⚠️':statusIcon[t.status]||'🟡'}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.titulo}</div>
+            ${tCli ? `<div style="font-size:10px;color:var(--muted);">👤 ${tCli}</div>` : ''}
+          </div>
+          ${t.prazo ? `<span style="font-size:10px;color:var(--muted);flex-shrink:0;">${new Date(t.prazo+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span>` : ''}
+        </div>`;
+      }).join('') : '<p style="font-size:11px;color:var(--muted);font-style:italic;padding:4px 0;">Sem tarefas</p>';
       return `<div class="proj-card${atrasadas.length?' atrasado-card':''}" onclick="Admin.abrirProjeto(${p.id})">
         <div class="proj-cover" style="${coverStyle}">
           <div class="proj-cover-pos" onclick="event.stopPropagation()">
@@ -2552,9 +2565,13 @@ const Admin = {
           </div>
         </div>
         <div class="proj-body">
-          <div class="proj-nome">${p.nome}</div>
-          <div class="proj-cliente">${cliNome ? '👤 '+cliNome : '<span style="font-size:11px;color:var(--muted);">Sem cliente vinculado</span>'}</div>
-          <div class="proj-badges">${badges||'<span style="font-size:11px;color:var(--muted);">Sem tarefas</span>'}</div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px;">
+            <div class="proj-nome" style="margin-bottom:0;">${p.nome}</div>
+            <button onclick="event.stopPropagation();Admin.abrirTarefa(null,${p.id})" style="background:var(--beige);border:none;border-radius:6px;padding:3px 8px;font-size:11px;color:var(--brown);cursor:pointer;flex-shrink:0;margin-left:8px;">+ tarefa</button>
+          </div>
+          <div class="proj-cliente" style="margin-bottom:8px;">${cliNome ? '👤 '+cliNome : '<span style="font-size:11px;color:var(--muted);">Sem cliente vinculado</span>'}</div>
+          <div>${listaCards}</div>
+          ${pts.length ? `<div class="proj-badges" style="margin-top:6px;">${badges}</div>` : ''}
         </div>
       </div>`;
     }).join('') + `<div style="display:flex;align-items:center;justify-content:center;min-height:130px;border:2px dashed var(--border);border-radius:14px;cursor:pointer;color:var(--muted);font-size:13px;flex-direction:column;gap:6px;" onclick="Admin.abrirModalProjeto()"><span style="font-size:28px;">+</span><span>Novo projeto</span></div>`;
