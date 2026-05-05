@@ -270,7 +270,7 @@
     .ig-grid-item:hover img{opacity:.85;}
     .ig-grid-item .ig-grid-multi{position:absolute;top:6px;right:6px;color:#fff;font-size:14px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));}
     .ig-grid-empty{aspect-ratio:1;background:#fafafa;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:22px;}
-    .ig-post-header{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #efefef;}
+    .ig-post-header{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid #efefef;}
     .ig-post-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);overflow:hidden;flex-shrink:0;}
     .ig-post-av img{width:100%;height:100%;object-fit:cover;}
     .ig-back{background:none;border:none;font-size:20px;cursor:pointer;color:#262626;padding:0;margin-right:4px;}
@@ -521,9 +521,9 @@
     .ig-actions{display:flex;align-items:center;padding:10px 14px;gap:14px;}
     .ig-icon{font-size:22px;cursor:pointer;}
     .ig-save{margin-left:auto;}
-    .ig-caption{padding:0 14px 6px;font-size:13px;line-height:1.5;color:#000;}
+    .ig-caption{padding:10px 18px 8px;font-size:14px;line-height:1.65;color:#000;}
     .ig-caption strong{font-weight:600;}
-    .ig-hashtags{padding:0 14px 10px;font-size:12px;color:#00376b;}
+    .ig-hashtags{padding:4px 18px 18px;font-size:13px;color:#00376b;line-height:1.6;}
     .ig-time{padding:0 14px 14px;font-size:10px;color:#8e8e8e;text-transform:uppercase;letter-spacing:.06em;}
     .cp-btn-ig{background:none;border:1px solid #c4967a55;color:var(--copper);padding:7px 14px;border-radius:20px;font-size:11px;cursor:pointer;letter-spacing:.06em;display:flex;align-items:center;gap:5px;}
     .cp-btn-ig:hover{background:rgba(196,150,122,.08);}
@@ -573,10 +573,11 @@
       .modal-box{width:95vw!important;max-height:90vh;overflow-y:auto;}
 
       /* Cliente main mobile */
-      .client-main{padding:14px!important;max-width:100%!important;margin:0!important;}
+      .client-main{padding:14px!important;max-width:100%!important;margin:0!important;display:flex;flex-direction:column;}
       #client-view{width:100%;}
       body{overflow-x:hidden;}
       .client-main>*{max-width:100%;box-sizing:border-box;}
+      .client-tabs{order:-1;}
       .client-layout{grid-template-columns:1fr!important;gap:12px!important;}
       .client-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))!important;gap:10px!important;}
       .cp-card{font-size:12px;}
