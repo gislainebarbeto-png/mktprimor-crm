@@ -242,9 +242,10 @@
     .cb-post-cap{font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
     .cb-empty{padding:20px 18px;font-size:13px;color:var(--muted);font-style:italic;font-family:"Cormorant Garamond",serif;}
     @media(max-width:860px){.client-layout{grid-template-columns:1fr;}}
-    .cp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);transition:all .22s;display:flex;flex-direction:column;animation:fadeIn .4s ease;cursor:pointer;}
-    .cp-card:hover{box-shadow:var(--sh2);transform:translateY(-3px);}
-    .cp-card:active{transform:scale(.98);}
+    .cp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);transition:all .22s;display:flex;flex-direction:column;animation:fadeIn .4s ease;}
+    .cp-card:hover{box-shadow:var(--sh2);}
+    .cp-compact-hd{display:none;}
+    .cp-expand{display:block;}
     .cp-img{width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--beige);display:block;cursor:zoom-in;}
     .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000;display:flex;align-items:center;justify-content:center;cursor:zoom-out;}
     .lightbox.hidden{display:none;}
@@ -578,8 +579,19 @@
       body{overflow-x:hidden;}
       .client-main>*{max-width:100%;box-sizing:border-box;}
       .client-layout{grid-template-columns:1fr!important;gap:12px!important;}
-      .client-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))!important;gap:10px!important;}
-      .cp-card{font-size:12px;}
+      /* Cards accordion no mobile */
+      .client-grid{display:flex!important;flex-direction:column;gap:8px;}
+      .cp-compact-hd{display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer;user-select:none;}
+      .cp-compact-thumb{width:52px;height:52px;border-radius:8px;background:var(--bg);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:18px;}
+      .cp-compact-thumb img{width:100%;height:100%;object-fit:cover;}
+      .cp-compact-info{flex:1;min-width:0;}
+      .cp-compact-info .cp-title{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .cp-compact-info .cp-date{font-size:11px;color:var(--muted);margin-top:2px;}
+      .cp-toggle-icon{font-size:12px;color:var(--muted);transition:transform .2s;flex-shrink:0;}
+      .cp-card.open .cp-toggle-icon{transform:rotate(180deg);}
+      .cp-expand{display:none;}
+      .cp-card.open .cp-expand{display:block;}
+      .cp-card{cursor:default;}
       .client-stats{gap:8px!important;justify-content:space-between;}
       .c-stat{min-width:60px;flex:1;}
       .client-header-row{margin-bottom:8px;}
@@ -691,6 +703,7 @@
     <!-- Tabs do portal -->
     <div class="client-tabs">
       <div class="client-tab active" id="ctab-posts" onclick="Client.clientTab('posts')">Posts</div>
+      <div class="client-tab" id="ctab-comece" onclick="Client.clientTab('comece')">🌱 Início</div>
       <div class="client-tab" id="ctab-onboarding" onclick="Client.clientTab('onboarding')">🌿 Onboarding</div>
       <div class="client-tab" id="ctab-financeiro" onclick="Client.clientTab('financeiro')">💰 Financeiro</div>
       <div class="client-tab" id="ctab-metricas" onclick="Client.clientTab('metricas')">📊 Métricas</div>
@@ -723,8 +736,6 @@
     </div>
     <!-- Barra de progresso -->
     <div class="progress-wrap" id="client-progress"></div>
-    <!-- Comece por aqui -->
-    <div id="comece-por-aqui" class="hidden"></div>
     <!-- Tab: Posts -->
     <div id="ctab-content-posts">
       <div class="client-layout">
@@ -742,6 +753,7 @@
       </div>
     </div>
     <!-- Tab: Métricas -->
+    <div id="ctab-content-comece" class="hidden"></div>
     <div id="ctab-content-onboarding" class="hidden"></div>
     <div id="ctab-content-financeiro" class="hidden"></div>
     <div id="ctab-content-metricas" class="hidden"></div>
@@ -3089,7 +3101,6 @@ const Client = {
       this._fotoUrl = clientData?.foto_url || '';
       this._mensagemGi = clientData?.mensagem_gi || '';
       this._arquivos = clientData?.arquivos || '[]';
-      await this.renderComecePorAqui();
       // Avatar no portal
       const av = document.getElementById('client-avatar');
       if (this._fotoUrl) {
@@ -3213,6 +3224,10 @@ const Client = {
     document.getElementById('ig-back-btn').style.display = 'block';
   },
 
+  toggleCard(id) {
+    document.getElementById('cpcard-'+id)?.classList.toggle('open');
+  },
+
   igNav(dir) {
     const wrap = document.getElementById('ig-car-wrap');
     const imgs = wrap.querySelectorAll('.ig-car-img');
@@ -3310,15 +3325,27 @@ const Client = {
         actions = `<div class="status-msg msg-cr">✦ Em produção pela equipe</div>`;
       }
       const openButton = `<button class="cp-btn-open" onclick="Client.igShowPost(${p.id})">Abrir post</button>`;
-      return `<div class="cp-card">
-        ${mediaBlock}
-        <div class="cp-body" style="padding:10px;">
-          <div class="cp-top">
-            <div><div class="cp-title" style="font-size:13px;">${(p.legenda||'Post').substring(0,30)}...</div><div class="cp-date">${date} · ${p.tipo||'Feed'}</div></div>
-            <span class="badge badge-${p.status}">${labels[p.status]||p.status}</span>
+      const title = (p.legenda||'Post').substring(0,35)+'...';
+      const thumbHtml = imgs.length ? `<img src="${imgs[0]}" alt=""/>` : '✦';
+      return `<div class="cp-card" id="cpcard-${p.id}">
+        <div class="cp-compact-hd" onclick="Client.toggleCard(${p.id})">
+          <div class="cp-compact-thumb">${thumbHtml}</div>
+          <div class="cp-compact-info">
+            <div class="cp-title">${title}</div>
+            <div class="cp-date">${date} · ${p.tipo||'Feed'}</div>
           </div>
-          <div class="cp-actions" style="padding-top:8px;">${actions}${openButton}</div>
-
+          <span class="badge badge-${p.status}" style="flex-shrink:0;">${labels[p.status]||p.status}</span>
+          <span class="cp-toggle-icon">▾</span>
+        </div>
+        <div class="cp-expand">
+          ${mediaBlock}
+          <div class="cp-body" style="padding:10px;">
+            <div class="cp-top">
+              <div><div class="cp-title" style="font-size:13px;">${title}</div><div class="cp-date">${date} · ${p.tipo||'Feed'}</div></div>
+              <span class="badge badge-${p.status}">${labels[p.status]||p.status}</span>
+            </div>
+            <div class="cp-actions" style="padding-top:8px;">${actions}${openButton}</div>
+          </div>
         </div>
       </div>`;
     }).join('');
@@ -3522,11 +3549,12 @@ const Client = {
   clientTab(name) {
     this._activeTab = name;
     localStorage.setItem('clientTab', name);
-    ['posts','onboarding','financeiro','metricas','arquivos','ideias','info','solicitacoes','tarefas','chat'].forEach(t => {
+    ['posts','comece','onboarding','financeiro','metricas','arquivos','ideias','info','solicitacoes','tarefas','chat'].forEach(t => {
       document.getElementById('ctab-'+t)?.classList.toggle('active', t===name);
       const c = document.getElementById('ctab-content-'+t);
       if (c) c.classList.toggle('hidden', t!==name);
     });
+    if (name==='comece')        this.renderComecePorAqui();
     if (name==='onboarding')    this.renderOnboardingTab();
     if (name==='financeiro')    this.renderFinanceiroTab();
     if (name==='metricas')      this.renderMetricasTab();
@@ -3702,12 +3730,12 @@ const Client = {
   },
 
   async renderComecePorAqui() {
-    const el = document.getElementById('comece-por-aqui');
+    const el = document.getElementById('ctab-content-comece');
     if (!el) return;
+    el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Carregando...</p>';
     const { data } = await db.from('arquivos_cliente').select('*').eq('client_email','__comece__').order('created_at',{ascending:true});
     const rows = (data||[]).filter(r=>!['__video__','__titulo__','__desc__'].includes(r.nome));
-    if (!rows.length) { el.classList.add('hidden'); return; }
-    el.classList.remove('hidden');
+    if (!rows.length) { el.innerHTML='<p style="color:var(--muted);font-style:italic;text-align:center;padding:40px;font-family:Cormorant Garamond,serif;font-size:18px;">Conteúdo em breve ✦</p>'; return; }
     const toEmbed = url => {
       const m = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/);
       return m ? `https://www.youtube-nocookie.com/embed/${m[1]}?rel=0` : url;
@@ -3734,13 +3762,12 @@ const Client = {
         return `<a href="${r.url}" target="_blank" class="file-item" style="margin-bottom:8px;">${icon} ${r.nome}</a>`;
       }
     }).join('');
-    el.innerHTML = `<div class="cpa-card">
-      <div class="cpa-header" onclick="const b=this.nextElementSibling;b.classList.toggle('hidden');this.querySelector('.cpa-chev').style.transform=b.classList.contains('hidden')?'rotate(-90deg)':'';">
-        <span class="cpa-title">✦ Comece por aqui</span>
-        <span class="cpa-chev">▾</span>
+    el.innerHTML = `
+      <div style="margin-bottom:20px;">
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-style:italic;color:var(--brown);margin-bottom:6px;">Por onde começar ✦</h2>
+        <p style="font-size:12px;color:var(--muted);">Tudo o que você precisa saber para aproveitar ao máximo o seu portal.</p>
       </div>
-      <div class="cpa-body">${items}</div>
-    </div>`;
+      <div style="display:flex;flex-direction:column;gap:16px;">${items}</div>`;
   },
 
   async renderInfoTab() {
