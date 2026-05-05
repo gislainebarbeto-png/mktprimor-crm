@@ -31,6 +31,13 @@
       --sh:      0 4px 20px rgba(44,37,32,0.06);
       --sh2:     0 12px 40px rgba(44,37,32,0.12);
     }
+    /* Light mode — garante contraste em inputs, selects e textareas */
+    input, textarea, select {
+      color: var(--text) !important;
+      background: var(--bg) !important;
+      border-color: var(--border) !important;
+    }
+    input::placeholder, textarea::placeholder { color: var(--muted) !important; }
     html.dark :root {
       --bg:      #1A1210;
       --surface: #231815;
