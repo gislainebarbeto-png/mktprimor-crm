@@ -210,7 +210,7 @@
 
     /* ── CLIENT PORTAL ── */
     #client-view{min-height:100vh;display:flex;flex-direction:column;}
-    .client-main{padding:28px 32px;max-width:1100px;margin:0 auto;width:100%;}
+    .client-main{padding:28px 32px;max-width:960px;margin:0 auto;width:100%;box-sizing:border-box;}
     .client-main h2{font-size:28px;font-style:italic;color:var(--brown);margin-bottom:4px;}
     .client-sub{font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:24px;}
     .client-stats{display:flex;gap:12px;margin-bottom:24px;}
@@ -435,7 +435,7 @@
     .chat-send{padding:9px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;flex-shrink:0;}
     .chat-notif-hd{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;background:#FFEBEE;color:#C62828;font-size:11px;border:1px solid rgba(198,40,40,.2);cursor:pointer;margin-left:8px;font-weight:500;}
     /* ── STARS ── */
-    .stars-modal{position:fixed;inset:0;background:rgba(44,24,16,.5);backdrop-filter:blur(6px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .stars-modal{position:fixed;inset:0;background:rgba(44,24,16,.5);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
     .stars-box{background:var(--surface);border-radius:var(--r);padding:28px;width:100%;max-width:380px;box-shadow:var(--sh2);animation:fadeIn .25s ease;text-align:center;}
     .stars-box h3{font-family:"Cormorant Garamond",serif;font-size:22px;font-style:italic;color:var(--brown);margin-bottom:6px;}
     .stars-box p{font-size:12px;color:var(--muted);margin-bottom:12px;}
@@ -567,9 +567,25 @@
       .client-tabs::-webkit-scrollbar{display:none;}
       .client-tab{white-space:nowrap;}
       /* Cliente main mobile */
-      .client-main{padding:16px!important;max-width:100%!important;}
+      .client-main{padding:12px!important;max-width:100%!important;margin:0!important;}
       #client-view{width:100%;overflow-x:hidden;}
       .client-main>*{max-width:100%;box-sizing:border-box;}
+      .client-layout{grid-template-columns:1fr!important;gap:12px!important;}
+      .client-grid{grid-template-columns:1fr 1fr!important;gap:8px!important;}
+      .cp-card{font-size:12px;}
+      .client-stats{gap:8px!important;justify-content:space-between;}
+      .c-stat{min-width:60px;flex:1;}
+      .client-header-row{margin-bottom:8px;}
+      .welcome-banner{padding:14px!important;margin-bottom:12px!important;}
+      .welcome-banner h3{font-size:16px!important;}
+      .welcome-banner p{font-size:11px!important;}
+      .client-tabs{gap:0!important;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+      .client-tab{white-space:nowrap;padding:8px 12px!important;font-size:11px!important;}
+      .app-header{padding:0 12px!important;}
+      #client-view .app-header{justify-content:space-between;}
+    }
+    @media(max-width:400px){
+      .client-grid{grid-template-columns:1fr!important;}
     }
   </style>
 </head>
@@ -3291,7 +3307,7 @@ const Client = {
             <span class="badge badge-${p.status}">${labels[p.status]||p.status}</span>
           </div>
           <div class="cp-actions" style="padding-top:8px;">${actions}</div>
-          <button onclick="Client.excluirPost(${p.id})" style="margin-top:8px;width:100%;padding:7px;border-radius:8px;border:1px solid #FFCDD2;background:#FFEBEE;font-size:11px;cursor:pointer;color:#C62828;">🗑 Excluir post</button>
+
         </div>
       </div>`;
     }).join('');
