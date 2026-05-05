@@ -573,11 +573,10 @@
       .modal-box{width:95vw!important;max-height:90vh;overflow-y:auto;}
 
       /* Cliente main mobile */
-      .client-main{padding:14px!important;max-width:100%!important;margin:0!important;display:flex;flex-direction:column;}
+      .client-main{padding:14px!important;max-width:100%!important;margin:0!important;}
       #client-view{width:100%;}
       body{overflow-x:hidden;}
       .client-main>*{max-width:100%;box-sizing:border-box;}
-      .client-tabs{order:-1;}
       .client-layout{grid-template-columns:1fr!important;gap:12px!important;}
       .client-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))!important;gap:10px!important;}
       .cp-card{font-size:12px;}
@@ -689,6 +688,19 @@
     </div>
   </div>
   <div class="client-main">
+    <!-- Tabs do portal -->
+    <div class="client-tabs">
+      <div class="client-tab active" id="ctab-posts" onclick="Client.clientTab('posts')">Posts</div>
+      <div class="client-tab" id="ctab-onboarding" onclick="Client.clientTab('onboarding')">🌿 Onboarding</div>
+      <div class="client-tab" id="ctab-financeiro" onclick="Client.clientTab('financeiro')">💰 Financeiro</div>
+      <div class="client-tab" id="ctab-metricas" onclick="Client.clientTab('metricas')">📊 Métricas</div>
+      <div class="client-tab" id="ctab-arquivos" onclick="Client.clientTab('arquivos')">📁 Arquivos</div>
+      <div class="client-tab" id="ctab-ideias" onclick="Client.clientTab('ideias')">💡 Ideias</div>
+      <div class="client-tab" id="ctab-info" onclick="Client.clientTab('info')">📋 Informações</div>
+      <div class="client-tab" id="ctab-solicitacoes" onclick="Client.clientTab('solicitacoes')">📅 Solicitações <span class="ctab-badge hidden" id="ctab-sol-badge"></span></div>
+      <div class="client-tab" id="ctab-tarefas" onclick="Client.clientTab('tarefas')">✅ Tarefas</div>
+      <div class="client-tab" id="ctab-chat" onclick="Client.clientTab('chat')">✉ Chat <span class="ctab-badge hidden" id="ctab-chat-badge"></span></div>
+    </div>
     <div class="client-header-row">
       <div class="client-avatar" id="client-avatar">✦</div>
       <div>
@@ -713,19 +725,6 @@
     <div class="progress-wrap" id="client-progress"></div>
     <!-- Comece por aqui -->
     <div id="comece-por-aqui" class="hidden"></div>
-    <!-- Tabs do portal -->
-    <div class="client-tabs">
-      <div class="client-tab active" id="ctab-posts" onclick="Client.clientTab('posts')">Posts</div>
-      <div class="client-tab" id="ctab-onboarding" onclick="Client.clientTab('onboarding')">🌿 Onboarding</div>
-      <div class="client-tab" id="ctab-financeiro" onclick="Client.clientTab('financeiro')">💰 Financeiro</div>
-      <div class="client-tab" id="ctab-metricas" onclick="Client.clientTab('metricas')">📊 Métricas</div>
-      <div class="client-tab" id="ctab-arquivos" onclick="Client.clientTab('arquivos')">📁 Arquivos</div>
-      <div class="client-tab" id="ctab-ideias" onclick="Client.clientTab('ideias')">💡 Ideias</div>
-      <div class="client-tab" id="ctab-info" onclick="Client.clientTab('info')">📋 Informações</div>
-      <div class="client-tab" id="ctab-solicitacoes" onclick="Client.clientTab('solicitacoes')">📅 Solicitações <span class="ctab-badge hidden" id="ctab-sol-badge"></span></div>
-      <div class="client-tab" id="ctab-tarefas" onclick="Client.clientTab('tarefas')">✅ Tarefas</div>
-      <div class="client-tab" id="ctab-chat" onclick="Client.clientTab('chat')">✉ Chat <span class="ctab-badge hidden" id="ctab-chat-badge"></span></div>
-    </div>
     <!-- Tab: Posts -->
     <div id="ctab-content-posts">
       <div class="client-layout">
