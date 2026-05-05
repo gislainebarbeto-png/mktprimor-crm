@@ -537,32 +537,33 @@
     .tab-btn.active{background:var(--surface);color:var(--brown);box-shadow:0 1px 4px rgba(44,37,32,.08);}
     @media(max-width:640px){
       .app-header,.client-main{padding-left:16px;padding-right:16px;}
-      .admin-body{flex-direction:column;height:auto;min-height:0;overflow:visible;}
-      .admin-main{padding:16px;overflow-y:auto;height:calc(100svh - 73px - 72px);}
+      .admin-body{flex-direction:column;height:calc(100svh - 52px - 42px);min-height:0;overflow:hidden;position:relative;}
+      .admin-main{padding:16px;overflow-y:auto;flex:1;height:100%;}
       .stats-row{grid-template-columns:1fr 1fr;}
 
-      /* Sidebar vira barra horizontal rolável no topo */
+      /* Sidebar vira menu dropdown sanduíche */
+      #admin-hamburger{display:flex!important;}
       .sidebar{
+        display:none;flex-direction:column;
+        position:absolute;top:0;left:0;right:0;z-index:400;
         width:100%;height:auto;
-        display:flex;flex-direction:row;
-        overflow-x:auto;overflow-y:hidden;
-        padding:8px 10px;gap:4px;
-        border-right:none;border-bottom:1px solid var(--border);
-        scrollbar-width:none;
+        background:var(--surface);
+        box-shadow:0 8px 28px rgba(44,37,32,.18);
+        border-bottom:1px solid var(--border);
+        padding:8px 0;
+        overflow-y:auto;max-height:80vh;
       }
-      .sidebar::-webkit-scrollbar{display:none;}
-      .nav-section{display:none;}
+      #admin-view.sidebar-open .sidebar{display:flex;}
+      .nav-section{display:block;font-size:9px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;padding:10px 16px 4px;}
       .nav-item{
-        flex-direction:column;flex-shrink:0;
-        padding:7px 10px;gap:3px;
-        font-size:9px;letter-spacing:.03em;
-        min-width:56px;text-align:center;margin-bottom:0;
-        border-radius:10px;
+        flex-direction:row;padding:12px 16px;gap:10px;
+        font-size:13px;border-radius:0;margin-bottom:0;
+        border-bottom:1px solid var(--border);
       }
-      /* Esconde texto dos badges de notificação no mobile, mantém o badge */
-      .nav-badge{font-size:8px;padding:1px 5px;}
-      .ni{font-size:18px;}
-      .nl{font-size:9px;letter-spacing:.02em;}
+      .nav-item:last-child{border-bottom:none;}
+      .ni{font-size:16px;}
+      .nl{font-size:13px;letter-spacing:0;}
+      .nav-badge{font-size:10px;padding:1px 7px;}
 
       /* Tabelas e cards */
       .table-head{display:none;}
@@ -672,9 +673,14 @@
       <button class="btn-out" onclick="App.logout()">Sair</button>
     </div>
   </div>
+  <!-- Admin hamburger (mobile only) -->
+  <div id="admin-hamburger" style="display:none;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--brown);letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--surface);" onclick="document.getElementById('admin-view').classList.toggle('sidebar-open')">
+    <span id="admin-active-tab-name">Leads</span>
+    <span style="font-size:22px;color:var(--muted);">☰</span>
+  </div>
   <div class="admin-body">
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="admin-sidebar">
       <div class="nav-section">Menu</div>
       <div class="nav-item active" onclick="Admin.tab('leads')" id="nav-leads"><span class="ni">◉</span><span class="nl">Leads</span></div>
       <div class="nav-item" onclick="Admin.tab('followup')" id="nav-followup"><span class="ni">↗</span><span class="nl">Follow-up <span class="nav-badge" id="nb-fu" style="display:none">0</span></span></div>
@@ -906,6 +912,9 @@ const Admin = {
     ['leads','followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','tarefas','chat'].forEach(t => {
       document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
     });
+    document.getElementById('admin-view')?.classList.remove('sidebar-open');
+    const nm = document.getElementById('nav-'+name)?.querySelector('.nl')?.textContent?.trim();
+    if (nm) { const el = document.getElementById('admin-active-tab-name'); if(el) el.textContent = nm; }
     this.closeDetail();
     this.loader(true);
     try {
@@ -3344,7 +3353,7 @@ const Client = {
       const date = p.data_post ? new Date(p.data_post+'T12:00:00').toLocaleDateString('pt-BR') : (p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '');
       let actions = '';
       if (p.status === 'revisao') {
-        actions = `<button class="cp-btn-ok" onclick="Client.abrirAprovacao(${p.id})">✓ Aprovar este post</button><button class="cp-btn-adj" onclick="Client.solicitarAjuste(${p.id})">← Solicitar ajuste</button>`;
+        actions = `${p.obs && p.obs.startsWith('✏') ? `<div style="background:#FFF3E0;border:1px solid #FFB74D;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:#E65100;">${p.obs}</div>` : ''}<button class="cp-btn-ok" onclick="Client.abrirAprovacao(${p.id})">✓ Aprovar este post</button><button class="cp-btn-adj" onclick="Client.solicitarAjuste(${p.id})">← Solicitar ajuste</button>`;
       } else if (p.status === 'aprovado') {
         actions = `<div class="status-msg msg-ap">✓ Aprovado — aguardando publicação</div>`;
       } else if (p.status === 'publicado') {
@@ -3506,9 +3515,24 @@ const Client = {
     if (!text) { document.getElementById('ajuste-text').focus(); return; }
     App.loader(true);
     try {
-      await db.from('posts').update({ status: 'criacao', obs: text }).eq('id', id);
+      // Busca título do post pra incluir na mensagem
+      const { data: post } = await db.from('posts').select('titulo,client_email').eq('id', id).single();
+      // Atualiza post: volta pra revisao com o pedido de ajuste no obs
+      await db.from('posts').update({ status: 'revisao', obs: '✏ Ajuste solicitado: ' + text }).eq('id', id);
+      // Manda mensagem no chat notificando admin
+      const nomeCliente = App.user.email;
+      const titulo = post?.titulo || 'post';
+      await db.from('mensagens').insert([{
+        client_email: App.user.email,
+        de: 'client',
+        texto: `✏ Solicitação de ajuste no post "${titulo}":
+
+${text}`,
+        lida: false
+      }]);
       this.fecharAjuste();
       await this.load();
+      alert('Pedido de ajuste enviado! ✓');
     } catch(e) { alert('Erro: '+e.message); App.loader(false); }
   },
 
