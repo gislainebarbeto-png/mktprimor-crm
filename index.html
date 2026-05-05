@@ -567,7 +567,9 @@
       /* Tabelas e cards */
       .table-head{display:none;}
       .table-row{flex-wrap:wrap;gap:4px;padding:10px 12px;}
-      .col-main{min-width:0;flex:1;}
+      .col-main{min-width:0;flex:1 1 120px;}
+      .table-head{display:none!important;}
+      .table-row > div:not(.col-main){font-size:11px;white-space:nowrap;}
       .detail-panel{width:100%!important;right:0!important;left:0!important;top:auto!important;bottom:0!important;height:85vh!important;border-radius:20px 20px 0 0!important;}
 
       /* Stats */
@@ -615,7 +617,10 @@
       #client-view .app-header{justify-content:space-between;padding:0 16px!important;}
       #client-view .header-user{display:none!important;}
       #client-view .theme-switcher{display:none!important;}
-      .app-header{padding:0 16px!important;}
+      .app-header{padding:0 12px!important;height:52px;}
+      #admin-email{display:none!important;}
+      #admin-view .header-user{display:none!important;}
+      #admin-view .theme-switcher{transform:scale(0.8);}
       .client-main{padding:16px!important;margin:0!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;}
       #client-view{width:100%;overflow-x:hidden;box-sizing:border-box;}
       .portal-nav{width:100%;box-sizing:border-box;}
@@ -751,15 +756,10 @@
       <p>Aqui, cada detalhe da sua marca é cuidado com intenção e primor.</p>
     </div>
     <!-- Stats / linha do tempo -->
-    <div class="client-stats" style="margin-top:0;margin-bottom:16px;flex-wrap:wrap;">
-      <div class="c-stat"><div class="c-stat-n" id="cs-rev" style="color:#E65100">0</div><div class="c-stat-l">Aguardando você</div></div>
-      <div class="c-stat"><div class="c-stat-n" id="cs-mes">0</div><div class="c-stat-l">Este mês</div></div>
-      <div class="c-stat"><div class="c-stat-n" id="cs-ant">0</div><div class="c-stat-l">Mês passado</div></div>
-      <div class="c-stat"><div class="c-stat-n" id="cs-pub" style="color:#6A1B9A">0</div><div class="c-stat-l">Publicados</div></div>
-      <div class="c-stat"><div class="c-stat-n" id="cs-growth" style="color:#2E7D32">—</div><div class="c-stat-l">Crescimento</div></div>
-    </div>
     <!-- Barra de progresso -->
     <div class="progress-wrap" id="client-progress"></div>
+    <!-- Stats hidden (moved to metricas) -->
+    <div style="display:none"><div id="cs-rev"></div><div id="cs-mes"></div><div id="cs-ant"></div><div id="cs-pub"></div><div id="cs-growth"></div></div>
     <!-- Tab: Posts -->
     <div id="ctab-content-posts">
       <div class="client-layout">
@@ -3660,8 +3660,19 @@ const Client = {
     }
   },
 
+  renderStatsBlock() {
+    return `<div class="client-stats" style="margin-bottom:20px;flex-wrap:wrap;">
+      <div class="c-stat"><div class="c-stat-n" id="cs-rev2" style="color:#E65100">${document.getElementById('cs-rev')?.textContent||'0'}</div><div class="c-stat-l">Aguardando você</div></div>
+      <div class="c-stat"><div class="c-stat-n" id="cs-mes2">${document.getElementById('cs-mes')?.textContent||'0'}</div><div class="c-stat-l">Este mês</div></div>
+      <div class="c-stat"><div class="c-stat-n" id="cs-ant2">${document.getElementById('cs-ant')?.textContent||'0'}</div><div class="c-stat-l">Mês passado</div></div>
+      <div class="c-stat"><div class="c-stat-n" id="cs-pub2" style="color:#6A1B9A">${document.getElementById('cs-pub')?.textContent||'0'}</div><div class="c-stat-l">Publicados</div></div>
+      <div class="c-stat"><div class="c-stat-n" id="cs-growth2" style="color:#2E7D32">${document.getElementById('cs-growth')?.textContent||'—'}</div><div class="c-stat-l">Crescimento</div></div>
+    </div>`;
+  },
+
   async renderMetricasTab() {
     const el = document.getElementById('ctab-content-metricas'); if (!el) return;
+    el.innerHTML = this.renderStatsBlock();
     el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;font-style:italic;">Carregando...</p>';
     const [{ data: mets }, { data: posts }, { data: metricoolRow }] = await Promise.all([
       db.from('metricas').select('*').eq('client_email', App.user.email).order('mes',{ascending:true}),
@@ -3951,7 +3962,7 @@ const Client = {
         </div>`;
       }).join('');
       html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;">
-        <div style="${coverStyle}height:70px;"></div>
+        <div style="${coverStyle}height:120px;width:100%;background-size:cover;background-position:center;"></div>
         <div style="padding:16px 20px;">
           <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--brown);margin-bottom:12px;">${p.nome}</div>
           ${tarefasHtml||'<p style="color:var(--muted);font-size:13px;font-style:italic;">Nenhuma tarefa neste projeto ainda.</p>'}
