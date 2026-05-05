@@ -463,6 +463,9 @@
     .cp-btn-adj{width:100%;padding:11px 12px;border-radius:8px;background:transparent;color:var(--muted);border:1px solid var(--border);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;}
     .cp-btn-adj:hover{background:var(--bg);}
     .cp-btn-adj:active{transform:scale(.96);}
+    .cp-btn-open{width:100%;padding:11px 12px;border-radius:8px;background:var(--brown);color:#F5EDD8;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;margin-top:6px;}
+    .cp-btn-open:hover{background:#6B3E28;}
+    .cp-btn-open:active{transform:scale(.96);}
     .status-msg{padding:9px;border-radius:8px;text-align:center;font-size:11px;}
     .msg-ap{background:rgba(196,150,122,.08);border:1px solid rgba(196,150,122,.2);color:var(--copper);}
     .msg-pu{background:rgba(75,45,34,.05);border:1px solid var(--border);color:var(--brown);}
@@ -3302,6 +3305,7 @@ const Client = {
       } else {
         actions = `<div class="status-msg msg-cr">✦ Em produção pela equipe</div>`;
       }
+      const openButton = `<button class="cp-btn-open" onclick="Client.igShowPost(${p.id})">Abrir post</button>`;
       return `<div class="cp-card">
         ${mediaBlock}
         <div class="cp-body" style="padding:10px;">
@@ -3309,7 +3313,7 @@ const Client = {
             <div><div class="cp-title" style="font-size:13px;">${(p.legenda||'Post').substring(0,30)}...</div><div class="cp-date">${date} · ${p.tipo||'Feed'}</div></div>
             <span class="badge badge-${p.status}">${labels[p.status]||p.status}</span>
           </div>
-          <div class="cp-actions" style="padding-top:8px;">${actions}</div>
+          <div class="cp-actions" style="padding-top:8px;">${actions}${openButton}</div>
 
         </div>
       </div>`;
