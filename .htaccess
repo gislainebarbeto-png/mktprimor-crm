@@ -1,13 +1,7 @@
 <IfModule mod_headers.c>
-    # Desativa cache para arquivos HTML
     <FilesMatch "\.(html|htm)$">
         Header set Cache-Control "no-cache, no-store, must-revalidate"
         Header set Pragma "no-cache"
         Header set Expires 0
     </FilesMatch>
-</IfModule>
-
-# LiteSpeed Cache - desativa para HTML
-<IfModule LiteSpeed>
-    CacheLookup off
 </IfModule>
