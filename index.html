@@ -99,7 +99,7 @@
     html.dark .nav-section{color:#9B8472;opacity:1;}
     html.dark .section-title{color:#F1C5AF!important;}
 
-    /* Glass cards — vidro com borda gradiente só no topo */
+    /* Glass cards — só borda no topo, fundo transparente deixa o grid aparecer */
     html.dark .stat-card,
     html.dark .k-card,
     html.dark .table-wrap,
@@ -111,19 +111,15 @@
     html.dark .ajuste-box,
     html.dark .welcome-banner,
     html.dark .progress-wrap {
-      background: linear-gradient(rgba(6,3,2,0.55),rgba(6,3,2,0.55)) padding-box,
-                  linear-gradient(90deg, rgba(73,54,47,0.3) 0%, rgba(212,168,130,0.6) 50%, rgba(73,54,47,0.3) 100%) border-box !important;
-      backdrop-filter: blur(16px) saturate(1.2);
-      -webkit-backdrop-filter: blur(16px) saturate(1.2);
-      border: 1px solid transparent !important;
-      border-bottom: none !important;
-      border-left: none !important;
-      border-right: none !important;
-      box-shadow: 0 8px 32px rgba(0,0,0,.5), inset 0 0 0 0 transparent !important;
+      background: transparent !important;
+      border: none !important;
+      border-top: 1px solid transparent !important;
+      border-image: linear-gradient(90deg, rgba(73,54,47,0.2) 0%, rgba(212,168,130,0.7) 50%, rgba(73,54,47,0.2) 100%) 1 !important;
+      box-shadow: none !important;
       color: var(--text) !important;
     }
     html.dark .cal-wrap,
-    html.dark .cal-wrap *:not(button) { background:rgba(6,3,2,0.55)!important; color:var(--text)!important; }
+    html.dark .cal-wrap *:not(button) { background:transparent!important; color:var(--text)!important; }
 
     /* Task modal glass */
     html.dark .task-modal {
