@@ -1,16 +1,17 @@
 #!/bin/bash
 set -e
 
-source "$(dirname "$0")/.env.deploy"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$DIR/.env.deploy"
 
 FILES=(index.html formulario.html manual-cliente.html manifest.json .htaccess Logo.png)
 
 echo "Iniciando deploy para $FTP_DIR..."
 
 for FILE in "${FILES[@]}"; do
-  if [ -f "$FILE" ]; then
+  if [ -f "$DIR/$FILE" ]; then
     echo "  Enviando $FILE..."
-    curl -s --ftp-create-dirs -T "$FILE" \
+    curl -s --ftp-create-dirs -T "$DIR/$FILE" \
       "ftp://$FTP_SERVER/$FTP_DIR$FILE" \
       --user "$FTP_USER:$FTP_PASS"
     echo "  ✓ $FILE"
