@@ -3208,7 +3208,7 @@ const Admin = {
           <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);">
             ${d.membro_email ? `<span>👤 ${memMap[d.membro_email]||d.membro_email}</span>` : ''}
             ${d.client_email ? `<span>🏢 ${cliMap[d.client_email]||d.client_email}</span>` : ''}
-            ${d.prazo ? `<span>📅 ${new Date(d.prazo+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}
+            ${d.prazo ? `<span>📅 ${new Date(d.prazo+'T12:00').toLocaleDateString('pt-BR')}${d.horario?' às '+d.horario:''}</span>` : ''}
           </div>
           ${d.descricao ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.descricao}</div>` : ''}
         </div>
@@ -3272,6 +3272,10 @@ const Admin = {
             <div class="task-section-lbl">📅 Prazo</div>
             <input id="dm-prazo" type="date" value="${d.prazo||''}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/>
           </div>
+        </div>
+        <div class="task-section">
+          <div class="task-section-lbl">⏰ Horário</div>
+          <input id="dm-horario" type="time" value="${d.horario||''}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/>
         </div>
 
         <!-- Membro + Cliente -->
@@ -3352,6 +3356,7 @@ const Admin = {
       membro_email: document.getElementById('dm-membro')?.value || null,
       client_email: document.getElementById('dm-cliente')?.value || null,
       prazo:        document.getElementById('dm-prazo')?.value || null,
+      horario:      document.getElementById('dm-horario')?.value || null,
       status:       document.getElementById('dm-status')?.value || 'pendente',
       etiquetas:    document.getElementById('dm-etiquetas')?.value || null,
       anexo_url:    document.getElementById('dm-anexo-url')?.value || null,
