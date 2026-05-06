@@ -3302,7 +3302,7 @@ const Admin = {
           ${d.anexo_url ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><a href="${d.anexo_url}" target="_blank" style="font-size:12px;color:var(--copper);">📄 Ver arquivo atual</a></div>` : ''}
           <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px dashed var(--border);border-radius:9px;cursor:pointer;font-size:12px;color:var(--muted);">
             📁 Selecionar arquivo
-            <input type="file" id="dm-anexo-file" style="display:none" onchange="Admin.uploadAnexoDemanda(this,${id||'null'})"/>
+            <input type="file" id="dm-anexo-file" multiple style="display:none" onchange="Admin.uploadAnexosDemanda(this,${id||'null'})"/>
           </label>
           <input type="hidden" id="dm-anexo-url" value="${d.anexo_url||''}"/>
         </div>
@@ -3331,19 +3331,35 @@ const Admin = {
     }
   },
 
-  async uploadAnexoDemanda(input, id) {
-    const file = input.files[0]; if (!file) return;
+  async uploadAnexosDemanda(input, id) {
+    const files = Array.from(input.files); if (!files.length) return;
     this.loader(true);
     try {
-      const safe = file.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_');
-      const path = `demandas/${Date.now()}-${safe}`;
-      const {error} = await db.storage.from('posts-media').upload(path,file,{cacheControl:'3600',upsert:false});
-      if (error) throw error;
-      const {data:u} = db.storage.from('posts-media').getPublicUrl(path);
-      document.getElementById('dm-anexo-url').value = u.publicUrl;
-      input.parentElement.querySelector('span') && (input.parentElement.querySelector('span').textContent = '✓ ' + file.name);
-    } catch(e) { alert('Erro: '+e.message); }
+      const inp = document.getElementById('dm-anexo-url');
+      let urls = []; try { urls = JSON.parse(inp.value||'[]'); } catch { urls = inp.value && inp.value.startsWith('http') ? [inp.value] : []; }
+      for (const file of files) {
+        const safe = file.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_');
+        const path = `demandas/${Date.now()}-${Math.random().toString(36).slice(2)}-${safe}`;
+        const {error} = await db.storage.from('posts-media').upload(path,file,{cacheControl:'3600',upsert:false});
+        if (error) throw error;
+        const {data:u} = db.storage.from('posts-media').getPublicUrl(path);
+        urls.push(u.publicUrl);
+      }
+      inp.value = JSON.stringify(urls);
+      const lista = document.getElementById('dm-anexos-lista');
+      if (lista) lista.innerHTML = urls.map((u,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--beige);border-radius:8px;"><a href="${u}" target="_blank" style="flex:1;font-size:12px;color:var(--copper);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📄 ${decodeURIComponent(u.split('/').pop().replace(/^\d+-[a-z0-9]+-/,''))}</a><button onclick="Admin.removerAnexoDemanda(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;">×</button></div>`).join('');
+      if (id && id !== 'null') await db.from('demandas').update({anexo_url: JSON.stringify(urls)}).eq('id',id);
+    } catch(e) { alert('Erro ao enviar: '+e.message); }
     finally { this.loader(false); }
+  },
+
+  removerAnexoDemanda(idx) {
+    const inp = document.getElementById('dm-anexo-url');
+    let urls = []; try { urls = JSON.parse(inp.value||'[]'); } catch { urls = []; }
+    urls.splice(idx, 1);
+    inp.value = JSON.stringify(urls);
+    const lista = document.getElementById('dm-anexos-lista');
+    if (lista) lista.innerHTML = urls.map((u,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--beige);border-radius:8px;"><a href="${u}" target="_blank" style="flex:1;font-size:12px;color:var(--copper);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📄 ${decodeURIComponent(u.split('/').pop().replace(/^\d+-[a-z0-9]+-/,''))}</a><button onclick="Admin.removerAnexoDemanda(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;">×</button></div>`).join('');
   },
 
   async salvarDemanda(id) {
@@ -3360,6 +3376,7 @@ const Admin = {
       status:       document.getElementById('dm-status')?.value || 'pendente',
       etiquetas:    document.getElementById('dm-etiquetas')?.value || null,
       anexo_url:    document.getElementById('dm-anexo-url')?.value || null,
+      links:        document.getElementById('dm-links')?.value.trim() || null,
     };
     this.loader(true);
     const result = id && id !== 'null'
