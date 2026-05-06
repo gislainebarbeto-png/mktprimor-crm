@@ -816,6 +816,7 @@
       <div class="nav-item" onclick="Admin.tab('info')" id="nav-info"><span class="ni">📋</span><span class="nl">Infos</span></div>
       <div class="nav-item" onclick="Admin.tab('solicitacoes')" id="nav-solicitacoes"><span class="ni">📅</span><span class="nl">Solic.</span></div>
       <div class="nav-item" onclick="Admin.tab('tarefas')" id="nav-tarefas"><span class="ni">✅</span><span class="nl">Tarefas</span></div>
+      <div class="nav-item" onclick="Admin.tab('demandas')" id="nav-demandas"><span class="ni">📋</span><span class="nl">Demandas</span></div>
       <div class="nav-item" onclick="Admin.tab('chat')" id="nav-chat"><span class="ni">✉</span><span class="nl">Chat <span class="chat-badge hidden" id="nb-chat" style="background:#C62828;color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;"></span></span></div>
     </div>
     <!-- Main -->
@@ -1027,7 +1028,7 @@ const Admin = {
 
   async tab(name) {
     this.currentTab = name;
-    ['leads','followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','tarefas','chat'].forEach(t => {
+    ['leads','followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','tarefas','demandas','chat'].forEach(t => {
       document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
     });
     document.getElementById('admin-view')?.classList.remove('sidebar-open');
@@ -1050,6 +1051,7 @@ const Admin = {
       if (name === 'info')         await this.renderInfoAdmin();
       if (name === 'solicitacoes') await this.renderSolicitacoesAdmin();
       if (name === 'tarefas')      await this.renderTarefas();
+      if (name === 'demandas')     await this.renderDemandas();
       if (name === 'chat')         await this.renderChat();
     } finally { this.loader(false); }
   },
@@ -3158,6 +3160,219 @@ const Admin = {
     document.getElementById('modal-tarefa')?.remove();
     await this.carregarProjetos();
     await this.abrirProjeto(this._projetoId);
+  },
+
+  // ── DEMANDAS ──
+  async renderDemandas() {
+    const main = document.getElementById('admin-main');
+    if (!main) return;
+    main.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 class="section-title" style="margin:0;">Demandas da Equipe</h2>
+        <button onclick="Admin.abrirNovaDemanda()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">+ Nova Demanda</button>
+      </div>
+      <div id="demandas-lista"><p style="color:var(--muted);text-align:center;padding:40px;font-style:italic;">Carregando...</p></div>`;
+    await this.carregarDemandas();
+  },
+
+  async carregarDemandas() {
+    const lista = document.getElementById('demandas-lista'); if (!lista) return;
+    const [r1, r2, r3] = await Promise.all([
+      db.from('demandas').select('*').order('created_at', {ascending: false}),
+      db.from('equipe').select('email,nome').order('nome'),
+      db.from('clients').select('email,nome').order('nome')
+    ]);
+    const demandas = r1.data || [];
+    this._equipe = r2.data || [];
+    const cliMap = {};
+    (r3.data||[]).forEach(c => { cliMap[c.email] = c.nome; });
+    const memMap = {};
+    this._equipe.forEach(m => { memMap[m.email] = m.nome||m.email; });
+    const statusLabel = {pendente:'🟡 Pendente', andamento:'🔵 Em andamento', concluido:'🟢 Concluído', urgente:'🔴 Urgente'};
+    const statusColor = {pendente:'#F59E0B', andamento:'#3B82F6', concluido:'#22C55E', urgente:'#EF4444'};
+    const now = new Date();
+    if (!demandas.length) {
+      lista.innerHTML = '<p style="color:var(--muted);font-style:italic;text-align:center;padding:40px;font-family:Cormorant Garamond,serif;font-size:18px;">Nenhuma demanda ainda ✦</p>';
+      return;
+    }
+    lista.innerHTML = demandas.map(d => {
+      const atrasada = d.status !== 'concluido' && d.prazo && new Date(d.prazo+'T23:59') < now;
+      const etqs = (d.etiquetas||'').split(',').filter(Boolean);
+      return `<div onclick="Admin.abrirDemanda(${d.id})" style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid ${atrasada?'#EF4444':'var(--border)'};margin-bottom:10px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--copper)'" onmouseout="this.style.borderColor='${atrasada?'#EF4444':'var(--border)'}'" >
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:500;color:var(--text);">${d.titulo||'Sem título'}</span>
+            ${atrasada ? '<span style="font-size:10px;background:#FEE2E2;color:#EF4444;padding:2px 8px;border-radius:10px;font-weight:600;">⚠ ATRASADO</span>' : ''}
+            ${etqs.map(e=>`<span style="font-size:10px;background:var(--beige);color:var(--brown);padding:2px 8px;border-radius:10px;">${e}</span>`).join('')}
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);">
+            ${d.membro_email ? `<span>👤 ${memMap[d.membro_email]||d.membro_email}</span>` : ''}
+            ${d.client_email ? `<span>🏢 ${cliMap[d.client_email]||d.client_email}</span>` : ''}
+            ${d.prazo ? `<span>📅 ${new Date(d.prazo+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}
+          </div>
+          ${d.descricao ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.descricao}</div>` : ''}
+        </div>
+        <span style="font-size:11px;padding:4px 10px;border-radius:20px;background:${statusColor[d.status]||'#9B8472'}22;color:${statusColor[d.status]||'#9B8472'};border:1px solid ${statusColor[d.status]||'#9B8472'}44;white-space:nowrap;flex-shrink:0;">${statusLabel[d.status]||d.status}</span>
+      </div>`;
+    }).join('');
+  },
+
+  async abrirNovaDemanda() { this.abrirDemanda(null); },
+
+  async abrirDemanda(id) {
+    document.getElementById('modal-demanda')?.remove();
+    let d = {titulo:'',descricao:'',membro_email:'',client_email:'',prazo:'',status:'pendente',etiquetas:'',anexo_url:''};
+    if (id) {
+      const {data} = await db.from('demandas').select('*').eq('id',id).single();
+      d = data || d;
+    }
+    if (!this._equipe) {
+      const {data} = await db.from('equipe').select('email,nome').order('nome');
+      this._equipe = data || [];
+    }
+    const {data: clientes} = await db.from('clients').select('email,nome').order('nome');
+    const memOptions = '<option value="">— Nenhum —</option>' + (this._equipe||[]).map(m=>`<option value="${m.email}"${d.membro_email===m.email?' selected':''}>${m.nome||m.email}</option>`).join('');
+    const cliOptions = '<option value="">— Nenhum —</option>' + (clientes||[]).map(c=>`<option value="${c.email}"${d.client_email===c.email?' selected':''}>${c.nome||c.email}</option>`).join('');
+    const etiqOpts = ['🔴 Urgente','🟡 Atenção','🟢 OK','🔵 Em revisão','🟣 Criativo','⚫ Bloqueado','📸 Foto','✍ Texto','🎨 Design'];
+    const etiqSel = (d.etiquetas||'').split(',').filter(Boolean);
+    const overlay = document.createElement('div');
+    overlay.className = 'task-modal-overlay';
+    overlay.id = 'modal-demanda';
+    overlay.innerHTML = `<div class="task-modal" style="max-width:640px;">
+      <div class="task-modal-head">
+        <input id="dm-titulo" type="text" value="${(d.titulo||'').replace(/"/g,'&quot;')}" placeholder="Título da demanda..." style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--brown);border:none;background:transparent;width:100%;outline:none;"/>
+        <button onclick="document.getElementById('modal-demanda').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);flex-shrink:0;">×</button>
+      </div>
+      <div class="task-modal-body">
+
+        <!-- Etiquetas -->
+        <div class="task-section">
+          <div class="task-section-lbl">🏷 Etiquetas</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${etiqOpts.map(e => {
+              const active = etiqSel.includes(e);
+              return `<span onclick="Admin.toggleDmEtiq('${e}')" id="dmetq-${e.replace(/[^a-zA-Z]/g,'')}" style="padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:${active?'var(--beige)':'transparent'};color:${active?'var(--brown)':'var(--muted)'};user-select:none;">${e}</span>`;
+            }).join('')}
+          </div>
+          <input type="hidden" id="dm-etiquetas" value="${d.etiquetas||''}"/>
+        </div>
+
+        <!-- Status + Prazo -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="task-section">
+            <div class="task-section-lbl">✦ Status</div>
+            <select id="dm-status" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
+              <option value="pendente"${d.status==='pendente'?' selected':''}>🟡 Pendente</option>
+              <option value="andamento"${d.status==='andamento'?' selected':''}>🔵 Em andamento</option>
+              <option value="concluido"${d.status==='concluido'?' selected':''}>🟢 Concluído</option>
+              <option value="urgente"${d.status==='urgente'?' selected':''}>🔴 Urgente</option>
+            </select>
+          </div>
+          <div class="task-section">
+            <div class="task-section-lbl">📅 Prazo</div>
+            <input id="dm-prazo" type="date" value="${d.prazo||''}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/>
+          </div>
+        </div>
+
+        <!-- Membro + Cliente -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="task-section">
+            <div class="task-section-lbl">👤 Membro da equipe</div>
+            <select id="dm-membro" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">${memOptions}</select>
+          </div>
+          <div class="task-section">
+            <div class="task-section-lbl">🏢 Cliente</div>
+            <select id="dm-cliente" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">${cliOptions}</select>
+          </div>
+        </div>
+
+        <!-- Descrição -->
+        <div class="task-section">
+          <div class="task-section-lbl">📝 Descrição / briefing</div>
+          <textarea id="dm-descricao" rows="4" placeholder="Descreva a demanda, briefing, referências..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${d.descricao||''}</textarea>
+        </div>
+
+        <!-- Anexo -->
+        <div class="task-section">
+          <div class="task-section-lbl">📎 Anexo</div>
+          ${d.anexo_url ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><a href="${d.anexo_url}" target="_blank" style="font-size:12px;color:var(--copper);">📄 Ver arquivo atual</a></div>` : ''}
+          <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px dashed var(--border);border-radius:9px;cursor:pointer;font-size:12px;color:var(--muted);">
+            📁 Selecionar arquivo
+            <input type="file" id="dm-anexo-file" style="display:none" onchange="Admin.uploadAnexoDemanda(this,${id||'null'})"/>
+          </label>
+          <input type="hidden" id="dm-anexo-url" value="${d.anexo_url||''}"/>
+        </div>
+
+        <div id="dm-err" style="color:#C62828;font-size:12px;margin-top:4px;display:none;"></div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button onclick="Admin.salvarDemanda(${id||'null'})" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:13px;border:none;cursor:pointer;">Salvar</button>
+          ${id ? `<button onclick="Admin.delDemanda(${id})" style="padding:11px 14px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;font-size:13px;cursor:pointer;">🗑</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+  },
+
+  toggleDmEtiq(e) {
+    const inp = document.getElementById('dm-etiquetas');
+    let sels = (inp.value||'').split(',').filter(Boolean);
+    const idx = sels.indexOf(e);
+    if (idx >= 0) sels.splice(idx,1); else sels.push(e);
+    inp.value = sels.join(',');
+    const el = document.getElementById('dmetq-'+e.replace(/[^a-zA-Z]/g,''));
+    if (el) {
+      el.style.background = sels.includes(e) ? 'var(--beige)' : 'transparent';
+      el.style.color = sels.includes(e) ? 'var(--brown)' : 'var(--muted)';
+    }
+  },
+
+  async uploadAnexoDemanda(input, id) {
+    const file = input.files[0]; if (!file) return;
+    this.loader(true);
+    try {
+      const safe = file.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path = `demandas/${Date.now()}-${safe}`;
+      const {error} = await db.storage.from('posts-media').upload(path,file,{cacheControl:'3600',upsert:false});
+      if (error) throw error;
+      const {data:u} = db.storage.from('posts-media').getPublicUrl(path);
+      document.getElementById('dm-anexo-url').value = u.publicUrl;
+      input.parentElement.querySelector('span') && (input.parentElement.querySelector('span').textContent = '✓ ' + file.name);
+    } catch(e) { alert('Erro: '+e.message); }
+    finally { this.loader(false); }
+  },
+
+  async salvarDemanda(id) {
+    const titulo = document.getElementById('dm-titulo')?.value.trim();
+    const errEl = document.getElementById('dm-err');
+    if (!titulo) { if(errEl){errEl.style.display='block';errEl.textContent='Informe o título.';} return; }
+    const payload = {
+      titulo,
+      descricao:    document.getElementById('dm-descricao')?.value.trim() || null,
+      membro_email: document.getElementById('dm-membro')?.value || null,
+      client_email: document.getElementById('dm-cliente')?.value || null,
+      prazo:        document.getElementById('dm-prazo')?.value || null,
+      status:       document.getElementById('dm-status')?.value || 'pendente',
+      etiquetas:    document.getElementById('dm-etiquetas')?.value || null,
+      anexo_url:    document.getElementById('dm-anexo-url')?.value || null,
+    };
+    this.loader(true);
+    const result = id && id !== 'null'
+      ? await db.from('demandas').update(payload).eq('id',id).select()
+      : await db.from('demandas').insert([payload]).select();
+    this.loader(false);
+    if (result.error) { if(errEl){errEl.style.display='block';errEl.textContent='Erro: '+result.error.message;} return; }
+    document.getElementById('modal-demanda')?.remove();
+    await this.renderDemandas();
+  },
+
+  async delDemanda(id) {
+    if (!confirm('Excluir esta demanda?')) return;
+    this.loader(true);
+    await db.from('demandas').delete().eq('id',id);
+    this.loader(false);
+    document.getElementById('modal-demanda')?.remove();
+    await this.renderDemandas();
   },
 
   // ── FIM TAREFAS ──
