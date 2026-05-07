@@ -3296,15 +3296,17 @@ const Admin = {
           <textarea id="dm-descricao" rows="4" placeholder="Descreva a demanda, briefing, referências..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${d.descricao||''}</textarea>
         </div>
 
-        <!-- Anexo -->
+        <!-- Anexos múltiplos -->
         <div class="task-section">
-          <div class="task-section-lbl">📎 Anexo</div>
-          ${d.anexo_url ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><a href="${d.anexo_url}" target="_blank" style="font-size:12px;color:var(--copper);">📄 Ver arquivo atual</a></div>` : ''}
+          <div class="task-section-lbl">📎 Anexos</div>
+          <div id="dm-anexos-lista" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;">
+            ${Admin._renderAnexosDm(d.anexo_url)}
+          </div>
           <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px dashed var(--border);border-radius:9px;cursor:pointer;font-size:12px;color:var(--muted);">
-            📁 Selecionar arquivo
+            📁 Adicionar arquivo(s)
             <input type="file" id="dm-anexo-file" multiple style="display:none" onchange="Admin.uploadAnexosDemanda(this,${id||'null'})"/>
           </label>
-          <input type="hidden" id="dm-anexo-url" value="${d.anexo_url||''}"/>
+          <input type="hidden" id="dm-anexo-url" value="${JSON.stringify(Admin._parseAnexos(d.anexo_url))}"/>
         </div>
 
         <div id="dm-err" style="color:#C62828;font-size:12px;margin-top:4px;display:none;"></div>
@@ -3316,6 +3318,31 @@ const Admin = {
     </div>`;
     document.body.appendChild(overlay);
     overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+  },
+
+  _parseAnexos(raw) {
+    if (!raw) return [];
+    try { const p = JSON.parse(raw); return Array.isArray(p) ? p : (typeof p === 'string' ? [p] : []); }
+    catch { return typeof raw === 'string' && raw.startsWith('http') ? [raw] : []; }
+  },
+
+  _renderAnexosDm(raw) {
+    const urls = this._parseAnexos(raw);
+    if (!urls.length) return '';
+    return urls.map((u,i) => {
+      const nome = decodeURIComponent(u.split('/').pop().replace(/^\d+-[a-z0-9]+-/,'').replace(/^\d+-/,''));
+      const isImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(nome);
+      const isPdf = /\.pdf$/i.test(nome);
+      return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--beige);margin-bottom:4px;">
+        ${isImg ? `<img src="${u}" style="width:100%;max-height:180px;object-fit:cover;display:block;"/>` : ''}
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;">
+          <span>${isPdf?'📄':isImg?'🖼':'📎'}</span>
+          <span style="flex:1;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${nome}</span>
+          <a href="${u}" download="${nome}" target="_blank" style="font-size:11px;padding:3px 8px;border-radius:6px;background:var(--brown);color:#F5EDD8;text-decoration:none;white-space:nowrap;flex-shrink:0;">⬇ Baixar</a>
+          <button onclick="Admin.removerAnexoDemanda(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 2px;flex-shrink:0;">×</button>
+        </div>
+      </div>`;
+    }).join('');
   },
 
   toggleDmEtiq(e) {
@@ -3347,7 +3374,7 @@ const Admin = {
       }
       inp.value = JSON.stringify(urls);
       const lista = document.getElementById('dm-anexos-lista');
-      if (lista) lista.innerHTML = urls.map((u,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--beige);border-radius:8px;"><a href="${u}" target="_blank" style="flex:1;font-size:12px;color:var(--copper);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📄 ${decodeURIComponent(u.split('/').pop().replace(/^\d+-[a-z0-9]+-/,''))}</a><button onclick="Admin.removerAnexoDemanda(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;">×</button></div>`).join('');
+      if (lista) lista.innerHTML = this._renderAnexosDm(JSON.stringify(urls));
       if (id && id !== 'null') await db.from('demandas').update({anexo_url: JSON.stringify(urls)}).eq('id',id);
     } catch(e) { alert('Erro ao enviar: '+e.message); }
     finally { this.loader(false); }
@@ -3355,11 +3382,11 @@ const Admin = {
 
   removerAnexoDemanda(idx) {
     const inp = document.getElementById('dm-anexo-url');
-    let urls = []; try { urls = JSON.parse(inp.value||'[]'); } catch { urls = []; }
+    const urls = this._parseAnexos(inp.value);
     urls.splice(idx, 1);
     inp.value = JSON.stringify(urls);
     const lista = document.getElementById('dm-anexos-lista');
-    if (lista) lista.innerHTML = urls.map((u,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--beige);border-radius:8px;"><a href="${u}" target="_blank" style="flex:1;font-size:12px;color:var(--copper);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📄 ${decodeURIComponent(u.split('/').pop().replace(/^\d+-[a-z0-9]+-/,''))}</a><button onclick="Admin.removerAnexoDemanda(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;">×</button></div>`).join('');
+    if (lista) lista.innerHTML = this._renderAnexosDm(JSON.stringify(urls));
   },
 
   async salvarDemanda(id) {
@@ -4695,6 +4722,107 @@ document.addEventListener('keydown', e => {
       </div>
     </div>
   </div>
+<style>
+  /* 1. Garante que as observações respeitem as quebras de linha (Enter) */
+  textarea, .lead-obs, [id*="obs"], [class*="obs"] {
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+  }
+  
+  /* 2. Estilo da linha divisória idêntica à do Trello */
+  hr.trello-divider {
+    border: none;
+    border-top: 2px dashed #4B2D22;
+    margin: 12px 0;
+    opacity: 0.4;
+  }
 
+  /* 3. Menu Suspenso do Comando Barra (/) */
+  #menu-magico {
+    position: fixed;
+    background: #ffffff;
+    border: 1px solid #e8e1da;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    display: none;
+    flex-direction: column;
+    width: 180px;
+    z-index: 999999;
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+  }
+  .item-magico {
+    padding: 12px 15px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1a1a1a;
+    transition: background 0.2s;
+  }
+  .item-magico:hover {
+    background: #f8f5f2;
+    color: #4B2D22;
+  }
+</style>
+
+<!-- Estrutura invisível do Menu do Comando '/' -->
+<div id="menu-magico">
+  <div class="item-magico" id="btn-inserir-divisoria">
+    <span>➖</span> Inserir Divisória
+  </div>
+</div>
+
+<script>
+  // Script que injeta as funcionalidades mágicas no teu CRM
+  setTimeout(() => {
+    // Procura a caixa de texto das observações
+    const textarea = document.getElementById('mnl-obs') || document.querySelector('textarea');
+    const menuMagico = document.getElementById('menu-magico');
+    const btnDivisoria = document.getElementById('btn-inserir-divisoria');
+
+    if (textarea) {
+      // Abre o menu quando digitas a barra "/"
+      textarea.addEventListener('input', (e) => {
+        if (textarea.value.endsWith('/')) {
+          const rect = textarea.getBoundingClientRect();
+          menuMagico.style.display = 'flex';
+          menuMagico.style.top = (rect.top + 30) + 'px';
+          menuMagico.style.left = (rect.left + 15) + 'px';
+        } else {
+          menuMagico.style.display = 'none';
+        }
+      });
+
+      // Transforma a barra na divisória
+      btnDivisoria.addEventListener('click', () => {
+        const texto = textarea.value;
+        textarea.value = texto.slice(0, -1) + "\n---\n";
+        menuMagico.style.display = 'none';
+        textarea.focus();
+      });
+
+      // Esconde o menu ao clicar fora
+      document.addEventListener('click', (e) => {
+        if (e.target !== textarea && !menuMagico.contains(e.target)) {
+          menuMagico.style.display = 'none';
+        }
+      });
+    }
+
+    // Procura por "---" nos cartões e converte na linha tracejada visual
+    setInterval(() => {
+      document.querySelectorAll('div').forEach(el => {
+        if (el.textContent.includes('---') && el.children.length === 0) {
+          if (el.innerHTML.includes('---') && !el.innerHTML.includes('<hr')) {
+            el.innerHTML = el.innerHTML.replace(/\n?---\n?/g, '<br><hr class="trello-divider"><br>');
+          }
+        }
+      });
+    }, 1500);
+
+  }, 1000); 
+</script>
 </body>
 </html>
