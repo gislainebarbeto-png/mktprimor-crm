@@ -21,9 +21,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg:      #F7F2EA;
+      --bg:      #FFFFFF;
       --surface: #FFFFFF;
-      --beige:   #EDE4D4;
+      --beige:   #F2EEEA;
       --brown:   #4B2D22;
       --brown2:  #6B3E28;
       --copper:  #C4967A;
@@ -313,7 +313,7 @@
     .dp-title{font-size:19px;font-style:italic;color:var(--brown);margin-bottom:14px;}
     .dp-field{margin-bottom:12px;}
     .dp-lbl{font-size:9px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px;}
-    .dp-val{font-size:12px;color:var(--text);background:var(--bg);padding:9px 11px;border-radius:8px;border:1px solid var(--border);line-height:1.55;}
+    .dp-val{font-size:12px;color:var(--text);background:#fff;padding:9px 11px;border-radius:8px;border:1px solid var(--border);line-height:1.7;white-space:pre-wrap;}
     .dp-close{background:var(--bg);border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:7px;font-size:15px;display:flex;align-items:center;justify-content:center;}
     .btn-ok{width:100%;padding:10px;border-radius:9px;background:#E8F5E9;color:#2E7D32;border:1px solid rgba(46,125,50,.2);font-size:12px;margin-bottom:8px;}
     .btn-ok:hover{background:#C8E6C9;}
@@ -1069,7 +1069,14 @@ const Admin = {
   },
 
   dpField(lbl, val) {
-    return `<div class="dp-field"><div class="dp-lbl">${lbl}</div><div class="dp-val">${val||'—'}</div></div>`;
+    if (!val) return `<div class="dp-field"><div class="dp-lbl">${lbl}</div><div class="dp-val">—</div></div>`;
+    const s = String(val);
+    const rendered = /<[a-z][\s\S]*>/i.test(s) ? s
+      : s.split('\n').map(l => l.trim() === '---'
+          ? '<hr style="border:none;border-top:2px solid #E8E0D8;margin:10px 0;">'
+          : l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        ).join('<br>');
+    return `<div class="dp-field"><div class="dp-lbl">${lbl}</div><div class="dp-val">${rendered}</div></div>`;
   },
 
   // ── FORMS ──
@@ -1919,6 +1926,77 @@ const Admin = {
     });
   },
 
+  _setupLegendaDivisor() {
+    const ta = document.getElementById('mp-legenda');
+    if (!ta || ta._divSetup) return;
+    ta._divSetup = true;
+
+    const commands = [
+      { icon:'─', label:'Divisória', desc:'Linha horizontal separando conteúdo', insert:'---\n' },
+      { icon:'📝', label:'Slide / Card', desc:'Marcar início de um slide ou card', insert:'SLIDE ' },
+      { icon:'•',  label:'Lista', desc:'Lista com marcadores', insert:'• ' },
+      { icon:'🔢', label:'Lista numerada', desc:'Lista ordenada', insert:'1. ' },
+      { icon:'❝',  label:'Citação', desc:'Bloco de citação', insert:'> ' },
+    ];
+
+    const removeMenu = () => document.getElementById('slash-menu')?.remove();
+
+    ta.addEventListener('keyup', function(e) {
+      if (e.key === 'Escape') { removeMenu(); return; }
+      const pos = this.selectionStart;
+      const val = this.value;
+      const lineStart = val.lastIndexOf('\n', pos-1)+1;
+      const lineEnd = val.indexOf('\n', pos);
+      const lineContent = val.slice(lineStart, lineEnd === -1 ? val.length : lineEnd);
+
+      if (lineContent === '/') {
+        removeMenu();
+        const rect = this.getBoundingClientRect();
+        const menu = document.createElement('div');
+        menu.id = 'slash-menu';
+        menu.style.cssText = 'position:fixed;z-index:99999;background:#fff;border:1px solid #E8E0D8;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);width:280px;overflow:hidden;font-family:Poppins,sans-serif;';
+        const lines = val.slice(0, pos).split('\n');
+        const lineH = parseInt(getComputedStyle(this).lineHeight)||22;
+        const top = rect.top + (lines.length * lineH) + 4;
+        menu.style.top = Math.min(top, window.innerHeight-290)+'px';
+        menu.style.left = (rect.left+8)+'px';
+        menu.innerHTML = '<div style="padding:8px 12px 6px;font-size:10px;color:#786C60;letter-spacing:.08em;text-transform:uppercase;font-weight:600;border-bottom:1px solid #f0ece8;">Inserir bloco</div>' +
+          commands.map((c,i)=>
+            `<div class="slash-item" data-idx="${i}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;">
+              <span style="width:30px;height:30px;border-radius:7px;background:#f5f0ec;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">${c.icon}</span>
+              <div><div style="font-size:13px;color:#2C1810;font-weight:500;">${c.label}</div><div style="font-size:11px;color:#786C60;">${c.desc}</div></div>
+            </div>`
+          ).join('');
+        document.body.appendChild(menu);
+
+        menu.querySelectorAll('.slash-item').forEach(item => {
+          item.addEventListener('mouseenter', () => item.style.background='#faf5f0');
+          item.addEventListener('mouseleave', () => item.style.background='');
+          item.addEventListener('mousedown', ev => {
+            ev.preventDefault();
+            const cmd = commands[parseInt(item.dataset.idx)];
+            const v = ta.value;
+            const ls = v.lastIndexOf('\n', ta.selectionStart-1)+1;
+            const le = v.indexOf('\n', ta.selectionStart);
+            const before = v.slice(0, ls);
+            const after = v.slice(le===-1?v.length:le);
+            ta.value = before + cmd.insert + after;
+            ta.setSelectionRange(ls+cmd.insert.length, ls+cmd.insert.length);
+            ta.focus(); removeMenu();
+          });
+        });
+
+        setTimeout(() => {
+          const close = e => { if(!menu.contains(e.target)){removeMenu();document.removeEventListener('mousedown',close);}};
+          document.addEventListener('mousedown', close);
+        }, 0);
+      } else if (!lineContent.startsWith('/')) {
+        removeMenu();
+      }
+    });
+    ta.addEventListener('blur', () => setTimeout(removeMenu, 200));
+  },
+
   async abrirModalPost() {
     // Load clients for dropdown
     const { data: clients } = await db.from('clients').select('nome,email').order('nome');
@@ -2623,7 +2701,7 @@ const Admin = {
         </div>
         <div style="margin-bottom:10px;">
           <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Descrição / instruções</div>
-          <textarea id="sol-desc" rows="2" placeholder="Detalhes do que precisa..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;"></textarea>
+          <textarea data-rich id="sol-desc" rows="2" placeholder="Detalhes do que precisa..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;"></textarea>
         </div>
         <button onclick="Admin.salvarSolicitacao()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Solicitar →</button>
       </div>
@@ -3271,7 +3349,7 @@ const Admin = {
         <!-- Anotações -->
         <div class="task-section">
           <div class="task-section-lbl">📝 Anotações</div>
-          <textarea id="tf-anotacoes" rows="3" placeholder="Rascunhos, lembretes..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${t.anotacoes||''}</textarea>
+          <textarea data-rich id="tf-anotacoes" rows="3" placeholder="Rascunhos, lembretes..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${t.anotacoes||''}</textarea>
         </div>
 
         <!-- Links -->
@@ -3451,7 +3529,7 @@ const Admin = {
             ${d.client_email ? `<span>🏢 ${cliMap[d.client_email]||d.client_email}</span>` : ''}
             ${d.prazo ? `<span>📅 ${new Date(d.prazo+'T12:00').toLocaleDateString('pt-BR')}${d.horario?' às '+d.horario:''}</span>` : ''}
           </div>
-          ${d.descricao ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.descricao}</div>` : ''}
+          ${d.descricao ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${d.descricao.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()}</div>` : ''}
         </div>
         <span style="font-size:11px;padding:4px 10px;border-radius:20px;background:${statusColor[d.status]||'#9B8472'}22;color:${statusColor[d.status]||'#9B8472'};border:1px solid ${statusColor[d.status]||'#9B8472'}44;white-space:nowrap;flex-shrink:0;">${statusLabel[d.status]||d.status}</span>
       </div>`;
@@ -3534,7 +3612,7 @@ const Admin = {
         <!-- Descrição -->
         <div class="task-section">
           <div class="task-section-lbl">📝 Descrição / briefing</div>
-          <textarea id="dm-descricao" rows="4" placeholder="Descreva a demanda, briefing, referências..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${d.descricao||''}</textarea>
+          <textarea data-rich id="dm-descricao" rows="4" placeholder="Descreva a demanda, briefing, referências..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${d.descricao||''}</textarea>
         </div>
 
         <!-- Anexos múltiplos -->
@@ -4604,7 +4682,7 @@ ${text}`,
           </div>
           ${t.prazo?`<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">📅 ${new Date(t.prazo+'T12:00').toLocaleDateString('pt-BR')}${t.horario?' às '+t.horario:''}</div>`:''}
           ${Object.keys(dias).length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;">${Object.entries(dias).map(([d,n])=>`<span style="font-size:10px;background:var(--beige);color:var(--brown);padding:2px 7px;border-radius:10px;">${diasNomes[d]||d}${n?' · '+n:''}</span>`).join('')}</div>`:''}
-          ${t.anotacoes?`<div style="font-size:12px;color:var(--muted);white-space:pre-wrap;margin-top:6px;">${t.anotacoes}</div>`:''}
+          ${t.anotacoes?`<div style="font-size:12px;color:var(--muted);margin-top:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">${t.anotacoes.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()}</div>`:''}
           ${t.links?`<div style="font-size:12px;margin-top:6px;"><a href="${t.links}" target="_blank" style="color:var(--copper);">🔗 Ver link</a></div>`:''}
         </div>`;
       }).join('');
@@ -4733,7 +4811,7 @@ document.addEventListener('keydown', e => {
     <div class="modal-box" style="max-width:440px;">
       <h3>Nova Ideia</h3>
       <div class="modal-field"><label>Título</label><input type="text" id="mi-titulo" placeholder="Nome da ideia"/></div>
-      <div class="modal-field"><label>Descrição</label><textarea id="mi-desc" rows="4" placeholder="Descreva a ideia..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;font-family:Poppins,sans-serif;font-weight:300;line-height:1.65;"></textarea></div>
+      <div class="modal-field"><label>Descrição</label><textarea data-rich id="mi-desc" rows="4" placeholder="Descreva a ideia..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;font-family:Poppins,sans-serif;font-weight:300;line-height:1.65;"></textarea></div>
       <div class="modal-field"><label>Status</label>
         <select id="mi-status" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;">
           <option value="ideia">Ideia</option>
@@ -4852,7 +4930,7 @@ document.addEventListener('keydown', e => {
         <div class="modal-field">
           <label>Legenda</label>
           <textarea id="mp-legenda" rows="4" placeholder="Escreva a legenda completa do post..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;line-height:1.65;font-family:Poppins,sans-serif;font-weight:300;"></textarea>
-          <div style="font-size:10px;color:var(--muted);margin-top:4px;">💡 Digite <kbd style="background:var(--beige);padding:1px 5px;border-radius:4px;font-size:10px;">/</kbd> no início de uma linha vazia para inserir um divisor</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">💡 Digite <kbd style="background:#f0ece8;padding:1px 6px;border-radius:4px;font-size:10px;border:1px solid #d0c8c0;">/</kbd> sozinho em uma linha para inserir divisória</div>
         </div>
         <div class="modal-field">
           <label>Hashtags</label>
@@ -4873,11 +4951,11 @@ document.addEventListener('keydown', e => {
       <div id="post-tab-obs" style="display:none;">
         <div class="modal-field">
           <label>Observações internas</label>
-          <textarea id="mp-obs-int" rows="4" placeholder="Notas internas — não visíveis pro cliente..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;line-height:1.65;font-family:Poppins,sans-serif;font-weight:300;"></textarea>
+          <textarea data-rich id="mp-obs-int" rows="4" placeholder="Notas internas — não visíveis pro cliente..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;line-height:1.65;font-family:Poppins,sans-serif;font-weight:300;"></textarea>
         </div>
         <div class="modal-field">
           <label>Observações para o cliente</label>
-          <textarea id="mp-obs-cli" rows="4" placeholder="Mensagem visível pro cliente ao abrir o post..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;line-height:1.65;font-family:Poppins,sans-serif;font-weight:300;"></textarea>
+          <textarea data-rich id="mp-obs-cli" rows="4" placeholder="Mensagem visível pro cliente ao abrir o post..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;line-height:1.65;font-family:Poppins,sans-serif;font-weight:300;"></textarea>
         </div>
         <div class="modal-field">
           <label>Status inicial</label>
@@ -4957,7 +5035,7 @@ document.addEventListener('keydown', e => {
         </div>
         <div><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Segmento</div><input id="mnl-segmento" type="text" placeholder="Ex: Moda, Saúde..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;"/></div>
       </div>
-      <div style="margin-bottom:16px;"><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Observações</div><textarea id="mnl-obs" rows="2" placeholder="Notas sobre o lead..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:none;"></textarea></div>
+      <div style="margin-bottom:16px;"><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Observações</div><textarea data-rich id="mnl-obs" rows="2" placeholder="Notas sobre o lead..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:none;"></textarea></div>
       <div style="display:flex;gap:8px;">
         <button onclick="Admin.fecharModalLead()" style="flex:1;padding:11px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;">Cancelar</button>
         <button onclick="Admin.salvarNovoLead()" style="flex:2;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;cursor:pointer;">Salvar lead →</button>
@@ -4965,106 +5043,352 @@ document.addEventListener('keydown', e => {
     </div>
   </div>
 <style>
-  /* 1. Garante que as observações respeitem as quebras de linha (Enter) */
-  textarea, .lead-obs, [id*="obs"], [class*="obs"] {
-    white-space: pre-wrap !important;
-    word-wrap: break-word !important;
+  /* ─── Rich Text Editor ─── */
+  .re-wrap{position:relative;}
+  .re-editor{
+    width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;
+    font-size:13px;background:var(--bg);color:var(--text);font-family:Poppins,sans-serif;
+    font-weight:300;line-height:1.65;outline:none;box-sizing:border-box;
+    word-break:break-word;overflow-y:auto;transition:border-color .2s;cursor:text;
   }
-  
-  /* 2. Estilo da linha divisória idêntica à do Trello */
-  hr.trello-divider {
-    border: none;
-    border-top: 2px dashed #4B2D22;
-    margin: 12px 0;
-    opacity: 0.4;
+  .re-editor:focus{border-color:var(--copper);}
+  .re-editor p{margin:0;min-height:1.2em;}
+  .re-editor:empty::before,.re-editor p:only-child:empty::before{
+    content:attr(data-placeholder);color:var(--muted);pointer-events:none;
   }
+  .re-editor hr.re-hr{
+    border:none;border-top:1.5px solid var(--border);
+    margin:10px 0;display:block;width:100%;
+  }
+  .re-editor .re-check{display:flex;align-items:flex-start;gap:8px;padding:2px 0;}
+  .re-editor .re-check input[type="checkbox"]{
+    margin-top:3px;flex-shrink:0;accent-color:var(--brown);width:14px;height:14px;cursor:pointer;
+  }
+  .re-editor .re-check span{flex:1;outline:none;min-width:10px;line-height:1.5;}
+  .re-editor a{color:var(--copper);text-decoration:underline;}
 
-  /* 3. Menu Suspenso do Comando Barra (/) */
-  #menu-magico {
-    position: fixed;
-    background: #ffffff;
-    border: 1px solid #e8e1da;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-    display: none;
-    flex-direction: column;
-    width: 180px;
-    z-index: 999999;
-    font-family: 'Poppins', sans-serif;
-    overflow: hidden;
+  /* Slash menu */
+  .re-menu{
+    position:fixed;background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;box-shadow:0 8px 28px rgba(44,24,16,.18);
+    padding:5px;z-index:9999;min-width:215px;display:none;
   }
-  .item-magico {
-    padding: 12px 15px;
-    font-size: 13px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #1a1a1a;
-    transition: background 0.2s;
+  .re-menu-item{
+    display:flex;align-items:center;gap:10px;padding:8px 10px;
+    border-radius:7px;cursor:pointer;user-select:none;
   }
-  .item-magico:hover {
-    background: #f8f5f2;
-    color: #4B2D22;
+  .re-menu-item:hover,.re-menu-item.re-active{background:var(--beige);}
+  .re-mi-icon{
+    width:30px;height:30px;border-radius:7px;background:var(--beige);
+    display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;
+  }
+  .re-mi-title{font-size:13px;font-weight:500;color:var(--text);font-family:Poppins,sans-serif;}
+  .re-mi-desc{font-size:11px;color:var(--muted);font-family:Poppins,sans-serif;}
+
+  /* Emoji panel */
+  .re-emoji-panel{
+    position:fixed;background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;box-shadow:0 8px 28px rgba(44,24,16,.18);
+    padding:8px;z-index:10000;width:272px;display:none;
+  }
+  .re-emoji-search{
+    width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:7px;
+    font-size:12px;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);
+    outline:none;box-sizing:border-box;margin-bottom:6px;
+  }
+  .re-emoji-search:focus{border-color:var(--copper);}
+  .re-emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:1px;max-height:210px;overflow-y:auto;}
+  .re-emoji-btn{
+    background:none;border:none;cursor:pointer;font-size:19px;
+    padding:4px;border-radius:5px;line-height:1;
+  }
+  .re-emoji-btn:hover{background:var(--beige);}
+
+  /* Link panel */
+  .re-link-panel{
+    position:fixed;background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;box-shadow:0 8px 28px rgba(44,24,16,.18);
+    padding:14px;z-index:10000;width:284px;display:none;
+  }
+  .re-link-title{font-size:12px;font-weight:500;color:var(--text);font-family:Poppins,sans-serif;margin-bottom:10px;}
+  .re-link-panel input{
+    width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;
+    font-size:12px;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);
+    outline:none;box-sizing:border-box;margin-bottom:8px;
+  }
+  .re-link-panel input:focus{border-color:var(--copper);}
+  .re-link-row{display:flex;gap:6px;justify-content:flex-end;}
+  .re-link-cancel{
+    padding:6px 14px;border-radius:7px;border:1px solid var(--border);
+    background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;
+  }
+  .re-link-ok{
+    padding:6px 14px;border-radius:7px;border:none;
+    background:var(--brown);color:#F5EDD8;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;
   }
 </style>
 
-<!-- Estrutura invisível do Menu do Comando '/' -->
-<div id="menu-magico">
-  <div class="item-magico" id="btn-inserir-divisoria">
-    <span>➖</span> Inserir Divisória
-  </div>
-</div>
-
 <script>
-  // Script que injeta as funcionalidades mágicas no teu CRM
-  setTimeout(() => {
-    // Procura a caixa de texto das observações
-    const textarea = document.getElementById('mnl-obs') || document.querySelector('textarea');
-    const menuMagico = document.getElementById('menu-magico');
-    const btnDivisoria = document.getElementById('btn-inserir-divisoria');
+  const _taDesc = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
 
-    if (textarea) {
-      // Abre o menu quando digitas a barra "/"
-      textarea.addEventListener('input', (e) => {
-        if (textarea.value.endsWith('/')) {
-          const rect = textarea.getBoundingClientRect();
-          menuMagico.style.display = 'flex';
-          menuMagico.style.top = (rect.top + 30) + 'px';
-          menuMagico.style.left = (rect.left + 15) + 'px';
+  const RichEditor = {
+    menu: null, emojiPanel: null, linkPanel: null,
+    active: null,
+    slashNode: null, slashOffset: 0,
+    savedSel: null,
+
+    init() {
+      this._buildUI();
+      new MutationObserver(muts => {
+        for (const m of muts) for (const n of m.addedNodes) {
+          if (n.nodeType !== 1) continue;
+          if (n.matches?.('textarea[data-rich]')) this._convert(n);
+          n.querySelectorAll?.('textarea[data-rich]').forEach(t => this._convert(t));
+        }
+      }).observe(document.body, {childList:true, subtree:true});
+      document.querySelectorAll('textarea[data-rich]').forEach(t => this._convert(t));
+    },
+
+    _buildUI() {
+      this.menu = document.createElement('div');
+      this.menu.className = 're-menu';
+      this.menu.innerHTML = `
+        <div class="re-menu-item" data-cmd="hr"><div class="re-mi-icon">─</div><div><div class="re-mi-title">Divisora</div><div class="re-mi-desc">Linha separadora ponta a ponta</div></div></div>
+        <div class="re-menu-item" data-cmd="emoji"><div class="re-mi-icon">😀</div><div><div class="re-mi-title">Emojis</div><div class="re-mi-desc">Inserir emoji</div></div></div>
+        <div class="re-menu-item" data-cmd="check"><div class="re-mi-icon">☑️</div><div><div class="re-mi-title">Checklist</div><div class="re-mi-desc">Item com checkbox</div></div></div>
+        <div class="re-menu-item" data-cmd="link"><div class="re-mi-icon">🔗</div><div><div class="re-mi-title">Link</div><div class="re-mi-desc">Inserir link clicável</div></div></div>`;
+      document.body.appendChild(this.menu);
+      this.menu.addEventListener('mousedown', e => e.preventDefault());
+      this.menu.addEventListener('click', e => { const it = e.target.closest('[data-cmd]'); if(it) this._execCmd(it.dataset.cmd); });
+
+      const emojis = ['😀','😂','🥰','😍','😎','🤔','😅','😭','🙌','👏','🔥','✨','💡','📌','✅','❌','⚠️','💬','📅','🎯','🚀','💪','🌟','❤️','💙','💚','💛','🧡','💜','🖤','🌺','🌸','🍀','🎨','📸','🎵','🏆','💰','🔔','📢','🎁','🙏','👋','✌️','🤝','👀','💭','🌙','☀️','⭐','🔑','🏠','📱','💻','🔒','📝','📎','🗂️','📊','🎬','🌈','🦋','🌻','🎉','🎊','🌍','💎','⚡','🌊','🦄','🐝','🌿','🌱','🌲'];
+      this.emojiPanel = document.createElement('div');
+      this.emojiPanel.className = 're-emoji-panel';
+      this.emojiPanel.innerHTML = `<input class="re-emoji-search" placeholder="Pesquisar..."><div class="re-emoji-grid">${emojis.map(e=>`<button class="re-emoji-btn">${e}</button>`).join('')}</div>`;
+      document.body.appendChild(this.emojiPanel);
+      this.emojiPanel.addEventListener('mousedown', e => { if(e.target.tagName !== 'INPUT') e.preventDefault(); });
+      this.emojiPanel.addEventListener('click', e => {
+        if (e.target.classList.contains('re-emoji-btn')) {
+          this._hideAll(); this._restoreSel(); this._removeSlashText();
+          this._insertText(e.target.textContent); this._sync();
+        }
+      });
+
+      this.linkPanel = document.createElement('div');
+      this.linkPanel.className = 're-link-panel';
+      this.linkPanel.innerHTML = `
+        <div class="re-link-title">Inserir link</div>
+        <input class="re-lp-text" placeholder="Texto do link (opcional)">
+        <input class="re-lp-url" placeholder="https://...">
+        <div class="re-link-row">
+          <button class="re-link-cancel">Cancelar</button>
+          <button class="re-link-ok">Inserir →</button>
+        </div>`;
+      document.body.appendChild(this.linkPanel);
+      this.linkPanel.querySelector('.re-link-cancel').addEventListener('mousedown', e => e.preventDefault());
+      this.linkPanel.querySelector('.re-link-cancel').addEventListener('click', () => this._hideAll());
+      this.linkPanel.querySelector('.re-link-ok').addEventListener('mousedown', e => e.preventDefault());
+      this.linkPanel.querySelector('.re-link-ok').addEventListener('click', () => this._doInsertLink());
+      this.linkPanel.querySelector('.re-lp-url').addEventListener('keydown', e => { if(e.key==='Enter') this._doInsertLink(); if(e.key==='Escape') this._hideAll(); });
+
+      document.addEventListener('mousedown', e => {
+        if (this._anyVisible() && !this.menu.contains(e.target) && !this.emojiPanel.contains(e.target) && !this.linkPanel.contains(e.target))
+          this._hideAll();
+      });
+    },
+
+    _convert(ta) {
+      if (ta._re) return;
+      ta._re = true;
+      const ed = document.createElement('div');
+      ed.className = 're-editor';
+      ed.contentEditable = 'true';
+      ed.setAttribute('data-placeholder', ta.placeholder || '');
+      ed.style.minHeight = ((ta.rows || 3) * 22 + 20) + 'px';
+      if (ta.style.fontSize) ed.style.fontSize = ta.style.fontSize;
+      if (ta.style.lineHeight) ed.style.lineHeight = ta.style.lineHeight;
+      const wrap = document.createElement('div');
+      wrap.className = 're-wrap';
+      ta.parentNode.insertBefore(wrap, ta);
+      wrap.appendChild(ed);
+      ta.style.display = 'none';
+      wrap.appendChild(ta);
+      this._load(ed, _taDesc.get.call(ta));
+      const self = this;
+      Object.defineProperty(ta, 'value', {
+        get() { return _taDesc.get.call(this); },
+        set(v) { _taDesc.set.call(this, v); self._load(ed, v); },
+        configurable: true
+      });
+      ed.addEventListener('input', () => { _taDesc.set.call(ta, ed.innerHTML); this._onInput(ed); });
+      ed.addEventListener('focus', () => { this.active = {ed, ta}; });
+      ed.addEventListener('keydown', e => this._onKeyDown(e, ed, ta));
+      ed.addEventListener('paste', e => { e.preventDefault(); document.execCommand('insertText', false, e.clipboardData.getData('text/plain')); });
+    },
+
+    _load(ed, val) {
+      if (!val) { ed.innerHTML = ''; return; }
+      if (/<[a-z][\s\S]*>/i.test(val)) { ed.innerHTML = val; return; }
+      ed.innerHTML = val.split('\n').map(l => l
+        ? `<p>${l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`
+        : '<p><br></p>').join('');
+    },
+
+    _onKeyDown(e, ed, ta) {
+      if (e.key === 'Escape') { this._hideAll(); return; }
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const node = sel.anchorNode;
+      const check = node?.nodeType === 3 ? node.parentElement?.closest('.re-check') : node?.closest?.('.re-check');
+      if (e.key === 'Enter' && !e.shiftKey && check) {
+        e.preventDefault();
+        const span = check.querySelector('span');
+        if (!span?.textContent.trim()) {
+          const p = document.createElement('p'); p.innerHTML = '<br>';
+          check.replaceWith(p); this._cur(p, 0);
         } else {
-          menuMagico.style.display = 'none';
+          const nc = document.createElement('div'); nc.className = 're-check';
+          nc.innerHTML = '<input type="checkbox"><span contenteditable="true"></span>';
+          check.after(nc); this._cur(nc.querySelector('span'), 0);
         }
-      });
+        _taDesc.set.call(ta, ed.innerHTML);
+      }
+    },
 
-      // Transforma a barra na divisória
-      btnDivisoria.addEventListener('click', () => {
-        const texto = textarea.value;
-        textarea.value = texto.slice(0, -1) + "\n---\n";
-        menuMagico.style.display = 'none';
-        textarea.focus();
-      });
+    _onInput(ed) {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      const node = range.startContainer;
+      if (node.nodeType !== Node.TEXT_NODE) { this._hideMenu(); return; }
+      const before = node.textContent.slice(0, range.startOffset);
+      const si = before.lastIndexOf('/');
+      if (si === -1 || /[ \n]/.test(before.slice(si + 1))) { this._hideMenu(); return; }
+      this.slashNode = node; this.slashOffset = si;
+      this._saveSel(); this._posMenu();
+    },
 
-      // Esconde o menu ao clicar fora
-      document.addEventListener('click', (e) => {
-        if (e.target !== textarea && !menuMagico.contains(e.target)) {
-          menuMagico.style.display = 'none';
+    _posMenu() {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const rect = sel.getRangeAt(0).getBoundingClientRect();
+      let top = rect.bottom + 6, left = rect.left;
+      if (left + 225 > window.innerWidth - 8) left = window.innerWidth - 233;
+      if (top + 210 > window.innerHeight) top = rect.top - 218;
+      this.menu.style.cssText = `display:block;top:${top}px;left:${left}px;`;
+      this.menu.querySelectorAll('.re-menu-item').forEach((el, i) => el.classList.toggle('re-active', i === 0));
+    },
+
+    _hideMenu() { this.menu.style.display = 'none'; this.slashNode = null; },
+    _hideAll() { ['menu','emojiPanel','linkPanel'].forEach(k => { if(this[k]) this[k].style.display = 'none'; }); this.slashNode = null; },
+    _anyVisible() { return ['menu','emojiPanel','linkPanel'].some(k => this[k] && this[k].style.display !== 'none'); },
+    _saveSel() { const s = window.getSelection(); if(s.rangeCount) this.savedSel = s.getRangeAt(0).cloneRange(); },
+    _restoreSel() { if(!this.savedSel) return; const s = window.getSelection(); s.removeAllRanges(); s.addRange(this.savedSel); },
+
+    _removeSlashText() {
+      if (!this.slashNode) return;
+      const node = this.slashNode, si = this.slashOffset;
+      const sel = window.getSelection();
+      const end = (sel.rangeCount && sel.anchorNode === node) ? sel.anchorOffset
+                : (this.savedSel?.startContainer === node ? this.savedSel.startOffset : si + 1);
+      node.textContent = node.textContent.slice(0, si) + node.textContent.slice(end);
+      this._cur(node, si); this.slashNode = null;
+    },
+
+    _cur(node, offset) {
+      try {
+        const r = document.createRange(), s = window.getSelection();
+        r.setStart(node, offset); r.collapse(true);
+        s.removeAllRanges(); s.addRange(r);
+      } catch(e) {}
+    },
+
+    _execCmd(cmd) {
+      this._saveSel(); this._hideMenu();
+      if (cmd === 'hr')    { this._restoreSel(); this._removeSlashText(); this._insHr(); }
+      else if (cmd === 'emoji') { this._showEmoji(); }
+      else if (cmd === 'check') { this._restoreSel(); this._removeSlashText(); this._insCheck(); }
+      else if (cmd === 'link')  { this._showLink(); }
+    },
+
+    _insHr() {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      const hr = document.createElement('hr'); hr.className = 're-hr';
+      range.insertNode(hr);
+      const p = document.createElement('p'); p.innerHTML = '<br>';
+      hr.after(p); this._cur(p, 0); this._sync();
+    },
+
+    _insCheck() {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      const check = document.createElement('div'); check.className = 're-check';
+      check.innerHTML = '<input type="checkbox"><span contenteditable="true"></span>';
+      let anchor = range.startContainer;
+      while (anchor && anchor !== this.active?.ed) {
+        if (anchor.nodeType === 1 && (anchor.tagName === 'P' || (anchor.tagName === 'DIV' && anchor !== this.active?.ed && !anchor.classList.contains('re-editor')))) {
+          anchor.after(check); break;
         }
-      });
-    }
+        anchor = anchor.parentNode;
+      }
+      if (!check.parentNode) { range.deleteContents(); range.insertNode(check); }
+      this._cur(check.querySelector('span'), 0); this._sync();
+    },
 
-    // Procura por "---" nos cartões e converte na linha tracejada visual
-    setInterval(() => {
-      document.querySelectorAll('div').forEach(el => {
-        if (el.textContent.includes('---') && el.children.length === 0) {
-          if (el.innerHTML.includes('---') && !el.innerHTML.includes('<hr')) {
-            el.innerHTML = el.innerHTML.replace(/\n?---\n?/g, '<br><hr class="trello-divider"><br>');
-          }
-        }
-      });
-    }, 1500);
+    _showEmoji() {
+      const mr = this.menu.getBoundingClientRect();
+      let left = mr.right + 8, top = mr.top;
+      if (left + 272 > window.innerWidth - 8) left = mr.left - 280;
+      if (top + 290 > window.innerHeight) top = window.innerHeight - 298;
+      this.emojiPanel.style.cssText = `display:block;left:${left}px;top:${top}px;`;
+      const s = this.emojiPanel.querySelector('.re-emoji-search'); s.value = ''; s.focus();
+    },
 
-  }, 1000); 
+    _showLink() {
+      const mr = this.menu.getBoundingClientRect();
+      let left = mr.right + 8, top = mr.top;
+      if (left + 284 > window.innerWidth - 8) left = mr.left - 292;
+      if (top + 200 > window.innerHeight) top = window.innerHeight - 208;
+      this.linkPanel.style.cssText = `display:block;left:${left}px;top:${top}px;`;
+      const u = this.linkPanel.querySelector('.re-lp-url'), t = this.linkPanel.querySelector('.re-lp-text');
+      u.value = ''; t.value = ''; u.focus();
+    },
+
+    _doInsertLink() {
+      const url = this.linkPanel.querySelector('.re-lp-url').value.trim();
+      const text = this.linkPanel.querySelector('.re-lp-text').value.trim();
+      if (!url) { this.linkPanel.querySelector('.re-lp-url').focus(); return; }
+      this._hideAll(); this._restoreSel(); this._removeSlashText();
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      const a = document.createElement('a');
+      a.href = url.startsWith('http') ? url : 'https://' + url;
+      a.textContent = text || url; a.target = '_blank'; a.rel = 'noopener';
+      range.insertNode(a);
+      const r = document.createRange(); r.setStartAfter(a); r.collapse(true);
+      sel.removeAllRanges(); sel.addRange(r);
+      this._sync(); this.active?.ed.focus();
+    },
+
+    _insertText(txt) {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      const node = document.createTextNode(txt);
+      range.insertNode(node); range.setStartAfter(node); range.collapse(true);
+      sel.removeAllRanges(); sel.addRange(range);
+      this.active?.ed.focus();
+    },
+
+    _sync() { if(this.active) _taDesc.set.call(this.active.ta, this.active.ed.innerHTML); }
+  };
+
+  document.addEventListener('DOMContentLoaded', () => RichEditor.init());
 </script>
 </body>
 </html>
