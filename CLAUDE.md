@@ -38,6 +38,8 @@ O workflow usa os secrets do repositório GitHub:
 - `FTP_USERNAME` — usuário FTP
 - `FTP_PASSWORD` — senha FTP
 
+> **⚠️ CRÍTICO — server-dir do FTP:** O `server-dir` no workflow DEVE ser `crm/` e nunca `public_html/crm/` ou `domains/.../public_html/crm/`. O FTP do Hostinger já cai dentro de `public_html/`, então qualquer prefixo extra cria uma pasta duplicada. A estrutura correta no servidor é `public_html/crm/` e o caminho relativo ao root FTP é apenas `crm/`.
+
 ## Architecture
 
 Arquivos HTML auto-contidos (CSS e JS inline):
