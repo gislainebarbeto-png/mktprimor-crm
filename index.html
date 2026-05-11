@@ -145,28 +145,28 @@
     html.dark .cal-head-day { color: #7A6358 !important; }
 
     /* ── DARK MODE CHIPS — bg e texto idênticos ao light mode ── */
-    html.dark .pchip-st-criacao   { background: #FDE68A !important; }
-    html.dark .pchip-st-rascunho  { background: #FEF08A !important; }
-    html.dark .pchip-st-revisao   { background: #FCA5A5 !important; }
-    html.dark .pchip-st-aprovado  { background: #86EFAC !important; }
-    html.dark .pchip-st-publicado { background: #93C5FD !important; }
+    html.dark .pchip-st-criacao,
+    html.dark .pchip-st-rascunho  { background: #fffae6 !important; }
+    html.dark .pchip-st-revisao   { background: #fdf1e7 !important; }
+    html.dark .pchip-st-aprovado  { background: #e9f9ee !important; }
+    html.dark .pchip-st-publicado { background: #e7e6f5 !important; }
 
     html.dark .pchip-st-criacao   .pchip-tipo,
-    html.dark .pchip-st-rascunho  .pchip-tipo  { color: #D97706 !important; }
-    html.dark .pchip-st-revisao   .pchip-tipo  { color: #DC2626 !important; }
-    html.dark .pchip-st-aprovado  .pchip-tipo  { color: #16A34A !important; }
-    html.dark .pchip-st-publicado .pchip-tipo  { color: #2563EB !important; }
+    html.dark .pchip-st-rascunho  .pchip-tipo  { color: #f6d12d !important; }
+    html.dark .pchip-st-revisao   .pchip-tipo  { color: #ffa14e !important; }
+    html.dark .pchip-st-aprovado  .pchip-tipo  { color: #41ff72 !important; }
+    html.dark .pchip-st-publicado .pchip-tipo  { color: #8688ff !important; }
 
     html.dark .pchip-st-criacao   .pchip-tema,
     html.dark .pchip-st-criacao   .pchip-titulo,
     html.dark .pchip-st-rascunho  .pchip-tema,
-    html.dark .pchip-st-rascunho  .pchip-titulo { color: #78350F !important; }
+    html.dark .pchip-st-rascunho  .pchip-titulo { color: #c9a800 !important; }
     html.dark .pchip-st-revisao   .pchip-tema,
-    html.dark .pchip-st-revisao   .pchip-titulo { color: #7C2D12 !important; }
+    html.dark .pchip-st-revisao   .pchip-titulo { color: #d4762a !important; }
     html.dark .pchip-st-aprovado  .pchip-tema,
-    html.dark .pchip-st-aprovado  .pchip-titulo { color: #14532D !important; }
+    html.dark .pchip-st-aprovado  .pchip-titulo { color: #1db855 !important; }
     html.dark .pchip-st-publicado .pchip-tema,
-    html.dark .pchip-st-publicado .pchip-titulo { color: #1E3A8A !important; }
+    html.dark .pchip-st-publicado .pchip-titulo { color: #5254cc !important; }
     /* ─────────────────────────────────────────────────── */
     html.dark .cal-cell.drag-over {
       background: rgba(59,130,246,0.12) !important;
@@ -1481,11 +1481,11 @@ const Admin = {
     // Save scroll position before re-render
     const savedScroll = main ? main.scrollTop : 0;
     const SM = {
-      criacao:  {l:'Aprovar',   c:'#78350F', bc:'#FDE68A', dot:'#D97706'},
-      rascunho: {l:'Rascunho',  c:'#6B5B2E', bc:'#FEF08A', dot:'#CA8A04'},
-      revisao:  {l:'Revisar',   c:'#7C2D12', bc:'#FCA5A5', dot:'#DC2626'},
-      aprovado: {l:'Aprovado',  c:'#14532D', bc:'#86EFAC', dot:'#16A34A'},
-      publicado:{l:'Publicado', c:'#1E3A8A', bc:'#93C5FD', dot:'#2563EB'}
+      criacao:  {l:'Aprovar',   c:'#c9a800', bc:'#fffae6', dot:'#f6d12d'},
+      rascunho: {l:'Rascunho',  c:'#c9a800', bc:'#fffae6', dot:'#f6d12d'},
+      revisao:  {l:'Revisar',   c:'#d4762a', bc:'#fdf1e7', dot:'#ffa14e'},
+      aprovado: {l:'Aprovado',  c:'#1db855', bc:'#e9f9ee', dot:'#41ff72'},
+      publicado:{l:'Publicado', c:'#5254cc', bc:'#e7e6f5', dot:'#8688ff'}
     };
     const v = this._postsView;
     const clientList = this._clientList || [];
@@ -1584,7 +1584,7 @@ const Admin = {
 
   _showCalPreview(postId, e) {
     const p = this.posts.find(x=>x.id===postId); if (!p) return;
-    const SM = {criacao:{l:'Aprovar',c:'#78350F',bc:'#FDE68A',dot:'#D97706'},rascunho:{l:'Rascunho',c:'#6B5B2E',bc:'#FEF08A',dot:'#CA8A04'},revisao:{l:'Revisar',c:'#7C2D12',bc:'#FCA5A5',dot:'#DC2626'},aprovado:{l:'Aprovado',c:'#14532D',bc:'#86EFAC',dot:'#16A34A'},publicado:{l:'Publicado',c:'#1E3A8A',bc:'#93C5FD',dot:'#2563EB'}};
+    const SM = {criacao:{l:'Aprovar',c:'#c9a800',bc:'#fffae6',dot:'#f6d12d'},rascunho:{l:'Rascunho',c:'#c9a800',bc:'#fffae6',dot:'#f6d12d'},revisao:{l:'Revisar',c:'#d4762a',bc:'#fdf1e7',dot:'#ffa14e'},aprovado:{l:'Aprovado',c:'#1db855',bc:'#e9f9ee',dot:'#41ff72'},publicado:{l:'Publicado',c:'#5254cc',bc:'#e7e6f5',dot:'#8688ff'}};
     const m = SM[p.status||'criacao']||SM.criacao;
     let img = ''; try { const a=JSON.parse(p.img_url); img=Array.isArray(a)?a[0]:p.img_url; } catch{img=p.img_url||'';}
     const el = document.getElementById('cal-preview'); if (!el) return;
@@ -1659,6 +1659,13 @@ const Admin = {
 
     // Chip compact (mensal/quinzenal) — tipo + tema + título, drag-and-drop
     const tipoIco = (t) => t==='Reels'?'🎬':t==='Stories'?'📖':t&&t.includes('Carrossel')?'📑':'📷';
+    const statusDot = (status, color) => {
+      const s = `width:14px;height:14px;border-radius:50%;background:${color};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;vertical-align:middle;`;
+      if (status==='publicado') return `<span style="${s}"><svg width="9" height="8" viewBox="0 0 9 8" fill="none"><polyline points="1.5,4.5 3.5,6.5 7.5,1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+      if (status==='aprovado')  return `<span style="${s}"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><polyline points="1.5,4.5 3.5,6.5 7.5,1.5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><line x1="1.5" y1="7.5" x2="7.5" y2="7.5" stroke="white" stroke-width="1" stroke-linecap="round"/></svg></span>`;
+      if (status==='revisao')   return `<span style="${s}"><svg width="9" height="9" viewBox="0 0 9 9" fill="white"><rect x="3.5" y="1.5" width="2" height="3.5" rx="1"/><circle cx="4.5" cy="7" r="1"/></svg></span>`;
+      return `<span style="${s}"><span style="width:5px;height:5px;border-radius:50%;background:white;display:block;"></span></span>`;
+    };
     const chipCompact = (p, sm) => {
       const tipo = p.tipo||'Feed';
       const tema = p.tema_titulo ? p.tema_titulo.slice(0,35) : '';
@@ -1669,7 +1676,7 @@ const Admin = {
         ondragend="this.classList.remove('dragging')"
         onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()"
         onclick="event.stopPropagation();Admin.openPost(${p.id})">
-        <span class="pchip-tipo" style="color:${sm.dot};">${tipoIco(tipo)} ${tipo}<span style="width:7px;height:7px;border-radius:50%;background:${sm.dot};display:inline-block;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,0.8);"></span></span>
+        <span class="pchip-tipo" style="color:${sm.dot};">${tipoIco(tipo)} ${tipo}${statusDot(p.status||'criacao', sm.dot)}</span>
         ${tema?`<span class="pchip-tema" style="color:${sm.c};">${tema}</span>`:''}
         <span class="pchip-titulo" style="color:${sm.c};">${titulo}</span>
       </div>`;
@@ -4847,10 +4854,10 @@ const Client = {
     const container = document.getElementById('client-posts-main');
     if (!container) return;
     const SM = {
-      criacao:  {l:'Aprovar',   c:'#78350F', bc:'#FDE68A', dot:'#D97706'},
-      revisao:  {l:'Revisar',   c:'#7C2D12', bc:'#FCA5A5', dot:'#DC2626'},
-      aprovado: {l:'Aprovado',  c:'#14532D', bc:'#86EFAC', dot:'#16A34A'},
-      publicado:{l:'Publicado', c:'#1E3A8A', bc:'#93C5FD', dot:'#2563EB'}
+      criacao:  {l:'Aprovar',   c:'#c9a800', bc:'#fffae6', dot:'#f6d12d'},
+      revisao:  {l:'Revisar',   c:'#d4762a', bc:'#fdf1e7', dot:'#ffa14e'},
+      aprovado: {l:'Aprovado',  c:'#1db855', bc:'#e9f9ee', dot:'#41ff72'},
+      publicado:{l:'Publicado', c:'#5254cc', bc:'#e7e6f5', dot:'#8688ff'}
     };
     const v = this._clientView;
     const posts = this._posts;
@@ -4923,10 +4930,10 @@ const Client = {
   _showClientPreview(id, e) {
     const p = this._posts.find(x=>x.id===id); if(!p) return;
     const SM = {
-      criacao:{l:'Aprovar',c:'#78350F',bc:'#FDE68A'},
-      revisao:{l:'Revisar',c:'#7C2D12',bc:'#FCA5A5'},
-      aprovado:{l:'Aprovado',c:'#14532D',bc:'#86EFAC'},
-      publicado:{l:'Publicado',c:'#1E3A8A',bc:'#93C5FD'}
+      criacao:{l:'Aprovar',c:'#c9a800',bc:'#fffae6'},
+      revisao:{l:'Revisar',c:'#d4762a',bc:'#fdf1e7'},
+      aprovado:{l:'Aprovado',c:'#1db855',bc:'#e9f9ee'},
+      publicado:{l:'Publicado',c:'#5254cc',bc:'#e7e6f5'}
     };
     const m = SM[p.status||'criacao']||SM.criacao;
     const img = this.postMedia(p)[0] || '';
