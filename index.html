@@ -144,21 +144,30 @@
     html.dark .cal-add-btn { color: #C4967A !important; }
     html.dark .cal-head-day { color: #7A6358 !important; }
 
-    /* ── DARK MODE CHIPS ── */
-    html.dark .pchip {
-      background: var(--chip-bg) !important;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.35) !important;
-      opacity: 0.92;
-    }
-    html.dark .pchip:hover {
-      background: var(--chip-bg) !important;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.45) !important;
-      opacity: 1;
-    }
-    html.dark .pchip .pchip-tipo  { color: var(--chip-dot)   !important; opacity: 1 !important; }
-    html.dark .pchip .pchip-tema  { color: var(--chip-c)     !important; opacity: 0.8 !important; }
-    html.dark .pchip .pchip-titulo{ color: var(--chip-c)     !important; }
-    /* preserva cores de status no dark mode — não sobrescreve texto */
+    /* ── DARK MODE CHIPS — bg e texto idênticos ao light mode ── */
+    html.dark .pchip-st-criacao   { background: #FDE68A !important; }
+    html.dark .pchip-st-rascunho  { background: #FEF08A !important; }
+    html.dark .pchip-st-revisao   { background: #FCA5A5 !important; }
+    html.dark .pchip-st-aprovado  { background: #86EFAC !important; }
+    html.dark .pchip-st-publicado { background: #93C5FD !important; }
+
+    html.dark .pchip-st-criacao   .pchip-tipo,
+    html.dark .pchip-st-rascunho  .pchip-tipo  { color: #D97706 !important; }
+    html.dark .pchip-st-revisao   .pchip-tipo  { color: #DC2626 !important; }
+    html.dark .pchip-st-aprovado  .pchip-tipo  { color: #16A34A !important; }
+    html.dark .pchip-st-publicado .pchip-tipo  { color: #2563EB !important; }
+
+    html.dark .pchip-st-criacao   .pchip-tema,
+    html.dark .pchip-st-criacao   .pchip-titulo,
+    html.dark .pchip-st-rascunho  .pchip-tema,
+    html.dark .pchip-st-rascunho  .pchip-titulo { color: #78350F !important; }
+    html.dark .pchip-st-revisao   .pchip-tema,
+    html.dark .pchip-st-revisao   .pchip-titulo { color: #7C2D12 !important; }
+    html.dark .pchip-st-aprovado  .pchip-tema,
+    html.dark .pchip-st-aprovado  .pchip-titulo { color: #14532D !important; }
+    html.dark .pchip-st-publicado .pchip-tema,
+    html.dark .pchip-st-publicado .pchip-titulo { color: #1E3A8A !important; }
+    /* ─────────────────────────────────────────────────── */
     html.dark .cal-cell.drag-over {
       background: rgba(59,130,246,0.12) !important;
       border-color: #3B82F6 !important;
@@ -1654,7 +1663,7 @@ const Admin = {
       const tipo = p.tipo||'Feed';
       const tema = p.tema_titulo ? p.tema_titulo.slice(0,35) : '';
       const titulo = (p.legenda||'—').slice(0,42);
-      return `<div class="pchip" style="--chip-bg:${sm.bc};--chip-c:${sm.c};--chip-dot:${sm.dot};background:${sm.bc};border-color:${sm.dot}40;"
+      return `<div class="pchip pchip-st-${p.status||'criacao'}" style="background:${sm.bc};border-color:${sm.dot}40;"
         draggable="true"
         ondragstart="event.stopPropagation();event.dataTransfer.setData('postId','${p.id}');this.classList.add('dragging');Admin._dragPostId=${p.id}"
         ondragend="this.classList.remove('dragging')"
