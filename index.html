@@ -1467,11 +1467,11 @@ const Admin = {
     // Save scroll position before re-render
     const savedScroll = main ? main.scrollTop : 0;
     const SM = {
-      criacao:  {l:'Aprovar',   c:'#78350F', bc:'#FEF3C7', dot:'#F59E0B'},
-      rascunho: {l:'Rascunho',  c:'#6B5B2E', bc:'#FEF9E7', dot:'#FCD34D'},
-      revisao:  {l:'Revisar',   c:'#7C2D12', bc:'#FFEDD5', dot:'#F97316'},
-      aprovado: {l:'Aprovado',  c:'#14532D', bc:'#DCFCE7', dot:'#22C55E'},
-      publicado:{l:'Publicado', c:'#1E3A8A', bc:'#DBEAFE', dot:'#3B82F6'}
+      criacao:  {l:'Aprovar',   c:'#78350F', bc:'#FDE68A', dot:'#D97706'},
+      rascunho: {l:'Rascunho',  c:'#6B5B2E', bc:'#FEF08A', dot:'#CA8A04'},
+      revisao:  {l:'Revisar',   c:'#7C2D12', bc:'#FCA5A5', dot:'#DC2626'},
+      aprovado: {l:'Aprovado',  c:'#14532D', bc:'#86EFAC', dot:'#16A34A'},
+      publicado:{l:'Publicado', c:'#1E3A8A', bc:'#93C5FD', dot:'#2563EB'}
     };
     const v = this._postsView;
     const clientList = this._clientList || [];
@@ -1510,8 +1510,8 @@ const Admin = {
         .cal-cell:hover .cal-add-btn{opacity:1;}
         .cal-add-btn:hover{background:rgba(196,150,122,0.15);}
         /* Post chip compacto (mensal/quinzenal) */
-        .pchip{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:8px;margin-bottom:4px;cursor:grab;overflow:visible;border:1px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,0.06);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:all .15s;}
-        .pchip:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+        .pchip{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:8px;margin-bottom:4px;cursor:grab;overflow:visible;border:1px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,0.08);transition:all .15s;}
+        .pchip:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,0.12);}
         .pchip:active{cursor:grabbing;transform:scale(0.98);}
         .pchip.dragging{opacity:.35;transform:scale(0.96);}
         .pchip-tipo{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;justify-content:space-between;}
@@ -1570,7 +1570,7 @@ const Admin = {
 
   _showCalPreview(postId, e) {
     const p = this.posts.find(x=>x.id===postId); if (!p) return;
-    const SM = {criacao:{l:'Aprovar',c:'#78350F',bc:'#FEF3C7',dot:'#F59E0B'},rascunho:{l:'Rascunho',c:'#6B5B2E',bc:'#FEF9E7',dot:'#FCD34D'},revisao:{l:'Revisar',c:'#7C2D12',bc:'#FFEDD5',dot:'#F97316'},aprovado:{l:'Aprovado',c:'#14532D',bc:'#DCFCE7',dot:'#22C55E'},publicado:{l:'Publicado',c:'#1E3A8A',bc:'#DBEAFE',dot:'#3B82F6'}};
+    const SM = {criacao:{l:'Aprovar',c:'#78350F',bc:'#FDE68A',dot:'#D97706'},rascunho:{l:'Rascunho',c:'#6B5B2E',bc:'#FEF08A',dot:'#CA8A04'},revisao:{l:'Revisar',c:'#7C2D12',bc:'#FCA5A5',dot:'#DC2626'},aprovado:{l:'Aprovado',c:'#14532D',bc:'#86EFAC',dot:'#16A34A'},publicado:{l:'Publicado',c:'#1E3A8A',bc:'#93C5FD',dot:'#2563EB'}};
     const m = SM[p.status||'criacao']||SM.criacao;
     let img = ''; try { const a=JSON.parse(p.img_url); img=Array.isArray(a)?a[0]:p.img_url; } catch{img=p.img_url||'';}
     const el = document.getElementById('cal-preview'); if (!el) return;
@@ -4833,10 +4833,10 @@ const Client = {
     const container = document.getElementById('client-posts-main');
     if (!container) return;
     const SM = {
-      criacao:  {l:'Aprovar',   c:'#78350F', bc:'#FEF3C7', dot:'#F59E0B'},
-      revisao:  {l:'Revisar',   c:'#7C2D12', bc:'#FFEDD5', dot:'#F97316'},
-      aprovado: {l:'Aprovado',  c:'#14532D', bc:'#DCFCE7', dot:'#22C55E'},
-      publicado:{l:'Publicado', c:'#1E3A8A', bc:'#DBEAFE', dot:'#3B82F6'}
+      criacao:  {l:'Aprovar',   c:'#78350F', bc:'#FDE68A', dot:'#D97706'},
+      revisao:  {l:'Revisar',   c:'#7C2D12', bc:'#FCA5A5', dot:'#DC2626'},
+      aprovado: {l:'Aprovado',  c:'#14532D', bc:'#86EFAC', dot:'#16A34A'},
+      publicado:{l:'Publicado', c:'#1E3A8A', bc:'#93C5FD', dot:'#2563EB'}
     };
     const v = this._clientView;
     const posts = this._posts;
@@ -4909,10 +4909,10 @@ const Client = {
   _showClientPreview(id, e) {
     const p = this._posts.find(x=>x.id===id); if(!p) return;
     const SM = {
-      criacao:{l:'Aprovar',c:'#78350F',bc:'#FEF3C7'},
-      revisao:{l:'Revisar',c:'#7C2D12',bc:'#FFEDD5'},
-      aprovado:{l:'Aprovado',c:'#14532D',bc:'#DCFCE7'},
-      publicado:{l:'Publicado',c:'#1E3A8A',bc:'#DBEAFE'}
+      criacao:{l:'Aprovar',c:'#78350F',bc:'#FDE68A'},
+      revisao:{l:'Revisar',c:'#7C2D12',bc:'#FCA5A5'},
+      aprovado:{l:'Aprovado',c:'#14532D',bc:'#86EFAC'},
+      publicado:{l:'Publicado',c:'#1E3A8A',bc:'#93C5FD'}
     };
     const m = SM[p.status||'criacao']||SM.criacao;
     const img = this.postMedia(p)[0] || '';
