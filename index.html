@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="color-scheme" content="light dark">
-  <title>Marketing Primor · Portal</title>
+  <title>Marketing Primor · Portal v5.10</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="Logo.png">
   <link rel="apple-touch-icon" href="Logo.png">
@@ -122,6 +122,45 @@
     }
     html.dark .cal-wrap,
     html.dark .cal-wrap *:not(button) { background:transparent!important; color:var(--text)!important; }
+
+    /* ── DARK MODE CALENDAR CELLS ── */
+    html.dark .cal-cell {
+      background: linear-gradient(155deg, rgba(22,14,10,0.92) 0%, rgba(12,8,6,0.88) 100%) !important;
+      border-color: rgba(73,54,47,0.7) !important;
+      box-shadow: inset 0 1px 0 rgba(241,197,175,0.07), 0 1px 4px rgba(0,0,0,0.4) !important;
+    }
+    html.dark .cal-cell:hover {
+      border-color: rgba(196,150,122,0.6) !important;
+      box-shadow: inset 0 1px 0 rgba(241,197,175,0.12), 0 3px 12px rgba(0,0,0,0.5) !important;
+    }
+    html.dark .cal-cell.today {
+      background: linear-gradient(155deg, rgba(44,26,14,0.95) 0%, rgba(30,16,8,0.9) 100%) !important;
+      border-color: rgba(196,150,122,0.8) !important;
+    }
+    html.dark .cal-cell.outro-mes { opacity: 0.2 !important; }
+    html.dark .cal-day-num { color: #9B8472 !important; }
+    html.dark .cal-cell.today .cal-day-num { color: #F1C5AF !important; }
+    html.dark .cal-add-btn { color: #C4967A !important; }
+    html.dark .cal-head-day { color: #7A6358 !important; }
+
+    /* ── DARK MODE CHIPS ── */
+    html.dark .pchip {
+      background: rgba(28,16,10,0.95) !important;
+      border-color: rgba(73,54,47,0.75) !important;
+      box-shadow: inset 0 1px 0 rgba(241,197,175,0.06), 0 1px 3px rgba(0,0,0,0.4) !important;
+    }
+    html.dark .pchip:hover {
+      border-color: rgba(196,150,122,0.6) !important;
+      box-shadow: inset 0 1px 0 rgba(241,197,175,0.1), 0 3px 8px rgba(0,0,0,0.5) !important;
+    }
+    html.dark .pchip-tipo { opacity: 1 !important; }
+    html.dark .pchip-tema { color: #B8A090 !important; opacity: 1 !important; }
+    html.dark .pchip-titulo { color: #F1C5AF !important; }
+    /* status dot colors stay vivid in dark — só o texto e fundo mudam */
+    html.dark .cal-cell.drag-over {
+      background: rgba(59,130,246,0.12) !important;
+      border-color: #3B82F6 !important;
+    }
 
     /* Task modal glass */
     html.dark .task-modal {
@@ -340,6 +379,16 @@
     /* Client posts grid */
     .client-layout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start;}
     .client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
+    .client-post-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+    .client-status-legend{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+    .client-status-pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 9px;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border:1px solid transparent;}
+    .client-status-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+    .client-status-pill.aprovado{background:rgba(34,197,94,0.15);color:#14532D;border-color:#86EFAC;}
+    .client-status-pill.revisar{background:rgba(249,115,22,0.15);color:#9A3412;border-color:#FED7AA;}
+    .client-status-pill.producao{background:rgba(251,191,36,0.15);color:#92400E;border-color:#FDE68A;}
+    .client-status-pill.publicado{background:rgba(59,130,246,0.15);color:#1E3A8A;border-color:#BFDBFE;}
+    .client-post-note{background:rgba(196,150,122,.08);border:1px solid rgba(196,150,122,.24);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:11px;color:var(--text);line-height:1.55;}
+    .client-post-note strong{display:block;font-size:9px;color:var(--copper);letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px;}
     .ig-inline{background:#fff;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh);position:sticky;top:20px;}
     .ig-inline-hd{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #efefef;}
     /* Client boards in admin */
@@ -383,7 +432,7 @@
     .ig-profile-stat strong{display:block;font-size:14px;font-weight:600;}
     .ig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}
     .ig-grid-item{aspect-ratio:1;overflow:hidden;cursor:pointer;position:relative;background:#f0f0f0;}
-    .ig-grid-item img{width:100%;height:100%;object-fit:cover;transition:opacity .15s;}
+    .ig-grid-item img,.ig-grid-item video{width:100%;height:100%;object-fit:cover;transition:opacity .15s;}
     .ig-grid-item:hover img{opacity:.85;}
     .ig-grid-item .ig-grid-multi{position:absolute;top:6px;right:6px;color:#fff;font-size:14px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));}
     .ig-grid-empty{aspect-ratio:1;background:#fafafa;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:22px;}
@@ -424,9 +473,13 @@
     .cal-day{min-height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text);position:relative;}
     .cal-day.has-post{background:rgba(196,150,122,.18);color:var(--brown);cursor:pointer;font-weight:500;}
     .cal-day.has-post:hover{background:rgba(196,150,122,.35);}
+    .cal-day.st-aprovado{background:#E8F5E9;color:#2E7D32;}
+    .cal-day.st-revisar{background:#FCE4EC;color:#AD1457;}
+    .cal-day.st-producao{background:#FFF3E0;color:#E65100;}
+    .cal-day.st-publicado{background:#E0F7FA;color:#00838F;}
     .cal-day.today{border:1px solid var(--copper);}
     .cal-day.empty{opacity:.25;}
-    .cal-dot{width:3px;height:3px;background:var(--copper);border-radius:50%;position:absolute;bottom:2px;left:50%;transform:translateX(-50%);}
+    .cal-dot{width:3px;height:3px;background:currentColor;border-radius:50%;position:absolute;bottom:2px;left:50%;transform:translateX(-50%);}
     .cal-info{display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px;}
     .cal-info-item{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border);}
     .cal-info-item:last-child{border-bottom:none;}
@@ -573,10 +626,10 @@
     .cp-date{font-size:10px;color:var(--muted);margin-top:2px;}
     .cp-desc{font-size:12px;color:var(--muted);flex:1;margin-bottom:14px;line-height:1.7;}
     .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:400;letter-spacing:.04em;}
-    .badge-revisao{background:#FFF3E0;color:#E65100;}
+    .badge-revisao{background:#FCE4EC;color:#AD1457;}
     .badge-aprovado{background:#E8F5E9;color:#2E7D32;}
-    .badge-publicado{background:#F3E5F5;color:#6A1B9A;}
-    .badge-criacao{background:#ECEFF1;color:#455A64;}
+    .badge-publicado{background:#E0F7FA;color:#00838F;}
+    .badge-criacao{background:#FFF3E0;color:#E65100;}
     .cp-actions{border-top:1px solid var(--border);padding-top:12px;margin-top:auto;}
     .cp-btn-ok{width:100%;margin-bottom:7px;padding:11px 12px;border-radius:8px;background:#E8F5E9;color:#2E7D32;border:1px solid rgba(46,125,50,.2);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;}
     .cp-btn-ok:hover{background:#C8E6C9;}
@@ -609,7 +662,24 @@
     .upload-area span{font-size:11px;color:var(--copper);}
     .upload-preview{width:100%;height:160px;object-fit:cover;border-radius:9px;margin-top:10px;display:none;}
     .upload-thumbs{display:none;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-top:10px;}
-    .upload-thumbs img{width:100%;height:80px;object-fit:cover;border-radius:7px;border:2px solid var(--border);}
+    .upload-thumbs img,.upload-thumbs video{width:100%;height:80px;object-fit:cover;border-radius:7px;border:2px solid var(--border);background:var(--beige);}
+    .post-modal-grid{display:grid;grid-template-columns:170px 1fr;gap:18px;align-items:start;}
+    .post-side-preview{position:sticky;top:0;border:1px solid var(--border);border-radius:10px;background:var(--bg);overflow:hidden;}
+    .post-side-preview img,.post-side-preview video{width:100%;aspect-ratio:4/5;object-fit:cover;display:block;background:var(--beige);}
+    .post-side-empty{aspect-ratio:4/5;display:flex;align-items:center;justify-content:center;color:var(--copper);font-family:"Cormorant Garamond",serif;font-style:italic;font-size:22px;background:var(--beige);}
+    .post-side-meta{padding:10px;font-size:10px;color:var(--muted);line-height:1.5;}
+    .post-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .post-ref-grid{display:grid;grid-template-columns:1fr;gap:8px;}
+    .post-toolbar{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
+    .post-tool-btn{min-width:32px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:12px;display:inline-flex;align-items:center;justify-content:center;}
+    .post-tool-btn:hover{border-color:var(--copper);color:var(--brown);background:rgba(196,150,122,.08);}
+    .post-status-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .post-carousel-preview{display:none;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-top:10px;background:var(--bg);}
+    .post-carousel-stage{position:relative;background:var(--beige);}
+    .post-carousel-stage img,.post-carousel-stage video{width:100%;aspect-ratio:1/1;object-fit:contain;display:block;background:#000;}
+    .post-carousel-count{position:absolute;right:10px;top:10px;background:rgba(0,0,0,.55);color:#fff;border-radius:20px;padding:3px 8px;font-size:10px;}
+    .post-cover-preview{display:none;margin-top:10px;}
+    .post-cover-preview img,.post-cover-preview video{width:120px;height:120px;object-fit:cover;border-radius:9px;border:2px solid var(--border);background:var(--beige);}
     .carousel{position:relative;overflow:hidden;}
     .car-slide{width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--beige);display:block;cursor:zoom-in;}
     .car-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.45);border:none;color:#fff;font-size:22px;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;transition:background .2s;}
@@ -648,6 +718,9 @@
     .tab-btn{flex:1;padding:8px;text-align:center;border-radius:8px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;}
     .tab-btn.active{background:var(--surface);color:var(--brown);box-shadow:0 1px 4px rgba(44,37,32,.08);}
     @media(max-width:640px){
+      .post-modal-grid{grid-template-columns:1fr;}
+      .post-side-preview{position:static;}
+      .post-field-grid,.post-status-row{grid-template-columns:1fr;}
       .app-header,.client-main{padding-left:16px;padding-right:16px;}
       .admin-body{flex-direction:column;display:flex;flex:1;min-height:0;overflow:hidden;position:relative;height:0;}
       .admin-main{padding:16px;overflow-y:auto;flex:1;min-height:0;height:0;}
@@ -704,7 +777,7 @@
       .client-grid{display:flex!important;flex-direction:column;gap:8px;}
       .cp-compact-hd{display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer;user-select:none;}
       .cp-compact-thumb{width:52px;height:52px;border-radius:8px;background:var(--bg);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:18px;}
-      .cp-compact-thumb img{width:100%;height:100%;object-fit:cover;}
+      .cp-compact-thumb img,.cp-compact-thumb video{width:100%;height:100%;object-fit:cover;}
       .cp-compact-info{flex:1;min-width:0;}
       .cp-compact-info .cp-title{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
       .cp-compact-info .cp-date{font-size:11px;color:var(--muted);margin-top:2px;}
@@ -889,9 +962,13 @@
     <div id="ctab-content-posts">
       <div class="client-layout">
         <div>
-          <div class="cal-card" id="client-calendar"></div>
-          <div class="cal-info" id="cal-info"></div>
-          <div id="client-posts" class="client-grid"></div>
+          <div id="client-posts-main"></div>
+          <!-- IDs kept para compatibilidade com funções existentes -->
+          <div style="display:none">
+            <div id="client-calendar"></div>
+            <div id="cal-info"></div>
+            <div id="client-posts" class="client-grid"></div>
+          </div>
         </div>
         <div>
           <div class="next-post-card hidden" id="client-next-post"></div>
@@ -983,11 +1060,14 @@ const App = {
   },
 
   async route() {
+    const VALID_TABS = ['leads','followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','tarefas','demandas','chat'];
+    const savedTab = sessionStorage.getItem('adminTab');
+    const startTab = (savedTab && VALID_TABS.includes(savedTab)) ? savedTab : 'leads';
     if (this.user.email === ADMIN_EMAIL) {
       document.getElementById('admin-email').textContent = this.user.email;
       this.show('admin-view');
       Admin.isEquipe = false;
-      Admin.tab('leads');
+      Admin.tab(startTab);
     } else {
       // Check if team member
       const { data: equipe } = await db.from('equipe').select('email').ilike('email', this.user.email).maybeSingle();
@@ -996,7 +1076,7 @@ const App = {
         this.show('admin-view');
         Admin.isEquipe = true;
         document.getElementById('nav-financeiro').style.display = 'none';
-        Admin.tab('leads');
+        Admin.tab(startTab);
       } else {
         document.getElementById('client-email-display').textContent = this.user.email;
         const name = this.user.user_metadata?.nome || this.user.email.split('@')[0];
@@ -1028,6 +1108,7 @@ const Admin = {
 
   async tab(name) {
     this.currentTab = name;
+    sessionStorage.setItem('adminTab', name);
     ['leads','followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','tarefas','demandas','chat'].forEach(t => {
       document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
     });
@@ -1053,6 +1134,12 @@ const Admin = {
       if (name === 'tarefas')      await this.renderTarefas();
       if (name === 'demandas')     await this.renderDemandas();
       if (name === 'chat')         await this.renderChat();
+      // Restore saved scroll for this tab
+      const savedScroll = parseInt(sessionStorage.getItem('scroll_' + name)) || 0;
+      if (savedScroll) requestAnimationFrame(() => {
+        const m = document.getElementById('admin-main');
+        if (m) m.scrollTop = savedScroll;
+      });
     } finally { this.loader(false); }
   },
 
@@ -1377,7 +1464,15 @@ const Admin = {
 
   _renderPostsView() {
     const main = document.getElementById('admin-main');
-    const SM = {criacao:{l:'Em Criação',c:'#78909C',bc:'rgba(120,144,156,0.18)',dot:'#78909C'},rascunho:{l:'Rascunho',c:'#90A4AE',bc:'rgba(144,164,174,0.18)',dot:'#90A4AE'},revisao:{l:'Em Revisão',c:'#E65100',bc:'rgba(230,81,0,0.18)',dot:'#FB8C00'},aprovado:{l:'Aprovado',c:'#2E7D32',bc:'rgba(46,125,50,0.18)',dot:'#43A047'},publicado:{l:'Publicado',c:'#6A1B9A',bc:'rgba(106,27,154,0.18)',dot:'#8E24AA'}};
+    // Save scroll position before re-render
+    const savedScroll = main ? main.scrollTop : 0;
+    const SM = {
+      criacao:  {l:'Aprovar',   c:'#92400E', bc:'rgba(251,191,36,0.18)',  dot:'#F59E0B'},
+      rascunho: {l:'Rascunho',  c:'#92400E', bc:'rgba(251,191,36,0.12)',  dot:'#FCD34D'},
+      revisao:  {l:'Revisar',   c:'#9A3412', bc:'rgba(249,115,22,0.18)',  dot:'#F97316'},
+      aprovado: {l:'Aprovado',  c:'#14532D', bc:'rgba(34,197,94,0.18)',   dot:'#22C55E'},
+      publicado:{l:'Publicado', c:'#1E3A8A', bc:'rgba(59,130,246,0.18)',  dot:'#3B82F6'}
+    };
     const v = this._postsView;
     const clientList = this._clientList || [];
     const cliOptions = '<option value="">Todos os clientes</option>' + clientList.map(c=>`<option value="${c.email}" ${this._postsCliFiltro===c.email?'selected':''}>${c.nome||c.email}</option>`).join('');
@@ -1390,24 +1485,41 @@ const Admin = {
 
     main.innerHTML = `
       <style>
-        .cal-grid-7{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+        .cal-grid-7{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;grid-auto-rows:110px;}
         .cal-grid-14{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;}
         .cal-head-day{font-size:10px;color:var(--muted);text-align:center;padding:6px 2px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;}
-        .cal-cell{border-radius:10px;border:1px solid var(--border);background:var(--surface);padding:6px;position:relative;transition:border-color .15s;overflow:hidden;}
-        .cal-cell:hover{border-color:var(--copper);}
-        .cal-cell.today{border-color:var(--copper)!important;background:rgba(212,168,130,0.05);}
-        .cal-cell.outro-mes{opacity:.3;}
-        .cal-cell.mensal{min-height:90px;}
-        .cal-cell.semanal{min-height:140px;}
-        .cal-cell.diario-cell{min-height:180px;}
-        .cal-day-num{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:700;line-height:1;}
+        .cal-cell{
+          border-radius:12px;
+          border:1px solid rgba(200,200,208,0.65);
+          background:linear-gradient(155deg,rgba(255,255,255,0.95) 0%,rgba(246,246,250,0.82) 100%);
+          padding:6px;position:relative;transition:all .18s;
+          box-shadow:0 1px 3px rgba(0,0,0,0.055),inset 0 1px 0 rgba(255,255,255,1);
+          backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+          height:110px;box-sizing:border-box;overflow:hidden;
+        }
+        .cal-cell:hover{border-color:rgba(160,160,172,0.8);box-shadow:0 3px 10px rgba(0,0,0,0.08),inset 0 1px 0 #fff;}
+        .cal-cell.today{border-color:rgba(196,150,122,0.7)!important;background:linear-gradient(155deg,rgba(255,249,243,0.97) 0%,rgba(250,238,225,0.88) 100%);}
+        .cal-cell.outro-mes{opacity:.35;}
+        .cal-cell.mensal{} /* altura controlada pelo grid-auto-rows */
+        .cal-cell.semanal{height:auto;min-height:140px;}
+        .cal-cell.diario-cell{height:auto;min-height:180px;}
+        .cal-cell.empty-day{cursor:pointer;}
+        .cal-cell.empty-day:hover .cal-day-num::after{content:' +';color:var(--copper);font-weight:400;}
+        .cal-day-num{font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:700;line-height:1;}
         .cal-cell.today .cal-day-num{color:var(--copper);}
+        .cal-add-btn{opacity:0;font-size:14px;color:var(--copper);cursor:pointer;line-height:1;padding:0 2px;border-radius:4px;transition:opacity .15s,background .15s;font-weight:300;}
+        .cal-cell:hover .cal-add-btn{opacity:1;}
+        .cal-add-btn:hover{background:rgba(196,150,122,0.15);}
         /* Post chip compacto (mensal/quinzenal) */
-        .pchip{display:flex;align-items:center;gap:3px;padding:2px 5px;border-radius:5px;margin-bottom:2px;cursor:pointer;overflow:hidden;}
-        .pchip:hover{opacity:.85;}
-        .pchip-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
-        .pchip-txt{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;line-height:1.4;}
-        .pchip-ico{font-size:9px;flex-shrink:0;}
+        .pchip{display:flex;flex-direction:column;gap:1px;padding:5px 7px;border-radius:8px;margin-bottom:3px;cursor:grab;overflow:visible;border:1px solid rgba(255,255,255,0.75);background:rgba(255,255,255,0.72)!important;box-shadow:0 1px 3px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,0.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:all .15s;}
+        .pchip:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,0.1),inset 0 1px 0 #fff;border-color:rgba(255,255,255,0.9);}
+        .pchip:active{cursor:grabbing;transform:scale(0.98);}
+        .pchip.dragging{opacity:.35;transform:scale(0.96);}
+        .pchip-tipo{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;justify-content:space-between;}
+        .pchip-tema{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.7;}
+        .pchip-titulo{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;line-height:1.3;}
+        /* Drag-over highlight */
+        .cal-cell.drag-over{background:rgba(59,130,246,0.08)!important;outline:2px dashed #3B82F6;outline-offset:-2px;}
         /* Post card visual (semanal/diario) */
         .pcardv{border-radius:8px;margin-bottom:4px;cursor:pointer;overflow:hidden;border:1px solid transparent;transition:all .2s;}
         .pcardv:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15);}
@@ -1459,7 +1571,7 @@ const Admin = {
 
   _showCalPreview(postId, e) {
     const p = this.posts.find(x=>x.id===postId); if (!p) return;
-    const SM = {criacao:{l:'Em Criação',c:'#78909C',bc:'rgba(120,144,156,0.18)'},rascunho:{l:'Rascunho',c:'#90A4AE',bc:'rgba(144,164,174,0.18)'},revisao:{l:'Em Revisão',c:'#E65100',bc:'rgba(230,81,0,0.18)'},aprovado:{l:'Aprovado',c:'#2E7D32',bc:'rgba(46,125,50,0.18)'},publicado:{l:'Publicado',c:'#6A1B9A',bc:'rgba(106,27,154,0.18)'}};
+    const SM = {criacao:{l:'Aprovar',c:'#92400E',bc:'rgba(251,191,36,0.18)'},rascunho:{l:'Rascunho',c:'#92400E',bc:'rgba(251,191,36,0.12)'},revisao:{l:'Revisar',c:'#9A3412',bc:'rgba(249,115,22,0.18)'},aprovado:{l:'Aprovado',c:'#14532D',bc:'rgba(34,197,94,0.18)'},publicado:{l:'Publicado',c:'#1E3A8A',bc:'rgba(59,130,246,0.18)'}};
     const m = SM[p.status||'criacao']||SM.criacao;
     let img = ''; try { const a=JSON.parse(p.img_url); img=Array.isArray(a)?a[0]:p.img_url; } catch{img=p.img_url||'';}
     const el = document.getElementById('cal-preview'); if (!el) return;
@@ -1532,14 +1644,23 @@ const Admin = {
     });
     const getDay = (date) => byDay[`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`] || [];
 
-    // Chip compact (mensal/quinzenal)
-    const chipCompact = (p, sm) => `<div class="pchip" style="background:${sm.bc};"
-      onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()"
-      onclick="event.stopPropagation();Admin.openPost(${p.id})">
-      <span class="pchip-dot" style="background:${sm.dot};"></span>
-      <span class="pchip-txt" style="color:${sm.c};">${(p.legenda||'—').slice(0,28)}</span>
-      <span class="pchip-ico">${p.tipo==='Reels'?'🎬':p.tipo==='Stories'?'📖':'📷'}</span>
-    </div>`;
+    // Chip compact (mensal/quinzenal) — tipo + tema + título, drag-and-drop
+    const tipoIco = (t) => t==='Reels'?'🎬':t==='Stories'?'📖':t&&t.includes('Carrossel')?'📑':'📷';
+    const chipCompact = (p, sm) => {
+      const tipo = p.tipo||'Feed';
+      const tema = p.tema_titulo ? p.tema_titulo.slice(0,22) : '';
+      const titulo = (p.legenda||'—').slice(0,26);
+      return `<div class="pchip"
+        draggable="true"
+        ondragstart="event.stopPropagation();event.dataTransfer.setData('postId','${p.id}');this.classList.add('dragging');Admin._dragPostId=${p.id}"
+        ondragend="this.classList.remove('dragging')"
+        onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()"
+        onclick="event.stopPropagation();Admin.openPost(${p.id})">
+        <span class="pchip-tipo" style="color:${sm.dot};">${tipoIco(tipo)} ${tipo}<span style="width:7px;height:7px;border-radius:50%;background:${sm.dot};display:inline-block;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,0.8);"></span></span>
+        ${tema?`<span class="pchip-tema" style="color:${sm.c};">${tema}</span>`:''}
+        <span class="pchip-titulo" style="color:${sm.c};">${titulo}</span>
+      </div>`;
+    };
 
     // Card visual (semanal/diario)
     const cardVisual = (p, sm) => {
@@ -1616,7 +1737,17 @@ const Admin = {
         const dp = getDay(date);
         const chips = dp.slice(0,3).map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;return chipCompact(p,sm);}).join('');
         const more = dp.length>3?`<div style="font-size:9px;color:var(--muted);text-align:center;margin-top:1px;">+${dp.length-3} mais</div>`:'';
-        cells+=`<div class="cal-cell mensal${isToday?' today':''}"><div class="cal-day-num">${d}</div>${chips}${more}</div>`;
+        const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isEmpty = dp.length === 0;
+        cells+=`<div class="cal-cell mensal${isToday?' today':''}${isEmpty?' empty-day':''}"
+          ${isEmpty?`onclick="Admin._newPostOnDate('${dateStr}')"`:``}
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="event.preventDefault();this.classList.remove('drag-over');Admin._dropPostOnDate('${dateStr}')">
+          <div class="cal-day-num" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>${d}</span>
+            <span class="cal-add-btn" onclick="event.stopPropagation();Admin._newPostOnDate('${dateStr}')" title="Novo post">+</span>
+          </div>${chips}${more}</div>`;
       }
       const rem=(7-((startDow+totalDays)%7))%7;
       for (let i=1;i<=rem;i++) cells+=`<div class="cal-cell mensal outro-mes"><div class="cal-day-num">${i}</div></div>`;
@@ -1640,6 +1771,8 @@ const Admin = {
             ${semData.map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;return`<div onclick="Admin.openPost(${p.id})" onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()" style="padding:4px 9px;border-radius:7px;background:${sm.bc};border:1px solid ${sm.dot}33;cursor:pointer;font-size:11px;color:${sm.c};display:flex;align-items:center;gap:4px;"><span style="width:5px;height:5px;border-radius:50%;background:${sm.dot};display:inline-block;flex-shrink:0;"></span>${(p.legenda||'Post').slice(0,25)}${(p.legenda||'').length>25?'…':''}</div>`;}).join('')}
           </div>
         </div>` : ''}`;
+    // Restore scroll position
+    if (main && savedScroll) requestAnimationFrame(() => { main.scrollTop = savedScroll; });
   },
 
   _renderBoards(posts, SM, cliMap, parseFirst) {
@@ -1677,17 +1810,23 @@ const Admin = {
 
   async openPost(id) {
     const p = this.posts.find(x=>x.id===id); if(!p) return;
-    const SM = {criacao:{l:'Em Criação',c:'#455A64'},revisao:{l:'Em Revisão',c:'#E65100'},aprovado:{l:'Aprovado',c:'#2E7D32'},publicado:{l:'Publicado',c:'#6A1B9A'}};
+    const SM = {criacao:{l:'Aprovar',c:'#92400E'},revisao:{l:'Revisar',c:'#9A3412'},aprovado:{l:'Aprovado',c:'#14532D'},publicado:{l:'Publicado',c:'#1E3A8A'}};
     const m = SM[p.status]||SM.criacao;
+    const postMedia = this._parsePostMedia(p.midia_urls || p.img_url);
+    const cover = p.capa_url || postMedia[0] || p.tema_imagem_url || '';
     this.openDetail(`
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <span class="dp-title">Post</span>
         <button class="dp-close" onclick="Admin.closeDetail()">×</button>
       </div>
-      ${(() => { try { const a=JSON.parse(p.img_url); return Array.isArray(a)?a[0]:p.img_url; } catch{return p.img_url;} })()?`<img src="${(() => { try { const a=JSON.parse(p.img_url); return Array.isArray(a)?a[0]:p.img_url; } catch{return p.img_url;} })()}" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:9px;margin-bottom:12px;"/>`:''}
-      ${this.dpField('Legenda', p.legenda)}
+      ${cover ? (this._isVideoUrl(cover) ? `<video src="${cover}" controls style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:9px;margin-bottom:12px;background:#000;"></video>` : `<img src="${cover}" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:9px;margin-bottom:12px;"/>`) : ''}
+      ${p.tema_titulo ? this.dpField('Tema', p.tema_titulo) : ''}
+      ${p.rede_social ? this.dpField('Rede social', p.rede_social) : ''}
+      ${p.conteudo_html ? this.dpField('Conteúdo', p.conteudo_html) : ''}
+      ${this.dpField('Legenda', p.legenda_html || p.legenda)}
       ${p.hashtags ? this.dpField('Hashtags', `<span style="color:var(--copper);font-size:11px;">${p.hashtags}</span>`) : ''}
       ${this.dpField('Tipo · Data', `${p.tipo||'Feed'} · ${p.data_post||'—'}`)}
+      ${p.ajuste_cliente ? this.dpField('Ajustes', p.ajuste_cliente) : ''}
       ${this.dpField('Status', `<span style="color:${m.c};">${m.l}</span>`)}
       <div style="margin-top:8px;">
         ${p.status==='revisao' ? `
@@ -1886,7 +2025,7 @@ const Admin = {
       </div>
       ${fld('✉ E-mail / Login (não editável)', `<div style="padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;background:var(--bg);color:var(--muted);margin-top:4px;">${c.email}</div>`)}
       <!-- Mensagem da Gi -->
-      ${fld('Mensagem para a cliente', `<textarea id="dp-mensagem-gi" rows="2" placeholder="Ex: Essa semana trabalhamos muito no seu posicionamento 🌿" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);resize:none;margin-top:4px;">${c.mensagem_gi||''}</textarea>`)}
+      ${fld('Mensagem para a cliente', `<textarea data-rich id="dp-mensagem-gi" rows="2" placeholder="Ex: Essa semana trabalhamos muito no seu posicionamento 🌿" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);resize:none;margin-top:4px;">${c.mensagem_gi||''}</textarea>`)}
       <!-- Metricool -->
       ${fld('📊 Link do relatório Metricool', inp('dp-metricool', metricoolUrl, 'https://app.metricool.com/...'))}
       <!-- Arquivos (links) -->
@@ -1904,97 +2043,95 @@ const Admin = {
   },
 
   postTab(tab) {
-    ['info','obs'].forEach(t => {
+    ['tema','conteudo','midia','legenda'].forEach(t => {
       document.getElementById('post-tab-'+t).style.display = t===tab ? 'block' : 'none';
       document.getElementById('ptab-'+t).classList.toggle('active', t===tab);
     });
   },
 
+  _postMediaFiles: [],
+  _postCoverFile: null,
+  _postExistingMedia: [],
+  _postExistingCover: '',
+
+  _isVideoUrl(url) {
+    return /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url||'');
+  },
+
+  _parsePostMedia(raw) {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw.filter(Boolean);
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [raw].filter(Boolean);
+    } catch {
+      return [raw].filter(Boolean);
+    }
+  },
+
+  _setPostPreview(url) {
+    const box = document.getElementById('mp-side-preview'); if (!box) return;
+    if (!url) {
+      box.innerHTML = `<div class="post-side-empty">Prévia</div><div class="post-side-meta">A imagem do tema, a capa ou a primeira mídia aparecem aqui.</div>`;
+      return;
+    }
+    const media = this._isVideoUrl(url)
+      ? `<video src="${url}" muted playsinline controls></video>`
+      : `<img src="${url}" alt="">`;
+    box.innerHTML = `${media}<div class="post-side-meta">Prévia visual do post</div>`;
+  },
+
+  previewTemaImg(input) {
+    const file = input.files?.[0]; if (!file) return;
+    const url = URL.createObjectURL(file);
+    this._setPostPreview(url);
+  },
+
   previewImgs(input) {
     const files = [...input.files]; if (!files.length) return;
+    this._postMediaFiles = files;
     const grid = document.getElementById('mp-thumbs');
     grid.innerHTML = '';
     grid.style.display = 'grid';
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = document.createElement('img');
-        img.src = e.target.result;
-        grid.appendChild(img);
-      };
-      reader.readAsDataURL(file);
+    const stage = document.getElementById('mp-carousel-preview');
+    const stageInner = document.getElementById('mp-carousel-stage');
+    files.forEach((file, i) => {
+      const url = URL.createObjectURL(file);
+      const el = file.type.startsWith('video/') ? document.createElement('video') : document.createElement('img');
+      el.src = url;
+      if (el.tagName === 'VIDEO') { el.controls = true; el.muted = true; el.playsInline = true; }
+      grid.appendChild(el);
+      if (i === 0) {
+        this._setPostPreview(url);
+        if (stage && stageInner) {
+          stage.style.display = 'block';
+          stageInner.innerHTML = `${file.type.startsWith('video/') ? `<video src="${url}" controls muted playsinline></video>` : `<img src="${url}" alt="">`}<div class="post-carousel-count">1/${files.length}</div>`;
+        }
+      }
     });
   },
 
-  _setupLegendaDivisor() {
-    const ta = document.getElementById('mp-legenda');
-    if (!ta || ta._divSetup) return;
-    ta._divSetup = true;
+  previewCapa(input) {
+    const file = input.files?.[0]; if (!file) return;
+    this._postCoverFile = file;
+    const url = URL.createObjectURL(file);
+    const prev = document.getElementById('mp-capa-preview');
+    if (prev) {
+      prev.style.display = 'block';
+      prev.innerHTML = file.type.startsWith('video/') ? `<video src="${url}" controls muted playsinline></video>` : `<img src="${url}" alt="">`;
+    }
+    this._setPostPreview(url);
+  },
 
-    const commands = [
-      { icon:'─', label:'Divisória', desc:'Linha horizontal separando conteúdo', insert:'---\n' },
-      { icon:'📝', label:'Slide / Card', desc:'Marcar início de um slide ou card', insert:'SLIDE ' },
-      { icon:'•',  label:'Lista', desc:'Lista com marcadores', insert:'• ' },
-      { icon:'🔢', label:'Lista numerada', desc:'Lista ordenada', insert:'1. ' },
-      { icon:'❝',  label:'Citação', desc:'Bloco de citação', insert:'> ' },
-    ];
-
-    const removeMenu = () => document.getElementById('slash-menu')?.remove();
-
-    ta.addEventListener('keyup', function(e) {
-      if (e.key === 'Escape') { removeMenu(); return; }
-      const pos = this.selectionStart;
-      const val = this.value;
-      const lineStart = val.lastIndexOf('\n', pos-1)+1;
-      const lineEnd = val.indexOf('\n', pos);
-      const lineContent = val.slice(lineStart, lineEnd === -1 ? val.length : lineEnd);
-
-      if (lineContent === '/') {
-        removeMenu();
-        const rect = this.getBoundingClientRect();
-        const menu = document.createElement('div');
-        menu.id = 'slash-menu';
-        menu.style.cssText = 'position:fixed;z-index:99999;background:#fff;border:1px solid #E8E0D8;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);width:280px;overflow:hidden;font-family:Poppins,sans-serif;';
-        const lines = val.slice(0, pos).split('\n');
-        const lineH = parseInt(getComputedStyle(this).lineHeight)||22;
-        const top = rect.top + (lines.length * lineH) + 4;
-        menu.style.top = Math.min(top, window.innerHeight-290)+'px';
-        menu.style.left = (rect.left+8)+'px';
-        menu.innerHTML = '<div style="padding:8px 12px 6px;font-size:10px;color:#786C60;letter-spacing:.08em;text-transform:uppercase;font-weight:600;border-bottom:1px solid #f0ece8;">Inserir bloco</div>' +
-          commands.map((c,i)=>
-            `<div class="slash-item" data-idx="${i}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;">
-              <span style="width:30px;height:30px;border-radius:7px;background:#f5f0ec;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">${c.icon}</span>
-              <div><div style="font-size:13px;color:#2C1810;font-weight:500;">${c.label}</div><div style="font-size:11px;color:#786C60;">${c.desc}</div></div>
-            </div>`
-          ).join('');
-        document.body.appendChild(menu);
-
-        menu.querySelectorAll('.slash-item').forEach(item => {
-          item.addEventListener('mouseenter', () => item.style.background='#faf5f0');
-          item.addEventListener('mouseleave', () => item.style.background='');
-          item.addEventListener('mousedown', ev => {
-            ev.preventDefault();
-            const cmd = commands[parseInt(item.dataset.idx)];
-            const v = ta.value;
-            const ls = v.lastIndexOf('\n', ta.selectionStart-1)+1;
-            const le = v.indexOf('\n', ta.selectionStart);
-            const before = v.slice(0, ls);
-            const after = v.slice(le===-1?v.length:le);
-            ta.value = before + cmd.insert + after;
-            ta.setSelectionRange(ls+cmd.insert.length, ls+cmd.insert.length);
-            ta.focus(); removeMenu();
-          });
-        });
-
-        setTimeout(() => {
-          const close = e => { if(!menu.contains(e.target)){removeMenu();document.removeEventListener('mousedown',close);}};
-          document.addEventListener('mousedown', close);
-        }, 0);
-      } else if (!lineContent.startsWith('/')) {
-        removeMenu();
-      }
-    });
-    ta.addEventListener('blur', () => setTimeout(removeMenu, 200));
+  async _uploadPostFile(file, folder='posts') {
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error: upErr } = await db.storage
+      .from('posts-media')
+      .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type || undefined });
+    if (upErr) throw upErr;
+    const { data: urlData } = db.storage.from('posts-media').getPublicUrl(path);
+    return urlData.publicUrl;
   },
 
   async abrirModalPost() {
@@ -2005,15 +2142,28 @@ const Admin = {
       (clients||[]).map(c => `<option value="${c.email}">${c.nome}</option>`).join('');
     
     // Reset fields
-    ['mp-legenda','mp-hashtags','mp-obs-int','mp-obs-cli'].forEach(id => {
+    ['mp-tema-titulo','mp-ref-1','mp-ref-2','mp-ref-3','mp-conteudo','mp-legenda','mp-hashtags','mp-ajuste'].forEach(id => {
       const el = document.getElementById(id); if(el) el.value = '';
     });
+    this._postMediaFiles = [];
+    this._postCoverFile = null;
+    this._postExistingMedia = [];
+    this._postExistingCover = '';
+    document.getElementById('mp-tema-img').value = '';
     const thumbs = document.getElementById('mp-thumbs');
     thumbs.innerHTML = ''; thumbs.style.display = 'none';
+    document.getElementById('mp-carousel-preview').style.display = 'none';
+    document.getElementById('mp-capa-preview').style.display = 'none';
     document.getElementById('mp-file').value = '';
+    document.getElementById('mp-capa-file').value = '';
     document.getElementById('mp-err').style.display = 'none';
     document.getElementById('mp-data').value = '';
-    this.postTab('info');
+    document.getElementById('mp-rede').value = 'Instagram';
+    document.getElementById('mp-tipo').value = 'Feed · Foto';
+    document.getElementById('mp-status').value = 'revisao';
+    document.getElementById('mp-status-abas').value = 'todos_aprovados';
+    this._setPostPreview('');
+    this.postTab('tema');
     document.getElementById('modal-post').classList.remove('hidden');
   },
 
@@ -2023,45 +2173,70 @@ const Admin = {
 
   async salvarPost() {
     const clientEmail = document.getElementById('mp-cliente').value;
-    const legenda     = document.getElementById('mp-legenda').value.trim();
+    const temaTitulo  = document.getElementById('mp-tema-titulo').value.trim();
+    const redeSocial  = document.getElementById('mp-rede').value;
+    const conteudo    = document.getElementById('mp-conteudo').value.trim();
+    const legendaHtml = document.getElementById('mp-legenda').value.trim();
+    const legenda     = legendaHtml || conteudo || temaTitulo;
     const hashtags    = document.getElementById('mp-hashtags').value.trim();
     const tipo        = document.getElementById('mp-tipo').value;
     const data_post   = document.getElementById('mp-data').value;
-    const obs         = document.getElementById('mp-obs-cli').value.trim();
-    const obs_int     = document.getElementById('mp-obs-int').value.trim();
+    const ajuste      = document.getElementById('mp-ajuste').value.trim();
     const status      = document.getElementById('mp-status').value;
+    const statusAbasOpt = document.getElementById('mp-status-abas').value;
+    const temaRefs    = ['mp-ref-1','mp-ref-2','mp-ref-3'].map(id => document.getElementById(id).value.trim()).filter(Boolean).slice(0,3);
+    const temaFile    = document.getElementById('mp-tema-img').files?.[0] || null;
     const files       = [...document.getElementById('mp-file').files];
+    const coverFile   = document.getElementById('mp-capa-file').files?.[0] || null;
     const errEl       = document.getElementById('mp-err');
     errEl.style.display = 'none';
 
     if (!clientEmail) { errEl.style.display='block'; errEl.textContent='Selecione o cliente.'; return; }
-    if (!legenda)     { errEl.style.display='block'; errEl.textContent='Escreva a legenda.'; return; }
+    if (!legenda)     { errEl.style.display='block'; errEl.textContent='Preencha conteúdo ou legenda.'; return; }
 
     this.loader(true);
     const btn = document.getElementById('mp-btn');
     btn.textContent = 'Salvando...';
 
     try {
-      let img_url = null;
+      let tema_imagem_url = this._editPostId ? null : '';
+      let mediaUrls = [...(this._postExistingMedia || [])];
+      let capaUrl = this._postExistingCover || '';
 
-      // Upload images if selected
+      if (temaFile) tema_imagem_url = await this._uploadPostFile(temaFile, 'posts/temas');
       if (files.length) {
-        const urls = [];
+        mediaUrls = [];
         for (const file of files) {
-          const ext = file.name.split('.').pop();
-          const path = `posts/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-          const { error: upErr } = await db.storage
-            .from('posts-media')
-            .upload(path, file, { cacheControl: '3600', upsert: false });
-          if (upErr) throw upErr;
-          const { data: urlData } = db.storage.from('posts-media').getPublicUrl(path);
-          urls.push(urlData.publicUrl);
+          mediaUrls.push(await this._uploadPostFile(file, 'posts/midias'));
         }
-        img_url = urls.length === 1 ? urls[0] : JSON.stringify(urls);
       }
+      if (coverFile) capaUrl = await this._uploadPostFile(coverFile, 'posts/capas');
 
-      // Save or update post
-      const payload = { client_email: clientEmail, legenda, hashtags, tipo, data_post: data_post||null, obs, obs_int, status };
+      const img_url = capaUrl || mediaUrls[0] || tema_imagem_url || null;
+      const status_abas = statusAbasOpt === 'todos_aprovados'
+        ? { tema:'aprovado', conteudo:'aprovado', midia:'aprovado', legenda:'aprovado' }
+        : { tema:'ajuste', conteudo:'ajuste', midia:'ajuste', legenda:'ajuste' };
+
+      const payload = {
+        client_email: clientEmail,
+        legenda,
+        hashtags,
+        tipo,
+        data_post: data_post||null,
+        obs: ajuste || null,
+        obs_int: conteudo || null,
+        status,
+        tema_titulo: temaTitulo || null,
+        tema_referencias: temaRefs,
+        rede_social: redeSocial,
+        conteudo_html: conteudo || null,
+        midia_urls: mediaUrls,
+        capa_url: capaUrl || null,
+        legenda_html: legendaHtml || null,
+        ajuste_cliente: ajuste || null,
+        status_abas
+      };
+      if (tema_imagem_url) payload.tema_imagem_url = tema_imagem_url;
       if (img_url) payload.img_url = img_url;
       let error;
       if (this._editPostId) {
@@ -2120,6 +2295,24 @@ const Admin = {
     this.tab('posts');
   },
 
+  _dragPostId: null,
+  async _dropPostOnDate(dateStr) {
+    const id = this._dragPostId;
+    if (!id) return;
+    this._dragPostId = null;
+    this.loader(true);
+    await db.from('posts').update({data_post: dateStr}).eq('id', id);
+    await this.renderPosts();
+    this.loader(false);
+  },
+
+  async _newPostOnDate(dateStr) {
+    await this.abrirModalPost();
+    // Pre-fill the date field after modal opens
+    const el = document.getElementById('mp-data');
+    if (el) el.value = dateStr;
+  },
+
   _editPostId: null,
   async editarPost(id) {
     const p = this.posts.find(x=>x.id===id); if(!p) return;
@@ -2127,14 +2320,38 @@ const Admin = {
     this._editPostId = id;
     // Pre-fill fields
     document.getElementById('mp-cliente').value  = p.client_email||'';
-    document.getElementById('mp-legenda').value  = p.legenda||'';
-    setTimeout(() => Admin._setupLegendaDivisor(), 100);
+    document.getElementById('mp-tema-titulo').value = p.tema_titulo||'';
+    document.getElementById('mp-rede').value = p.rede_social||'Instagram';
+    const refs = this._parsePostMedia(p.tema_referencias);
+    ['mp-ref-1','mp-ref-2','mp-ref-3'].forEach((id,i)=>document.getElementById(id).value = refs[i]||'');
+    document.getElementById('mp-conteudo').value = p.conteudo_html||p.obs_int||'';
+    document.getElementById('mp-legenda').value  = p.legenda_html||p.legenda||'';
     document.getElementById('mp-hashtags').value = p.hashtags||'';
     document.getElementById('mp-tipo').value     = p.tipo||'Feed';
     document.getElementById('mp-data').value     = p.data_post||'';
-    document.getElementById('mp-obs-cli').value  = p.obs||'';
-    document.getElementById('mp-obs-int').value  = p.obs_int||'';
+    document.getElementById('mp-ajuste').value   = p.ajuste_cliente||p.obs||'';
     document.getElementById('mp-status').value   = p.status||'criacao';
+    this._postExistingMedia = this._parsePostMedia(p.midia_urls || p.img_url);
+    this._postExistingCover = p.capa_url || '';
+    const previewUrl = p.capa_url || this._postExistingMedia[0] || p.tema_imagem_url || '';
+    this._setPostPreview(previewUrl);
+    if (this._postExistingMedia.length) {
+      const grid = document.getElementById('mp-thumbs');
+      grid.innerHTML = '';
+      grid.style.display = 'grid';
+      this._postExistingMedia.forEach(url => {
+        grid.insertAdjacentHTML('beforeend', this._isVideoUrl(url) ? `<video src="${url}" controls muted playsinline></video>` : `<img src="${url}" alt="">`);
+      });
+      const stage = document.getElementById('mp-carousel-preview');
+      const stageInner = document.getElementById('mp-carousel-stage');
+      stage.style.display = 'block';
+      stageInner.innerHTML = `${this._isVideoUrl(this._postExistingMedia[0]) ? `<video src="${this._postExistingMedia[0]}" controls muted playsinline></video>` : `<img src="${this._postExistingMedia[0]}" alt="">`}<div class="post-carousel-count">1/${this._postExistingMedia.length}</div>`;
+    }
+    if (this._postExistingCover) {
+      const prev = document.getElementById('mp-capa-preview');
+      prev.style.display = 'block';
+      prev.innerHTML = this._isVideoUrl(this._postExistingCover) ? `<video src="${this._postExistingCover}" controls muted playsinline></video>` : `<img src="${this._postExistingCover}" alt="">`;
+    }
     const btn = document.getElementById('mp-btn');
     btn.textContent = 'Salvar alterações →';
     this.closeDetail();
@@ -2309,7 +2526,7 @@ const Admin = {
             </div>
             <div>
               <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:4px;">Texto de descrição</label>
-              <textarea id="comece-desc" rows="3" placeholder="Explique como usar o portal, o que a cliente vai encontrar aqui..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${cfg['__desc__']||''}</textarea>
+              <textarea data-rich id="comece-desc" rows="3" placeholder="Explique como usar o portal, o que a cliente vai encontrar aqui..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${cfg['__desc__']||''}</textarea>
             </div>
             <button onclick="Admin.salvarConfigComece()" style="align-self:flex-start;padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;">Salvar configuração</button>
           </div>
@@ -2432,7 +2649,7 @@ const Admin = {
       el.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:10px;">
           ${inp('cf-titulo','Título (ex: Bem-vinda ao seu portal!)')}
-          <textarea id="cf-texto" rows="4" placeholder="Escreva aqui o texto que vai aparecer pra todas as clientes..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;"></textarea>
+          <textarea data-rich id="cf-texto" rows="4" placeholder="Escreva aqui o texto que vai aparecer pra todas as clientes..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;"></textarea>
           <button onclick="Admin.saveComece()" style="align-self:flex-start;padding:9px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">Salvar texto</button>
         </div>`;
     } else {
@@ -2599,7 +2816,7 @@ const Admin = {
         </div>
         <div style="margin-bottom:10px;">
           <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Conteúdo</div>
-          <textarea id="info-conteudo" rows="3" placeholder="Ex: usuário: @primor | senha: abc123" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;"></textarea>
+          <textarea data-rich id="info-conteudo" rows="3" placeholder="Ex: usuário: @primor | senha: abc123" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;"></textarea>
         </div>
         <button onclick="Admin.salvarInfo()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Adicionar →</button>
       </div>
@@ -3355,7 +3572,7 @@ const Admin = {
         <!-- Links -->
         <div class="task-section">
           <div class="task-section-lbl">🔗 Links e referências</div>
-          <textarea id="tf-links" rows="2" placeholder="Cole links ou anotações rápidas..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${t.links||''}</textarea>
+          <textarea data-rich id="tf-links" rows="2" placeholder="Cole links ou anotações rápidas..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${t.links||''}</textarea>
         </div>
 
         <div id="tf-err" style="color:#C62828;font-size:12px;margin-top:4px;display:none;"></div>
@@ -3870,11 +4087,41 @@ const Client = {
   _mensagemGi: '',
   _arquivos: '[]',
   _ajusteId: null,
+  _clientView: 'mensal',
+  _clientMonth: null,
+  _clientWeekOffset: 0,
 
   parseImgs(raw) {
     if (!raw) return [];
     try { const a = JSON.parse(raw); return Array.isArray(a) ? a : [raw]; }
     catch { return [raw]; }
+  },
+
+  postMedia(p) {
+    const urls = this.parseImgs(p.midia_urls || p.img_url).filter(Boolean);
+    const cover = p.capa_url || urls[0] || p.tema_imagem_url || '';
+    return cover ? [cover, ...urls.filter(u => u !== cover)] : urls;
+  },
+
+  isVideo(url) {
+    return /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url || '');
+  },
+
+  statusInfo(status) {
+    const map = {
+      aprovado: { label:'APROVADO', cls:'aprovado' },
+      revisao: { label:'REVISAR', cls:'revisar' },
+      criacao: { label:'EM PRODUÇÃO', cls:'producao' },
+      publicado: { label:'PUBLICADO', cls:'publicado' }
+    };
+    return map[status] || map.criacao;
+  },
+
+  mediaTag(url, cls='', attrs='') {
+    if (!url) return '';
+    return this.isVideo(url)
+      ? `<video src="${url}" class="${cls}" ${attrs} controls muted playsinline></video>`
+      : `<img src="${url}" class="${cls}" ${attrs} alt=""/>`;
   },
 
   async excluirPost(id) {
@@ -3909,11 +4156,11 @@ const Client = {
     else { avImg.style.display = 'none'; }
     // Grid
     const filled = posts9.map(p => {
-      const imgs = this.parseImgs(p.img_url);
+      const imgs = this.postMedia(p);
       const thumb = imgs[0] || '';
       const multi = imgs.length > 1 ? '<span class="ig-grid-multi">❒</span>' : '';
       return thumb
-        ? `<div class="ig-grid-item" onclick="Client.igShowPost(${p.id})">${multi}<img src="${thumb}" alt=""/></div>`
+        ? `<div class="ig-grid-item" onclick="Client.igShowPost(${p.id})">${multi}${this.mediaTag(thumb)}</div>`
         : `<div class="ig-grid-item ig-grid-empty" onclick="Client.igShowPost(${p.id})">✦</div>`;
     });
     while (filled.length < 9) filled.push(`<div class="ig-grid-empty">+</div>`);
@@ -3929,13 +4176,13 @@ const Client = {
   igShowPost(id) {
     const p = this._posts.find(x => x.id === id); if (!p) return;
     const handle = this._igHandle || 'seu_perfil';
-    const imgs = this.parseImgs(p.img_url);
+    const imgs = this.postMedia(p);
     document.getElementById('ig-preview').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     const wrap = document.getElementById('ig-car-wrap');
     if (imgs.length) {
       wrap.innerHTML = imgs.map((u, i) =>
-        `<img src="${u}" class="ig-car-img" style="${i>0?'display:none':''}" />`
+        this.mediaTag(u, 'ig-car-img', `style="${i>0?'display:none':''}"`)
       ).join('') +
       (imgs.length > 1 ? `
         <button class="ig-car-btn ig-car-prev" onclick="Client.igNav(-1)">&#8249;</button>
@@ -3999,10 +4246,10 @@ const Client = {
       ? `<div class="ig-profile-av" style="border:none;"><img src="${this._fotoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></div>`
       : `<div class="ig-profile-av"></div>`;
     const cells = posts9.map(p => {
-      const imgs = this.parseImgs(p.img_url);
+      const imgs = this.postMedia(p);
       const thumb = imgs[0] || '';
       return thumb
-        ? `<div class="ig-grid-item" onclick="Client.igShowPost(${p.id})">${imgs.length>1?'<span class="ig-grid-multi">❒</span>':''}<img src="${thumb}" alt=""/></div>`
+        ? `<div class="ig-grid-item" onclick="Client.igShowPost(${p.id})">${imgs.length>1?'<span class="ig-grid-multi">❒</span>':''}${this.mediaTag(thumb)}</div>`
         : `<div class="ig-grid-item ig-grid-empty" onclick="Client.igShowPost(${p.id})">✦</div>`;
     });
     while (cells.length < 9) cells.push(`<div class="ig-grid-empty">+</div>`);
@@ -4023,71 +4270,424 @@ const Client = {
   render(posts) {
     this._posts = posts;
     this.renderProgress(posts);
-    this.renderCalendar(posts);
     this.renderNextPost(posts);
     this.renderGiMessage();
     this.renderFiles();
-    const c = document.getElementById('client-posts');
-    if (!posts.length) {
-      c.innerHTML = `<p style="color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:18px;grid-column:1/-1;">Nenhum post encontrado ✦</p>`;
-      this.renderInlineFeed();
-      return;
+    this.renderInlineFeed();
+    if (!this._clientMonth) {
+      const now = new Date();
+      this._clientMonth = { y: now.getFullYear(), m: now.getMonth() };
     }
-    const labels = {revisao:'Em Revisão',aprovado:'Aprovado',publicado:'Publicado',criacao:'Em Criação'};
-    c.innerHTML = posts.map(p => {
-      const imgs = this.parseImgs(p.img_url);
-      let mediaBlock;
-      if (imgs.length === 0) {
-        mediaBlock = `<div class="cp-ph">✦</div>`;
-      } else if (imgs.length === 1) {
-        mediaBlock = `<img src="${imgs[0]}" class="car-slide" alt="" data-lightbox="${imgs[0]}" style="aspect-ratio:1/1;object-fit:cover;width:100%;display:block;cursor:zoom-in;"/>`;
-      } else {
-        const slides = imgs.map((u,i) => `<img src="${u}" class="car-slide" alt="" data-lightbox="${u}" style="${i>0?'display:none':''}"/>`).join('');
-        const dots = imgs.map((_,i) => `<span class="car-dot${i===0?' active':''}"></span>`).join('');
-        mediaBlock = `<div class="carousel" id="car-${p.id}" data-cur="0" style="position:relative;">
-          ${slides}
-          <button class="car-btn car-prev" onclick="Client.carNav(${p.id},-1)">&#8249;</button>
-          <button class="car-btn car-next" onclick="Client.carNav(${p.id},1)">&#8250;</button>
-          <div class="car-dots">${dots}</div>
-        </div>`;
-      }
-      const date = p.data_post ? new Date(p.data_post+'T12:00:00').toLocaleDateString('pt-BR') : (p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '');
-      let actions = '';
-      if (p.status === 'revisao') {
-        actions = `${p.obs && p.obs.startsWith('✏') ? `<div style="background:#FFF3E0;border:1px solid #FFB74D;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:#E65100;">${p.obs}</div>` : ''}<button class="cp-btn-ok" onclick="Client.abrirAprovacao(${p.id})">✓ Aprovar este post</button><button class="cp-btn-adj" onclick="Client.solicitarAjuste(${p.id})">← Solicitar ajuste</button>`;
-      } else if (p.status === 'aprovado') {
-        actions = `<div class="status-msg msg-ap">✓ Aprovado — aguardando publicação</div>`;
-      } else if (p.status === 'publicado') {
-        actions = `<div class="status-msg msg-pu">✦ Publicado no Instagram!</div>`;
-      } else {
-        actions = `<div class="status-msg msg-cr">✦ Em produção pela equipe</div>`;
-      }
-      const openButton = `<button class="cp-btn-open" onclick="Client.igShowPost(${p.id})">Abrir post</button>`;
-      const title = (p.legenda||'Post').substring(0,35)+'...';
-      const thumbHtml = imgs.length ? `<img src="${imgs[0]}" alt=""/>` : '✦';
-      return `<div class="cp-card" id="cpcard-${p.id}">
-        <div class="cp-compact-hd" onclick="Client.toggleCard(${p.id})">
-          <div class="cp-compact-thumb">${thumbHtml}</div>
-          <div class="cp-compact-info">
-            <div class="cp-title">${title}</div>
-            <div class="cp-date">${date} · ${p.tipo||'Feed'}</div>
-          </div>
-          <span class="badge badge-${p.status}" style="flex-shrink:0;">${labels[p.status]||p.status}</span>
-          <span class="cp-toggle-icon">▾</span>
+    this._renderClientPostsView();
+  },
+
+  _renderClientPostsView() {
+    const container = document.getElementById('client-posts-main');
+    if (!container) return;
+    const SM = {
+      criacao:  {l:'Aprovar',   c:'#92400E', bc:'rgba(251,191,36,0.18)',  dot:'#F59E0B'},
+      revisao:  {l:'Revisar',   c:'#9A3412', bc:'rgba(249,115,22,0.18)',  dot:'#F97316'},
+      aprovado: {l:'Aprovado',  c:'#14532D', bc:'rgba(34,197,94,0.18)',   dot:'#22C55E'},
+      publicado:{l:'Publicado', c:'#1E3A8A', bc:'rgba(59,130,246,0.18)',  dot:'#3B82F6'}
+    };
+    const v = this._clientView;
+    const posts = this._posts;
+    const parseFirst = raw => { if(!raw) return ''; try{const a=JSON.parse(raw); return Array.isArray(a)?a[0]:raw;}catch{return raw;} };
+    const stats = Object.entries(SM).map(([k,sv])=>{
+      const n = posts.filter(p=>(p.status||'criacao')===k).length;
+      return n ? `<div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:${sv.bc};border:1px solid ${sv.dot}33;">
+        <span style="width:6px;height:6px;border-radius:50%;background:${sv.dot};display:inline-block;flex-shrink:0;"></span>
+        <span style="font-size:11px;color:${sv.c};font-weight:500;">${n} ${sv.l}</span></div>` : '';
+    }).filter(Boolean).join('');
+    const views = ['diario','semanal','quinzenal','mensal'];
+    const viewLabels = {diario:'Diário',semanal:'Semanal',quinzenal:'Quinzenal',mensal:'Mensal'};
+    container.innerHTML = `
+      <style>
+        .cli-cal-grid-7{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+        .cli-cal-grid-14{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;}
+        .cli-cal-head-day{font-size:10px;color:var(--muted);text-align:center;padding:6px 2px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;}
+        .cli-cal-cell{border-radius:10px;border:1px solid var(--border);background:var(--surface);padding:6px;position:relative;transition:border-color .15s;overflow:hidden;}
+        .cli-cal-cell:hover{border-color:var(--copper);}
+        .cli-cal-cell.today{border-color:var(--copper)!important;background:rgba(212,168,130,0.05);}
+        .cli-cal-cell.outro-mes{opacity:.3;}
+        .cli-cal-cell.mensal{min-height:90px;}
+        .cli-cal-cell.semanal{min-height:140px;}
+        .cli-cal-cell.diario-cell{min-height:180px;}
+        .cli-day-num{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:700;line-height:1;}
+        .cli-cal-cell.today .cli-day-num{color:var(--copper);}
+        .cli-pchip{display:flex;flex-direction:column;gap:1px;padding:4px 6px;border-radius:7px;margin-bottom:3px;cursor:pointer;overflow:hidden;border:1px solid rgba(255,255,255,0.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 1px 4px rgba(0,0,0,0.06),inset 0 1px 0 rgba(255,255,255,0.5);}
+        .cli-pchip:hover{opacity:.92;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.1),inset 0 1px 0 rgba(255,255,255,0.6);}
+        .cli-pchip-tipo{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .cli-pchip-tema{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.75;}
+        .cli-pchip-titulo{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;line-height:1.3;}
+        .cli-pchip-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+        .cli-pcardv{border-radius:8px;margin-bottom:4px;cursor:pointer;overflow:hidden;border:1px solid transparent;transition:all .2s;}
+        .cli-pcardv:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15);}
+        .cli-pcardv-img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;}
+        .cli-pcardv-body{padding:4px 6px 5px;}
+        .cli-pcardv-txt{font-size:10px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+        .cli-pcardv-status{font-size:9px;padding:1px 5px;border-radius:4px;display:inline-flex;align-items:center;gap:3px;margin-top:2px;}
+        .cli-cal-preview{display:none;position:fixed;z-index:9999;width:230px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,.4);overflow:hidden;pointer-events:none;}
+        .cli-cal-preview.show{display:block;}
+        .cli-cal-preview-img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;}
+        .cli-cal-preview-body{padding:10px 12px;}
+        .cli-cal-preview-cap{font-size:12px;color:var(--text);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+      </style>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <h2 class="section-title" style="margin:0;">Calendário de Posts</h2>
+        <div style="display:flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;">
+          ${views.map(vv=>`<button onclick="Client._clientView='${vv}';Client._clientWeekOffset=0;Client._renderClientPostsView()" style="padding:6px 11px;font-size:11px;border:none;cursor:pointer;background:${v===vv?'var(--brown)':'var(--surface)'};color:${v===vv?'#F5EDD8':'var(--muted)'};border-right:1px solid var(--border);">${viewLabels[vv]}</button>`).join('')}
         </div>
-        <div class="cp-expand">
-          ${mediaBlock}
-          <div class="cp-body" style="padding:10px;">
-            <div class="cp-top">
-              <div><div class="cp-title" style="font-size:13px;">${title}</div><div class="cp-date">${date} · ${p.tipo||'Feed'}</div></div>
-              <span class="badge badge-${p.status}">${labels[p.status]||p.status}</span>
-            </div>
-            <div class="cp-actions" style="padding-top:8px;">${actions}${openButton}</div>
+      </div>
+      ${stats ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">${stats}</div>` : ''}
+      <div id="client-cal-content"></div>
+      <div id="client-cal-preview" class="cli-cal-preview"></div>`;
+
+    document.removeEventListener('mousemove', Client._clientPreviewMove);
+    document.addEventListener('mousemove', Client._clientPreviewMove);
+    this._renderClientCalGrid(posts, SM, parseFirst, v);
+  },
+
+  _clientPreviewMove(e) {
+    const el = document.getElementById('client-cal-preview');
+    if (!el || !el.classList.contains('show')) return;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    let x = e.clientX + 18, y = e.clientY - 20;
+    if (x + 240 > vw) x = e.clientX - 248;
+    if (y + 310 > vh) y = vh - 318;
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+  },
+
+  _showClientPreview(id, e) {
+    const p = this._posts.find(x=>x.id===id); if(!p) return;
+    const SM = {
+      criacao:{l:'Aprovar',c:'#92400E',bc:'rgba(251,191,36,0.18)'},
+      revisao:{l:'Revisar',c:'#9A3412',bc:'rgba(249,115,22,0.18)'},
+      aprovado:{l:'Aprovado',c:'#14532D',bc:'rgba(34,197,94,0.18)'},
+      publicado:{l:'Publicado',c:'#1E3A8A',bc:'rgba(59,130,246,0.18)'}
+    };
+    const m = SM[p.status||'criacao']||SM.criacao;
+    const img = this.postMedia(p)[0] || '';
+    const el = document.getElementById('client-cal-preview'); if(!el) return;
+    el.innerHTML = `${img?`<img src="${img}" class="cli-cal-preview-img" onerror="this.style.display='none'"/>`:''}
+      <div class="cli-cal-preview-body">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+          <span style="font-size:10px;padding:2px 8px;border-radius:8px;background:${m.bc};color:${m.c};">${m.l}</span>
+          ${p.tipo?`<span style="font-size:10px;color:var(--muted);">${p.tipo==='Reels'?'🎬':p.tipo==='Stories'?'📖':'📷'} ${p.tipo}</span>`:''}
+        </div>
+        <div class="cli-cal-preview-cap">${p.legenda||'Sem legenda'}</div>
+        ${p.data_post?`<div style="font-size:10px;color:var(--muted);margin-top:5px;">📅 ${new Date(p.data_post+'T12:00').toLocaleDateString('pt-BR')}</div>`:''}
+        ${p.hashtags?`<div style="font-size:10px;color:var(--copper);margin-top:3px;">${p.hashtags.split(' ').slice(0,5).join(' ')}${p.hashtags.split(' ').length>5?'…':''}</div>`:''}
+      </div>`;
+    el.classList.add('show');
+    Client._clientPreviewMove(e);
+  },
+
+  _hideClientPreview() {
+    const el = document.getElementById('client-cal-preview');
+    if (el) el.classList.remove('show');
+  },
+
+  _renderClientCalGrid(posts, SM, parseFirst, mode) {
+    const now = new Date();
+    const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    let startDate, endDate, titleStr, prevFn, nextFn;
+    const wo = this._clientWeekOffset || 0;
+
+    if (mode === 'mensal') {
+      const {y, m} = this._clientMonth;
+      startDate = new Date(y, m, 1);
+      endDate = new Date(y, m+1, 0);
+      titleStr = `${meses[m]} ${y}`;
+      prevFn = `Client._clientMonth.m--;if(Client._clientMonth.m<0){Client._clientMonth.m=11;Client._clientMonth.y--;}Client._renderClientPostsView()`;
+      nextFn = `Client._clientMonth.m++;if(Client._clientMonth.m>11){Client._clientMonth.m=0;Client._clientMonth.y++;}Client._renderClientPostsView()`;
+    } else if (mode === 'semanal') {
+      const base = new Date(now); base.setDate(now.getDate() - now.getDay() + wo*7);
+      startDate = new Date(base); startDate.setDate(base.getDate() - base.getDay());
+      endDate = new Date(startDate); endDate.setDate(startDate.getDate()+6);
+      titleStr = `${startDate.getDate()}/${startDate.getMonth()+1} – ${endDate.getDate()}/${endDate.getMonth()+1}/${endDate.getFullYear()}`;
+      prevFn = `Client._clientWeekOffset--;Client._renderClientPostsView()`;
+      nextFn = `Client._clientWeekOffset++;Client._renderClientPostsView()`;
+    } else if (mode === 'quinzenal') {
+      const base = new Date(now); base.setDate(now.getDate() - now.getDay() + wo*14);
+      startDate = new Date(base); startDate.setDate(base.getDate() - base.getDay());
+      endDate = new Date(startDate); endDate.setDate(startDate.getDate()+13);
+      titleStr = `${startDate.getDate()}/${startDate.getMonth()+1} – ${endDate.getDate()}/${endDate.getMonth()+1}/${endDate.getFullYear()}`;
+      prevFn = `Client._clientWeekOffset--;Client._renderClientPostsView()`;
+      nextFn = `Client._clientWeekOffset++;Client._renderClientPostsView()`;
+    } else {
+      const base = new Date(now); base.setDate(now.getDate() + wo);
+      startDate = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+      endDate = new Date(startDate);
+      titleStr = startDate.toLocaleDateString('pt-BR', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      prevFn = `Client._clientWeekOffset--;Client._renderClientPostsView()`;
+      nextFn = `Client._clientWeekOffset++;Client._renderClientPostsView()`;
+    }
+
+    const byDay = {};
+    posts.forEach(p => {
+      if (!p.data_post) return;
+      const d = new Date(p.data_post+'T12:00');
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      if (!byDay[key]) byDay[key] = [];
+      byDay[key].push(p);
+    });
+    const getDay = date => byDay[`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`] || [];
+
+    const cliTipoIco = (t) => t==='Reels'?'🎬':t==='Stories'?'📖':t&&t.includes('Carrossel')?'📑':'📷';
+    const chipCompact = (p, sm) => {
+      const tipo = p.tipo||'Feed';
+      const tema = p.tema_titulo ? p.tema_titulo.slice(0,22) : '';
+      const titulo = (p.legenda||'—').slice(0,26);
+      return `<div class="cli-pchip" style="background:${sm.bc};"
+        onmouseenter="Client._showClientPreview(${p.id},event)" onmouseleave="Client._hideClientPreview()"
+        onclick="event.stopPropagation();Client.openClientPost(${p.id})">
+        <span class="cli-pchip-tipo" style="color:${sm.dot};">${cliTipoIco(tipo)} ${tipo}</span>
+        ${tema?`<span class="cli-pchip-tema" style="color:${sm.c};">${tema}</span>`:''}
+        <span class="cli-pchip-titulo" style="color:${sm.c};">${titulo}</span>
+      </div>`;
+    };
+
+    const cardVisual = (p, sm) => {
+      const thumb = this.postMedia(p)[0] || '';
+      return `<div class="cli-pcardv" style="background:${sm.bc};border-color:${sm.dot}30;"
+        onmouseenter="Client._showClientPreview(${p.id},event)" onmouseleave="Client._hideClientPreview()"
+        onclick="event.stopPropagation();Client.openClientPost(${p.id})">
+        ${thumb?`<img src="${thumb}" class="cli-pcardv-img" onerror="this.style.display='none'"/>`:''}
+        <div class="cli-pcardv-body">
+          <div class="cli-pcardv-txt" style="color:${sm.c};">${(p.legenda||'—').slice(0,60)}</div>
+          <div class="cli-pcardv-status" style="background:${sm.bc};color:${sm.c};">
+            <span style="width:5px;height:5px;border-radius:50%;background:${sm.dot};display:inline-block;"></span>${sm.l}
           </div>
         </div>
       </div>`;
-    }).join('');
-    this.renderInlineFeed();
+    };
+
+    let html = '';
+    if (mode === 'diario') {
+      const dayPosts = getDay(startDate);
+      html = `<div style="max-width:500px;margin:0 auto;">
+        ${dayPosts.length ? dayPosts.map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;return cardVisual(p,sm);}).join('') : '<p style="color:var(--muted);text-align:center;padding:40px;font-style:italic;font-family:Cormorant Garamond,serif;font-size:18px;">Nenhum post neste dia ✦</p>'}
+      </div>`;
+    } else if (mode === 'semanal') {
+      const cells7 = [];
+      for (let i=0;i<7;i++) {
+        const d = new Date(startDate); d.setDate(startDate.getDate()+i);
+        const isToday = d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()&&d.getDate()===now.getDate();
+        const dp = getDay(d);
+        cells7.push(`<div class="cli-cal-cell semanal${isToday?' today':''}">
+          <div class="cli-day-num">${diasSemana[d.getDay()]} ${d.getDate()}</div>
+          ${dp.map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;return cardVisual(p,sm);}).join('')}
+          ${!dp.length?'<div style="font-size:10px;color:var(--border);text-align:center;padding:8px 0;">—</div>':''}
+        </div>`);
+      }
+      html = `<div class="cli-cal-grid-7">${cells7.join('')}</div>`;
+    } else if (mode === 'quinzenal') {
+      const header = diasSemana.map(d=>`<div class="cli-cal-head-day">${d}</div>`).join('');
+      let week1='', week2='';
+      for (let i=0;i<7;i++) {
+        const d = new Date(startDate); d.setDate(startDate.getDate()+i);
+        const isToday = d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()&&d.getDate()===now.getDate();
+        const dp = getDay(d);
+        const chips = dp.slice(0,3).map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;return chipCompact(p,sm);}).join('');
+        const more = dp.length>3?`<div style="font-size:9px;color:var(--muted);margin-top:1px;">+${dp.length-3}</div>`:'';
+        week1+=`<div class="cli-cal-cell mensal${isToday?' today':''}"><div class="cli-day-num">${d.getDate()}</div>${chips}${more}</div>`;
+      }
+      for (let i=7;i<14;i++) {
+        const d = new Date(startDate); d.setDate(startDate.getDate()+i);
+        const isToday = d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()&&d.getDate()===now.getDate();
+        const dp = getDay(d);
+        const chips = dp.slice(0,3).map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;return chipCompact(p,sm);}).join('');
+        const more = dp.length>3?`<div style="font-size:9px;color:var(--muted);margin-top:1px;">+${dp.length-3}</div>`:'';
+        week2+=`<div class="cli-cal-cell mensal${isToday?' today':''}"><div class="cli-day-num">${d.getDate()}</div>${chips}${more}</div>`;
+      }
+      html = `<div class="cli-cal-grid-7" style="margin-bottom:3px;">${header}</div><div class="cli-cal-grid-7" style="margin-bottom:3px;">${week1}</div><div class="cli-cal-grid-7">${week2}</div>`;
+    } else {
+      // Mensal
+      const {y, m} = this._clientMonth;
+      const firstDay = new Date(y,m,1);
+      const startDow = firstDay.getDay();
+      const totalDays = new Date(y,m+1,0).getDate();
+      const prevLast = new Date(y,m,0).getDate();
+      let cells = '';
+      for (let i=startDow-1;i>=0;i--) cells+=`<div class="cli-cal-cell mensal outro-mes"><div class="cli-day-num">${prevLast-i}</div></div>`;
+      for (let d=1;d<=totalDays;d++) {
+        const date = new Date(y,m,d);
+        const isToday = now.getFullYear()===y&&now.getMonth()===m&&now.getDate()===d;
+        const dp = getDay(date);
+        const chips = dp.slice(0,3).map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;return chipCompact(p,sm);}).join('');
+        const more = dp.length>3?`<div style="font-size:9px;color:var(--muted);text-align:center;margin-top:1px;">+${dp.length-3} mais</div>`:'';
+        cells+=`<div class="cli-cal-cell mensal${isToday?' today':''}"><div class="cli-day-num">${d}</div>${chips}${more}</div>`;
+      }
+      const rem=(7-((startDow+totalDays)%7))%7;
+      for (let i=1;i<=rem;i++) cells+=`<div class="cli-cal-cell mensal outro-mes"><div class="cli-day-num">${i}</div></div>`;
+      html = `<div class="cli-cal-grid-7" style="margin-bottom:3px;">${diasSemana.map(d=>`<div class="cli-cal-head-day">${d}</div>`).join('')}</div><div class="cli-cal-grid-7">${cells}</div>`;
+    }
+
+    const semData = posts.filter(p=>!p.data_post);
+    document.getElementById('client-cal-content').innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <button onclick="${prevFn}" style="padding:6px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:16px;">‹</button>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--brown);text-align:center;">${titleStr}</div>
+        <button onclick="${nextFn}" style="padding:6px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:16px;">›</button>
+      </div>
+      ${html}
+      ${semData.length ? `
+        <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Sem data (${semData.length})</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${semData.map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;return`<div onclick="Client.openClientPost(${p.id})" onmouseenter="Client._showClientPreview(${p.id},event)" onmouseleave="Client._hideClientPreview()" style="padding:4px 9px;border-radius:7px;background:${sm.bc};border:1px solid ${sm.dot}33;cursor:pointer;font-size:11px;color:${sm.c};display:flex;align-items:center;gap:4px;"><span style="width:5px;height:5px;border-radius:50%;background:${sm.dot};display:inline-block;flex-shrink:0;"></span>${(p.legenda||'Post').slice(0,25)}${(p.legenda||'').length>25?'…':''}</div>`;}).join('')}
+          </div>
+        </div>` : ''}`;
+  },
+
+  openClientPost(id) {
+    const p = this._posts.find(x=>x.id===id); if(!p) return;
+    this._hideClientPreview();
+    document.getElementById('client-post-modal')?.remove();
+
+    const imgs = this.postMedia(p);
+    const st = this.statusInfo(p.status);
+    const date = p.data_post ? new Date(p.data_post+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'}) : '';
+    const obsTxt = p.ajuste_cliente || p.obs || p.comentario || '';
+    const note = obsTxt ? `<div style="background:rgba(196,150,122,0.08);border:1px solid rgba(196,150,122,0.25);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--text);line-height:1.6;"><div style="font-size:9px;color:var(--copper);letter-spacing:.12em;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Observações da equipe</div>${obsTxt}</div>` : '';
+
+    // Status color
+    const stColor = p.status==='revisao'?'#F97316':p.status==='aprovado'?'#22C55E':p.status==='publicado'?'#3B82F6':'#F59E0B';
+    const stBg    = p.status==='revisao'?'rgba(249,115,22,0.1)':p.status==='aprovado'?'rgba(34,197,94,0.1)':p.status==='publicado'?'rgba(59,130,246,0.1)':'rgba(251,191,36,0.1)';
+
+    // Action buttons
+    let actions = '';
+    if (p.status === 'revisao') {
+      actions = `<button class="cp-btn-ok" onclick="Client.abrirAprovacao(${p.id})" style="width:100%;padding:13px;margin-bottom:8px;">✓ Aprovar este post</button><button class="cp-btn-adj" onclick="Client.solicitarAjuste(${p.id})" style="width:100%;padding:13px;">← Solicitar ajuste</button>`;
+    } else if (p.status === 'aprovado') {
+      actions = `<div style="padding:13px;border-radius:10px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);text-align:center;color:#14532D;font-size:13px;font-weight:500;">✓ Post aprovado — aguardando publicação</div>`;
+    } else if (p.status === 'publicado') {
+      actions = `<div style="padding:13px;border-radius:10px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);text-align:center;color:#1E3A8A;font-size:13px;font-weight:500;">✦ Publicado!</div>`;
+    } else {
+      actions = `<div style="padding:13px;border-radius:10px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);text-align:center;color:#92400E;font-size:13px;">✦ Em produção pela equipe Primor</div>`;
+    }
+
+    // Main carousel
+    let mainSlides = '', thumbsHtml = '';
+    if (imgs.length === 0) {
+      mainSlides = `<div style="aspect-ratio:1/1;background:var(--beige);display:flex;align-items:center;justify-content:center;color:var(--copper);font-size:32px;">✦</div>`;
+    } else {
+      mainSlides = imgs.map((u,i) => {
+        const isVid = this.isVideo(u);
+        return isVid
+          ? `<video class="cpm-slide" src="${u}" ${i===0?'':'style="display:none"'} controls style="width:100%;aspect-ratio:1/1;object-fit:cover;display:${i===0?'block':'none'};background:#000;"></video>`
+          : `<img class="cpm-slide" src="${u}" ${i===0?'':'style="display:none"'} style="width:100%;aspect-ratio:1/1;object-fit:cover;display:${i===0?'block':'none'};cursor:zoom-in;" data-lightbox="${u}" onclick="Client.openLightbox(${JSON.stringify(imgs)},${i})"/>`;
+      }).join('');
+
+      if (imgs.length > 1) {
+        const dots = imgs.map((_,i)=>`<span class="cpm-dot${i===0?' active':''}" onclick="Client._cpmGoTo(${i})" style="width:6px;height:6px;border-radius:50%;background:${i===0?'#fff':'rgba(255,255,255,0.4)'};cursor:pointer;display:inline-block;transition:all .2s;"></span>`).join('');
+        mainSlides = `<div style="position:relative;" id="cpm-car-${id}" data-cur="0">
+          ${mainSlides}
+          <button onclick="Client._cpmNav(-1)" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.45);color:#fff;border:none;cursor:pointer;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;">‹</button>
+          <button onclick="Client._cpmNav(1)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.45);color:#fff;border:none;cursor:pointer;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;">›</button>
+          <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px;">${dots}</div>
+          <div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.45);color:#fff;font-size:10px;padding:3px 8px;border-radius:20px;" id="cpm-count-${id}">1 / ${imgs.length}</div>
+        </div>`;
+
+        // Thumbnail strip
+        thumbsHtml = `<div style="display:flex;gap:6px;overflow-x:auto;padding:8px 0 4px;scrollbar-width:thin;">
+          ${imgs.map((u,i)=>{
+            const isV = this.isVideo(u);
+            const media = isV
+              ? `<video src="${u}" style="width:100%;height:100%;object-fit:cover;pointer-events:none;"></video>`
+              : `<img src="${u}" style="width:100%;height:100%;object-fit:cover;"/>`;
+            return `<div onclick="Client._cpmGoTo(${i})" id="cpm-thumb-${id}-${i}" style="flex-shrink:0;width:60px;height:60px;border-radius:7px;overflow:hidden;cursor:pointer;border:2px solid ${i===0?'var(--copper)':'transparent'};transition:border-color .2s;opacity:${i===0?'1':'0.65'};">${media}</div>`;
+          }).join('')}
+        </div>`;
+      }
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'client-post-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:8000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);';
+    modal.innerHTML = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5);display:flex;flex-direction:column;">
+        <!-- Header -->
+        <div style="padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;">
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--brown);line-height:1.2;margin-bottom:4px;">${p.tema_titulo||'Post'}</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              ${date?`<span style="font-size:11px;color:var(--muted);">📅 ${date}</span>`:''}
+              <span style="font-size:11px;color:var(--muted);">${p.tipo||'Feed'}</span>
+              <span style="font-size:11px;padding:2px 9px;border-radius:20px;background:${stBg};color:${stColor};font-weight:500;">${st.label}</span>
+            </div>
+          </div>
+          <button onclick="document.getElementById('client-post-modal').remove()" style="width:32px;height:32px;flex-shrink:0;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:18px;color:var(--muted);display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
+        </div>
+
+        <!-- Carousel -->
+        <div style="flex-shrink:0;overflow:hidden;">
+          <div style="border-radius:0;">${mainSlides}</div>
+          ${thumbsHtml ? `<div style="padding:0 14px;">${thumbsHtml}</div>` : ''}
+        </div>
+
+        <!-- Content -->
+        <div style="padding:16px 18px;flex:1;">
+          ${note}
+          ${p.legenda ? `<div style="margin-bottom:14px;">
+            <div style="font-size:9px;color:var(--copper);letter-spacing:.12em;text-transform:uppercase;font-weight:600;margin-bottom:6px;">Legenda</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;">${p.legenda}</div>
+          </div>` : ''}
+          ${p.hashtags ? `<div style="font-size:12px;color:var(--copper);margin-bottom:14px;line-height:1.6;">${p.hashtags}</div>` : ''}
+          ${actions}
+          <button onclick="Client.igShowPost(${p.id})" class="cp-btn-open" style="margin-top:10px;width:100%;">Pré-visualizar no Instagram →</button>
+        </div>
+      </div>`;
+
+    // Store post id for nav
+    modal._cpmPostId = id;
+    modal._cpmImgs = imgs;
+    modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
+    document.body.appendChild(modal);
+  },
+
+  _cpmPostId: null,
+  _cpmNav(dir) {
+    const modal = document.getElementById('client-post-modal');
+    if (!modal) return;
+    const id = modal._cpmPostId || (document.querySelector('[id^="cpm-car-"]')?.id.replace('cpm-car-',''));
+    const car = document.querySelector('[id^="cpm-car-"]');
+    if (!car) return;
+    const slides = car.querySelectorAll('.cpm-slide');
+    const dots = document.querySelectorAll('.cpm-dot');
+    const thumbs = document.querySelectorAll('[id^="cpm-thumb-"]');
+    const countEl = document.querySelector('[id^="cpm-count-"]');
+    let cur = parseInt(car.dataset.cur)||0;
+    slides[cur].style.display = 'none';
+    if(dots[cur]) { dots[cur].style.background = 'rgba(255,255,255,0.4)'; }
+    if(thumbs[cur]) { thumbs[cur].style.borderColor='transparent'; thumbs[cur].style.opacity='0.65'; }
+    cur = (cur + dir + slides.length) % slides.length;
+    slides[cur].style.display = 'block';
+    if(dots[cur]) { dots[cur].style.background = '#fff'; }
+    if(thumbs[cur]) { thumbs[cur].style.borderColor='var(--copper)'; thumbs[cur].style.opacity='1'; thumbs[cur].scrollIntoView({behavior:'smooth',block:'nearest',inline:'nearest'}); }
+    if(countEl) countEl.textContent = `${cur+1} / ${slides.length}`;
+    car.dataset.cur = cur;
+  },
+
+  _cpmGoTo(idx) {
+    const car = document.querySelector('[id^="cpm-car-"]');
+    if (!car) return;
+    const slides = car.querySelectorAll('.cpm-slide');
+    const dots = document.querySelectorAll('.cpm-dot');
+    const thumbs = document.querySelectorAll('[id^="cpm-thumb-"]');
+    const countEl = document.querySelector('[id^="cpm-count-"]');
+    const cur = parseInt(car.dataset.cur)||0;
+    if (cur === idx) return;
+    slides[cur].style.display = 'none';
+    if(dots[cur]) dots[cur].style.background = 'rgba(255,255,255,0.4)';
+    if(thumbs[cur]) { thumbs[cur].style.borderColor='transparent'; thumbs[cur].style.opacity='0.65'; }
+    slides[idx].style.display = 'block';
+    if(dots[idx]) dots[idx].style.background = '#fff';
+    if(thumbs[idx]) { thumbs[idx].style.borderColor='var(--copper)'; thumbs[idx].style.opacity='1'; }
+    if(countEl) countEl.textContent = `${idx+1} / ${slides.length}`;
+    car.dataset.cur = idx;
   },
 
   renderProgress(posts) {
@@ -4130,7 +4730,9 @@ const Client = {
     for (let d=1; d<=daysInMonth; d++) {
       const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const hp = scheduled[ds];
-      const cls = `cal-day${hp?' has-post':''}${ds===today?' today':''}`;
+      const firstStatus = hp?.[0]?.status || '';
+      const stCls = firstStatus ? ' st-' + this.statusInfo(firstStatus).cls : '';
+      const cls = `cal-day${hp?' has-post':''}${stCls}${ds===today?' today':''}`;
       const dot = hp ? `<span class="cal-dot"></span>` : '';
       const onclick = hp ? `onclick="Client.calDay('${ds}')"` : '';
       cells += `<div class="${cls}" ${onclick}>${d}${dot}</div>`;
@@ -4149,9 +4751,10 @@ const Client = {
     el.style.display = 'block';
     el.innerHTML = `<div style="font-size:10px;color:var(--copper);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Posts em ${fmt}</div>` +
       posts.map(p => {
-        const imgs = this.parseImgs(p.img_url);
-        const th = imgs[0] ? `<img src="${imgs[0]}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0;"/>` : `<div style="width:36px;height:36px;background:var(--beige);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--copper);">✦</div>`;
-        return `<div class="cal-info-item">${th}<div><div style="font-size:11px;color:var(--text);">${(p.legenda||'Post').substring(0,45)}...</div><div style="font-size:10px;color:var(--muted);">${p.tipo||'Feed'}</div></div></div>`;
+        const imgs = this.postMedia(p);
+        const st = this.statusInfo(p.status);
+        const th = imgs[0] ? this.mediaTag(imgs[0], '', 'style="width:36px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0;"') : `<div style="width:36px;height:36px;background:var(--beige);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--copper);">✦</div>`;
+        return `<div class="cal-info-item">${th}<div style="flex:1;"><div style="font-size:11px;color:var(--text);">${(p.tema_titulo||p.legenda||'Post').substring(0,45)}...</div><div style="display:flex;align-items:center;gap:6px;margin-top:2px;"><span class="client-status-pill ${st.cls}" style="padding:2px 7px;">${st.label}</span><span style="font-size:10px;color:var(--muted);">${p.tipo||'Feed'}</span></div></div></div>`;
       }).join('');
   },
 
@@ -4163,7 +4766,7 @@ const Client = {
       .sort((a,b) => a.data_post.localeCompare(b.data_post))[0];
     if (!upcoming) { el.classList.add('hidden'); return; }
     const daysUntil = Math.max(0, Math.ceil((new Date(upcoming.data_post+'T12:00:00') - new Date()) / (1000*60*60*24)));
-    const imgs = this.parseImgs(upcoming.img_url);
+    const imgs = this.postMedia(upcoming);
     el.classList.remove('hidden');
     el.innerHTML = `
       <div class="next-post-lbl">Próximo post</div>
@@ -4217,12 +4820,17 @@ const Client = {
     App.loader(true);
     try {
       // Busca título do post pra incluir na mensagem
-      const { data: post } = await db.from('posts').select('titulo,client_email').eq('id', id).single();
+      const { data: post } = await db.from('posts').select('tema_titulo,legenda,client_email').eq('id', id).single();
       // Atualiza post: volta pra revisao com o pedido de ajuste no obs
-      await db.from('posts').update({ status: 'revisao', obs: '✏ Ajuste solicitado: ' + text }).eq('id', id);
+      await db.from('posts').update({
+        status: 'revisao',
+        obs: '✏ Ajuste solicitado: ' + text,
+        ajuste_cliente: text,
+        status_abas: { tema:'ajuste', conteudo:'ajuste', midia:'ajuste', legenda:'ajuste' }
+      }).eq('id', id);
       // Manda mensagem no chat notificando admin
       const nomeCliente = App.user.email;
-      const titulo = post?.titulo || 'post';
+      const titulo = post?.tema_titulo || post?.legenda || 'post';
       await db.from('mensagens').insert([{
         client_email: App.user.email,
         de: 'client',
@@ -4291,7 +4899,12 @@ ${text}`,
     const comentario = document.getElementById('stars-comentario').value.trim();
     App.loader(true);
     try {
-      await db.from('posts').update({status:'aprovado', avaliacao:this._starsVal||null, comentario:comentario||null}).eq('id',id);
+      await db.from('posts').update({
+        status:'aprovado',
+        avaliacao:this._starsVal||null,
+        comentario:comentario||null,
+        status_abas: { tema:'aprovado', conteudo:'aprovado', midia:'aprovado', legenda:'aprovado' }
+      }).eq('id',id);
       this.fecharStars();
       await this.load();
     } catch(e) { alert('Erro: '+e.message); App.loader(false); }
@@ -4741,7 +5354,18 @@ const Theme = {
 };
 Theme.init();
 
-document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('%c✦ MKT PRIMOR PORTAL v5.10 — build 20260510 ✦', 'background:#4B2D22;color:#F1C5AF;padding:4px 12px;border-radius:4px;font-weight:bold;');
+  App.init();
+  // Persist scroll position per tab
+  const adminMain = document.getElementById('admin-main');
+  if (adminMain) {
+    adminMain.addEventListener('scroll', () => {
+      const tab = sessionStorage.getItem('adminTab') || 'leads';
+      sessionStorage.setItem('scroll_' + tab, adminMain.scrollTop);
+    }, { passive: true });
+  }
+});
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { Client.closeLightbox(); Client.closePreview(); Client.fecharAjuste(); Client.fecharStars(); }
 });
@@ -4773,7 +5397,7 @@ document.addEventListener('keydown', e => {
         <span class="star-btn" data-v="4" onclick="Client.setStar(4)">⭐</span>
         <span class="star-btn" data-v="5" onclick="Client.setStar(5)">⭐</span>
       </div>
-      <textarea id="stars-comentario" placeholder="Deixe um comentário opcional..." rows="2"></textarea>
+      <textarea data-rich id="stars-comentario" placeholder="Deixe um comentário opcional..." rows="2"></textarea>
       <div style="display:flex;gap:10px;">
         <button onclick="Client.confirmarAprovacao()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">✓ Confirmar aprovação</button>
         <button onclick="Client.fecharStars()" style="padding:11px 16px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;">Cancelar</button>
@@ -4832,7 +5456,7 @@ document.addEventListener('keydown', e => {
     <div class="ajuste-box">
       <h3>Solicitar ajuste</h3>
       <p>Descreva o que você gostaria de ajustar neste post.</p>
-      <textarea id="ajuste-text" rows="4" placeholder="Ex: Mudar a cor do texto, ajustar a legenda para mencionar a promoção de maio..."></textarea>
+      <textarea data-rich id="ajuste-text" rows="4" placeholder="Ex: Mudar a cor do texto, ajustar a legenda para mencionar a promoção de maio..."></textarea>
       <div style="display:flex;gap:10px;margin-top:14px;">
         <button onclick="Client.confirmarAjuste()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Enviar pedido →</button>
         <button onclick="Client.fecharAjuste()" style="padding:11px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;">Cancelar</button>
@@ -4897,72 +5521,159 @@ document.addEventListener('keydown', e => {
 
   <!-- MODAL NOVO POST -->
   <div id="modal-post" class="modal-bg hidden">
-    <div class="modal-box" style="max-width:520px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-box" style="max-width:860px;max-height:90vh;overflow-y:auto;">
       <h3>Novo Post</h3>
 
       <!-- Tabs -->
       <div class="tabs-row">
-        <div class="tab-btn active" onclick="Admin.postTab('info')" id="ptab-info">✦ Conteúdo</div>
-        <div class="tab-btn" onclick="Admin.postTab('obs')" id="ptab-obs">◎ Observações</div>
+        <div class="tab-btn active" onclick="Admin.postTab('tema')" id="ptab-tema">Tema</div>
+        <div class="tab-btn" onclick="Admin.postTab('conteudo')" id="ptab-conteudo">Conteúdo</div>
+        <div class="tab-btn" onclick="Admin.postTab('midia')" id="ptab-midia">Mídia</div>
+        <div class="tab-btn" onclick="Admin.postTab('legenda')" id="ptab-legenda">Legenda</div>
       </div>
 
-      <!-- Tab Conteúdo -->
-      <div id="post-tab-info">
-        <div class="modal-field">
-          <label>Cliente</label>
-          <select id="mp-cliente" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;color:var(--text);">
-            <option value="">Selecione o cliente...</option>
-          </select>
+      <div class="post-modal-grid">
+        <div id="mp-side-preview" class="post-side-preview">
+          <div class="post-side-empty">Prévia</div>
+          <div class="post-side-meta">A imagem do tema, a capa ou a primeira mídia aparecem aqui.</div>
         </div>
-        <div class="modal-field">
-          <label>Tipo de post</label>
-          <select id="mp-tipo" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;color:var(--text);">
-            <option value="Feed · Foto">Feed · Foto</option>
-            <option value="Feed · Carrossel">Feed · Carrossel</option>
-            <option value="Reels">Reels</option>
-            <option value="Stories">Stories</option>
-          </select>
-        </div>
-        <div class="modal-field">
-          <label>Data de publicação</label>
-          <input type="date" id="mp-data" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/>
-        </div>
-        <div class="modal-field">
-          <label>Legenda</label>
-          <textarea id="mp-legenda" rows="4" placeholder="Escreva a legenda completa do post..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;line-height:1.65;font-family:Poppins,sans-serif;font-weight:300;"></textarea>
-          <div style="font-size:10px;color:var(--muted);margin-top:4px;">💡 Digite <kbd style="background:#f0ece8;padding:1px 6px;border-radius:4px;font-size:10px;border:1px solid #d0c8c0;">/</kbd> sozinho em uma linha para inserir divisória</div>
-        </div>
-        <div class="modal-field">
-          <label>Hashtags</label>
-          <textarea id="mp-hashtags" rows="2" placeholder="#hashtag1 #hashtag2 #hashtag3" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:none;font-family:Poppins,sans-serif;font-weight:300;color:var(--copper);"></textarea>
-        </div>
-        <div class="modal-field">
-          <label>Imagem / Mídia</label>
-          <div class="upload-area" onclick="document.getElementById('mp-file').click()">
-            <p>Clique para selecionar imagens</p>
-            <span>JPG ou PNG · Para carrossel selecione várias de uma vez</span>
+
+        <div>
+          <!-- Tab Tema -->
+          <div id="post-tab-tema">
+            <div class="modal-field">
+              <label>Imagem do tema</label>
+              <div class="upload-area" onclick="document.getElementById('mp-tema-img').click()">
+                <p>Adicionar imagem do tema</p>
+                <span>Foto ou referência visual principal</span>
+              </div>
+              <input type="file" id="mp-tema-img" accept="image/*,video/*" style="display:none" onchange="Admin.previewTemaImg(this)"/>
+            </div>
+            <div class="modal-field">
+              <label>Tema da publicação</label>
+              <input id="mp-tema-titulo" type="text" placeholder="Ex: Cuidados antes da consulta"/>
+            </div>
+            <div class="modal-field">
+              <label>Referências do tema até 3</label>
+              <div class="post-ref-grid">
+                <input id="mp-ref-1" type="url" placeholder="Referência 1 · https://...">
+                <input id="mp-ref-2" type="url" placeholder="Referência 2 · https://...">
+                <input id="mp-ref-3" type="url" placeholder="Referência 3 · https://...">
+              </div>
+            </div>
+            <div class="post-field-grid">
+              <div class="modal-field">
+                <label>Rede social</label>
+                <select id="mp-rede" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;color:var(--text);">
+                  <option>Instagram</option>
+                  <option>Facebook</option>
+                  <option>TikTok</option>
+                  <option>LinkedIn</option>
+                  <option>YouTube Shorts</option>
+                  <option>Pinterest</option>
+                </select>
+              </div>
+              <div class="modal-field">
+                <label>Data de publicação</label>
+                <input type="date" id="mp-data"/>
+              </div>
+            </div>
           </div>
-          <div id="mp-thumbs" class="upload-thumbs"></div>
-          <input type="file" id="mp-file" accept="image/*" multiple style="display:none" onchange="Admin.previewImgs(this)"/>
-        </div>
-      </div>
 
-      <!-- Tab Observações -->
-      <div id="post-tab-obs" style="display:none;">
-        <div class="modal-field">
-          <label>Observações internas</label>
-          <textarea data-rich id="mp-obs-int" rows="4" placeholder="Notas internas — não visíveis pro cliente..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;line-height:1.65;font-family:Poppins,sans-serif;font-weight:300;"></textarea>
-        </div>
-        <div class="modal-field">
-          <label>Observações para o cliente</label>
-          <textarea data-rich id="mp-obs-cli" rows="4" placeholder="Mensagem visível pro cliente ao abrir o post..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;line-height:1.65;font-family:Poppins,sans-serif;font-weight:300;"></textarea>
-        </div>
-        <div class="modal-field">
-          <label>Status inicial</label>
-          <select id="mp-status" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;color:var(--text);">
-            <option value="revisao">Em Revisão — cliente pode aprovar</option>
-            <option value="criacao">Em Criação — ainda não mostrar pro cliente</option>
-          </select>
+          <!-- Tab Conteúdo -->
+          <div id="post-tab-conteudo" style="display:none;">
+            <div class="modal-field">
+              <label>Conteúdo</label>
+              <div class="post-toolbar">
+                <button type="button" class="post-tool-btn" onmousedown="event.preventDefault()" onclick="RichEditor.format('bold')"><strong>B</strong></button>
+                <button type="button" class="post-tool-btn" onmousedown="event.preventDefault()" onclick="RichEditor.format('italic')"><em>I</em></button>
+                <button type="button" class="post-tool-btn" onmousedown="event.preventDefault()" onclick="RichEditor.openEmoji()">😀</button>
+                <button type="button" class="post-tool-btn" onmousedown="event.preventDefault()" onclick="RichEditor.openLink()">🔗</button>
+              </div>
+              <textarea data-rich id="mp-conteudo" rows="8" placeholder="Escreva o conteúdo do post..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;line-height:1.65;font-family:Poppins,sans-serif;font-weight:300;"></textarea>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px;">Digite <kbd style="background:#f0ece8;padding:1px 6px;border-radius:4px;font-size:10px;border:1px solid #d0c8c0;">/</kbd> para divisória, emoji, checklist ou link</div>
+            </div>
+          </div>
+
+          <!-- Tab Mídia -->
+          <div id="post-tab-midia" style="display:none;">
+            <div class="post-field-grid">
+              <div class="modal-field">
+                <label>Cliente</label>
+                <select id="mp-cliente" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;color:var(--text);">
+                  <option value="">Selecione o cliente...</option>
+                </select>
+              </div>
+              <div class="modal-field">
+                <label>Formato</label>
+                <select id="mp-tipo" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;color:var(--text);">
+                  <option value="Feed · Foto">Feed · Foto</option>
+                  <option value="Feed · Carrossel">Feed · Carrossel</option>
+                  <option value="Reels">Reels</option>
+                  <option value="Stories">Stories</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-field">
+              <label>Mídias do post</label>
+              <div class="upload-area" onclick="document.getElementById('mp-file').click()">
+                <p>Selecionar fotos e vídeos</p>
+                <span>Pode escolher vários arquivos de uma vez para carrossel</span>
+              </div>
+              <div id="mp-carousel-preview" class="post-carousel-preview"><div id="mp-carousel-stage" class="post-carousel-stage"></div></div>
+              <div id="mp-thumbs" class="upload-thumbs"></div>
+              <input type="file" id="mp-file" accept="image/*,video/*" multiple style="display:none" onchange="Admin.previewImgs(this)"/>
+            </div>
+            <div class="modal-field">
+              <label>Capa do post</label>
+              <div class="upload-area" onclick="document.getElementById('mp-capa-file').click()">
+                <p>Adicionar capa</p>
+                <span>Imagem ou vídeo usado como capa principal</span>
+              </div>
+              <div id="mp-capa-preview" class="post-cover-preview"></div>
+              <input type="file" id="mp-capa-file" accept="image/*,video/*" style="display:none" onchange="Admin.previewCapa(this)"/>
+            </div>
+            <div class="post-status-row">
+              <div class="modal-field">
+                <label>Status inicial</label>
+                <select id="mp-status" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;color:var(--text);">
+                  <option value="revisao">Em Revisão — cliente pode aprovar</option>
+                  <option value="criacao">Em Criação — ainda não mostrar pro cliente</option>
+                  <option value="aprovado">Aprovado</option>
+                </select>
+              </div>
+              <div class="modal-field">
+                <label>Aprovação das abas</label>
+                <select id="mp-status-abas" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;color:var(--text);">
+                  <option value="todos_aprovados">Aprovar em todos</option>
+                  <option value="ajustes">Ajustes</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-field">
+              <label>Ajustes</label>
+              <textarea data-rich id="mp-ajuste" rows="3" placeholder="Escreva o ajuste que deve chegar direto no post..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;line-height:1.65;font-family:Poppins,sans-serif;font-weight:300;"></textarea>
+            </div>
+          </div>
+
+          <!-- Tab Legenda -->
+          <div id="post-tab-legenda" style="display:none;">
+            <div class="modal-field">
+              <label>Legenda</label>
+              <div class="post-toolbar">
+                <button type="button" class="post-tool-btn" onmousedown="event.preventDefault()" onclick="RichEditor.format('bold')"><strong>B</strong></button>
+                <button type="button" class="post-tool-btn" onmousedown="event.preventDefault()" onclick="RichEditor.format('italic')"><em>I</em></button>
+                <button type="button" class="post-tool-btn" onmousedown="event.preventDefault()" onclick="RichEditor.openEmoji()">😀</button>
+                <button type="button" class="post-tool-btn" onmousedown="event.preventDefault()" onclick="RichEditor.openLink()">🔗</button>
+              </div>
+              <textarea data-rich id="mp-legenda" rows="7" placeholder="Escreva a legenda final..." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;line-height:1.65;font-family:Poppins,sans-serif;font-weight:300;"></textarea>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px;">Digite <kbd style="background:#f0ece8;padding:1px 6px;border-radius:4px;font-size:10px;border:1px solid #d0c8c0;">/</kbd> para inserir divisória, emoji, checklist ou link</div>
+            </div>
+            <div class="modal-field">
+              <label>Hashtags</label>
+              <textarea id="mp-hashtags" rows="2" placeholder="#hashtag1 #hashtag2 #hashtag3" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:none;font-family:Poppins,sans-serif;font-weight:300;color:var(--copper);"></textarea>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -5169,7 +5880,7 @@ document.addEventListener('keydown', e => {
       this.emojiPanel.addEventListener('mousedown', e => { if(e.target.tagName !== 'INPUT') e.preventDefault(); });
       this.emojiPanel.addEventListener('click', e => {
         if (e.target.classList.contains('re-emoji-btn')) {
-          this._hideAll(); this._restoreSel(); this._removeSlashText();
+          this._restoreSel(); this._removeSlashText(); this._hideAll();
           this._insertText(e.target.textContent); this._sync();
         }
       });
@@ -5229,7 +5940,9 @@ document.addEventListener('keydown', e => {
     _load(ed, val) {
       if (!val) { ed.innerHTML = ''; return; }
       if (/<[a-z][\s\S]*>/i.test(val)) { ed.innerHTML = val; return; }
-      ed.innerHTML = val.split('\n').map(l => l
+      ed.innerHTML = val.split('\n').map(l => l.trim() === '---'
+        ? '<hr class="re-hr">'
+        : l
         ? `<p>${l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`
         : '<p><br></p>').join('');
     },
@@ -5304,11 +6017,53 @@ document.addEventListener('keydown', e => {
     },
 
     _execCmd(cmd) {
-      this._saveSel(); this._hideMenu();
-      if (cmd === 'hr')    { this._restoreSel(); this._removeSlashText(); this._insHr(); }
-      else if (cmd === 'emoji') { this._showEmoji(); }
-      else if (cmd === 'check') { this._restoreSel(); this._removeSlashText(); this._insCheck(); }
-      else if (cmd === 'link')  { this._showLink(); }
+      this._saveSel();
+      if (cmd === 'hr') {
+        this.menu.style.display = 'none';
+        this._restoreSel(); this._removeSlashText(); this._insHr();
+      } else if (cmd === 'emoji') {
+        this._showEmoji(); this.menu.style.display = 'none';
+      } else if (cmd === 'check') {
+        this.menu.style.display = 'none';
+        this._restoreSel(); this._removeSlashText(); this._insCheck();
+      } else if (cmd === 'link') {
+        this._showLink(); this.menu.style.display = 'none';
+      }
+    },
+
+    format(cmd) {
+      if (!this.active?.ed) return;
+      this.active.ed.focus();
+      document.execCommand(cmd, false, null);
+      this._sync();
+    },
+
+    _panelPosFromActive(w=280, h=240) {
+      const ed = this.active?.ed;
+      const rect = ed ? ed.getBoundingClientRect() : {left:20, top:20, right:300, bottom:60};
+      let left = rect.left, top = rect.bottom + 8;
+      if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+      if (top + h > window.innerHeight) top = Math.max(8, rect.top - h - 8);
+      return {left, top};
+    },
+
+    openEmoji() {
+      if (!this.active?.ed) return;
+      this.active.ed.focus(); this._saveSel();
+      const {left, top} = this._panelPosFromActive(272, 290);
+      this._hideAll();
+      this.emojiPanel.style.cssText = `display:block;left:${left}px;top:${top}px;`;
+      const s = this.emojiPanel.querySelector('.re-emoji-search'); s.value = ''; s.focus();
+    },
+
+    openLink() {
+      if (!this.active?.ed) return;
+      this.active.ed.focus(); this._saveSel();
+      const {left, top} = this._panelPosFromActive(284, 200);
+      this._hideAll();
+      this.linkPanel.style.cssText = `display:block;left:${left}px;top:${top}px;`;
+      const u = this.linkPanel.querySelector('.re-lp-url'), t = this.linkPanel.querySelector('.re-lp-text');
+      u.value = ''; t.value = ''; u.focus();
     },
 
     _insHr() {
@@ -5362,7 +6117,7 @@ document.addEventListener('keydown', e => {
       const url = this.linkPanel.querySelector('.re-lp-url').value.trim();
       const text = this.linkPanel.querySelector('.re-lp-text').value.trim();
       if (!url) { this.linkPanel.querySelector('.re-lp-url').focus(); return; }
-      this._hideAll(); this._restoreSel(); this._removeSlashText();
+      this._restoreSel(); this._removeSlashText(); this._hideAll();
       const sel = window.getSelection();
       if (!sel.rangeCount) return;
       const range = sel.getRangeAt(0);
