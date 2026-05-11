@@ -1658,13 +1658,13 @@ const Admin = {
     const getDay = (date) => byDay[`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`] || [];
 
     // Chip compact (mensal/quinzenal) — tipo + tema + título, drag-and-drop
-    const tipoIco = (t) => t==='Reels'?'🎬':t==='Stories'?'📖':t&&t.includes('Carrossel')?'📑':'📷';
+    const tipoIco = (t) => t==='Reels'?'R ':t==='Stories'?'S ':t&&t.includes('Carrossel')?'C ':'';
     const statusDot = (status, color) => {
-      const s = `width:14px;height:14px;border-radius:50%;background:${color};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;vertical-align:middle;`;
-      if (status==='publicado') return `<span style="${s}"><svg width="9" height="8" viewBox="0 0 9 8" fill="none"><polyline points="1.5,4.5 3.5,6.5 7.5,1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
-      if (status==='aprovado')  return `<span style="${s}"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><polyline points="1.5,4.5 3.5,6.5 7.5,1.5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><line x1="1.5" y1="7.5" x2="7.5" y2="7.5" stroke="white" stroke-width="1" stroke-linecap="round"/></svg></span>`;
-      if (status==='revisao')   return `<span style="${s}"><svg width="9" height="9" viewBox="0 0 9 9" fill="white"><rect x="3.5" y="1.5" width="2" height="3.5" rx="1"/><circle cx="4.5" cy="7" r="1"/></svg></span>`;
-      return `<span style="${s}"><span style="width:5px;height:5px;border-radius:50%;background:white;display:block;"></span></span>`;
+      const s = `width:14px;height:14px;border-radius:50%;background:${color};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;vertical-align:middle;font-size:9px;font-weight:800;color:white;line-height:1;font-style:normal;`;
+      if (status==='publicado') return `<span style="${s}">&#10003;</span>`;
+      if (status==='aprovado')  return `<span style="${s}; font-size:8px;">&#10003;</span>`;
+      if (status==='revisao')   return `<span style="${s}">!</span>`;
+      return `<span style="${s}"><span style="width:5px;height:5px;border-radius:50%;background:white;display:block;flex-shrink:0;"></span></span>`;
     };
     const chipCompact = (p, sm) => {
       const tipo = p.tipo||'Feed';
