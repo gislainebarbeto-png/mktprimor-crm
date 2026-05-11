@@ -147,14 +147,13 @@
     /* ── DARK MODE CHIPS ── */
     html.dark .pchip {
       box-shadow: 0 1px 3px rgba(0,0,0,0.35) !important;
+      opacity: 0.92;
     }
     html.dark .pchip:hover {
       box-shadow: 0 3px 8px rgba(0,0,0,0.45) !important;
+      opacity: 1;
     }
-    html.dark .pchip-tipo { opacity: 1 !important; }
-    html.dark .pchip-tema { color: #B8A090 !important; opacity: 1 !important; }
-    html.dark .pchip-titulo { color: #F1C5AF !important; }
-    /* status dot colors stay vivid in dark — só o texto e fundo mudam */
+    /* preserva cores de status no dark mode — não sobrescreve texto */
     html.dark .cal-cell.drag-over {
       background: rgba(59,130,246,0.12) !important;
       border-color: #3B82F6 !important;
