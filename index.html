@@ -155,6 +155,9 @@
       box-shadow: 0 3px 8px rgba(0,0,0,0.45) !important;
       opacity: 1;
     }
+    html.dark .pchip .pchip-tipo  { color: var(--chip-dot)   !important; opacity: 1 !important; }
+    html.dark .pchip .pchip-tema  { color: var(--chip-c)     !important; opacity: 0.8 !important; }
+    html.dark .pchip .pchip-titulo{ color: var(--chip-c)     !important; }
     /* preserva cores de status no dark mode — não sobrescreve texto */
     html.dark .cal-cell.drag-over {
       background: rgba(59,130,246,0.12) !important;
@@ -1651,7 +1654,7 @@ const Admin = {
       const tipo = p.tipo||'Feed';
       const tema = p.tema_titulo ? p.tema_titulo.slice(0,35) : '';
       const titulo = (p.legenda||'—').slice(0,42);
-      return `<div class="pchip" style="--chip-bg:${sm.bc};background:${sm.bc};border-color:${sm.dot}40;"
+      return `<div class="pchip" style="--chip-bg:${sm.bc};--chip-c:${sm.c};--chip-dot:${sm.dot};background:${sm.bc};border-color:${sm.dot}40;"
         draggable="true"
         ondragstart="event.stopPropagation();event.dataTransfer.setData('postId','${p.id}');this.classList.add('dragging');Admin._dragPostId=${p.id}"
         ondragend="this.classList.remove('dragging')"
