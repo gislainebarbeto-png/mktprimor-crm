@@ -146,10 +146,12 @@
 
     /* ── DARK MODE CHIPS ── */
     html.dark .pchip {
+      background: var(--chip-bg) !important;
       box-shadow: 0 1px 3px rgba(0,0,0,0.35) !important;
       opacity: 0.92;
     }
     html.dark .pchip:hover {
+      background: var(--chip-bg) !important;
       box-shadow: 0 3px 8px rgba(0,0,0,0.45) !important;
       opacity: 1;
     }
@@ -1649,7 +1651,7 @@ const Admin = {
       const tipo = p.tipo||'Feed';
       const tema = p.tema_titulo ? p.tema_titulo.slice(0,35) : '';
       const titulo = (p.legenda||'—').slice(0,42);
-      return `<div class="pchip" style="background:${sm.bc};border-color:${sm.dot}40;"
+      return `<div class="pchip" style="--chip-bg:${sm.bc};background:${sm.bc};border-color:${sm.dot}40;"
         draggable="true"
         ondragstart="event.stopPropagation();event.dataTransfer.setData('postId','${p.id}');this.classList.add('dragging');Admin._dragPostId=${p.id}"
         ondragend="this.classList.remove('dragging')"
