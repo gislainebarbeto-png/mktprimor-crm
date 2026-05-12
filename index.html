@@ -3432,9 +3432,12 @@ const Admin = {
   _bcMmEditingId: null,
 
   async _bcAbrirMapa(mapaId, email) {
-    const { data: row } = await db.from('informacoes_cliente').select('*').eq('id', mapaId).single();
-    if (!row) return;
-    let data = {}; try { data = JSON.parse(row.conteudo||'{}'); } catch {}
+    try {
+    const { data: row, error: rowErr } = await db.from('informacoes_cliente').select('*').eq('id', mapaId).single();
+    if (rowErr || !row) { this._showToast('Erro ao carregar mapa: '+(rowErr?.message||'não encontrado')); return; }
+    let data = {title:'Mapa', nodes:[], nextId:2, panX:0, panY:0};
+    try { const parsed = JSON.parse(row.conteudo||'{}'); data = Object.assign(data, parsed); } catch {}
+    if (!Array.isArray(data.nodes)) data.nodes = [];
     if (!data.panX) data.panX = 0;
     if (!data.panY) data.panY = 0;
     this._bcMapaData = data;
@@ -3474,7 +3477,8 @@ const Admin = {
           </div>
         </div>
       </div>`;
-    this._bcMmRenderAll();
+    requestAnimationFrame(() => { try { this._bcMmRenderAll(); } catch(re) { this._showToast('Erro ao renderizar: '+re.message); } });
+    } catch(e) { this._showToast('Erro ao abrir mapa: '+e.message); console.error(e); }
   },
 
   /* ── DOM-based mind map rendering ── */
@@ -3484,21 +3488,27 @@ const Admin = {
     const px = node.x + (this._bcMapaData.panX||0);
     const py = node.y + (this._bcMapaData.panY||0);
     const clr = node.color || '#B8820A';
-    return `<div id="mm-node-${node.id}" class="mm-node" data-id="${node.id}"
-      style="position:absolute;left:${px}px;top:${py}px;transform:translate(-50%,-50%);
-        min-width:${isRoot?110:72}px;max-width:200px;
-        border-radius:${isRoot?22:12}px;
-        background:${clr};
-        pointer-events:auto;cursor:pointer;
-        border:3px solid ${isSel?'rgba(255,255,255,0.9)':'transparent'};
-        box-shadow:${isSel?`0 0 0 3px ${clr},`:''}0 3px 14px rgba(0,0,0,0.22);
-        transition:border-color .1s,box-shadow .1s;z-index:${isSel?10:5};"
-      onclick="Admin._bcMmNodeClick(event,${node.id})"
-      ondblclick="Admin._bcMmNodeDblClick(event,${node.id})"
-      onmousedown="Admin._bcMmNodeDown(event,${node.id})">
-      ${node.imgUrl ? `<img src="${node.imgUrl}" style="width:100%;border-radius:${isRoot?19:9}px ${isRoot?19:9}px 0 0;max-height:90px;object-fit:cover;display:block;pointer-events:none;"/>` : ''}
-      <div class="mm-node-text" style="padding:${isRoot?'10px 16px':'6px 11px'};color:#fff;font-size:${isRoot?13:11}px;font-weight:${isRoot?600:400};font-family:Poppins,sans-serif;text-align:center;line-height:1.35;word-break:break-word;pointer-events:none;">${node.text||''}</div>
-    </div>`;
+    const bxShadow = (isSel ? '0 0 0 3px '+clr+',' : '') + '0 3px 14px rgba(0,0,0,0.22)';
+    const borderR = (isRoot ? 22 : 12);
+    const imgR = isRoot ? 19 : 9;
+    const imgHtml = node.imgUrl ? '<img src="'+node.imgUrl+'" style="width:100%;border-radius:'+imgR+'px '+imgR+'px 0 0;max-height:90px;object-fit:cover;display:block;pointer-events:none;"/>' : '';
+    const pad = isRoot ? '10px 16px' : '6px 11px';
+    const fs = isRoot ? 13 : 11;
+    const fw = isRoot ? 600 : 400;
+    const mw = isRoot ? 110 : 72;
+    return '<div id="mm-node-'+node.id+'" class="mm-node" data-id="'+node.id+'"'
+      +' style="position:absolute;left:'+px+'px;top:'+py+'px;transform:translate(-50%,-50%);'
+      +'min-width:'+mw+'px;max-width:200px;border-radius:'+borderR+'px;background:'+clr+';'
+      +'pointer-events:auto;cursor:pointer;'
+      +'border:3px solid '+(isSel?'rgba(255,255,255,0.9)':'transparent')+';'
+      +'box-shadow:'+bxShadow+';transition:border-color .1s,box-shadow .1s;z-index:'+(isSel?10:5)+';"'
+      +' onclick="Admin._bcMmNodeClick(event,'+node.id+')"'
+      +' ondblclick="Admin._bcMmNodeDblClick(event,'+node.id+')"'
+      +' onmousedown="Admin._bcMmNodeDown(event,'+node.id+')">'
+      + imgHtml
+      +'<div class="mm-node-text" style="padding:'+pad+';color:#fff;font-size:'+fs+'px;font-weight:'+fw+';'
+      +'font-family:Poppins,sans-serif;text-align:center;line-height:1.35;word-break:break-word;pointer-events:none;">'
+      +(node.text||'')+'</div></div>';
   },
 
   _bcMmRenderAll() {
