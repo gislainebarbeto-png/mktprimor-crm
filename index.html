@@ -43,63 +43,48 @@
     }
     input::placeholder, textarea::placeholder { color: var(--muted) !important; }
     html.dark {
-      --bg:      #000000;
-      --surface: #0a0a0a;
-      --beige:   #0D0D00;
+      --bg:      #0D0D0D;
+      --surface: #161616;
+      --beige:   #1A1A1A;
       --brown:   #D4AF37;
       --brown2:  #C9A800;
       --copper:  #D4AF37;
       --text:    #F5F5F5;
-      --muted:   #AAAAAA;
-      --border:  #2A2200;
-      --sh:      0 4px 24px rgba(0,0,0,.6);
-      --sh2:     0 12px 48px rgba(0,0,0,.8);
+      --muted:   #888888;
+      --border:  rgba(212,175,55,0.18);
+      --sh:      0 4px 16px rgba(0,0,0,.5);
+      --sh2:     0 8px 32px rgba(0,0,0,.7);
     }
 
     /* ── DARK THEME AESTHETIC ── */
-    html.dark body{background:#000000;}
+    html.dark body{background:#0D0D0D;}
     html.dark #admin-view,
     html.dark #client-view {
-      background-color:#000000;
-      background-image:
-        linear-gradient(rgba(45,37,0,0.18) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(45,37,0,0.18) 1px, transparent 1px);
-      background-size: 40px 40px, 40px 40px;
+      background:#0D0D0D;
     }
 
-    /* Glow no topo */
-    html.dark #admin-view::before,
-    html.dark #client-view::before {
-      content:'';
-      position:fixed;top:-80px;left:50%;transform:translateX(-50%);
-      width:700px;height:500px;
-      background:radial-gradient(ellipse, rgba(212,175,55,0.18) 0%, rgba(45,37,0,0.08) 40%, transparent 70%);
-      pointer-events:none;z-index:0;
-    }
-
-    html.dark .login-box{background:rgba(8,8,2,0.95);border:1px solid #2D2500;backdrop-filter:blur(12px);}
-    html.dark .app-header{background:rgba(5,5,1,0.85);backdrop-filter:blur(12px);border-bottom:1px solid #2D2500;}
+    html.dark .login-box{background:#111111;border:1px solid rgba(212,175,55,0.2);box-shadow:0 8px 40px rgba(0,0,0,0.8);}
+    html.dark .app-header{background:#111111;border-bottom:1px solid rgba(212,175,55,0.15);}
     html.dark .admin-main,html.dark .client-main{background:transparent!important;}
     html.dark .client-main *:not(button):not(input):not(textarea):not(select):not(.badge-aprovado):not(.badge-revisao):not(.badge-criacao):not(.badge-publicado){color:var(--text);}
     html.dark .client-main .muted, html.dark .client-main [style*='color:var(--muted)']{color:#AAAAAA!important;}
 
-    /* Sidebar glass */
+    /* Sidebar */
     html.dark .sidebar{
-      background:rgba(8,8,2,0.85);
-      backdrop-filter:blur(16px);
-      border-right:1px solid #2D2500;
+      background:#111111;
+      border-right:1px solid rgba(212,175,55,0.15);
     }
-    html.dark .nav-item{color:#BFA030;}
-    html.dark .nav-item:hover{background:rgba(45,37,0,0.25);color:#D4AF37;}
+    html.dark .nav-item{color:#888888;}
+    html.dark .nav-item:hover{background:rgba(212,175,55,0.08);color:#D4AF37;}
     html.dark .nav-item.active{
-      background:rgba(45,37,0,0.35);
+      background:rgba(212,175,55,0.12);
       color:#D4AF37;
       border-left:2px solid #D4AF37;
     }
-    html.dark .nav-section{color:#AA9030;opacity:1;}
+    html.dark .nav-section{color:#555555;opacity:1;}
     html.dark .section-title{color:#D4AF37!important;}
 
-    /* Glass cards — vidro com borda degradê marrom→bege */
+    /* Cards */
     html.dark .stat-card,
     html.dark .k-card,
     html.dark .table-wrap,
@@ -111,14 +96,9 @@
     html.dark .ajuste-box,
     html.dark .welcome-banner,
     html.dark .progress-wrap {
-      background: rgba(10,10,2,0.55) !important;
-      backdrop-filter: blur(14px) !important;
-      -webkit-backdrop-filter: blur(14px) !important;
-      border: 1px solid rgba(45,37,0,0.6) !important;
-      box-shadow:
-        inset 0 1px 0 rgba(212,175,55,0.18),
-        inset 0 -1px 0 rgba(45,37,0,0.3),
-        0 4px 24px rgba(0,0,0,0.4) !important;
+      background: #161616 !important;
+      border: 1px solid rgba(212,175,55,0.18) !important;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4) !important;
       color: var(--text) !important;
     }
     html.dark .cal-wrap,
@@ -126,17 +106,17 @@
 
     /* ── DARK MODE CALENDAR CELLS ── */
     html.dark .cal-cell {
-      background: linear-gradient(155deg, rgba(10,10,2,0.92) 0%, rgba(7,6,1,0.88) 100%) !important;
-      border-color: rgba(45,37,0,0.7) !important;
-      box-shadow: inset 0 1px 0 rgba(212,175,55,0.07), 0 1px 4px rgba(0,0,0,0.4) !important;
+      background: #161616 !important;
+      border-color: rgba(212,175,55,0.15) !important;
+      box-shadow: none !important;
     }
     html.dark .cal-cell:hover {
-      border-color: rgba(201,162,39,0.6) !important;
-      box-shadow: inset 0 1px 0 rgba(212,175,55,0.12), 0 3px 12px rgba(0,0,0,0.5) !important;
+      border-color: rgba(212,175,55,0.4) !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
     }
     html.dark .cal-cell.today {
-      background: linear-gradient(155deg, rgba(22,18,0,0.95) 0%, rgba(16,13,0,0.9) 100%) !important;
-      border-color: rgba(201,162,39,0.8) !important;
+      background: rgba(212,175,55,0.07) !important;
+      border-color: rgba(212,175,55,0.5) !important;
     }
     html.dark .cal-cell.outro-mes { opacity: 0.2 !important; }
     html.dark .cal-day-num { color: #AA9940 !important; }
@@ -186,32 +166,32 @@
 
     /* Inputs */
     html.dark input,html.dark textarea,html.dark select{
-      background:rgba(45,37,0,0.2)!important;
+      background:rgba(255,255,255,0.04)!important;
       color:var(--text)!important;
-      border-color:#2D2500!important;
+      border-color:rgba(212,175,55,0.2)!important;
     }
     html.dark input:focus,html.dark textarea:focus,html.dark select:focus{
       border-color:#D4AF37!important;
-      background:rgba(45,37,0,0.3)!important;
+      background:rgba(255,255,255,0.07)!important;
     }
 
     /* Gradient border on proj cards */
     html.dark .proj-card {
       position:relative;
-      background:rgba(15,14,0,0.7)!important;
+      background:#161616!important;
     }
 
     /* Table rows */
-    html.dark .table-row{border-bottom:1px solid rgba(45,37,0,0.4)!important;}
-    html.dark .table-row:hover{background:rgba(45,37,0,0.2)!important;}
+    html.dark .table-row{border-bottom:1px solid rgba(212,175,55,0.1)!important;}
+    html.dark .table-row:hover{background:rgba(212,175,55,0.05)!important;}
 
     /* Day cols */
-    html.dark .day-col-head{background:rgba(45,37,0,0.3)!important;}
-    html.dark .day-col-head.dark{background:rgba(45,35,0,0.5)!important;}
-    html.dark .day-col textarea{background:rgba(45,37,0,0.1)!important;color:var(--text)!important;}
+    html.dark .day-col-head{background:rgba(212,175,55,0.1)!important;}
+    html.dark .day-col-head.dark{background:rgba(212,175,55,0.15)!important;}
+    html.dark .day-col textarea{background:rgba(255,255,255,0.04)!important;color:var(--text)!important;}
 
     /* CPA header */
-    html.dark .cpa-header{background:linear-gradient(135deg,rgba(35,28,0,0.8) 0%,rgba(55,44,0,0.8) 100%)!important;backdrop-filter:blur(8px);}
+    html.dark .cpa-header{background:linear-gradient(135deg,#1A1400 0%,#261D00 100%)!important;border-bottom:1px solid rgba(212,175,55,0.2)!important;}
 
     /* Badges */
     html.dark .pbadge.pendente{background:rgba(255,193,7,0.15);color:#FFD54F;border:1px solid rgba(255,193,7,0.3);}
@@ -223,7 +203,7 @@
     /* Scrollbar */
     html.dark ::-webkit-scrollbar{width:4px;height:4px;}
     html.dark ::-webkit-scrollbar-track{background:transparent;}
-    html.dark ::-webkit-scrollbar-thumb{background:#2D2500;border-radius:4px;}
+    html.dark ::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.3);border-radius:4px;}
     /* Elementos com fundo branco hardcoded */
     html.dark .ig-inline{background:#0a0a0a!important;border-color:#1A1500!important;}
     html.dark .ig-phone{background:#0a0a0a!important;}
@@ -234,8 +214,8 @@
     html.dark h1,html.dark h2,html.dark h3{color:var(--text);}
     html.dark .client-main h2{color:var(--brown);}
     html.dark p,html.dark span,html.dark div,html.dark td,html.dark li{color:inherit;}
-    /* Client stat boxes legibility in dark mode */
-    html.dark .cli-stat { color: var(--text) !important; filter: brightness(1.8) saturate(0.6); }
+    /* Client stat boxes — keep colored backgrounds in dark mode */
+    html.dark .cli-stat { filter: none !important; }
     /* Financial badges dark mode */
     html.dark .fin-pago { background: rgba(76,175,80,0.15) !important; color: #81C784 !important; }
     html.dark .fin-pendente { background: rgba(255,152,0,0.15) !important; color: #FFB74D !important; }
@@ -2051,10 +2031,10 @@ const Admin = {
               <div class="cli-card-ig">${c.instagram ? '@ '+c.instagram.replace('@','') : '—'}</div>
               ${c.empresa ? `<span class="cli-card-tag">${c.empresa}</span>` : ''}
               <div class="cli-card-stats" id="cli-stats-${c.id}">
-                <div class="cli-stat" style="background:rgba(251,191,36,0.1);color:#92400E;"><span class="cli-stat-label">Rascunho</span>—</div>
-                <div class="cli-stat" style="background:rgba(249,115,22,0.1);color:#9A3412;"><span class="cli-stat-label">Ajuste</span>—</div>
-                <div class="cli-stat" style="background:rgba(251,191,36,0.1);color:#92400E;"><span class="cli-stat-label">Aprovação</span>—</div>
-                <div class="cli-stat" style="background:rgba(34,197,94,0.1);color:#14532D;"><span class="cli-stat-label">Aprovados</span>—</div>
+                <div class="cli-stat" style="background:#fffae6;color:#c9a800;border:1px solid #f6d12d33;"><span class="cli-stat-label">Rascunho</span>—</div>
+                <div class="cli-stat" style="background:#fdf1e7;color:#d4762a;border:1px solid #ffa14e33;"><span class="cli-stat-label">Ajuste</span>—</div>
+                <div class="cli-stat" style="background:#e9f9ee;color:#1db855;border:1px solid #41ff7233;"><span class="cli-stat-label">Aprovação</span>—</div>
+                <div class="cli-stat" style="background:#e7e6f5;color:#5254cc;border:1px solid #8688ff33;"><span class="cli-stat-label">Aprovados</span>—</div>
               </div>
             </div>
           </div>`;
@@ -2071,10 +2051,10 @@ const Admin = {
       const aprov = posts.filter(p=>p.status==='aprovado').length;
       const pub = posts.filter(p=>p.status==='publicado').length;
       el.innerHTML = `
-        <div class="cli-stat" style="background:rgba(251,191,36,0.1);color:#92400E;"><span class="cli-stat-label">Rascunho</span>${rasc}</div>
-        <div class="cli-stat" style="background:rgba(249,115,22,0.1);color:#9A3412;"><span class="cli-stat-label">Ajuste</span>${ajuste}</div>
-        <div class="cli-stat" style="background:rgba(251,191,36,0.1);color:#92400E;"><span class="cli-stat-label">Aprovação</span>${aprov}</div>
-        <div class="cli-stat" style="background:rgba(34,197,94,0.1);color:#14532D;"><span class="cli-stat-label">Aprovados</span>${pub}</div>`;
+        <div class="cli-stat" style="background:#fffae6;color:#c9a800;border:1px solid #f6d12d33;"><span class="cli-stat-label">Rascunho</span>${rasc}</div>
+        <div class="cli-stat" style="background:#fdf1e7;color:#d4762a;border:1px solid #ffa14e33;"><span class="cli-stat-label">Ajuste</span>${ajuste}</div>
+        <div class="cli-stat" style="background:#e9f9ee;color:#1db855;border:1px solid #41ff7233;"><span class="cli-stat-label">Aprovação</span>${aprov}</div>
+        <div class="cli-stat" style="background:#e7e6f5;color:#5254cc;border:1px solid #8688ff33;"><span class="cli-stat-label">Aprovados</span>${pub}</div>`;
     });
     } catch(e) {
       console.error('renderClientes error:', e);
