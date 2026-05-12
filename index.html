@@ -2270,9 +2270,10 @@ const Admin = {
 
       <!-- TABS -->
       <div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;" id="cli-tabs">
-        ${['feed','posts','arquivos','tarefas','chat','info'].map((t,i) => {
-          const labels = {feed:'▦ Feed',posts:'◫ Posts',arquivos:'▤ Arquivos',tarefas:'✓ Tarefas',chat:'◷ Chat',info:'⚙ Info'};
-          return `<button onclick="Admin._cliTab('${t}',${id})" id="clitab-${t}" style="padding:9px 16px;font-size:12px;border:none;background:none;cursor:pointer;border-bottom:2px solid ${i===0?'var(--copper)':'transparent'};color:${i===0?'var(--copper)':'var(--muted)'};transition:all .15s;font-family:Poppins,sans-serif;white-space:nowrap;">${labels[t]}</button>`;
+        ${['feed','posts','arquivos','tarefas','chat','info','brand'].map((t,i) => {
+          const labels = {feed:'▦ Feed',posts:'◫ Posts',arquivos:'▤ Arquivos',tarefas:'✓ Tarefas',chat:'◷ Chat',info:'⚙ Info',brand:'✦ Brand Core'};
+          const isBrand = t==='brand';
+          return `<button onclick="Admin._cliTab('${t}',${id})" id="clitab-${t}" style="padding:9px 16px;font-size:12px;border:none;${isBrand?'background:linear-gradient(135deg,rgba(184,130,10,0.08),rgba(232,184,75,0.12));':'background:none;'}cursor:pointer;border-bottom:2px solid ${i===0?'var(--copper)':'transparent'};color:${isBrand?'var(--brown)':(i===0?'var(--copper)':'var(--muted)')};transition:all .15s;font-family:Poppins,sans-serif;white-space:nowrap;${isBrand?'font-weight:500;border-radius:8px 8px 0 0;':''}">${labels[t]}</button>`;
         }).join('')}
       </div>
 
@@ -2290,11 +2291,11 @@ const Admin = {
   _cliTab(tab, id) {
     id = id || this._cliCurrentId;
     const c = this._cliClienteData;
-    ['feed','posts','arquivos','tarefas','chat','info'].forEach(t => {
+    ['feed','posts','arquivos','tarefas','chat','info','brand'].forEach(t => {
       const el = document.getElementById('clitab-'+t);
       if (!el) return;
       el.style.borderBottomColor = t===tab ? 'var(--copper)' : 'transparent';
-      el.style.color = t===tab ? 'var(--copper)' : 'var(--muted)';
+      el.style.color = t===tab ? 'var(--copper)' : (t==='brand' ? 'var(--brown)' : 'var(--muted)');
     });
     const content = document.getElementById('cli-tab-content');
     if (!content) return;
@@ -2304,6 +2305,7 @@ const Admin = {
     else if (tab==='tarefas') this._cliTabTarefas(id, c);
     else if (tab==='chat') this._cliTabChat(id, c);
     else if (tab==='info') this._cliTabInfo(id, c);
+    else if (tab==='brand') this._cliTabBrandCore(id, c);
   },
 
   async _cliTabPosts(id, c) {
@@ -2564,6 +2566,737 @@ const Admin = {
         crm.gislainebarbeto.com.br · <strong>${c.email}</strong> · <strong>${c.access_code||'Primor2026!'}</strong>
       </div>`;
   },
+
+  /* ===== BRAND CORE ===== */
+  _bcSection: null,
+  _bcSubSection: null,
+
+  async _bcLoad(email, tipo) {
+    const { data } = await db.from('informacoes_cliente')
+      .select('*').eq('client_email', email).eq('tipo', tipo).maybeSingle();
+    if (!data?.conteudo) return {};
+    try { return JSON.parse(data.conteudo); } catch { return {}; }
+  },
+
+  async _bcSave(email, tipo, obj) {
+    const conteudo = JSON.stringify(obj);
+    const { data: existing } = await db.from('informacoes_cliente')
+      .select('id').eq('client_email', email).eq('tipo', tipo).maybeSingle();
+    if (existing?.id) {
+      await db.from('informacoes_cliente').update({ conteudo, titulo: tipo }).eq('id', existing.id);
+    } else {
+      await db.from('informacoes_cliente').insert([{ client_email: email, tipo, titulo: tipo, conteudo }]);
+    }
+  },
+
+  async _cliTabBrandCore(id, c) {
+    const content = document.getElementById('cli-tab-content');
+    if (!content) return;
+    if (this._bcSection) {
+      this._bcRenderSection(this._bcSection, id, c);
+      return;
+    }
+    const sections = [
+      { key:'diagnostico', icon:'🔍', title:'Diagnóstico do Perfil', desc:'Análise completa da presença digital', color:'#7C3AED', bg:'rgba(124,58,237,0.08)' },
+      { key:'persona',     icon:'👤', title:'Estudo de Persona',     desc:'Perfil psicológico do público-alvo',  color:'#0891B2', bg:'rgba(8,145,178,0.08)' },
+      { key:'concorrencia',icon:'⚡', title:'Análise de Concorrência',desc:'Benchmarking e oportunidades',        color:'#DC2626', bg:'rgba(220,38,38,0.08)' },
+      { key:'posicionamento',icon:'✦',title:'Posicionamento de Imagem',desc:'Identidade, voz e expressão visual', color:'#B8820A', bg:'rgba(184,130,10,0.08)' },
+      { key:'esteira',     icon:'◈', title:'Esteira de Produtos',    desc:'Portfólio de produtos e serviços',    color:'#059669', bg:'rgba(5,150,105,0.08)' },
+      { key:'arquivos_bc', icon:'▤', title:'Arquivos',               desc:'Documentos e referências do projeto', color:'#6B7280', bg:'rgba(107,114,128,0.08)' },
+    ];
+    content.innerHTML = `
+      <div style="max-width:800px;">
+        <div style="text-align:center;margin-bottom:32px;padding:28px 20px;background:linear-gradient(135deg,rgba(184,130,10,0.06),rgba(232,184,75,0.03));border-radius:20px;border:1px solid rgba(184,130,10,0.12);">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-style:italic;color:var(--brown);line-height:1.2;">✦ Brand Core</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;letter-spacing:.08em;">O lugar onde a essência de ${c.nome||'sua cliente'} é documentada, organizada e sempre acessível</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;">
+          ${sections.map(s => `
+            <div onclick="Admin._bcSection='${s.key}';Admin._bcSubSection=null;Admin._bcRenderSection('${s.key}',${id},Admin._cliClienteData)"
+              style="border-radius:16px;border:1px solid var(--border);background:var(--surface);padding:20px;cursor:pointer;transition:all .2s;hover:transform:translateY(-3px);"
+              onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)'"
+              onmouseleave="this.style.transform='';this.style.boxShadow=''">
+              <div style="width:44px;height:44px;border-radius:12px;background:${s.bg};display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px;">${s.icon}</div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">${s.title}</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.4;">${s.desc}</div>
+              <div style="margin-top:12px;font-size:10px;color:${s.color};letter-spacing:.08em;text-transform:uppercase;font-weight:500;">Acessar →</div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  },
+
+  _bcRenderSection(section, id, c) {
+    if (section==='diagnostico')   this._bcDiagnostico(id, c);
+    else if (section==='persona')  this._bcPersona(id, c);
+    else if (section==='concorrencia') this._bcConcorrencia(id, c);
+    else if (section==='posicionamento') this._bcPosicionamento(id, c);
+    else if (section==='esteira')  this._bcEsteira(id, c);
+    else if (section==='arquivos_bc') this._bcArquivos(id, c);
+  },
+
+  _bcBack(id, c) {
+    this._bcSection = null;
+    this._bcSubSection = null;
+    this._cliTabBrandCore(id, c);
+  },
+
+  _bcHeader(title, icon, id, c) {
+    return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+      <button onclick="Admin._bcBack(${id},Admin._cliClienteData)" style="width:34px;height:34px;border-radius:10px;background:var(--beige);border:1px solid var(--border);font-size:18px;cursor:pointer;color:var(--muted);flex-shrink:0;">←</button>
+      <div style="font-size:20px;">${icon}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic;color:var(--brown);">${title}</div>
+    </div>`;
+  },
+
+  _bcSubTabs(tabs, active, onclick) {
+    return `<div style="display:flex;gap:2px;background:var(--beige);border-radius:12px;padding:4px;margin-bottom:20px;width:fit-content;">
+      ${tabs.map(t => `<button onclick="${onclick}('${t.key}')" id="bcsub-${t.key}"
+        style="padding:7px 14px;border-radius:9px;border:none;font-size:11px;font-family:Poppins,sans-serif;cursor:pointer;transition:all .15s;
+        background:${t.key===active?'var(--surface)':'transparent'};
+        color:${t.key===active?'var(--brown)':'var(--muted)'};
+        font-weight:${t.key===active?'500':'400'};
+        box-shadow:${t.key===active?'0 1px 4px rgba(0,0,0,0.08)':'none'};">${t.label}</button>`).join('')}
+    </div>`;
+  },
+
+  _bcInput(id, val, ph, type='text') {
+    return `<input type="${type}" id="${id}" value="${(val||'').replace(/"/g,'&quot;')}" placeholder="${ph}"
+      style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);box-sizing:border-box;margin-top:4px;"/>`;
+  },
+
+  _bcTextarea(id, val, ph, rows=3) {
+    return `<textarea id="${id}" rows="${rows}" placeholder="${ph}"
+      style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);resize:vertical;box-sizing:border-box;margin-top:4px;">${val||''}</textarea>`;
+  },
+
+  _bcField(label, content2, cols=1) {
+    return `<div style="margin-bottom:14px;grid-column:span ${cols};">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px;">${label}</div>
+      ${content2}
+    </div>`;
+  },
+
+  _bcRadio(name, options, selected) {
+    return `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+      ${options.map(o => `<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text);cursor:pointer;padding:5px 10px;border:1px solid ${selected===o?'var(--brown)':'var(--border)'};border-radius:8px;background:${selected===o?'rgba(184,130,10,0.08)':'var(--bg)'};">
+        <input type="radio" name="${name}" value="${o}" ${selected===o?'checked':''} style="accent-color:var(--brown);"> ${o}
+      </label>`).join('')}
+    </div>`;
+  },
+
+  _bcSaveBtn(onclick) {
+    return `<button onclick="${onclick}" style="padding:11px 24px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;font-size:12px;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;margin-top:16px;">Salvar ✓</button>`;
+  },
+
+  /* ─── DIAGNÓSTICO DO PERFIL ─── */
+  async _bcDiagnostico(id, c) {
+    const sub = this._bcSubSection || 'geral';
+    const content = document.getElementById('cli-tab-content');
+    const tabs = [{key:'geral',label:'Diagnóstico Geral'},{key:'conteudo',label:'Conteúdo'},{key:'metricas',label:'Métricas'}];
+    const [dg, dc, dm] = await Promise.all([
+      this._bcLoad(c.email,'bc_diag_geral'),
+      this._bcLoad(c.email,'bc_diag_conteudo'),
+      this._bcLoad(c.email,'bc_diag_metricas'),
+    ]);
+    const qualOpts = ['Excelente','Bom','Regular','Fraco','Ausente'];
+    const classOpts = ['Excelente','Bom','Regular','Fraco'];
+
+    const tabGeral = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
+        ${this._bcField('URL do Instagram', this._bcInput('bc-dg-ig', dg.instagram,'https://instagram.com/...'))}
+        ${this._bcField('Print do perfil (URL da imagem)', this._bcInput('bc-dg-print',dg.print_url,'Cole a URL do print'))}
+        <div style="grid-column:span 2;"><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);">Identidade Visual</div></div>
+        ${this._bcField('Qualidade da identidade visual', this._bcRadio('bc-dg-iv',qualOpts,dg.identidade_visual), 2)}
+        ${this._bcField('Observações (Identidade Visual)', this._bcTextarea('bc-dg-iv-obs',dg.iv_obs,'Coerência, paleta, tipografia...'), 2)}
+        <div style="grid-column:span 2;"><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);">Análise da Bio</div></div>
+        ${this._bcField('Clareza da bio', this._bcRadio('bc-dg-bio',qualOpts,dg.bio_clareza), 2)}
+        ${this._bcField('Observações (Bio)', this._bcTextarea('bc-dg-bio-obs',dg.bio_obs,'CTA, proposta de valor, link...'), 2)}
+        <div style="grid-column:span 2;"><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);">Destaques</div></div>
+        ${this._bcField('Qualidade dos destaques', this._bcRadio('bc-dg-dest',qualOpts,dg.destaques), 2)}
+        ${this._bcField('Observações (Destaques)', this._bcTextarea('bc-dg-dest-obs',dg.dest_obs,'Capas, organização, conteúdo...'), 2)}
+        <div style="grid-column:span 2;"><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);">Posicionamento</div></div>
+        ${this._bcField('Clareza do posicionamento', this._bcRadio('bc-dg-pos',qualOpts,dg.posicionamento), 2)}
+        ${this._bcField('Observações (Posicionamento)', this._bcTextarea('bc-dg-pos-obs',dg.pos_obs,'Nicho, diferencial, autoridade...'), 2)}
+        <div style="grid-column:span 2;"><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);">Resumo Final</div></div>
+        ${this._bcField('Classificação final do perfil', this._bcRadio('bc-dg-class',classOpts,dg.classificacao_final), 2)}
+        ${this._bcField('Resumo diagnóstico geral', this._bcTextarea('bc-dg-resumo',dg.resumo,'Pontos fortes, fracos e prioridades...', 4), 2)}
+      </div>
+      ${this._bcSaveBtn(`Admin._bcSalvarDiagGeral('${c.email}')`)}`;
+
+    const tabConteudo = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
+        <div style="grid-column:span 2;"><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);">Análise de Conteúdo</div></div>
+        ${this._bcField('Consistência de postagem', this._bcRadio('bc-dc-consist',qualOpts,dc.consistencia), 2)}
+        ${this._bcField('Qualidade visual dos posts', this._bcRadio('bc-dc-visual',qualOpts,dc.qualidade_visual), 2)}
+        ${this._bcField('Variedade de formatos', this._bcRadio('bc-dc-formato',qualOpts,dc.variedade), 2)}
+        ${this._bcField('Qualidade das legendas', this._bcRadio('bc-dc-legenda',qualOpts,dc.legendas), 2)}
+        ${this._bcField('Uso de Stories', this._bcRadio('bc-dc-stories',qualOpts,dc.stories), 2)}
+        ${this._bcField('Uso de Reels', this._bcRadio('bc-dc-reels',qualOpts,dc.reels), 2)}
+        ${this._bcField('Temas abordados', this._bcTextarea('bc-dc-temas',dc.temas,'Quais temas são mais explorados?'), 2)}
+        ${this._bcField('Oportunidades de conteúdo', this._bcTextarea('bc-dc-oport',dc.oportunidades,'O que está faltando?',4), 2)}
+        ${this._bcField('Resumo de conteúdo', this._bcTextarea('bc-dc-resumo',dc.resumo,'Análise geral do conteúdo...',4), 2)}
+      </div>
+      ${this._bcSaveBtn(`Admin._bcSalvarDiagConteudo('${c.email}')`)}`;
+
+    const tabMetricas = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;max-width:760px;">
+        <div style="grid-column:span 3;"><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);">Engajamento Médio</div></div>
+        ${this._bcField('Seguidores', this._bcInput('bc-dm-seg',dm.seguidores,'ex: 3.200','number'))}
+        ${this._bcField('Média de curtidas', this._bcInput('bc-dm-curt',dm.curtidas,'ex: 80','number'))}
+        ${this._bcField('Média de comentários', this._bcInput('bc-dm-com',dm.comentarios,'ex: 12','number'))}
+        ${this._bcField('Média de compartilhamentos', this._bcInput('bc-dm-comp',dm.compartilhamentos,'ex: 5','number'))}
+        ${this._bcField('Média de visualizações (Stories)', this._bcInput('bc-dm-story',dm.stories_views,'ex: 150','number'))}
+        ${this._bcField('Taxa de engajamento (%)', this._bcInput('bc-dm-taxa',dm.taxa_eng,'ex: 2.5'))}
+        <div style="grid-column:span 3;"><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);">Acompanhamento Mensal</div></div>
+        <div style="grid-column:span 3;">
+          <div id="bc-metricas-table" style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+              <thead>
+                <tr style="background:var(--beige);">
+                  <th style="padding:8px 10px;text-align:left;border:1px solid var(--border);color:var(--muted);font-weight:500;">Mês</th>
+                  <th style="padding:8px 10px;text-align:left;border:1px solid var(--border);color:var(--muted);font-weight:500;">Seguidores</th>
+                  <th style="padding:8px 10px;text-align:left;border:1px solid var(--border);color:var(--muted);font-weight:500;">Alcance</th>
+                  <th style="padding:8px 10px;text-align:left;border:1px solid var(--border);color:var(--muted);font-weight:500;">Engajamento</th>
+                  <th style="padding:8px 10px;text-align:left;border:1px solid var(--border);color:var(--muted);font-weight:500;">Observação</th>
+                  <th style="padding:8px 10px;border:1px solid var(--border);"></th>
+                </tr>
+              </thead>
+              <tbody id="bc-meses-tbody">
+                ${(dm.meses||[]).map((m,i) => `
+                  <tr>
+                    <td style="padding:6px 8px;border:1px solid var(--border);"><input value="${m.mes||''}" onchange="Admin._bcMesUpdate(${i},'mes',this.value)" style="width:90px;border:none;background:transparent;font-size:12px;color:var(--text);"/></td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);"><input value="${m.seg||''}" onchange="Admin._bcMesUpdate(${i},'seg',this.value)" style="width:70px;border:none;background:transparent;font-size:12px;color:var(--text);"/></td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);"><input value="${m.alcance||''}" onchange="Admin._bcMesUpdate(${i},'alcance',this.value)" style="width:70px;border:none;background:transparent;font-size:12px;color:var(--text);"/></td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);"><input value="${m.eng||''}" onchange="Admin._bcMesUpdate(${i},'eng',this.value)" style="width:70px;border:none;background:transparent;font-size:12px;color:var(--text);"/></td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);"><input value="${m.obs||''}" onchange="Admin._bcMesUpdate(${i},'obs',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;color:var(--text);"/></td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);text-align:center;"><button onclick="Admin._bcMesRemove(${i},'${c.email}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;">×</button></td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+            <button onclick="Admin._bcMesAdd('${c.email}')" style="margin-top:8px;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--beige);font-size:11px;cursor:pointer;color:var(--muted);">+ Adicionar mês</button>
+          </div>
+        </div>
+        ${this._bcField('Observações gerais de métricas', this._bcTextarea('bc-dm-obs',dm.obs_gerais,'Tendências, picos, quedas...', 3), 3)}
+      </div>
+      ${this._bcSaveBtn(`Admin._bcSalvarDiagMetricas('${c.email}')`)}`;
+
+    const views = {geral:tabGeral,conteudo:tabConteudo,metricas:tabMetricas};
+
+    content.innerHTML = `
+      <div style="max-width:800px;">
+        ${this._bcHeader('Diagnóstico do Perfil','🔍',id,c)}
+        ${this._bcSubTabs(tabs, sub, 'Admin._bcDiagSub')}
+        <div id="bc-diag-content">${views[sub]}</div>
+      </div>`;
+    this._bcDiagData = {meses: dm.meses||[]};
+  },
+
+  _bcDiagData: null,
+
+  _bcDiagSub(sub) {
+    this._bcSubSection = sub;
+    this._bcDiagnostico(this._cliCurrentId, this._cliClienteData);
+  },
+
+  _bcMesAdd(email) {
+    if (!this._bcDiagData) this._bcDiagData = {meses:[]};
+    this._bcDiagData.meses.push({mes:'',seg:'',alcance:'',eng:'',obs:''});
+    this._bcDiagnostico(this._cliCurrentId, this._cliClienteData);
+    this._bcSubSection = 'metricas';
+    setTimeout(() => this._bcDiagnostico(this._cliCurrentId, this._cliClienteData),10);
+  },
+
+  _bcMesUpdate(i, key, val) {
+    if (!this._bcDiagData?.meses) return;
+    this._bcDiagData.meses[i][key] = val;
+  },
+
+  _bcMesRemove(i, email) {
+    if (!this._bcDiagData?.meses) return;
+    this._bcDiagData.meses.splice(i,1);
+    this._bcSubSection = 'metricas';
+    this._bcDiagnostico(this._cliCurrentId, this._cliClienteData);
+  },
+
+  async _bcSalvarDiagGeral(email) {
+    const g = v => document.getElementById(v)?.value||'';
+    const r = n => document.querySelector(`input[name="${n}"]:checked`)?.value||'';
+    await this._bcSave(email,'bc_diag_geral',{
+      instagram: g('bc-dg-ig'), print_url: g('bc-dg-print'),
+      identidade_visual: r('bc-dg-iv'), iv_obs: g('bc-dg-iv-obs'),
+      bio_clareza: r('bc-dg-bio'), bio_obs: g('bc-dg-bio-obs'),
+      destaques: r('bc-dg-dest'), dest_obs: g('bc-dg-dest-obs'),
+      posicionamento: r('bc-dg-pos'), pos_obs: g('bc-dg-pos-obs'),
+      classificacao_final: r('bc-dg-class'), resumo: g('bc-dg-resumo'),
+    });
+    this._showToast('Diagnóstico geral salvo ✓');
+  },
+
+  async _bcSalvarDiagConteudo(email) {
+    const g = v => document.getElementById(v)?.value||'';
+    const r = n => document.querySelector(`input[name="${n}"]:checked`)?.value||'';
+    await this._bcSave(email,'bc_diag_conteudo',{
+      consistencia: r('bc-dc-consist'), qualidade_visual: r('bc-dc-visual'),
+      variedade: r('bc-dc-formato'), legendas: r('bc-dc-legenda'),
+      stories: r('bc-dc-stories'), reels: r('bc-dc-reels'),
+      temas: g('bc-dc-temas'), oportunidades: g('bc-dc-oport'), resumo: g('bc-dc-resumo'),
+    });
+    this._showToast('Análise de conteúdo salva ✓');
+  },
+
+  async _bcSalvarDiagMetricas(email) {
+    const g = v => document.getElementById(v)?.value||'';
+    const meses = this._bcDiagData?.meses || [];
+    await this._bcSave(email,'bc_diag_metricas',{
+      seguidores: g('bc-dm-seg'), curtidas: g('bc-dm-curt'),
+      comentarios: g('bc-dm-com'), compartilhamentos: g('bc-dm-comp'),
+      stories_views: g('bc-dm-story'), taxa_eng: g('bc-dm-taxa'),
+      obs_gerais: g('bc-dm-obs'), meses,
+    });
+    this._showToast('Métricas salvas ✓');
+  },
+
+  /* ─── ESTUDO DE PERSONA ─── */
+  async _bcPersona(id, c) {
+    const sub = this._bcSubSection || 'visao';
+    const content = document.getElementById('cli-tab-content');
+    const tabs = [
+      {key:'visao',label:'Visão Geral'},
+      {key:'psico',label:'Psicologia'},
+      {key:'conteudo',label:'Estratégia de Conteúdo'},
+      {key:'visual',label:'Recursos Visuais'},
+    ];
+    const [pv, pp, pc, pvi] = await Promise.all([
+      this._bcLoad(c.email,'bc_persona_visao'),
+      this._bcLoad(c.email,'bc_persona_psico'),
+      this._bcLoad(c.email,'bc_persona_conteudo'),
+      this._bcLoad(c.email,'bc_persona_visual'),
+    ]);
+
+    const tabVisao = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
+        ${this._bcField('Foto da Persona (URL)', this._bcInput('bc-pv-foto',pv.foto_url,'URL da imagem'))}
+        ${this._bcField('Nome da Persona', this._bcInput('bc-pv-nome',pv.nome,'Ex: Mariana, 34 anos'))}
+        ${this._bcField('Idade', this._bcInput('bc-pv-idade',pv.idade,'Ex: 28-40 anos'))}
+        ${this._bcField('Localização', this._bcInput('bc-pv-local',pv.localizacao,'Cidade/Região'))}
+        ${this._bcField('Profissão / Ocupação', this._bcInput('bc-pv-prof',pv.profissao,'Ex: Empreendedora, mãe...'))}
+        ${this._bcField('Renda média', this._bcInput('bc-pv-renda',pv.renda,'Ex: R$ 5.000 – R$ 15.000'))}
+        ${this._bcField('Estado civil', this._bcInput('bc-pv-civil',pv.estado_civil,'Ex: Casada, mãe de 2 filhos'))}
+        ${this._bcField('Escolaridade', this._bcInput('bc-pv-escola',pv.escolaridade,'Ex: Superior completo'))}
+        ${this._bcField('Redes sociais que usa', this._bcInput('bc-pv-redes',pv.redes,'Ex: Instagram, Pinterest'))}
+        ${this._bcField('Como consome conteúdo', this._bcInput('bc-pv-consumo',pv.consumo,'Ex: Stories, Reels, às 21h'))}
+        ${this._bcField('Dores principais', this._bcTextarea('bc-pv-dores',pv.dores,'O que a mantém acordada à noite?',3), 2)}
+        ${this._bcField('Desejos e sonhos', this._bcTextarea('bc-pv-desejos',pv.desejos,'O que ela realmente quer?',3), 2)}
+      </div>
+      ${this._bcSaveBtn(`Admin._bcSalvarPersonaVisao('${c.email}')`)}`;
+
+    const tabPsico = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
+        ${this._bcField('Frases reais que ela diz', this._bcTextarea('bc-pp-frases',pp.frases,'Ex: "Não tenho tempo para...", "Quero algo que..."',4), 2)}
+        ${this._bcField('Objetivos de vida', this._bcTextarea('bc-pp-obj',pp.objetivos,'O que ela quer conquistar?',3), 2)}
+        ${this._bcField('Obstáculos / Medos', this._bcTextarea('bc-pp-obs',pp.obstaculos,'O que a impede de agir?',3), 2)}
+        ${this._bcField('Estado de Consciência', this._bcRadio('bc-pp-consc',['Inconsciente','Consciente do problema','Consciente da solução','Produto-ciente','Totalmente ciente'],pp.consciencia), 2)}
+        ${this._bcField('Promessa Irresistível', this._bcTextarea('bc-pp-promessa',pp.promessa,'O que ela não consegue ignorar?',3), 2)}
+        ${this._bcField('Principais gatilhos mentais', this._bcTextarea('bc-pp-gatilhos',pp.gatilhos,'Ex: Escassez, prova social, autoridade...',3), 2)}
+        ${this._bcField('Exemplos de Copy que funcionam', this._bcTextarea('bc-pp-copy',pp.copy,'Frases, abordagens que ressoam com ela...',4), 2)}
+      </div>
+      ${this._bcSaveBtn(`Admin._bcSalvarPersonaPsico('${c.email}')`)}`;
+
+    const tabConteudo = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
+        ${this._bcField('Pilares de conteúdo', this._bcTextarea('bc-pc-pilares',pc.pilares,'Ex: Educação, Inspiração, Bastidores, Vendas',3), 2)}
+        ${this._bcField('Formatos preferidos', this._bcTextarea('bc-pc-formatos',pc.formatos,'Ex: Carrossel, Reels, Stories com enquete',3), 2)}
+        ${this._bcField('Temas que engajam', this._bcTextarea('bc-pc-temas',pc.temas,'Quais assuntos ela para para ver?',3), 2)}
+        ${this._bcField('Tom de voz ideal', this._bcRadio('bc-pc-tom',['Próximo e informal','Profissional e direto','Inspirador e poético','Educativo e técnico','Bem-humorado'],pc.tom), 2)}
+        ${this._bcField('Horários de maior engajamento', this._bcInput('bc-pc-horarios',pc.horarios,'Ex: 19h-21h, manhãs de seg a sex'))}
+        ${this._bcField('Frequência ideal de posts', this._bcInput('bc-pc-freq',pc.frequencia,'Ex: 1x/dia no feed + 3 stories'))}
+        ${this._bcField('Ideias de pauta personalizadas', this._bcTextarea('bc-pc-pauta',pc.pauta,'Tópicos específicos para esta persona...',4), 2)}
+      </div>
+      ${this._bcSaveBtn(`Admin._bcSalvarPersonaConteudo('${c.email}')`)}`;
+
+    const tabVisual = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
+        ${this._bcField('Palavras que descrevem o visual ideal', this._bcTextarea('bc-pvi-palavras',pvi.palavras,'Ex: Minimalista, sofisticado, caloroso...',3), 2)}
+        ${this._bcField('Paleta de cores referência', this._bcInput('bc-pvi-paleta',pvi.paleta,'Ex: Terracota, off-white, dourado'))}
+        ${this._bcField('Tipografia / Estilo de fonte', this._bcInput('bc-pvi-tipo',pvi.tipografia,'Ex: Serif elegante, sans-serif clean'))}
+        ${this._bcField('Referências visuais (URLs separadas por vírgula)', this._bcTextarea('bc-pvi-refs',pvi.referencias,'https://..., https://...',3), 2)}
+        <div style="grid-column:span 2;">
+          <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Moodboard de referências</div>
+          <div id="bc-moodboard" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+            ${(pvi.referencias||'').split(',').filter(u=>u.trim()).map(u => `
+              <div style="border-radius:10px;overflow:hidden;aspect-ratio:1;background:var(--beige);">
+                <img src="${u.trim()}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'"/>
+              </div>`).join('')}
+            ${!(pvi.referencias||'').trim() ? `<div style="border-radius:10px;background:var(--beige);aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">Cole URLs acima</div>` : ''}
+          </div>
+        </div>
+        ${this._bcField('Elementos visuais a evitar', this._bcTextarea('bc-pvi-evitar',pvi.evitar,'O que não combina com a persona?',3), 2)}
+      </div>
+      ${this._bcSaveBtn(`Admin._bcSalvarPersonaVisual('${c.email}')`)}`;
+
+    const views = {visao:tabVisao,psico:tabPsico,conteudo:tabConteudo,visual:tabVisual};
+    content.innerHTML = `
+      <div style="max-width:800px;">
+        ${this._bcHeader('Estudo de Persona','👤',id,c)}
+        ${this._bcSubTabs(tabs, sub, 'Admin._bcPersonaSub')}
+        <div id="bc-persona-content">${views[sub]}</div>
+      </div>`;
+  },
+
+  _bcPersonaSub(sub) { this._bcSubSection=sub; this._bcPersona(this._cliCurrentId,this._cliClienteData); },
+
+  async _bcSalvarPersonaVisao(email) {
+    const g = v => document.getElementById(v)?.value||'';
+    await this._bcSave(email,'bc_persona_visao',{foto_url:g('bc-pv-foto'),nome:g('bc-pv-nome'),idade:g('bc-pv-idade'),localizacao:g('bc-pv-local'),profissao:g('bc-pv-prof'),renda:g('bc-pv-renda'),estado_civil:g('bc-pv-civil'),escolaridade:g('bc-pv-escola'),redes:g('bc-pv-redes'),consumo:g('bc-pv-consumo'),dores:g('bc-pv-dores'),desejos:g('bc-pv-desejos')});
+    this._showToast('Visão Geral da Persona salva ✓');
+  },
+  async _bcSalvarPersonaPsico(email) {
+    const g = v => document.getElementById(v)?.value||'';
+    const r = n => document.querySelector(`input[name="${n}"]:checked`)?.value||'';
+    await this._bcSave(email,'bc_persona_psico',{frases:g('bc-pp-frases'),objetivos:g('bc-pp-obj'),obstaculos:g('bc-pp-obs'),consciencia:r('bc-pp-consc'),promessa:g('bc-pp-promessa'),gatilhos:g('bc-pp-gatilhos'),copy:g('bc-pp-copy')});
+    this._showToast('Psicologia da Persona salva ✓');
+  },
+  async _bcSalvarPersonaConteudo(email) {
+    const g = v => document.getElementById(v)?.value||'';
+    const r = n => document.querySelector(`input[name="${n}"]:checked`)?.value||'';
+    await this._bcSave(email,'bc_persona_conteudo',{pilares:g('bc-pc-pilares'),formatos:g('bc-pc-formatos'),temas:g('bc-pc-temas'),tom:r('bc-pc-tom'),horarios:g('bc-pc-horarios'),frequencia:g('bc-pc-freq'),pauta:g('bc-pc-pauta')});
+    this._showToast('Estratégia de Conteúdo salva ✓');
+  },
+  async _bcSalvarPersonaVisual(email) {
+    const g = v => document.getElementById(v)?.value||'';
+    await this._bcSave(email,'bc_persona_visual',{palavras:g('bc-pvi-palavras'),paleta:g('bc-pvi-paleta'),tipografia:g('bc-pvi-tipo'),referencias:g('bc-pvi-refs'),evitar:g('bc-pvi-evitar')});
+    this._showToast('Recursos Visuais salvos ✓');
+  },
+
+  /* ─── ANÁLISE DE CONCORRÊNCIA ─── */
+  _bcConcorrList: [],
+  _bcConcorrSel: 0,
+
+  async _bcConcorrencia(id, c) {
+    const sub = this._bcSubSection || 'lista';
+    const content = document.getElementById('cli-tab-content');
+    const { data: concorr } = await db.from('informacoes_cliente')
+      .select('*').eq('client_email', c.email).eq('tipo', 'bc_concorrente')
+      .order('created_at',{ascending:true});
+    this._bcConcorrList = concorr || [];
+    const sel = this._bcConcorrList[this._bcConcorrSel] || null;
+    let detailData = sel ? (() => { try { return JSON.parse(sel.conteudo||'{}'); } catch { return {}; } })() : {};
+
+    const tabLista = `
+      <div style="display:flex;gap:16px;max-width:760px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:240px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="font-size:13px;font-weight:500;color:var(--text);">Concorrentes mapeados</div>
+            <button onclick="Admin._bcAddConcorrente('${c.email}')" style="font-size:11px;padding:5px 12px;border-radius:8px;background:var(--brown);color:#fff;border:none;cursor:pointer;">+ Adicionar</button>
+          </div>
+          ${this._bcConcorrList.length ? `
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              ${this._bcConcorrList.map((cc,i) => {
+                let d = {}; try { d = JSON.parse(cc.conteudo||'{}'); } catch {}
+                return `<div onclick="Admin._bcConcorrSel=${i};Admin._bcConcorrencia(Admin._cliCurrentId,Admin._cliClienteData)"
+                  style="padding:10px 14px;border-radius:10px;border:1px solid ${i===this._bcConcorrSel?'var(--brown)':'var(--border)'};background:${i===this._bcConcorrSel?'rgba(184,130,10,0.06)':'var(--surface)'};cursor:pointer;">
+                  <div style="font-size:12px;font-weight:500;color:var(--text);">${d.nome||cc.titulo||'Concorrente '+(i+1)}</div>
+                  <div style="font-size:11px;color:var(--muted);">${d.instagram||''} ${d.seguidores?'· '+d.seguidores+' seg':''}</div>
+                </div>`;
+              }).join('')}
+            </div>` : `<div style="text-align:center;padding:32px 16px;color:var(--muted);font-size:12px;">Nenhum concorrente mapeado ainda</div>`}
+        </div>
+        ${sel ? `
+        <div style="flex:2;min-width:300px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:13px;font-weight:500;color:var(--text);">${detailData.nome||sel.titulo}</div>
+            <button onclick="Admin._bcExcluirConcorrente(${sel.id},'${c.email}')" style="font-size:11px;padding:4px 10px;border-radius:8px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;cursor:pointer;">Excluir</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            ${this._bcField('Nome/Perfil', this._bcInput('bc-cc-nome',detailData.nome,'@nomeperfil'))}
+            ${this._bcField('Instagram', this._bcInput('bc-cc-ig',detailData.instagram,'@...'))}
+            ${this._bcField('Seguidores', this._bcInput('bc-cc-seg',detailData.seguidores,'ex: 12.000'))}
+            ${this._bcField('Frequência de posts', this._bcInput('bc-cc-freq',detailData.frequencia,'ex: 1x/dia'))}
+            ${this._bcField('Tipos de conteúdo', this._bcTextarea('bc-cc-tipos',detailData.tipos,'Reels, carrossel, stories...',2), 2)}
+            ${this._bcField('Pontos fortes', this._bcTextarea('bc-cc-fortes',detailData.fortes,'O que eles fazem bem?',3), 2)}
+            ${this._bcField('Pontos fracos / Oportunidades', this._bcTextarea('bc-cc-fracos',detailData.fracos,'Onde podemos nos diferenciar?',3), 2)}
+            ${this._bcField('Recomendações', this._bcTextarea('bc-cc-recom',detailData.recomendacoes,'O que aprender/evitar?',3), 2)}
+          </div>
+          ${this._bcSaveBtn(`Admin._bcSalvarConcorrente('${c.email}',${sel.id})`)}
+        </div>` : ''}
+      </div>`;
+
+    content.innerHTML = `
+      <div style="max-width:820px;">
+        ${this._bcHeader('Análise de Concorrência','⚡',id,c)}
+        ${tabLista}
+      </div>`;
+  },
+
+  async _bcAddConcorrente(email) {
+    const nome = prompt('Nome/perfil do concorrente:');
+    if (!nome) return;
+    await db.from('informacoes_cliente').insert([{
+      client_email: email, tipo: 'bc_concorrente', titulo: nome,
+      conteudo: JSON.stringify({nome}),
+    }]);
+    this._bcConcorrSel = this._bcConcorrList.length;
+    this._bcConcorrencia(this._cliCurrentId, this._cliClienteData);
+  },
+
+  async _bcExcluirConcorrente(id, email) {
+    if (!confirm('Excluir este concorrente?')) return;
+    await db.from('informacoes_cliente').delete().eq('id', id);
+    this._bcConcorrSel = 0;
+    this._bcConcorrencia(this._cliCurrentId, this._cliClienteData);
+  },
+
+  async _bcSalvarConcorrente(email, id) {
+    const g = v => document.getElementById(v)?.value||'';
+    const obj = {nome:g('bc-cc-nome'),instagram:g('bc-cc-ig'),seguidores:g('bc-cc-seg'),frequencia:g('bc-cc-freq'),tipos:g('bc-cc-tipos'),fortes:g('bc-cc-fortes'),fracos:g('bc-cc-fracos'),recomendacoes:g('bc-cc-recom')};
+    await db.from('informacoes_cliente').update({conteudo:JSON.stringify(obj),titulo:obj.nome}).eq('id',id);
+    this._showToast('Concorrente salvo ✓');
+    this._bcConcorrencia(this._cliCurrentId,this._cliClienteData);
+  },
+
+  /* ─── POSICIONAMENTO DE IMAGEM ─── */
+  async _bcPosicionamento(id, c) {
+    const sub = this._bcSubSection || 'conceito';
+    const content = document.getElementById('cli-tab-content');
+    const tabs = [
+      {key:'conceito',label:'Conceituação'},
+      {key:'expressao',label:'Expressão'},
+      {key:'estrategia',label:'Estratégia'},
+      {key:'recursos',label:'Recursos'},
+    ];
+    const [pc, pe, pe2, pr] = await Promise.all([
+      this._bcLoad(c.email,'bc_pos_conceito'),
+      this._bcLoad(c.email,'bc_pos_expressao'),
+      this._bcLoad(c.email,'bc_pos_estrategia'),
+      this._bcLoad(c.email,'bc_pos_recursos'),
+    ]);
+
+    const arq = ['O Inocente','O Explorador','O Sábio','O Herói','O Fora-da-lei','O Mago','O Cara Comum','O Amante','O Bobo','O Cuidador','O Criador','O Governante'];
+
+    const tabConceito = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
+        ${this._bcField('Arquétipo de marca', this._bcRadio('bc-poc-arq',arq,pc.arquetipo), 2)}
+        ${this._bcField('Essência da marca (em 1 frase)', this._bcInput('bc-poc-essencia',pc.essencia,'Ex: Transformar vidas através da beleza consciente'))}
+        ${this._bcField('Proposta de Valor Única', this._bcInput('bc-poc-pvp',pc.pvp,'O que só esta marca oferece?'))}
+        ${this._bcField('Missão', this._bcTextarea('bc-poc-missao',pc.missao,'Por que esta marca existe?',3), 2)}
+        ${this._bcField('Visão', this._bcTextarea('bc-poc-visao',pc.visao,'Onde quer chegar?',3), 2)}
+        ${this._bcField('Valores da marca (um por linha)', this._bcTextarea('bc-poc-valores',pc.valores,'Autenticidade\nExcelência\nCuidado...',4), 2)}
+        ${this._bcField('Diferencial competitivo', this._bcTextarea('bc-poc-dif',pc.diferencial,'O que os concorrentes não têm?',3), 2)}
+      </div>
+      ${this._bcSaveBtn(`Admin._bcSalvarPosConceito('${c.email}')`)}`;
+
+    const persOpts = ['Sofisticado','Jovem e dinâmico','Acolhedor','Audacioso','Técnico/especialista','Divertido','Elegante','Minimalista','Poético'];
+    const tabExpressao = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
+        ${this._bcField('Personalidade da marca', this._bcRadio('bc-poe-pers',persOpts,pe.personalidade), 2)}
+        ${this._bcField('Tom de voz', this._bcRadio('bc-poe-tom',['Formal e profissional','Amigável e próximo','Inspirador e poético','Direto e objetivo','Bem-humorado e leve'],pe.tom), 2)}
+        ${this._bcField('Adjetivos que descrevem a marca', this._bcInput('bc-poe-adj',pe.adjetivos,'Ex: Elegante, transformadora, acolhedora'))}
+        ${this._bcField('Adjetivos que a marca NÃO é', this._bcInput('bc-poe-nadj',pe.nao_adjetivos,'Ex: Barata, agressiva, genérica'))}
+        ${this._bcField('Paleta de cores da identidade', this._bcInput('bc-poe-paleta',pe.paleta,'Ex: Nude rosado, dourado, off-white'))}
+        ${this._bcField('Tipografia / Estética visual', this._bcInput('bc-poe-tipo',pe.tipografia,'Ex: Serif clássica + sans-serif clean'))}
+        ${this._bcField('Exemplos de marcas com visual similar', this._bcTextarea('bc-poe-refs',pe.referencias,'Quais marcas têm estética parecida?',3), 2)}
+      </div>
+      ${this._bcSaveBtn(`Admin._bcSalvarPosExpressao('${c.email}')`)}`;
+
+    const tabEstrategia = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
+        ${this._bcField('Nicho de mercado', this._bcInput('bc-pe-nicho',pe2.nicho,'Ex: Estética vegana premium para mulheres 30+'))}
+        ${this._bcField('Público-alvo principal', this._bcInput('bc-pe-publico',pe2.publico,'Ex: Mulheres 28-45, A/B, São Paulo'))}
+        ${this._bcField('Canais de comunicação', this._bcTextarea('bc-pe-canais',pe2.canais,'Instagram, TikTok, Email, WhatsApp...',2), 2)}
+        ${this._bcField('Estratégia de conteúdo', this._bcTextarea('bc-pe-conteudo',pe2.conteudo,'Como comunicar o posicionamento?',4), 2)}
+        ${this._bcField('Estratégia de crescimento', this._bcTextarea('bc-pe-crescimento',pe2.crescimento,'Parcerias, colaborações, eventos...',3), 2)}
+        ${this._bcField('Objetivos de curto prazo (3 meses)', this._bcTextarea('bc-pe-obj3',pe2.obj3,'O que alcançar nos próximos 3 meses?',3), 2)}
+        ${this._bcField('Objetivos de longo prazo (1 ano)', this._bcTextarea('bc-pe-obj12',pe2.obj12,'Onde estar em 12 meses?',3), 2)}
+      </div>
+      ${this._bcSaveBtn(`Admin._bcSalvarPosEstrategia('${c.email}')`)}`;
+
+    const tabRecursos = `
+      <div style="display:grid;grid-template-columns:1fr;gap:12px;max-width:760px;">
+        ${this._bcField('Guia de voz (como escrever posts)', this._bcTextarea('bc-pr-voz',pr.guia_voz,'Instruções detalhadas sobre como a marca se comunica...',5))}
+        ${this._bcField('Palavras proibidas / a evitar', this._bcTextarea('bc-pr-proibidas',pr.proibidas,'Palavras que fogem do posicionamento...',3))}
+        ${this._bcField('Hashtags estratégicas', this._bcTextarea('bc-pr-hashtags',pr.hashtags,'#hashtags principais...',3))}
+        ${this._bcField('Links e referências importantes', this._bcTextarea('bc-pr-links',pr.links,'URLs de referência, drive, site...',3))}
+        ${this._bcField('Notas adicionais', this._bcTextarea('bc-pr-notas',pr.notas,'Qualquer outra informação relevante...',4))}
+      </div>
+      ${this._bcSaveBtn(`Admin._bcSalvarPosRecursos('${c.email}')`)}`;
+
+    const views = {conceito:tabConceito,expressao:tabExpressao,estrategia:tabEstrategia,recursos:tabRecursos};
+    content.innerHTML = `
+      <div style="max-width:800px;">
+        ${this._bcHeader('Posicionamento de Imagem','✦',id,c)}
+        ${this._bcSubTabs(tabs,sub,'Admin._bcPosSub')}
+        ${views[sub]}
+      </div>`;
+  },
+
+  _bcPosSub(sub) { this._bcSubSection=sub; this._bcPosicionamento(this._cliCurrentId,this._cliClienteData); },
+
+  async _bcSalvarPosConceito(email) {
+    const g = v => document.getElementById(v)?.value||'';
+    const r = n => document.querySelector(`input[name="${n}"]:checked`)?.value||'';
+    await this._bcSave(email,'bc_pos_conceito',{arquetipo:r('bc-poc-arq'),essencia:g('bc-poc-essencia'),pvp:g('bc-poc-pvp'),missao:g('bc-poc-missao'),visao:g('bc-poc-visao'),valores:g('bc-poc-valores'),diferencial:g('bc-poc-dif')});
+    this._showToast('Conceituação salva ✓');
+  },
+  async _bcSalvarPosExpressao(email) {
+    const g = v => document.getElementById(v)?.value||'';
+    const r = n => document.querySelector(`input[name="${n}"]:checked`)?.value||'';
+    await this._bcSave(email,'bc_pos_expressao',{personalidade:r('bc-poe-pers'),tom:r('bc-poe-tom'),adjetivos:g('bc-poe-adj'),nao_adjetivos:g('bc-poe-nadj'),paleta:g('bc-poe-paleta'),tipografia:g('bc-poe-tipo'),referencias:g('bc-poe-refs')});
+    this._showToast('Expressão salva ✓');
+  },
+  async _bcSalvarPosEstrategia(email) {
+    const g = v => document.getElementById(v)?.value||'';
+    await this._bcSave(email,'bc_pos_estrategia',{nicho:g('bc-pe-nicho'),publico:g('bc-pe-publico'),canais:g('bc-pe-canais'),conteudo:g('bc-pe-conteudo'),crescimento:g('bc-pe-crescimento'),obj3:g('bc-pe-obj3'),obj12:g('bc-pe-obj12')});
+    this._showToast('Estratégia salva ✓');
+  },
+  async _bcSalvarPosRecursos(email) {
+    const g = v => document.getElementById(v)?.value||'';
+    await this._bcSave(email,'bc_pos_recursos',{guia_voz:g('bc-pr-voz'),proibidas:g('bc-pr-proibidas'),hashtags:g('bc-pr-hashtags'),links:g('bc-pr-links'),notas:g('bc-pr-notas')});
+    this._showToast('Recursos salvos ✓');
+  },
+
+  /* ─── ESTEIRA DE PRODUTOS/SERVIÇOS ─── */
+  _bcEsteiraSel: 0,
+  _bcEsteiraList: [],
+
+  async _bcEsteira(id, c) {
+    const content = document.getElementById('cli-tab-content');
+    const { data: prods } = await db.from('informacoes_cliente')
+      .select('*').eq('client_email', c.email).eq('tipo', 'bc_produto')
+      .order('created_at',{ascending:true});
+    this._bcEsteiraList = prods || [];
+    const sel = this._bcEsteiraList[this._bcEsteiraSel] || null;
+    let pd = sel ? (() => { try { return JSON.parse(sel.conteudo||'{}'); } catch { return {}; } })() : {};
+
+    const nivelOpts = ['Entrada (gratuito/baixo custo)','Front-end (baixo/médio)','Core (médio/alto)','Premium (alto)','VIP/Exclusivo'];
+    const tipoProd = ['Serviço','Produto digital','Produto físico','Mentoria','Consultoria','Evento','Assinatura','Pacote'];
+
+    content.innerHTML = `
+      <div style="max-width:820px;">
+        ${this._bcHeader('Esteira de Produtos/Serviços','◈',id,c)}
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div style="width:220px;flex-shrink:0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div style="font-size:12px;font-weight:500;color:var(--text);">Produtos</div>
+              <button onclick="Admin._bcAddProduto('${c.email}')" style="font-size:10px;padding:4px 10px;border-radius:7px;background:var(--brown);color:#fff;border:none;cursor:pointer;">+ Novo</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              ${this._bcEsteiraList.map((p,i) => {
+                let d = {}; try { d = JSON.parse(p.conteudo||'{}'); } catch {}
+                const nivelColor = ['#059669','#0891B2','#7C3AED','#B8820A','#DC2626'][nivelOpts.indexOf(d.nivel)%5]||'#6B7280';
+                return `<div onclick="Admin._bcEsteiraSel=${i};Admin._bcEsteira(Admin._cliCurrentId,Admin._cliClienteData)"
+                  style="padding:8px 12px;border-radius:9px;border:1px solid ${i===this._bcEsteiraSel?'var(--brown)':'var(--border)'};background:${i===this._bcEsteiraSel?'rgba(184,130,10,0.06)':'var(--surface)'};cursor:pointer;">
+                  <div style="font-size:11px;font-weight:500;color:var(--text);">${d.nome||'Produto '+(i+1)}</div>
+                  <div style="font-size:10px;color:${nivelColor};margin-top:2px;">${d.nivel||'Sem nível'}</div>
+                </div>`;
+              }).join('')}
+              ${!this._bcEsteiraList.length ? `<div style="text-align:center;padding:24px 12px;color:var(--muted);font-size:11px;">Nenhum produto ainda</div>` : ''}
+            </div>
+            <div style="margin-top:16px;padding:12px;background:var(--beige);border-radius:10px;font-size:11px;color:var(--muted);">
+              <div style="font-weight:500;color:var(--text);margin-bottom:6px;">Análise Geral</div>
+              <div>${this._bcEsteiraList.length} produto(s) mapeado(s)</div>
+            </div>
+          </div>
+          ${sel ? `
+          <div style="flex:1;min-width:300px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+              <div style="font-size:13px;font-weight:500;color:var(--text);">${pd.nome||'Produto'}</div>
+              <button onclick="Admin._bcExcluirProduto(${sel.id},'${c.email}')" style="font-size:10px;padding:4px 10px;border-radius:7px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;cursor:pointer;">Excluir</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              ${this._bcField('Nome do produto/serviço', this._bcInput('bc-ep-nome',pd.nome,'Ex: Mentoria VIP 1:1'), 2)}
+              ${this._bcField('Nível na esteira', this._bcRadio('bc-ep-nivel',nivelOpts,pd.nivel), 2)}
+              ${this._bcField('Tipo', this._bcRadio('bc-ep-tipo',tipoProd,pd.tipo), 2)}
+              ${this._bcField('Preço / Investimento', this._bcInput('bc-ep-preco',pd.preco,'Ex: R$ 997'))}
+              ${this._bcField('Formato de entrega', this._bcInput('bc-ep-formato',pd.formato,'Ex: Online, ao vivo, gravado'))}
+              ${this._bcField('Descrição completa', this._bcTextarea('bc-ep-desc',pd.descricao,'O que é, o que entrega, para quem é...',4), 2)}
+              ${this._bcField('Transformação prometida', this._bcTextarea('bc-ep-transf',pd.transformacao,'Qual resultado o cliente terá?',3), 2)}
+              ${this._bcField('Objeções comuns', this._bcTextarea('bc-ep-obj',pd.objecoes,'O que impede a compra?',3), 2)}
+              ${this._bcField('Gatilhos de venda', this._bcTextarea('bc-ep-gatilhos',pd.gatilhos,'Como convencer a comprar?',3), 2)}
+            </div>
+            ${this._bcSaveBtn(`Admin._bcSalvarProduto('${c.email}',${sel.id})`)}
+          </div>` : ''}
+        </div>
+      </div>`;
+  },
+
+  async _bcAddProduto(email) {
+    const nome = prompt('Nome do produto/serviço:');
+    if (!nome) return;
+    await db.from('informacoes_cliente').insert([{client_email:email,tipo:'bc_produto',titulo:nome,conteudo:JSON.stringify({nome})}]);
+    this._bcEsteiraSel = this._bcEsteiraList.length;
+    this._bcEsteira(this._cliCurrentId,this._cliClienteData);
+  },
+
+  async _bcExcluirProduto(id, email) {
+    if (!confirm('Excluir este produto?')) return;
+    await db.from('informacoes_cliente').delete().eq('id',id);
+    this._bcEsteiraSel=0;
+    this._bcEsteira(this._cliCurrentId,this._cliClienteData);
+  },
+
+  async _bcSalvarProduto(email, id) {
+    const g = v => document.getElementById(v)?.value||'';
+    const r = n => document.querySelector(`input[name="${n}"]:checked`)?.value||'';
+    const obj = {nome:g('bc-ep-nome'),nivel:r('bc-ep-nivel'),tipo:r('bc-ep-tipo'),preco:g('bc-ep-preco'),formato:g('bc-ep-formato'),descricao:g('bc-ep-desc'),transformacao:g('bc-ep-transf'),objecoes:g('bc-ep-obj'),gatilhos:g('bc-ep-gatilhos')};
+    await db.from('informacoes_cliente').update({conteudo:JSON.stringify(obj),titulo:obj.nome}).eq('id',id);
+    this._showToast('Produto salvo ✓');
+    this._bcEsteira(this._cliCurrentId,this._cliClienteData);
+  },
+
+  /* ─── ARQUIVOS BRAND CORE ─── */
+  async _bcArquivos(id, c) {
+    const content = document.getElementById('cli-tab-content');
+    const { data: arqs } = await db.from('arquivos_cliente')
+      .select('*').eq('client_email', c.email+'__bc').order('created_at',{ascending:false});
+    const { data: arqsNorm } = await db.from('arquivos_cliente')
+      .select('*').eq('client_email', c.email).order('created_at',{ascending:false});
+    const todos = [...(arqs||[]),...(arqsNorm||[])];
+    content.innerHTML = `
+      <div style="max-width:700px;">
+        ${this._bcHeader('Arquivos do Brand Core','▤',id,c)}
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+          <input id="bc-arq-nome" placeholder="Nome do arquivo/documento" style="flex:2;min-width:180px;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);" />
+          <input id="bc-arq-url" placeholder="URL do arquivo / Google Drive / Figma" style="flex:3;min-width:220px;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);" />
+          <button onclick="Admin._bcAddArquivo('${c.email}')" style="padding:9px 16px;border-radius:9px;background:var(--brown);color:#fff;border:none;cursor:pointer;font-size:12px;white-space:nowrap;">+ Adicionar</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${todos.map(a => `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);">
+              <span style="font-size:20px;">📄</span>
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:500;color:var(--text);">${a.nome}</div>
+                <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:350px;">${a.url}</div>
+              </div>
+              <a href="${a.url}" target="_blank" style="font-size:11px;padding:5px 12px;border-radius:7px;background:var(--beige);border:1px solid var(--border);color:var(--text);text-decoration:none;">Abrir →</a>
+              <button onclick="Admin._bcDelArquivo(${a.id},'${c.email}')" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--muted);">×</button>
+            </div>`).join('')}
+          ${!todos.length ? `<div style="text-align:center;padding:40px;color:var(--muted);font-style:italic;font-size:13px;">Nenhum arquivo adicionado ainda</div>` : ''}
+        </div>
+      </div>`;
+  },
+
+  async _bcAddArquivo(email) {
+    const nome = document.getElementById('bc-arq-nome')?.value.trim();
+    const url = document.getElementById('bc-arq-url')?.value.trim();
+    if (!nome || !url) { alert('Preencha nome e URL'); return; }
+    await db.from('arquivos_cliente').insert([{client_email: email, nome, url, uploader:'admin'}]);
+    this._bcArquivos(this._cliCurrentId,this._cliClienteData);
+  },
+
+  async _bcDelArquivo(id, email) {
+    if (!confirm('Excluir este arquivo?')) return;
+    await db.from('arquivos_cliente').delete().eq('id',id);
+    this._bcArquivos(this._cliCurrentId,this._cliClienteData);
+  },
+
+  _showToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:linear-gradient(135deg,#B8820A,#E8B84B);color:#1A1400;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(184,130,10,0.3);font-family:Poppins,sans-serif;';
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),2500);
+  },
+  /* ===== END BRAND CORE ===== */
 
   async _addArquivo(email) {
     const nome = document.getElementById('arq-nome')?.value.trim();
