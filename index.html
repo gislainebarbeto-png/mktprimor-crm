@@ -1958,12 +1958,9 @@ const Admin = {
   },
 
   async openPost(id) {
-    let p = this.posts.find(x=>x.id===id);
-    if (!p) {
-      const { data } = await db.from('posts').select('*').eq('id', id).single();
-      if (!data) return;
-      p = data;
-    }
+    const { data: fresh } = await db.from('posts').select('*').eq('id', id).single();
+    if (!fresh) { const cached = this.posts.find(x=>x.id===id); if (!cached) return; }
+    const p = fresh || this.posts.find(x=>x.id===id);
     const SM = {criacao:{l:'Aprovar',c:'#92400E'},revisao:{l:'Revisar',c:'#9A3412'},aprovado:{l:'Aprovado',c:'#14532D'},publicado:{l:'Publicado',c:'#1E3A8A'}};
     const m = SM[p.status]||SM.criacao;
     const postMedia = this._parsePostMedia(p.midia_urls || p.img_url);
@@ -4519,12 +4516,9 @@ const Admin = {
 
   _editPostId: null,
   async editarPost(id) {
-    let p = this.posts.find(x=>x.id===id);
-    if (!p) {
-      const { data } = await db.from('posts').select('*').eq('id', id).single();
-      if (!data) return;
-      p = data;
-    }
+    const { data: fresh } = await db.from('posts').select('*').eq('id', id).single();
+    if (!fresh) { const cached = this.posts.find(x=>x.id===id); if (!cached) return; }
+    const p = fresh || this.posts.find(x=>x.id===id);
     await this.abrirModalPost();
     this._editPostId = id;
     // Pre-fill fields
