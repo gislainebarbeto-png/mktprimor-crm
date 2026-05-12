@@ -2269,10 +2269,10 @@ const Admin = {
       </div>
 
       <!-- TABS -->
-      <div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:20px;" id="cli-tabs">
-        ${['posts','arquivos','tarefas','chat','info'].map((t,i) => {
-          const labels = {posts:'📅 Posts',arquivos:'📁 Arquivos',tarefas:'✅ Tarefas',chat:'💬 Chat',info:'⚙ Info'};
-          return `<button onclick="Admin._cliTab('${t}',${id})" id="clitab-${t}" style="padding:9px 16px;font-size:12px;border:none;background:none;cursor:pointer;border-bottom:2px solid ${i===0?'var(--copper)':'transparent'};color:${i===0?'var(--copper)':'var(--muted)'};transition:all .15s;font-family:Poppins,sans-serif;">${labels[t]}</button>`;
+      <div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;" id="cli-tabs">
+        ${['feed','posts','arquivos','tarefas','chat','info'].map((t,i) => {
+          const labels = {feed:'▦ Feed',posts:'◫ Posts',arquivos:'▤ Arquivos',tarefas:'✓ Tarefas',chat:'◷ Chat',info:'⚙ Info'};
+          return `<button onclick="Admin._cliTab('${t}',${id})" id="clitab-${t}" style="padding:9px 16px;font-size:12px;border:none;background:none;cursor:pointer;border-bottom:2px solid ${i===0?'var(--copper)':'transparent'};color:${i===0?'var(--copper)':'var(--muted)'};transition:all .15s;font-family:Poppins,sans-serif;white-space:nowrap;">${labels[t]}</button>`;
         }).join('')}
       </div>
 
@@ -2281,8 +2281,7 @@ const Admin = {
 
     this._cliCurrentId = id;
     this._cliClienteData = c;
-    // Carrega a primeira aba
-    this._cliTab('posts', id);
+    this._cliTab('feed', id);
   },
 
   _cliCurrentId: null,
@@ -2291,8 +2290,7 @@ const Admin = {
   _cliTab(tab, id) {
     id = id || this._cliCurrentId;
     const c = this._cliClienteData;
-    // Update tab styles
-    ['posts','arquivos','tarefas','chat','info'].forEach(t => {
+    ['feed','posts','arquivos','tarefas','chat','info'].forEach(t => {
       const el = document.getElementById('clitab-'+t);
       if (!el) return;
       el.style.borderBottomColor = t===tab ? 'var(--copper)' : 'transparent';
@@ -2300,7 +2298,8 @@ const Admin = {
     });
     const content = document.getElementById('cli-tab-content');
     if (!content) return;
-    if (tab==='posts') this._cliTabPosts(id, c);
+    if (tab==='feed')     this._cliTabFeed(id, c);
+    else if (tab==='posts') this._cliTabPosts(id, c);
     else if (tab==='arquivos') this._cliTabArquivos(id, c);
     else if (tab==='tarefas') this._cliTabTarefas(id, c);
     else if (tab==='chat') this._cliTabChat(id, c);
@@ -2391,6 +2390,153 @@ const Admin = {
       <div style="font-size:32px;margin-bottom:12px;">💬</div>
       <button onclick="Admin.tab('chat')" style="font-size:13px;color:var(--copper);background:none;border:1px solid rgba(201,162,39,.3);padding:10px 20px;border-radius:10px;cursor:pointer;">Abrir Chat Completo →</button>
     </div>`;
+  },
+
+  async _cliTabFeed(id, c) {
+    const content = document.getElementById('cli-tab-content');
+    content.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:20px 0;">Carregando feed…</div>`;
+
+    const { data: posts } = await db.from('posts').select('*').eq('client_email', c.email).order('data_post',{ascending:false});
+    if (!content) return;
+
+    const allPosts = posts || [];
+    // Helper to get the best image URL for a post
+    const getImg = (p) => {
+      if (p.capa_url) return p.capa_url;
+      if (p.midia_urls) { try { const a = JSON.parse(p.midia_urls); if (Array.isArray(a) && a[0]) return a[0]; } catch{} }
+      if (p.img_url) { try { const a = JSON.parse(p.img_url); if (Array.isArray(a) && a[0]) return a[0]; return p.img_url; } catch{ return p.img_url; } }
+      return '';
+    };
+    const SM = {
+      criacao:  {dot:'#f6d12d',bc:'#fffae6'},
+      rascunho: {dot:'#f6d12d',bc:'#fffae6'},
+      revisao:  {dot:'#ffa14e',bc:'#fdf1e7'},
+      aprovado: {dot:'#41ff72',bc:'#e9f9ee'},
+      publicado:{dot:'#8688ff',bc:'#e7e6f5'},
+    };
+    const gradients = ['linear-gradient(135deg,#C9A800,#8B7200)','linear-gradient(135deg,#B5A0C8,#7B5EA7)','linear-gradient(135deg,#A8C5DA,#5B8FA8)','linear-gradient(135deg,#F0C27F,#C97B3A)'];
+    const grad = c.capa_cor || gradients[id % gradients.length];
+    const coverStyle = c.capa_url ? `url('${c.capa_url}') center/cover no-repeat` : grad;
+
+    // Build grid cells
+    const cells = allPosts.map((p, idx) => {
+      const img = getImg(p);
+      const sm = SM[p.status||'criacao'] || SM.criacao;
+      const dateStr = p.data_post ? new Date(p.data_post+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}) : 'Sem data';
+      const bg = img
+        ? `url('${img}') center/cover no-repeat`
+        : sm.bc;
+      return `
+        <div class="feed-cell" data-pid="${p.id}" data-date="${p.data_post||''}" data-idx="${idx}"
+          draggable="true"
+          ondragstart="Admin._feedDragStart(event,this)"
+          ondragover="event.preventDefault();this.classList.add('feed-drag-over')"
+          ondragleave="this.classList.remove('feed-drag-over')"
+          ondrop="Admin._feedDrop(event,this,'${c.email}')"
+          ondragend="document.querySelectorAll('.feed-cell').forEach(el=>el.classList.remove('feed-drag-over'))"
+          onclick="Admin.openPost(${p.id})"
+          style="background:${bg};aspect-ratio:1/1;position:relative;cursor:pointer;overflow:hidden;border-radius:2px;">
+          ${!img ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;"><span style="font-size:10px;color:${sm.dot};font-weight:600;text-align:center;padding:4px 6px;">${(p.legenda||p.tema_titulo||'Post').replace(/<[^>]*>/g,'').slice(0,30)}</span></div>` : ''}
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.55) 0%,transparent 50%);opacity:0;transition:opacity .2s;" class="feed-overlay"></div>
+          <div style="position:absolute;bottom:0;left:0;right:0;padding:6px 7px;opacity:0;transition:opacity .2s;" class="feed-meta">
+            <div style="font-size:9px;color:#fff;font-weight:500;">${dateStr}</div>
+          </div>
+          <div style="position:absolute;top:5px;left:5px;width:8px;height:8px;border-radius:50%;background:${sm.dot};box-shadow:0 0 0 2px rgba(0,0,0,0.3);"></div>
+          <div style="position:absolute;top:5px;right:5px;font-size:10px;color:rgba(255,255,255,0.7);cursor:grab;">⠿</div>
+        </div>`;
+    }).join('');
+
+    const emptySlots = (3 - (allPosts.length % 3)) % 3;
+    const empties = Array(emptySlots).fill('<div style="aspect-ratio:1/1;background:var(--beige);border-radius:2px;opacity:0.3;"></div>').join('');
+
+    content.innerHTML = `
+      <style>
+        .feed-preview-wrap{max-width:400px;margin:0 auto;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh2);}
+        .feed-header{height:120px;background:${coverStyle};position:relative;}
+        .feed-avatar-row{display:flex;align-items:flex-end;gap:14px;padding:0 16px 14px;margin-top:-36px;}
+        .feed-avatar{width:72px;height:72px;border-radius:50%;border:3px solid var(--surface);overflow:hidden;flex-shrink:0;object-fit:cover;}
+        .feed-avatar-ph{width:72px;height:72px;border-radius:50%;border:3px solid var(--surface);background:${grad};display:flex;align-items:center;justify-content:center;font-size:26px;font-family:'Cormorant Garamond',serif;color:#fff;flex-shrink:0;}
+        .feed-info{flex:1;padding-top:8px;}
+        .feed-name{font-size:14px;font-weight:600;color:var(--text);}
+        .feed-ig{font-size:11px;color:var(--muted);}
+        .feed-stats-row{display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+        .feed-stat{flex:1;text-align:center;padding:10px 0;}
+        .feed-stat-n{font-size:15px;font-weight:700;color:var(--text);font-family:'Cormorant Garamond',serif;}
+        .feed-stat-l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+        .feed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--beige);}
+        .feed-cell:hover .feed-overlay,.feed-cell:hover .feed-meta{opacity:1!important;}
+        .feed-cell{transition:transform .15s;cursor:grab!important;}
+        .feed-cell:active{cursor:grabbing!important;transform:scale(0.97);}
+        .feed-drag-over{outline:3px solid var(--copper)!important;outline-offset:-3px;}
+        .feed-hint{font-size:10px;color:var(--muted);text-align:center;padding:10px;border-top:1px solid var(--border);}
+      </style>
+      <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:11px;color:var(--muted);">Arraste os posts para reordenar · clique para abrir</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#f6d12d;display:inline-block;"></span><span style="font-size:10px;color:var(--muted);">Criação</span>
+          <span style="width:8px;height:8px;border-radius:50%;background:#ffa14e;display:inline-block;margin-left:6px;"></span><span style="font-size:10px;color:var(--muted);">Revisão</span>
+          <span style="width:8px;height:8px;border-radius:50%;background:#41ff72;display:inline-block;margin-left:6px;"></span><span style="font-size:10px;color:var(--muted);">Aprovado</span>
+          <span style="width:8px;height:8px;border-radius:50%;background:#8688ff;display:inline-block;margin-left:6px;"></span><span style="font-size:10px;color:var(--muted);">Publicado</span>
+        </div>
+      </div>
+      <div class="feed-preview-wrap">
+        <div class="feed-header"></div>
+        <div style="background:var(--surface);padding-bottom:4px;">
+          <div class="feed-avatar-row">
+            ${c.foto_url
+              ? `<img class="feed-avatar" src="${c.foto_url}" alt="${c.nome}"/>`
+              : `<div class="feed-avatar-ph">${(c.nome||'?')[0].toUpperCase()}</div>`}
+            <div class="feed-info">
+              <div class="feed-name">${c.nome||'—'}</div>
+              <div class="feed-ig">${c.instagram ? '@'+c.instagram.replace('@','') : ''}</div>
+            </div>
+          </div>
+          <div class="feed-stats-row">
+            <div class="feed-stat"><div class="feed-stat-n">${allPosts.length}</div><div class="feed-stat-l">posts</div></div>
+            <div class="feed-stat"><div class="feed-stat-n">${allPosts.filter(p=>p.status==='aprovado').length}</div><div class="feed-stat-l">aprovados</div></div>
+            <div class="feed-stat"><div class="feed-stat-n">${allPosts.filter(p=>p.status==='publicado').length}</div><div class="feed-stat-l">publicados</div></div>
+          </div>
+        </div>
+        ${allPosts.length
+          ? `<div class="feed-grid">${cells}${empties}</div>`
+          : `<div style="padding:40px;text-align:center;color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:16px;">Nenhum post criado ainda ✦</div>`}
+        <div class="feed-hint">⠿ arraste para reordenar — as datas são trocadas automaticamente</div>
+      </div>`;
+  },
+
+  _feedDragStart(e, el) {
+    this._feedDragId = el.dataset.pid;
+    this._feedDragDate = el.dataset.date;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', el.dataset.pid);
+    setTimeout(() => el.style.opacity = '0.45', 0);
+  },
+
+  async _feedDrop(e, el, email) {
+    e.preventDefault();
+    el.classList.remove('feed-drag-over');
+    document.querySelectorAll('.feed-cell').forEach(c => c.style.opacity = '1');
+    const fromId = this._feedDragId;
+    const fromDate = this._feedDragDate;
+    const toId = el.dataset.pid;
+    const toDate = el.dataset.date;
+    if (!fromId || fromId === toId) return;
+
+    this.loader(true);
+    try {
+      // Swap the data_post dates between the two posts
+      const dateA = fromDate || null;
+      const dateB = toDate || null;
+      await Promise.all([
+        db.from('posts').update({data_post: dateB}).eq('id', fromId),
+        db.from('posts').update({data_post: dateA}).eq('id', toId),
+      ]);
+    } catch(err) { console.error(err); }
+    this.loader(false);
+    this._feedDragId = null;
+    this._feedDragDate = null;
+    // Reload feed
+    this._cliTabFeed(this._cliCurrentId, this._cliClienteData);
   },
 
   _cliTabInfo(id, c) {
