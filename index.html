@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="Logo.png">
   <link rel="apple-touch-icon" href="Logo.png">
-  <meta name="theme-color" content="#4B2D22">
+  <meta name="theme-color" content="#7A5C00">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -24,16 +24,16 @@
     :root {
       --bg:      #FFFFFF;
       --surface: #FFFFFF;
-      --beige:   #F2EEEA;
-      --brown:   #4B2D22;
-      --brown2:  #6B3E28;
-      --copper:  #C4967A;
-      --text:    #2C1810;
-      --muted:   #786C60;
-      --border:  #E2D4C0;
+      --beige:   #FAFAF0;
+      --brown:   #7A5C00;
+      --brown2:  #9B7500;
+      --copper:  #C9A800;
+      --text:    #111111;
+      --muted:   #666666;
+      --border:  #E8E0C0;
       --r:       12px;
-      --sh:      0 4px 20px rgba(44,37,32,0.06);
-      --sh2:     0 12px 40px rgba(44,37,32,0.12);
+      --sh:      0 4px 20px rgba(10,10,0,0.06);
+      --sh2:     0 12px 40px rgba(10,10,0,0.12);
     }
     /* Light mode — garante contraste em inputs, selects e textareas */
     input, textarea, select {
@@ -45,13 +45,13 @@
     html.dark {
       --bg:      #000000;
       --surface: #0a0a0a;
-      --beige:   #0f0a08;
-      --brown:   #F1C5AF;
-      --brown2:  #D4A882;
-      --copper:  #F1C5AF;
-      --text:    #F5EDD8;
-      --muted:   #B8A090;
-      --border:  #3a2820;
+      --beige:   #0D0D00;
+      --brown:   #D4AF37;
+      --brown2:  #C9A800;
+      --copper:  #D4AF37;
+      --text:    #F5F5F5;
+      --muted:   #AAAAAA;
+      --border:  #2A2200;
       --sh:      0 4px 24px rgba(0,0,0,.6);
       --sh2:     0 12px 48px rgba(0,0,0,.8);
     }
@@ -62,8 +62,8 @@
     html.dark #client-view {
       background-color:#000000;
       background-image:
-        linear-gradient(rgba(73,54,47,0.18) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(73,54,47,0.18) 1px, transparent 1px);
+        linear-gradient(rgba(45,37,0,0.18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(45,37,0,0.18) 1px, transparent 1px);
       background-size: 40px 40px, 40px 40px;
     }
 
@@ -73,31 +73,31 @@
       content:'';
       position:fixed;top:-80px;left:50%;transform:translateX(-50%);
       width:700px;height:500px;
-      background:radial-gradient(ellipse, rgba(212,168,130,0.18) 0%, rgba(73,54,47,0.08) 40%, transparent 70%);
+      background:radial-gradient(ellipse, rgba(212,175,55,0.18) 0%, rgba(45,37,0,0.08) 40%, transparent 70%);
       pointer-events:none;z-index:0;
     }
 
-    html.dark .login-box{background:rgba(17,13,10,0.95);border:1px solid #49362F;backdrop-filter:blur(12px);}
-    html.dark .app-header{background:rgba(10,8,6,0.85);backdrop-filter:blur(12px);border-bottom:1px solid #49362F;}
+    html.dark .login-box{background:rgba(8,8,2,0.95);border:1px solid #2D2500;backdrop-filter:blur(12px);}
+    html.dark .app-header{background:rgba(5,5,1,0.85);backdrop-filter:blur(12px);border-bottom:1px solid #2D2500;}
     html.dark .admin-main,html.dark .client-main{background:transparent!important;}
     html.dark .client-main *:not(button):not(input):not(textarea):not(select):not(.badge-aprovado):not(.badge-revisao):not(.badge-criacao):not(.badge-publicado){color:var(--text);}
-    html.dark .client-main .muted, html.dark .client-main [style*='color:var(--muted)']{color:#B8A090!important;}
+    html.dark .client-main .muted, html.dark .client-main [style*='color:var(--muted)']{color:#AAAAAA!important;}
 
     /* Sidebar glass */
     html.dark .sidebar{
-      background:rgba(17,13,10,0.85);
+      background:rgba(8,8,2,0.85);
       backdrop-filter:blur(16px);
-      border-right:1px solid #49362F;
+      border-right:1px solid #2D2500;
     }
-    html.dark .nav-item{color:#C4A882;}
-    html.dark .nav-item:hover{background:rgba(73,54,47,0.25);color:#F1C5AF;}
+    html.dark .nav-item{color:#BFA030;}
+    html.dark .nav-item:hover{background:rgba(45,37,0,0.25);color:#D4AF37;}
     html.dark .nav-item.active{
-      background:rgba(73,54,47,0.35);
-      color:#F1C5AF;
-      border-left:2px solid #F1C5AF;
+      background:rgba(45,37,0,0.35);
+      color:#D4AF37;
+      border-left:2px solid #D4AF37;
     }
-    html.dark .nav-section{color:#9B8472;opacity:1;}
-    html.dark .section-title{color:#F1C5AF!important;}
+    html.dark .nav-section{color:#AA9030;opacity:1;}
+    html.dark .section-title{color:#D4AF37!important;}
 
     /* Glass cards — vidro com borda degradê marrom→bege */
     html.dark .stat-card,
@@ -111,13 +111,13 @@
     html.dark .ajuste-box,
     html.dark .welcome-banner,
     html.dark .progress-wrap {
-      background: rgba(20,12,8,0.55) !important;
+      background: rgba(10,10,2,0.55) !important;
       backdrop-filter: blur(14px) !important;
       -webkit-backdrop-filter: blur(14px) !important;
-      border: 1px solid rgba(73,54,47,0.6) !important;
+      border: 1px solid rgba(45,37,0,0.6) !important;
       box-shadow:
-        inset 0 1px 0 rgba(241,197,175,0.18),
-        inset 0 -1px 0 rgba(73,54,47,0.3),
+        inset 0 1px 0 rgba(212,175,55,0.18),
+        inset 0 -1px 0 rgba(45,37,0,0.3),
         0 4px 24px rgba(0,0,0,0.4) !important;
       color: var(--text) !important;
     }
@@ -126,23 +126,23 @@
 
     /* ── DARK MODE CALENDAR CELLS ── */
     html.dark .cal-cell {
-      background: linear-gradient(155deg, rgba(22,14,10,0.92) 0%, rgba(12,8,6,0.88) 100%) !important;
-      border-color: rgba(73,54,47,0.7) !important;
-      box-shadow: inset 0 1px 0 rgba(241,197,175,0.07), 0 1px 4px rgba(0,0,0,0.4) !important;
+      background: linear-gradient(155deg, rgba(10,10,2,0.92) 0%, rgba(7,6,1,0.88) 100%) !important;
+      border-color: rgba(45,37,0,0.7) !important;
+      box-shadow: inset 0 1px 0 rgba(212,175,55,0.07), 0 1px 4px rgba(0,0,0,0.4) !important;
     }
     html.dark .cal-cell:hover {
-      border-color: rgba(196,150,122,0.6) !important;
-      box-shadow: inset 0 1px 0 rgba(241,197,175,0.12), 0 3px 12px rgba(0,0,0,0.5) !important;
+      border-color: rgba(201,162,39,0.6) !important;
+      box-shadow: inset 0 1px 0 rgba(212,175,55,0.12), 0 3px 12px rgba(0,0,0,0.5) !important;
     }
     html.dark .cal-cell.today {
-      background: linear-gradient(155deg, rgba(44,26,14,0.95) 0%, rgba(30,16,8,0.9) 100%) !important;
-      border-color: rgba(196,150,122,0.8) !important;
+      background: linear-gradient(155deg, rgba(22,18,0,0.95) 0%, rgba(16,13,0,0.9) 100%) !important;
+      border-color: rgba(201,162,39,0.8) !important;
     }
     html.dark .cal-cell.outro-mes { opacity: 0.2 !important; }
-    html.dark .cal-day-num { color: #9B8472 !important; }
-    html.dark .cal-cell.today .cal-day-num { color: #F1C5AF !important; }
-    html.dark .cal-add-btn { color: #C4967A !important; }
-    html.dark .cal-head-day { color: #7A6358 !important; }
+    html.dark .cal-day-num { color: #AA9940 !important; }
+    html.dark .cal-cell.today .cal-day-num { color: #D4AF37 !important; }
+    html.dark .cal-add-btn { color: #D4AF37 !important; }
+    html.dark .cal-head-day { color: #887730 !important; }
 
     /* ── DARK MODE CHIPS — bg e texto idênticos ao light mode ── */
     html.dark .pchip-st-criacao,
@@ -175,43 +175,43 @@
 
     /* Task modal glass */
     html.dark .task-modal {
-      background: rgba(17,13,10,0.92) !important;
+      background: rgba(8,8,2,0.92) !important;
       backdrop-filter: blur(20px);
-      box-shadow: 0 0 0 1px #49362F, inset 0 1px 0 rgba(241,197,175,0.12), 0 24px 64px rgba(0,0,0,.8) !important;
+      box-shadow: 0 0 0 1px #2D2500, inset 0 1px 0 rgba(212,175,55,0.12), 0 24px 64px rgba(0,0,0,.8) !important;
       border: none !important;
     }
     html.dark .task-modal-overlay{background:rgba(0,0,0,.75)!important;}
     html.dark .task-modal label,html.dark .task-modal span,html.dark .task-modal p,html.dark .task-modal div{color:inherit;}
-    html.dark .task-section-lbl{color:#9B8472!important;}
+    html.dark .task-section-lbl{color:#AA9030!important;}
 
     /* Inputs */
     html.dark input,html.dark textarea,html.dark select{
-      background:rgba(73,54,47,0.2)!important;
+      background:rgba(45,37,0,0.2)!important;
       color:var(--text)!important;
-      border-color:#49362F!important;
+      border-color:#2D2500!important;
     }
     html.dark input:focus,html.dark textarea:focus,html.dark select:focus{
-      border-color:#F1C5AF!important;
-      background:rgba(73,54,47,0.3)!important;
+      border-color:#D4AF37!important;
+      background:rgba(45,37,0,0.3)!important;
     }
 
     /* Gradient border on proj cards */
     html.dark .proj-card {
       position:relative;
-      background:rgba(30,18,12,0.7)!important;
+      background:rgba(15,14,0,0.7)!important;
     }
 
     /* Table rows */
-    html.dark .table-row{border-bottom:1px solid rgba(73,54,47,0.4)!important;}
-    html.dark .table-row:hover{background:rgba(73,54,47,0.2)!important;}
+    html.dark .table-row{border-bottom:1px solid rgba(45,37,0,0.4)!important;}
+    html.dark .table-row:hover{background:rgba(45,37,0,0.2)!important;}
 
     /* Day cols */
-    html.dark .day-col-head{background:rgba(73,54,47,0.3)!important;}
-    html.dark .day-col-head.dark{background:rgba(75,45,34,0.5)!important;}
-    html.dark .day-col textarea{background:rgba(73,54,47,0.1)!important;color:var(--text)!important;}
+    html.dark .day-col-head{background:rgba(45,37,0,0.3)!important;}
+    html.dark .day-col-head.dark{background:rgba(45,35,0,0.5)!important;}
+    html.dark .day-col textarea{background:rgba(45,37,0,0.1)!important;color:var(--text)!important;}
 
     /* CPA header */
-    html.dark .cpa-header{background:linear-gradient(135deg,rgba(58,36,24,0.8) 0%,rgba(90,56,34,0.8) 100%)!important;backdrop-filter:blur(8px);}
+    html.dark .cpa-header{background:linear-gradient(135deg,rgba(35,28,0,0.8) 0%,rgba(55,44,0,0.8) 100%)!important;backdrop-filter:blur(8px);}
 
     /* Badges */
     html.dark .pbadge.pendente{background:rgba(255,193,7,0.15);color:#FFD54F;border:1px solid rgba(255,193,7,0.3);}
@@ -223,9 +223,9 @@
     /* Scrollbar */
     html.dark ::-webkit-scrollbar{width:4px;height:4px;}
     html.dark ::-webkit-scrollbar-track{background:transparent;}
-    html.dark ::-webkit-scrollbar-thumb{background:#49362F;border-radius:4px;}
+    html.dark ::-webkit-scrollbar-thumb{background:#2D2500;border-radius:4px;}
     /* Elementos com fundo branco hardcoded */
-    html.dark .ig-inline{background:#0a0a0a!important;border-color:#3a2820!important;}
+    html.dark .ig-inline{background:#0a0a0a!important;border-color:#1A1500!important;}
     html.dark .ig-phone{background:#0a0a0a!important;}
     html.dark .ig-uname,html.dark .ig-profile-uname{color:var(--text)!important;}
     html.dark input:focus,html.dark textarea:focus,html.dark select:focus{background:var(--surface)!important;}
@@ -234,6 +234,21 @@
     html.dark h1,html.dark h2,html.dark h3{color:var(--text);}
     html.dark .client-main h2{color:var(--brown);}
     html.dark p,html.dark span,html.dark div,html.dark td,html.dark li{color:inherit;}
+    /* Client stat boxes legibility in dark mode */
+    html.dark .cli-stat { color: var(--text) !important; filter: brightness(1.8) saturate(0.6); }
+    /* Financial badges dark mode */
+    html.dark .fin-pago { background: rgba(76,175,80,0.15) !important; color: #81C784 !important; }
+    html.dark .fin-pendente { background: rgba(255,152,0,0.15) !important; color: #FFB74D !important; }
+    html.dark .fin-atrasado { background: rgba(244,67,54,0.15) !important; color: #EF9A9A !important; }
+    /* Detail panel fields */
+    html.dark .dp-val { background: var(--surface) !important; color: var(--text) !important; }
+    html.dark .dp-lbl { color: var(--muted) !important; }
+    /* Nav badge gold */
+    html.dark .nav-badge { background: rgba(212,175,55,0.15); color: #D4AF37; }
+    /* Table head dark */
+    html.dark .table-head { background: rgba(45,37,0,0.3) !important; }
+    /* Unread dot */
+    html.dark .unread-dot { background: #D4AF37; }
     /* Theme switcher */
     .theme-switcher{display:flex;background:var(--beige);border-radius:20px;padding:2px;gap:1px;}
     .theme-btn{background:transparent;border:none;border-radius:16px;padding:5px 8px;font-size:13px;cursor:pointer;color:var(--muted);transition:all .2s;line-height:1;}
@@ -248,7 +263,7 @@
     @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
     /* LOADER */
-    #loader{position:fixed;inset:0;background:rgba(247,242,234,.88);backdrop-filter:blur(4px);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    #loader{position:fixed;inset:0;background:rgba(255,255,240,.88);backdrop-filter:blur(4px);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;}
     .spinner{width:34px;height:34px;border:2px solid var(--border);border-top-color:var(--copper);border-radius:50%;animation:spin 1s linear infinite;}
     #loader p{margin-top:12px;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:17px;color:var(--brown);}
 
@@ -263,12 +278,12 @@
     .field label{display:block;font-size:10px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;}
     .field input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);transition:all .2s;}
     .field input:focus{border-color:var(--copper);background:#fff;}
-    .btn-login{width:100%;margin-top:6px;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:11px;font-weight:300;letter-spacing:.12em;text-transform:uppercase;box-shadow:0 6px 24px rgba(75,45,34,.3);}
-    .btn-login:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(75,45,34,.4);}
+    .btn-login{width:100%;margin-top:6px;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:11px;font-weight:300;letter-spacing:.12em;text-transform:uppercase;box-shadow:0 6px 24px rgba(45,35,0,.3);}
+    .btn-login:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(45,35,0,.4);}
     .login-error{display:none;margin-top:12px;padding:10px 14px;background:#FFF0F0;border:1px solid #FFCDD2;border-radius:8px;color:#C62828;font-size:12px;text-align:left;}
 
     /* ── SHARED HEADER ── */
-    .app-header{background:var(--surface);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);box-shadow:0 2px 12px rgba(44,37,32,.04);}
+    .app-header{background:var(--surface);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);box-shadow:0 2px 12px rgba(10,10,0,.04);}
     .header-logo img{height:38px;object-fit:contain;}
     html.dark .header-logo img{filter:brightness(1.8) saturate(0.7);}
     .header-logo span{display:block;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--copper);margin-top:3px;}
@@ -288,7 +303,7 @@
     .nav-item.active{background:var(--beige);color:var(--brown);font-weight:400;}
     .ni{font-size:14px;line-height:1;}
     .nl{font-size:12px;}
-    .nav-badge{margin-left:auto;background:rgba(196,150,122,.15);color:var(--copper);font-size:9px;padding:1px 7px;border-radius:8px;}
+    .nav-badge{margin-left:auto;background:rgba(201,162,39,.15);color:var(--copper);font-size:9px;padding:1px 7px;border-radius:8px;}
     .nav-section{font-size:9px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;padding:14px 11px 6px;opacity:.6;}
 
     /* Main content */
@@ -314,8 +329,8 @@
     .col-sub{font-size:11px;color:var(--muted);}
     .col-tag{font-size:10px;padding:3px 9px;border-radius:8px;white-space:nowrap;}
     .col-date{font-size:10px;color:var(--muted);white-space:nowrap;}
-    .tag-novo{background:rgba(196,150,122,.1);color:var(--copper);}
-    .tag-contato{background:rgba(75,45,34,.08);color:var(--brown);}
+    .tag-novo{background:rgba(201,162,39,.1);color:var(--copper);}
+    .tag-contato{background:rgba(45,35,0,.08);color:var(--brown);}
     .tag-proposta{background:#FFF3E0;color:#E65100;}
     .tag-fechado{background:#E8F5E9;color:#2E7D32;}
     .tag-perdido{background:#ECEFF1;color:#455A64;}
@@ -329,7 +344,7 @@
     .fu-msg-box{margin-top:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
     .fu-msg-lbl{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between;}
     .fu-msg-text{font-size:12px;color:var(--muted);line-height:1.7;white-space:pre-line;}
-    .btn-copy{padding:3px 9px;border-radius:6px;background:rgba(196,150,122,.1);border:1px solid rgba(196,150,122,.2);color:var(--copper);font-size:9px;}
+    .btn-copy{padding:3px 9px;border-radius:6px;background:rgba(201,162,39,.1);border:1px solid rgba(201,162,39,.2);color:var(--copper);font-size:9px;}
     .btn-done{padding:5px 12px;border-radius:7px;background:#E8F5E9;border:1px solid rgba(46,125,50,.2);color:#2E7D32;font-size:10px;white-space:nowrap;}
     .urg-label{display:flex;align-items:center;gap:7px;margin-bottom:10px;margin-top:18px;}
     .urg-dot{width:5px;height:5px;border-radius:50%;}
@@ -363,13 +378,13 @@
     .dp-title{font-size:19px;font-style:italic;color:var(--brown);margin-bottom:14px;}
     .dp-field{margin-bottom:12px;}
     .dp-lbl{font-size:9px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px;}
-    .dp-val{font-size:12px;color:var(--text);background:#fff;padding:9px 11px;border-radius:8px;border:1px solid var(--border);line-height:1.7;white-space:pre-wrap;}
+    .dp-val{font-size:12px;color:var(--text);background:var(--surface);padding:9px 11px;border-radius:8px;border:1px solid var(--border);line-height:1.7;white-space:pre-wrap;}
     .dp-close{background:var(--bg);border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:7px;font-size:15px;display:flex;align-items:center;justify-content:center;}
     .btn-ok{width:100%;padding:10px;border-radius:9px;background:#E8F5E9;color:#2E7D32;border:1px solid rgba(46,125,50,.2);font-size:12px;margin-bottom:8px;}
     .btn-ok:hover{background:#C8E6C9;}
     .btn-soft-dp{width:100%;padding:9px;border-radius:9px;background:transparent;color:var(--muted);border:1px solid var(--border);font-size:12px;}
     .btn-soft-dp:hover{background:var(--bg);}
-    .btn-advance{width:100%;padding:10px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;margin-bottom:8px;}
+    .btn-advance{width:100%;padding:10px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;margin-bottom:8px;}
     .btn-wpp{width:100%;padding:9px;border-radius:9px;background:transparent;color:var(--brown);border:1px solid var(--border);font-size:12px;text-decoration:none;display:block;text-align:center;}
     .btn-wpp:hover{background:var(--bg);}
 
@@ -398,14 +413,14 @@
     .client-status-pill.revisar{background:rgba(249,115,22,0.15);color:#9A3412;border-color:#FED7AA;}
     .client-status-pill.producao{background:rgba(251,191,36,0.15);color:#92400E;border-color:#FDE68A;}
     .client-status-pill.publicado{background:rgba(59,130,246,0.15);color:#1E3A8A;border-color:#BFDBFE;}
-    .client-post-note{background:rgba(196,150,122,.08);border:1px solid rgba(196,150,122,.24);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:11px;color:var(--text);line-height:1.55;}
+    .client-post-note{background:rgba(201,162,39,.08);border:1px solid rgba(201,162,39,.24);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:11px;color:var(--text);line-height:1.55;}
     .client-post-note strong{display:block;font-size:9px;color:var(--copper);letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px;}
     .ig-inline{background:#fff;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh);position:sticky;top:20px;}
     .ig-inline-hd{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #efefef;}
     /* Client boards in admin */
     .client-board{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:20px;overflow:hidden;box-shadow:var(--sh);}
     .client-board-hd{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--border);background:var(--beige);}
-    .cb-av{width:36px;height:36px;border-radius:50%;object-fit:cover;background:rgba(196,150,122,.15);border:1px solid rgba(196,150,122,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;color:var(--copper);font-size:16px;overflow:hidden;}
+    .cb-av{width:36px;height:36px;border-radius:50%;object-fit:cover;background:rgba(201,162,39,.15);border:1px solid rgba(201,162,39,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;color:var(--copper);font-size:16px;overflow:hidden;}
     .cb-av img{width:100%;height:100%;object-fit:cover;}
     .cb-name{font-size:15px;font-style:italic;color:var(--brown);font-family:"Cormorant Garamond",serif;}
     .cb-sub{font-size:10px;color:var(--muted);}
@@ -458,17 +473,17 @@
     .mc-photo-prev{width:56px;height:56px;border-radius:50%;overflow:hidden;background:var(--beige);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--copper);}
     .mc-photo-prev img{width:100%;height:100%;object-fit:cover;display:none;}
     /* Client portal avatar */
-    .client-avatar{width:52px;height:52px;border-radius:50%;overflow:hidden;background:var(--beige);border:2px solid rgba(196,150,122,.3);display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:22px;color:var(--copper);flex-shrink:0;}
+    .client-avatar{width:52px;height:52px;border-radius:50%;overflow:hidden;background:var(--beige);border:2px solid rgba(201,162,39,.3);display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:22px;color:var(--copper);flex-shrink:0;}
     .client-avatar img{width:100%;height:100%;object-fit:cover;}
     .client-header-row{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
     /* ── WELCOME BANNER ── */
-    .welcome-banner{background:linear-gradient(135deg,var(--brown) 0%,var(--brown2) 100%);color:#F5EDD8;border-radius:var(--r);padding:20px 24px;margin-bottom:20px;}
+    .welcome-banner{background:linear-gradient(135deg,var(--brown) 0%,var(--brown2) 100%);color:#F5F5F5;border-radius:var(--r);padding:20px 24px;margin-bottom:20px;}
     .welcome-banner h3{font-family:"Cormorant Garamond",serif;font-size:22px;font-style:italic;font-weight:300;margin-bottom:4px;}
     .welcome-banner p{font-size:11px;opacity:.75;letter-spacing:.04em;}
     /* ── PROGRESS BAR ── */
     .progress-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:20px;}
     .cpa-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:20px;}
-    .cpa-header{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;cursor:pointer;user-select:none;background:linear-gradient(135deg,#4B2D22 0%,#7a4b2f 100%);color:#F5EDD8;}
+    .cpa-header{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;cursor:pointer;user-select:none;background:linear-gradient(135deg,#7A5C00 0%,#9B7500 100%);color:#F5F5F5;}
     .cpa-title{font-family:"Cormorant Garamond",serif;font-size:18px;font-style:italic;letter-spacing:.08em;}
     .cpa-chev{font-size:16px;transition:transform .3s;}
     .cpa-body{padding:20px;}
@@ -482,8 +497,8 @@
     .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
     .cal-dlbl{font-size:8px;color:var(--muted);text-align:center;padding:2px 0;text-transform:uppercase;letter-spacing:.05em;}
     .cal-day{min-height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text);position:relative;}
-    .cal-day.has-post{background:rgba(196,150,122,.18);color:var(--brown);cursor:pointer;font-weight:500;}
-    .cal-day.has-post:hover{background:rgba(196,150,122,.35);}
+    .cal-day.has-post{background:rgba(201,162,39,.18);color:var(--brown);cursor:pointer;font-weight:500;}
+    .cal-day.has-post:hover{background:rgba(201,162,39,.35);}
     .cal-day.st-aprovado{background:#E8F5E9;color:#2E7D32;}
     .cal-day.st-revisar{background:#FCE4EC;color:#AD1457;}
     .cal-day.st-producao{background:#FFF3E0;color:#E65100;}
@@ -503,7 +518,7 @@
     .next-post-sub{font-size:10px;color:var(--muted);margin-bottom:6px;}
     .next-post-cap{font-size:11px;color:var(--text);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
     /* ── GI MESSAGE ── */
-    .gi-msg-card{background:linear-gradient(135deg,var(--beige),#EED5B7);border:1px solid rgba(196,150,122,.3);border-radius:var(--r);padding:16px;margin-bottom:14px;}
+    .gi-msg-card{background:linear-gradient(135deg,var(--beige),#EED5B7);border:1px solid rgba(201,162,39,.3);border-radius:var(--r);padding:16px;margin-bottom:14px;}
     .gi-msg-lbl{font-size:9px;color:var(--copper);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;}
     .gi-msg-text{font-family:"Cormorant Garamond",serif;font-size:16px;font-style:italic;color:var(--brown);line-height:1.65;}
     .gi-msg-sig{font-size:10px;color:var(--muted);margin-top:8px;}
@@ -541,7 +556,7 @@
     /* ── TAREFAS ── */
     .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:20px;}
     .proj-card{border-radius:14px;overflow:hidden;background:var(--surface);border:1px solid var(--border);box-shadow:var(--sh);cursor:pointer;transition:transform .15s,box-shadow .15s;}
-    .proj-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(75,45,34,.12);}
+    .proj-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(45,35,0,.12);}
     .proj-cover{height:90px;position:relative;background:#E8E0F0;overflow:hidden;}
     .proj-cover img{width:100%;height:100%;object-fit:cover;pointer-events:none;}
     .proj-cover-pos{position:absolute;bottom:6px;right:6px;display:none;gap:4px;}
@@ -569,7 +584,7 @@
     .days-grid-row2{display:grid;grid-template-columns:1fr 1fr 2fr;gap:5px;margin-top:5px;}
     .day-col{border:1px solid var(--border);border-radius:8px;overflow:hidden;}
     .day-col-head{background:var(--beige);padding:5px 4px;text-align:center;font-size:10px;font-weight:500;letter-spacing:.07em;color:var(--brown);text-transform:uppercase;}
-    .day-col-head.dark{background:var(--brown);color:#F5EDD8;}
+    .day-col-head.dark{background:var(--brown);color:#F5F5F5;}
     .day-col textarea{width:100%;min-height:80px;border:none;padding:6px 8px;font-size:12px;resize:none;background:var(--bg);font-family:Poppins,sans-serif;line-height:1.5;box-sizing:border-box;}
     .day-col textarea:focus{outline:none;background:#fffdf9;}
     /* Checklist */
@@ -588,7 +603,7 @@
     .auto-tab.active{background:var(--beige);color:var(--brown);border-color:transparent;}
     .auto-post-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:all .18s;margin-bottom:8px;}
     .auto-post-item:hover{border-color:var(--copper);}
-    .auto-post-item.marked{background:rgba(196,150,122,.08);border-color:rgba(196,150,122,.4);}
+    .auto-post-item.marked{background:rgba(201,162,39,.08);border-color:rgba(196,150,122,.4);}
     /* ── MÉTRICAS ── */
     .met-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px;}
     .met-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
@@ -605,20 +620,20 @@
     .idea-titulo{font-size:15px;font-style:italic;font-family:"Cormorant Garamond",serif;color:var(--brown);margin-bottom:4px;}
     .idea-desc{font-size:11px;color:var(--muted);line-height:1.6;}
     .idea-meta{display:flex;align-items:center;gap:8px;margin-top:8px;}
-    .idea-ideia{font-size:10px;padding:2px 8px;border-radius:12px;background:rgba(196,150,122,.1);color:var(--copper);}
+    .idea-ideia{font-size:10px;padding:2px 8px;border-radius:12px;background:rgba(201,162,39,.1);color:var(--copper);}
     .idea-em_andamento{font-size:10px;padding:2px 8px;border-radius:12px;background:#FFF3E0;color:#E65100;}
     .idea-implementado{font-size:10px;padding:2px 8px;border-radius:12px;background:#E8F5E9;color:#2E7D32;}
     /* ── CHAT ── */
     .chat-wrap{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--surface);}
     .chat-msgs{height:380px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg);}
     .chat-bubble{max-width:72%;padding:10px 14px;border-radius:14px;font-size:12px;line-height:1.6;}
-    .chat-bubble.admin{background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;align-self:flex-end;border-bottom-right-radius:4px;}
+    .chat-bubble.admin{background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;align-self:flex-end;border-bottom-right-radius:4px;}
     .chat-bubble.client{background:var(--surface);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-bottom-left-radius:4px;}
     .chat-time{font-size:9px;opacity:.6;margin-top:4px;display:block;}
     .chat-input-row{display:flex;gap:10px;padding:12px 14px;border-top:1px solid var(--border);background:var(--surface);}
     .chat-input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-family:Poppins,sans-serif;font-size:12px;font-weight:300;background:var(--bg);resize:none;transition:border-color .2s;}
     .chat-input:focus{border-color:var(--copper);outline:none;background:#fff;}
-    .chat-send{padding:9px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;flex-shrink:0;}
+    .chat-send{padding:9px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;flex-shrink:0;}
     .chat-notif-hd{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;background:#FFEBEE;color:#C62828;font-size:11px;border:1px solid rgba(198,40,40,.2);cursor:pointer;margin-left:8px;font-weight:500;}
     /* ── STARS ── */
     .stars-modal{position:fixed;inset:0;background:rgba(44,24,16,.65);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
@@ -648,16 +663,16 @@
     .cp-btn-adj{width:100%;padding:11px 12px;border-radius:8px;background:transparent;color:var(--muted);border:1px solid var(--border);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;}
     .cp-btn-adj:hover{background:var(--bg);}
     .cp-btn-adj:active{transform:scale(.96);}
-    .cp-btn-open{width:100%;padding:11px 12px;border-radius:8px;background:var(--brown);color:#F5EDD8;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;margin-top:6px;}
-    .cp-btn-open:hover{background:#6B3E28;}
+    .cp-btn-open{width:100%;padding:11px 12px;border-radius:8px;background:var(--brown);color:#F5F5F5;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;margin-top:6px;}
+    .cp-btn-open:hover{background:#9B7500;}
     .cp-btn-open:active{transform:scale(.96);}
     .status-msg{padding:9px;border-radius:8px;text-align:center;font-size:11px;}
-    .msg-ap{background:rgba(196,150,122,.08);border:1px solid rgba(196,150,122,.2);color:var(--copper);}
-    .msg-pu{background:rgba(75,45,34,.05);border:1px solid var(--border);color:var(--brown);}
+    .msg-ap{background:rgba(201,162,39,.08);border:1px solid rgba(201,162,39,.2);color:var(--copper);}
+    .msg-pu{background:rgba(45,35,0,.05);border:1px solid var(--border);color:var(--brown);}
     .msg-cr{background:#ECEFF1;border:1px solid #CFD8DC;color:#455A64;}
 
     /* Modal */
-    .modal-bg{position:fixed;inset:0;background:rgba(44,37,32,.5);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .modal-bg{position:fixed;inset:0;background:rgba(10,10,0,.5);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
     .modal-box{background:var(--surface);border-radius:var(--r);padding:32px;width:100%;max-width:440px;box-shadow:var(--sh2);animation:fadeIn .3s ease;}
     .modal-box h3{font-size:22px;font-style:italic;color:var(--brown);margin-bottom:20px;}
     .modal-field{margin-bottom:14px;}
@@ -666,7 +681,7 @@
     .modal-field input:focus{border-color:var(--copper);background:#fff;}
     .modal-err{display:none;padding:9px 12px;background:#FFF0F0;border:1px solid #FFCDD2;border-radius:8px;color:#C62828;font-size:12px;margin-bottom:12px;}
     .client-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
-    .client-chip{padding:5px 12px;border-radius:20px;background:rgba(196,150,122,.1);border:1px solid rgba(196,150,122,.25);font-size:11px;color:var(--copper);}
+    .client-chip{padding:5px 12px;border-radius:20px;background:rgba(201,162,39,.1);border:1px solid rgba(196,150,122,.25);font-size:11px;color:var(--copper);}
     .upload-area{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);}
     .upload-area:hover{border-color:var(--copper);background:rgba(196,150,122,.04);}
     .upload-area p{font-size:13px;color:var(--muted);margin-bottom:4px;}
@@ -683,7 +698,7 @@
     .post-ref-grid{display:grid;grid-template-columns:1fr;gap:8px;}
     .post-toolbar{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
     .post-tool-btn{min-width:32px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:12px;display:inline-flex;align-items:center;justify-content:center;}
-    .post-tool-btn:hover{border-color:var(--copper);color:var(--brown);background:rgba(196,150,122,.08);}
+    .post-tool-btn:hover{border-color:var(--copper);color:var(--brown);background:rgba(201,162,39,.08);}
     .post-status-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
     .post-carousel-preview{display:none;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-top:10px;background:var(--bg);}
     .post-carousel-stage{position:relative;background:var(--beige);}
@@ -700,7 +715,7 @@
     .car-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5);}
     .car-dot.active{background:#fff;}
     .cp-btn-prev{background:none;border:1px solid var(--border);color:var(--copper);padding:7px 14px;border-radius:20px;font-size:11px;cursor:pointer;letter-spacing:.06em;}
-    .cp-btn-prev:hover{background:rgba(196,150,122,.08);}
+    .cp-btn-prev:hover{background:rgba(201,162,39,.08);}
     /* Instagram Preview */
     .ig-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:900;display:flex;align-items:center;justify-content:center;padding:16px;}
     .ig-modal-bg.hidden{display:none;}
@@ -724,10 +739,10 @@
     .ig-hashtags{padding:4px 18px 18px;font-size:13px;color:#00376b;line-height:1.6;}
     .ig-time{padding:0 14px 14px;font-size:10px;color:#8e8e8e;text-transform:uppercase;letter-spacing:.06em;}
     .cp-btn-ig{background:none;border:1px solid #c4967a55;color:var(--copper);padding:7px 14px;border-radius:20px;font-size:11px;cursor:pointer;letter-spacing:.06em;display:flex;align-items:center;gap:5px;}
-    .cp-btn-ig:hover{background:rgba(196,150,122,.08);}
+    .cp-btn-ig:hover{background:rgba(201,162,39,.08);}
     .tabs-row{display:flex;gap:2px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:20px;}
     .tab-btn{flex:1;padding:8px;text-align:center;border-radius:8px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;}
-    .tab-btn.active{background:var(--surface);color:var(--brown);box-shadow:0 1px 4px rgba(44,37,32,.08);}
+    .tab-btn.active{background:var(--surface);color:var(--brown);box-shadow:0 1px 4px rgba(10,10,0,.08);}
     @media(max-width:640px){
       .post-modal-grid{grid-template-columns:1fr;}
       .post-side-preview{position:static;}
@@ -744,7 +759,7 @@
         position:absolute;top:0;left:0;right:0;z-index:400;
         width:100%;height:auto;
         background:var(--surface);
-        box-shadow:0 8px 28px rgba(44,37,32,.18);
+        box-shadow:0 8px 28px rgba(10,10,0,.18);
         border-bottom:1px solid var(--border);
         padding:8px 0;
         overflow-y:auto;max-height:80vh;
@@ -808,7 +823,7 @@
       /* Hamburger mobile */
       .portal-hamburger{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--brown);letter-spacing:.04em;text-transform:uppercase;}
       .ph-icon{font-size:22px;color:var(--muted);}
-      .portal-nav .client-tabs{display:none;flex-direction:column;position:absolute;top:100%;left:0;right:0;z-index:300;background:var(--surface);box-shadow:0 8px 28px rgba(44,37,32,.15);padding:0!important;margin:0!important;border-top:1px solid var(--border);}
+      .portal-nav .client-tabs{display:none;flex-direction:column;position:absolute;top:100%;left:0;right:0;z-index:300;background:var(--surface);box-shadow:0 8px 28px rgba(10,10,0,.15);padding:0!important;margin:0!important;border-top:1px solid var(--border);}
       .portal-nav.open .client-tabs{display:flex;}
       .portal-nav .client-tab{padding:14px 20px!important;font-size:13px!important;border-bottom:1px solid var(--border);white-space:normal;border-left:none;}
       .portal-nav .client-tab:last-child{border-bottom:none;}
@@ -820,10 +835,10 @@
       #admin-email{display:none!important;}
       #admin-view .header-user{display:none!important;}
       #admin-view .theme-switcher{transform:scale(0.8);}
-      html.dark #admin-hamburger{background:#000000!important;border-bottom-color:#3a2820!important;}
+      html.dark #admin-hamburger{background:#000000!important;border-bottom-color:#1A1500!important;}
       html.dark .admin-body{background:#000000;}
       html.dark .detail-panel{background:#080808!important;}
-      html.dark .sidebar{background:#060606!important;border-bottom:1px solid #3a2820;}
+      html.dark .sidebar{background:#060606!important;border-bottom:1px solid #1A1500;}
       .client-main{padding:16px!important;margin:0!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;}
       #client-view{width:100%;overflow-x:hidden;box-sizing:border-box;}
       .portal-nav{width:100%;box-sizing:border-box;}
@@ -1220,7 +1235,7 @@ const Admin = {
     main.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <h2 class="section-title" style="margin:0;">Leads <span style="font-size:14px;color:var(--muted);font-family:Poppins,sans-serif;">${this.leads.length}</span></h2>
-        <button onclick="Admin.abrirModalLead()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;">+ Novo Lead</button>
+        <button onclick="Admin.abrirModalLead()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;">+ Novo Lead</button>
       </div>
       ${!this.leads.length
         ? `<p style="color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:18px;margin-top:40px;text-align:center;">Nenhum lead ainda ✦</p>`
@@ -1302,7 +1317,7 @@ const Admin = {
     main.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <h2 class="section-title" style="margin:0;">Follow-up</h2>
-        <button onclick="Admin.abrirModalFU()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;">+ Novo</button>
+        <button onclick="Admin.abrirModalFU()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;">+ Novo</button>
       </div>
       <div id="fu-list"></div>
       <!-- Modal FU -->
@@ -1356,7 +1371,7 @@ const Admin = {
           </div>
           <div style="display:flex;gap:8px;">
             <button onclick="document.getElementById('modal-fu').classList.add('hidden')" style="flex:1;padding:11px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;">Cancelar</button>
-            <button onclick="Admin.salvarFU()" style="flex:2;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;cursor:pointer;">Salvar →</button>
+            <button onclick="Admin.salvarFU()" style="flex:2;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;cursor:pointer;">Salvar →</button>
           </div>
         </div>
       </div>`;
@@ -1369,7 +1384,7 @@ const Admin = {
     }
 
     const TIPOS = {whatsapp:'💬',email:'✉️',ligação:'📞',reunião:'📅',instagram:'📸'};
-    const uColors = {atrasado:{l:'Atrasado',c:'#E65100',bg:'rgba(230,81,0,.07)'},hoje:{l:'Hoje',c:'#C4967A',bg:'rgba(196,150,122,.07)'},semana:{l:'Esta Semana',c:'#6B3E28',bg:'rgba(75,45,34,.05)'}};
+    const uColors = {atrasado:{l:'Atrasado',c:'#E65100',bg:'rgba(230,81,0,.07)'},hoje:{l:'Hoje',c:'#C9A800',bg:'rgba(201,162,39,.07)'},semana:{l:'Esta Semana',c:'#9B7500',bg:'rgba(45,35,0,.05)'}};
 
     ['atrasado','hoje','semana'].forEach(urg => {
       const items = active.filter(f=>f.urgencia===urg);
@@ -1514,7 +1529,7 @@ const Admin = {
           min-height:130px;box-sizing:border-box;overflow:visible;
         }
         .cal-cell:hover{border-color:rgba(160,160,172,0.8);box-shadow:0 3px 10px rgba(0,0,0,0.08),inset 0 1px 0 #fff;}
-        .cal-cell.today{border-color:rgba(196,150,122,0.7)!important;background:linear-gradient(155deg,rgba(255,249,243,0.97) 0%,rgba(250,238,225,0.88) 100%);}
+        .cal-cell.today{border-color:rgba(201,162,39,0.7)!important;background:linear-gradient(155deg,rgba(255,249,243,0.97) 0%,rgba(250,238,225,0.88) 100%);}
         .cal-cell.outro-mes{opacity:.35;}
         .cal-cell.empty-day{cursor:pointer;}
         .cal-cell.empty-day:hover .cal-day-num::after{content:' +';color:var(--copper);font-weight:400;}
@@ -1522,7 +1537,7 @@ const Admin = {
         .cal-cell.today .cal-day-num{color:var(--copper);}
         .cal-add-btn{opacity:0;font-size:14px;color:var(--copper);cursor:pointer;line-height:1;padding:0 2px;border-radius:4px;transition:opacity .15s,background .15s;font-weight:300;}
         .cal-cell:hover .cal-add-btn{opacity:1;}
-        .cal-add-btn:hover{background:rgba(196,150,122,0.15);}
+        .cal-add-btn:hover{background:rgba(201,162,39,0.15);}
         /* Post chip compacto (mensal/quinzenal) */
         .pchip{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:8px;margin-bottom:4px;cursor:grab;overflow:visible;border:1px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,0.08);transition:all .15s;}
         .pchip:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,0.12);}
@@ -1556,9 +1571,9 @@ const Admin = {
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <select onchange="Admin._postsCliFiltro=this.value;Admin._renderPostsView()" style="padding:6px 10px;border-radius:9px;border:1px solid var(--border);background:var(--bg);font-size:12px;color:var(--text);">${cliOptions}</select>
           <div style="display:flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;">
-            ${views.map(vv=>`<button onclick="Admin._postsView='${vv}';Admin._postsWeekOffset=0;Admin._renderPostsView()" style="padding:6px 11px;font-size:11px;border:none;cursor:pointer;background:${v===vv?'var(--brown)':'var(--surface)'};color:${v===vv?'#F5EDD8':'var(--muted)'};border-right:1px solid var(--border);">${viewLabels[vv]}</button>`).join('')}
+            ${views.map(vv=>`<button onclick="Admin._postsView='${vv}';Admin._postsWeekOffset=0;Admin._renderPostsView()" style="padding:6px 11px;font-size:11px;border:none;cursor:pointer;background:${v===vv?'var(--brown)':'var(--surface)'};color:${v===vv?'#F5F5F5':'var(--muted)'};border-right:1px solid var(--border);">${viewLabels[vv]}</button>`).join('')}
           </div>
-          <button onclick="Admin.abrirModalPost()" style="padding:7px 14px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">+ Novo Post</button>
+          <button onclick="Admin.abrirModalPost()" style="padding:7px 14px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;border:none;cursor:pointer;">+ Novo Post</button>
         </div>
       </div>
       ${stats?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">${stats}</div>`:''}
@@ -1924,7 +1939,7 @@ const Admin = {
         data_post:    String(p.data_post || '')
       };
 
-      console.log('%c[MKT Primor] Enviando pro Make:', 'color:#C4967A;font-weight:bold;', payload);
+      console.log('%c[MKT Primor] Enviando pro Make:', 'color:#C9A800;font-weight:bold;', payload);
 
       // Envia pro Make webhook
       let resp;
@@ -1975,7 +1990,7 @@ const Admin = {
 
     // Gradients para capa
     const gradients = [
-      'linear-gradient(135deg,#C4967A 0%,#8B5E3C 100%)',
+      'linear-gradient(135deg,#C9A800 0%,#8B7200 100%)',
       'linear-gradient(135deg,#B5A0C8 0%,#7B5EA7 100%)',
       'linear-gradient(135deg,#A8C5DA 0%,#5B8FA8 100%)',
       'linear-gradient(135deg,#F0C27F 0%,#C97B3A 100%)',
@@ -2010,7 +2025,7 @@ const Admin = {
         </div>
         <div style="display:flex;gap:10px;">
           <input id="cli-search" oninput="Admin._filterClientes()" placeholder="Buscar cliente..." style="padding:9px 14px;border:1px solid var(--border);border-radius:10px;font-size:12px;background:var(--bg);color:var(--text);width:220px;"/>
-          <button onclick="Admin.abrirModal()" style="padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;">+ Novo Cliente</button>
+          <button onclick="Admin.abrirModal()" style="padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;">+ Novo Cliente</button>
         </div>
       </div>
 
@@ -2066,7 +2081,7 @@ const Admin = {
       main.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted);">
         <div style="font-size:18px;margin-bottom:12px;">⚠️ Erro ao carregar clientes</div>
         <div style="font-size:12px;margin-bottom:16px;">${e.message}</div>
-        <button onclick="Admin.renderClientes()" style="padding:10px 20px;border-radius:9px;background:var(--brown);color:#F5EDD8;border:none;cursor:pointer;">Tentar novamente</button>
+        <button onclick="Admin.renderClientes()" style="padding:10px 20px;border-radius:9px;background:var(--brown);color:#F5F5F5;border:none;cursor:pointer;">Tentar novamente</button>
       </div>`;
     }
   },
@@ -2193,7 +2208,7 @@ const Admin = {
     const c = clients?.[0]; if (!c) return;
     const main = document.getElementById('admin-main');
     const gradients = [
-      'linear-gradient(135deg,#C4967A 0%,#8B5E3C 100%)',
+      'linear-gradient(135deg,#C9A800 0%,#8B7200 100%)',
       'linear-gradient(135deg,#B5A0C8 0%,#7B5EA7 100%)',
       'linear-gradient(135deg,#A8C5DA 0%,#5B8FA8 100%)',
       'linear-gradient(135deg,#F0C27F 0%,#C97B3A 100%)',
@@ -2288,13 +2303,13 @@ const Admin = {
       publicado:{l:'Publicado',dot:'#3B82F6', bc:'rgba(59,130,246,0.12)'},
     };
     if (!posts?.length) {
-      content.innerHTML = `<div style="text-align:center;padding:60px 0;color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:18px;">Nenhum post cadastrado para esta cliente ✦<br><br><button onclick="Admin._newPostForCliente('${c.email}')" style="font-size:12px;padding:10px 20px;border-radius:10px;background:var(--brown);color:#F5EDD8;border:none;cursor:pointer;margin-top:8px;">+ Criar primeiro post</button></div>`;
+      content.innerHTML = `<div style="text-align:center;padding:60px 0;color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:18px;">Nenhum post cadastrado para esta cliente ✦<br><br><button onclick="Admin._newPostForCliente('${c.email}')" style="font-size:12px;padding:10px 20px;border-radius:10px;background:var(--brown);color:#F5F5F5;border:none;cursor:pointer;margin-top:8px;">+ Criar primeiro post</button></div>`;
       return;
     }
     content.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <div style="font-size:13px;color:var(--muted);">${posts.length} posts</div>
-        <button onclick="Admin._newPostForCliente('${c.email}')" style="font-size:12px;padding:8px 16px;border-radius:9px;background:var(--brown);color:#F5EDD8;border:none;cursor:pointer;">+ Novo Post</button>
+        <button onclick="Admin._newPostForCliente('${c.email}')" style="font-size:12px;padding:8px 16px;border-radius:9px;background:var(--brown);color:#F5F5F5;border:none;cursor:pointer;">+ Novo Post</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
         ${posts.map(p => {
@@ -2323,7 +2338,7 @@ const Admin = {
       <div style="margin-bottom:16px;display:flex;gap:10px;">
         <input id="arq-nome" placeholder="Nome do arquivo" style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:12px;background:var(--bg);color:var(--text);"/>
         <input id="arq-url" placeholder="https://..." style="flex:2;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:12px;background:var(--bg);color:var(--text);"/>
-        <button onclick="Admin._addArquivo('${c.email}')" style="padding:9px 16px;border-radius:9px;background:var(--brown);color:#F5EDD8;border:none;cursor:pointer;font-size:12px;">+ Adicionar</button>
+        <button onclick="Admin._addArquivo('${c.email}')" style="padding:9px 16px;border-radius:9px;background:var(--brown);color:#F5F5F5;border:none;cursor:pointer;font-size:12px;">+ Adicionar</button>
       </div>
       ${!list.length ? '<p style="color:var(--muted);text-align:center;padding:40px 0;font-style:italic;">Nenhum arquivo ainda</p>' :
         `<div style="display:flex;flex-direction:column;gap:8px;">
@@ -2333,7 +2348,7 @@ const Admin = {
               <div style="font-size:13px;font-weight:500;color:var(--text);">${a.nome}</div>
               <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.url}</div>
             </div>
-            <a href="${a.url}" target="_blank" style="font-size:12px;color:var(--copper);text-decoration:none;padding:5px 12px;border:1px solid rgba(196,150,122,.3);border-radius:9px;">Abrir →</a>
+            <a href="${a.url}" target="_blank" style="font-size:12px;color:var(--copper);text-decoration:none;padding:5px 12px;border:1px solid rgba(201,162,39,.3);border-radius:9px;">Abrir →</a>
           </div>`).join('')}
         </div>`}`;
   },
@@ -2344,7 +2359,7 @@ const Admin = {
     const list = tarefas || [];
     content.innerHTML = `
       <div style="margin-bottom:16px;">
-        <button onclick="Admin.tab('tarefas')" style="font-size:12px;color:var(--copper);background:none;border:1px solid rgba(196,150,122,.3);padding:8px 16px;border-radius:9px;cursor:pointer;">Ver todas as tarefas →</button>
+        <button onclick="Admin.tab('tarefas')" style="font-size:12px;color:var(--copper);background:none;border:1px solid rgba(201,162,39,.3);padding:8px 16px;border-radius:9px;cursor:pointer;">Ver todas as tarefas →</button>
       </div>
       ${!list.length ? '<p style="color:var(--muted);text-align:center;padding:40px 0;font-style:italic;">Nenhuma tarefa para esta cliente</p>' :
         `<div style="display:flex;flex-direction:column;gap:8px;">
@@ -2360,7 +2375,7 @@ const Admin = {
     const content = document.getElementById('cli-tab-content');
     content.innerHTML = `<div style="text-align:center;padding:60px 0;color:var(--muted);font-size:13px;">
       <div style="font-size:32px;margin-bottom:12px;">💬</div>
-      <button onclick="Admin.tab('chat')" style="font-size:13px;color:var(--copper);background:none;border:1px solid rgba(196,150,122,.3);padding:10px 20px;border-radius:10px;cursor:pointer;">Abrir Chat Completo →</button>
+      <button onclick="Admin.tab('chat')" style="font-size:13px;color:var(--copper);background:none;border:1px solid rgba(201,162,39,.3);padding:10px 20px;border-radius:10px;cursor:pointer;">Abrir Chat Completo →</button>
     </div>`;
   },
 
@@ -2382,9 +2397,9 @@ const Admin = {
         ${fld('Mensagem para a cliente', `<textarea data-rich id="dp-mensagem-gi" rows="3" placeholder="Ex: Essa semana trabalhamos muito no seu posicionamento 🌿" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);color:var(--text);resize:none;margin-top:4px;">${c.mensagem_gi||''}</textarea>`)}
       </div>
       <div style="display:flex;gap:10px;margin-top:16px;max-width:700px;">
-        <button onclick="Admin.salvarDadosCliente(${c.id})" style="flex:1;padding:11px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Salvar alterações →</button>
+        <button onclick="Admin.salvarDadosCliente(${c.id})" style="flex:1;padding:11px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Salvar alterações →</button>
       </div>
-      <div style="margin-top:16px;padding:12px 16px;background:rgba(196,150,122,.06);border:1px solid rgba(196,150,122,.15);border-radius:12px;font-size:11px;color:var(--muted);line-height:2;max-width:700px;">
+      <div style="margin-top:16px;padding:12px 16px;background:rgba(196,150,122,.06);border:1px solid rgba(201,162,39,.15);border-radius:12px;font-size:11px;color:var(--muted);line-height:2;max-width:700px;">
         <strong style="color:var(--brown);">Acesso da cliente:</strong><br>
         crm.gislainebarbeto.com.br · <strong>${c.email}</strong> · <strong>${c.access_code||'Primor2026!'}</strong>
       </div>`;
@@ -2411,7 +2426,7 @@ const Admin = {
   _showGradientPicker(id) {
     document.getElementById('capa-picker-overlay')?.remove();
     const c = this._cliClienteData || {};
-    let c1 = '#C4967A', c2 = '#8B5E3C', dir = '135deg';
+    let c1 = '#C9A800', c2 = '#8B7200', dir = '135deg';
     if (c.capa_cor) {
       const m = c.capa_cor.match(/#[0-9a-fA-F]{3,8}/g);
       if (m && m.length >= 2) { c1 = m[0]; c2 = m[1]; }
@@ -2419,7 +2434,7 @@ const Admin = {
       if (dm) dir = dm[1].trim();
     }
     const presets = [
-      ['#C4967A','#8B5E3C'],['#B5A0C8','#7B5EA7'],['#A8C5DA','#5B8FA8'],
+      ['#C9A800','#8B7200'],['#B5A0C8','#7B5EA7'],['#A8C5DA','#5B8FA8'],
       ['#F0C27F','#C97B3A'],['#A8D5B5','#5A9E72'],['#F0A8A8','#C95A5A'],
       ['#D4B8E0','#9B6BB5'],['#1a1a2e','#16213e'],['#2D1B69','#11998e'],
       ['#373B44','#4286f4'],['#c94b4b','#4b134f'],['#f7971e','#ffd200'],
@@ -2453,7 +2468,7 @@ const Admin = {
         <div style="margin-bottom:14px;">
           <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Direção do degradê</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            ${dirs.map(([d,l]) => `<button onclick="Admin._setGradDir('${d}',${id})" data-gdir="${d}" style="padding:6px 11px;border-radius:8px;border:1px solid var(--border);background:${d===dir?'var(--brown)':'var(--bg)'};color:${d===dir?'#F5EDD8':'var(--muted)'};font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;">${l}</button>`).join('')}
+            ${dirs.map(([d,l]) => `<button onclick="Admin._setGradDir('${d}',${id})" data-gdir="${d}" style="padding:6px 11px;border-radius:8px;border:1px solid var(--border);background:${d===dir?'var(--brown)':'var(--bg)'};color:${d===dir?'#F5F5F5':'var(--muted)'};font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;">${l}</button>`).join('')}
           </div>
         </div>
         <div style="margin-bottom:20px;">
@@ -2462,7 +2477,7 @@ const Admin = {
             ${presets.map(([a,b]) => `<div onclick="Admin._setGradPreset('${a}','${b}')" style="height:32px;border-radius:8px;background:linear-gradient(135deg,${a},${b});cursor:pointer;border:2px solid transparent;" onmouseover="this.style.borderColor='var(--copper)'" onmouseout="this.style.borderColor='transparent'"></div>`).join('')}
           </div>
         </div>
-        <button onclick="Admin._applyCapaCor(${id})" style="width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;font-family:Poppins,sans-serif;letter-spacing:.08em;text-transform:uppercase;border:none;cursor:pointer;">Aplicar Degradê →</button>
+        <button onclick="Admin._applyCapaCor(${id})" style="width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;font-family:Poppins,sans-serif;letter-spacing:.08em;text-transform:uppercase;border:none;cursor:pointer;">Aplicar Degradê →</button>
       </div>`;
     document.body.appendChild(overlay);
     this._gradDir = dir;
@@ -2471,8 +2486,8 @@ const Admin = {
   _gradDir: '135deg',
 
   _updateGradPrev() {
-    const c1 = document.getElementById('capa-c1')?.value || '#C4967A';
-    const c2 = document.getElementById('capa-c2')?.value || '#8B5E3C';
+    const c1 = document.getElementById('capa-c1')?.value || '#C9A800';
+    const c2 = document.getElementById('capa-c2')?.value || '#8B7200';
     const prev = document.getElementById('capa-grad-prev');
     if (prev) prev.style.background = `linear-gradient(${this._gradDir},${c1},${c2})`;
   },
@@ -2482,7 +2497,7 @@ const Admin = {
     document.querySelectorAll('[data-gdir]').forEach(b => {
       const on = b.dataset.gdir === dir;
       b.style.background = on ? 'var(--brown)' : 'var(--bg)';
-      b.style.color = on ? '#F5EDD8' : 'var(--muted)';
+      b.style.color = on ? '#F5F5F5' : 'var(--muted)';
       b.style.borderColor = on ? 'var(--brown)' : 'var(--border)';
     });
     this._updateGradPrev();
@@ -2497,8 +2512,8 @@ const Admin = {
   },
 
   async _applyCapaCor(id) {
-    const c1 = document.getElementById('capa-c1')?.value || '#C4967A';
-    const c2 = document.getElementById('capa-c2')?.value || '#8B5E3C';
+    const c1 = document.getElementById('capa-c1')?.value || '#C9A800';
+    const c2 = document.getElementById('capa-c2')?.value || '#8B7200';
     const gradient = `linear-gradient(${this._gradDir},${c1},${c2})`;
     document.getElementById('capa-picker-overlay')?.remove();
     await this._setCapaCor(id, gradient);
@@ -2537,7 +2552,7 @@ const Admin = {
           </div>
           <input type="range" id="repos-yi" min="0" max="100" value="${y}" oninput="Admin._updateReposPrev(${id})" style="width:100%;accent-color:var(--copper);cursor:pointer;"/>
         </div>
-        <button onclick="Admin._applyRepos(${id})" style="width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;font-family:Poppins,sans-serif;letter-spacing:.08em;text-transform:uppercase;border:none;cursor:pointer;">Salvar Posição →</button>
+        <button onclick="Admin._applyRepos(${id})" style="width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;font-family:Poppins,sans-serif;letter-spacing:.08em;text-transform:uppercase;border:none;cursor:pointer;">Salvar Posição →</button>
       </div>`;
     document.body.appendChild(overlay);
   },
@@ -2946,7 +2961,7 @@ const Admin = {
           <option value="">Selecione o cliente...</option>
           ${(clients||[]).map(c=>`<option value="${c.email}">${c.nome}</option>`).join('')}
         </select>
-        <button onclick="Admin.abrirModalFin()" style="padding:10px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Lançamento</button>
+        <button onclick="Admin.abrirModalFin()" style="padding:10px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Lançamento</button>
       </div>
       <div id="fin-list"></div>`;
   },
@@ -3052,7 +3067,7 @@ const Admin = {
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;">
           <input id="arq-link-nome" type="text" placeholder="Nome do link (ex: Pasta do Drive)" style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;"/>
           <input id="arq-link-url" type="url" placeholder="https://drive.google.com/..." style="flex:2;padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;"/>
-          <button onclick="Admin.adicionarLink()" style="padding:10px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;white-space:nowrap;">+ Link</button>
+          <button onclick="Admin.adicionarLink()" style="padding:10px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;white-space:nowrap;">+ Link</button>
         </div>
       </div>
       <div id="arq-list"></div>`;
@@ -3087,7 +3102,7 @@ const Admin = {
               <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:4px;">Texto de descrição</label>
               <textarea data-rich id="comece-desc" rows="3" placeholder="Explique como usar o portal, o que a cliente vai encontrar aqui..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;">${cfg['__desc__']||''}</textarea>
             </div>
-            <button onclick="Admin.salvarConfigComece()" style="align-self:flex-start;padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;">Salvar configuração</button>
+            <button onclick="Admin.salvarConfigComece()" style="align-self:flex-start;padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;">Salvar configuração</button>
           </div>
         </div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-style:italic;">Arquivos que aparecem no "Comece por Aqui" (${files.length}):</div>
@@ -3160,13 +3175,13 @@ const Admin = {
     main.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
         <h2 class="section-title" style="margin:0;">✦ Comece por Aqui</h2>
-        <button onclick="Admin.showAddComece()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;border:none;cursor:pointer;">+ Adicionar</button>
+        <button onclick="Admin.showAddComece()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;border:none;cursor:pointer;">+ Adicionar</button>
       </div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:20px;">Aparece para <strong>todas as clientes</strong> no topo do portal.</p>
       <!-- Formulário de adição -->
       <div id="comece-form" class="hidden" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;">
         <div style="display:flex;gap:8px;margin-bottom:16px;">
-          <button onclick="Admin._comeceTipo='video';Admin._renderComeceTipoForm()" id="cfb-video" style="flex:1;padding:9px;border-radius:9px;border:2px solid var(--brown);background:var(--brown);color:#F5EDD8;font-size:12px;cursor:pointer;">▶ Vídeo</button>
+          <button onclick="Admin._comeceTipo='video';Admin._renderComeceTipoForm()" id="cfb-video" style="flex:1;padding:9px;border-radius:9px;border:2px solid var(--brown);background:var(--brown);color:#F5F5F5;font-size:12px;cursor:pointer;">▶ Vídeo</button>
           <button onclick="Admin._comeceTipo='texto';Admin._renderComeceTipoForm()" id="cfb-texto" style="flex:1;padding:9px;border-radius:9px;border:2px solid var(--border);background:transparent;color:var(--text);font-size:12px;cursor:pointer;">📝 Texto</button>
           <button onclick="Admin._comeceTipo='arquivo';Admin._renderComeceTipoForm()" id="cfb-arquivo" style="flex:1;padding:9px;border-radius:9px;border:2px solid var(--border);background:transparent;color:var(--text);font-size:12px;cursor:pointer;">📎 Arquivo/Link</button>
         </div>
@@ -3192,7 +3207,7 @@ const Admin = {
       if (!b) return;
       const active = t === this._comeceTipo;
       b.style.background = active ? 'var(--brown)' : 'transparent';
-      b.style.color = active ? '#F5EDD8' : 'var(--text)';
+      b.style.color = active ? '#F5F5F5' : 'var(--text)';
       b.style.borderColor = active ? 'var(--brown)' : 'var(--border)';
     });
     const el = document.getElementById('comece-tipo-form');
@@ -3202,14 +3217,14 @@ const Admin = {
         <div style="display:flex;flex-direction:column;gap:10px;">
           ${inp('cf-titulo','Título do vídeo (ex: Como usar o portal)')}
           ${inp('cf-url','Link do YouTube (https://www.youtube.com/watch?v=...)')}
-          <button onclick="Admin.saveComece()" style="align-self:flex-start;padding:9px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">Salvar vídeo</button>
+          <button onclick="Admin.saveComece()" style="align-self:flex-start;padding:9px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;border:none;cursor:pointer;">Salvar vídeo</button>
         </div>`;
     } else if (this._comeceTipo === 'texto') {
       el.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:10px;">
           ${inp('cf-titulo','Título (ex: Bem-vinda ao seu portal!)')}
           <textarea data-rich id="cf-texto" rows="4" placeholder="Escreva aqui o texto que vai aparecer pra todas as clientes..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;box-sizing:border-box;"></textarea>
-          <button onclick="Admin.saveComece()" style="align-self:flex-start;padding:9px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">Salvar texto</button>
+          <button onclick="Admin.saveComece()" style="align-self:flex-start;padding:9px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;border:none;cursor:pointer;">Salvar texto</button>
         </div>`;
     } else {
       el.innerHTML = `
@@ -3223,7 +3238,7 @@ const Admin = {
             ${inp('cf-link-nome','Nome do link (ex: Contrato, Briefing...)')}
             ${inp('cf-link-url','https://drive.google.com/...')}
           </div>
-          <button onclick="Admin.saveLinkComece()" style="align-self:flex-start;padding:9px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">Salvar link</button>
+          <button onclick="Admin.saveLinkComece()" style="align-self:flex-start;padding:9px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;border:none;cursor:pointer;">Salvar link</button>
         </div>`;
     }
   },
@@ -3377,7 +3392,7 @@ const Admin = {
           <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Conteúdo</div>
           <textarea data-rich id="info-conteudo" rows="3" placeholder="Ex: usuário: @primor | senha: abc123" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;"></textarea>
         </div>
-        <button onclick="Admin.salvarInfo()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Adicionar →</button>
+        <button onclick="Admin.salvarInfo()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Adicionar →</button>
       </div>
       <div id="info-list"></div>`;
   },
@@ -3479,7 +3494,7 @@ const Admin = {
           <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Descrição / instruções</div>
           <textarea data-rich id="sol-desc" rows="2" placeholder="Detalhes do que precisa..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:vertical;"></textarea>
         </div>
-        <button onclick="Admin.salvarSolicitacao()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Solicitar →</button>
+        <button onclick="Admin.salvarSolicitacao()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Solicitar →</button>
       </div>
       <div id="sol-list"></div>`;
   },
@@ -3516,10 +3531,10 @@ const Admin = {
           </div>
         </div>
         ${s.descricao?`<p style="font-size:12px;color:var(--muted);margin:4px 0 0;">${s.descricao}</p>`:''}
-        ${s.resposta?`<div style="margin-top:8px;padding:8px 10px;background:rgba(196,150,122,.08);border-radius:8px;font-size:12px;color:var(--text);"><strong>Resposta:</strong> ${s.resposta}</div>`:''}
+        ${s.resposta?`<div style="margin-top:8px;padding:8px 10px;background:rgba(201,162,39,.08);border-radius:8px;font-size:12px;color:var(--text);"><strong>Resposta:</strong> ${s.resposta}</div>`:''}
         ${!isAdmin && s.status==='pendente'?`<div style="margin-top:8px;display:flex;gap:6px;">
           <input id="resp-${s.id}" type="text" placeholder="Deixe sua resposta..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);font-family:Poppins,sans-serif;"/>
-          <button onclick="Client.concluirSolicitacao('${s.id}')" style="padding:8px 14px;border-radius:8px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;cursor:pointer;">Concluir →</button>
+          <button onclick="Client.concluirSolicitacao('${s.id}')" style="padding:8px 14px;border-radius:8px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;cursor:pointer;">Concluir →</button>
         </div>`:''}
       </div>`;
     }).join('')}</div>`;
@@ -3601,7 +3616,7 @@ const Admin = {
             <div style="font-size:10px;color:var(--muted);">${p.data_post||new Date(p.created_at).toLocaleDateString('pt-BR')}</div>
             ${auto?.resultado ? `<div style="font-size:11px;color:var(--copper);font-style:italic;margin-top:2px;">${auto.resultado}</div>` : ''}
           </div>
-          ${markedIds.has(p.id) ? `<span style="font-size:10px;background:rgba(196,150,122,.15);color:var(--copper);padding:3px 8px;border-radius:20px;">${this._autoTipo==='turbinado'?'🚀 Turbinado':'⚡ Automatizado'}</span>` : ''}
+          ${markedIds.has(p.id) ? `<span style="font-size:10px;background:rgba(201,162,39,.15);color:var(--copper);padding:3px 8px;border-radius:20px;">${this._autoTipo==='turbinado'?'🚀 Turbinado':'⚡ Automatizado'}</span>` : ''}
         </div>`;
       }).join('') || '<p style="color:var(--muted);font-style:italic;text-align:center;padding:20px;">Nenhum post para este cliente</p>';
   },
@@ -3660,7 +3675,7 @@ const Admin = {
             ${parseFirst(p.img_url)?`<img src="${parseFirst(p.img_url)}" style="width:22px;height:22px;border-radius:4px;object-fit:cover;"/>`:''} ${(p.legenda||'Post').substring(0,20)}
           </div>`).join('')}
         </div>
-        <button onclick="Admin.salvarMetrica()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Salvar métricas →</button>
+        <button onclick="Admin.salvarMetrica()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Salvar métricas →</button>
       </div>`;
     const { data } = await db.from('metricas').select('*').eq('client_email',email).order('mes',{ascending:true});
     this.renderMetList(data||[], pList);
@@ -3669,7 +3684,7 @@ const Admin = {
     const selected = document.querySelectorAll('.met-post-opt.sel');
     if (!el.classList.contains('sel') && selected.length >= 3) { alert('Máximo 3 posts.'); return; }
     el.classList.toggle('sel');
-    el.style.background = el.classList.contains('sel') ? 'rgba(196,150,122,.15)' : 'var(--bg)';
+    el.style.background = el.classList.contains('sel') ? 'rgba(201,162,39,.15)' : 'var(--bg)';
     el.style.borderColor = el.classList.contains('sel') ? 'var(--copper)' : 'var(--border)';
   },
   async salvarMetrica() {
@@ -3697,8 +3712,8 @@ const Admin = {
     if (!data.length) { el.innerHTML = '<p style="color:var(--muted);font-style:italic;text-align:center;padding:20px;">Nenhuma métrica registrada ainda</p>'; return; }
     const parseFirst = raw => { try { const a=JSON.parse(raw); return Array.isArray(a)?a[0]:raw; } catch{return raw;} };
     el.innerHTML = `
-      <div class="chart-wrap"><div class="chart-title">Crescimento de Seguidores</div>${svgLine(data.map(d=>({l:d.mes.substring(5),v:d.seguidores})),'#C4967A')}</div>
-      <div class="chart-wrap"><div class="chart-title">Alcance</div>${svgLine(data.map(d=>({l:d.mes.substring(5),v:d.alcance})),'#4B2D22')}</div>
+      <div class="chart-wrap"><div class="chart-title">Crescimento de Seguidores</div>${svgLine(data.map(d=>({l:d.mes.substring(5),v:d.seguidores})),'#C9A800')}</div>
+      <div class="chart-wrap"><div class="chart-title">Alcance</div>${svgLine(data.map(d=>({l:d.mes.substring(5),v:d.alcance})),'#7A5C00')}</div>
       <div style="margin-top:8px;">
         ${data.slice(-1).map(d => {
           let tops = []; try { tops=JSON.parse(d.top_posts||'[]'); } catch{}
@@ -3719,7 +3734,7 @@ const Admin = {
     main.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <h2 class="section-title" style="margin:0;">Lab de Ideias</h2>
-        <button onclick="Admin.abrirModalIdeia()" style="padding:10px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Nova Ideia</button>
+        <button onclick="Admin.abrirModalIdeia()" style="padding:10px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Nova Ideia</button>
       </div>
       <div style="margin-bottom:16px;">
         <select id="lab-sel" onchange="Admin.loadLab()" style="padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;min-width:220px;">
@@ -3797,7 +3812,7 @@ const Admin = {
     main.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <h2 class="section-title" style="margin:0;">Projetos & Tarefas</h2>
-        <button onclick="Admin.abrirModalProjeto()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">+ Novo Projeto</button>
+        <button onclick="Admin.abrirModalProjeto()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;border:none;cursor:pointer;">+ Novo Projeto</button>
       </div>
       <div class="proj-grid" id="proj-grid"><p style="color:var(--muted);text-align:center;padding:40px;font-style:italic;">Carregando...</p></div>`;
     await this.carregarProjetos();
@@ -3897,7 +3912,7 @@ const Admin = {
         </div>
         <div id="proj-err" style="color:#C62828;font-size:12px;margin-top:4px;display:none;"></div>
         <div style="display:flex;gap:8px;margin-top:16px;">
-          <button onclick="Admin.salvarProjeto(${id||'null'})" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:13px;border:none;cursor:pointer;">Salvar projeto</button>
+          <button onclick="Admin.salvarProjeto(${id||'null'})" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:13px;border:none;cursor:pointer;">Salvar projeto</button>
           ${id ? `<button onclick="Admin.delProjeto(${id})" style="padding:11px 14px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;font-size:13px;cursor:pointer;">🗑</button>` : ''}
         </div>
       </div>
@@ -4136,7 +4151,7 @@ const Admin = {
 
         <div id="tf-err" style="color:#C62828;font-size:12px;margin-top:4px;display:none;"></div>
         <div style="display:flex;gap:8px;margin-top:4px;">
-          <button onclick="Admin.salvarTarefa()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:13px;border:none;cursor:pointer;">Salvar</button>
+          <button onclick="Admin.salvarTarefa()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:13px;border:none;cursor:pointer;">Salvar</button>
           ${tarefaId ? `<button onclick="Admin.delTarefa(${tarefaId})" style="padding:11px 14px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;font-size:13px;cursor:pointer;">🗑</button>` : ''}
         </div>
       </div>
@@ -4264,7 +4279,7 @@ const Admin = {
     main.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <h2 class="section-title" style="margin:0;">Demandas da Equipe</h2>
-        <button onclick="Admin.abrirNovaDemanda()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;border:none;cursor:pointer;">+ Nova Demanda</button>
+        <button onclick="Admin.abrirNovaDemanda()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;border:none;cursor:pointer;">+ Nova Demanda</button>
       </div>
       <div id="demandas-lista"><p style="color:var(--muted);text-align:center;padding:40px;font-style:italic;">Carregando...</p></div>`;
     await this.carregarDemandas();
@@ -4406,7 +4421,7 @@ const Admin = {
 
         <div id="dm-err" style="color:#C62828;font-size:12px;margin-top:4px;display:none;"></div>
         <div style="display:flex;gap:8px;margin-top:4px;">
-          <button onclick="Admin.salvarDemanda(${id||'null'})" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:13px;border:none;cursor:pointer;">Salvar</button>
+          <button onclick="Admin.salvarDemanda(${id||'null'})" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:13px;border:none;cursor:pointer;">Salvar</button>
           ${id ? `<button onclick="Admin.delDemanda(${id})" style="padding:11px 14px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;color:#C62828;font-size:13px;cursor:pointer;">🗑</button>` : ''}
         </div>
       </div>
@@ -4433,7 +4448,7 @@ const Admin = {
         <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;">
           <span>${isPdf?'📄':isImg?'🖼':'📎'}</span>
           <span style="flex:1;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${nome}</span>
-          <a href="${u}" download="${nome}" target="_blank" style="font-size:11px;padding:3px 8px;border-radius:6px;background:var(--brown);color:#F5EDD8;text-decoration:none;white-space:nowrap;flex-shrink:0;">⬇ Baixar</a>
+          <a href="${u}" download="${nome}" target="_blank" style="font-size:11px;padding:3px 8px;border-radius:6px;background:var(--brown);color:#F5F5F5;text-decoration:none;white-space:nowrap;flex-shrink:0;">⬇ Baixar</a>
           <button onclick="Admin.removerAnexoDemanda(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 2px;flex-shrink:0;">×</button>
         </div>
       </div>`;
@@ -4589,10 +4604,10 @@ function svgLine(data, color) {
   const id='g'+color.replace('#','');
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;overflow:visible;">
     <defs><linearGradient id="${id}" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity=".18"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
-    ${[.25,.5,.75,1].map(f=>{const y=pT+cH-f*cH;return `<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="#E2D4C0" stroke-width="1"/><text x="${pL-4}" y="${y+3}" text-anchor="end" font-size="8" fill="#786C60">${Math.round(f*max).toLocaleString('pt-BR')}</text>`;}).join('')}
+    ${[.25,.5,.75,1].map(f=>{const y=pT+cH-f*cH;return `<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="#E8E0C0" stroke-width="1"/><text x="${pL-4}" y="${y+3}" text-anchor="end" font-size="8" fill="#666666">${Math.round(f*max).toLocaleString('pt-BR')}</text>`;}).join('')}
     <path d="M${pL},${pT+cH} ${pts.map(p=>`L${p}`).join(' ')} L${pL+(data.length-1)*xs},${pT+cH} Z" fill="url(#${id})"/>
     <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    ${pts.map((p,i)=>`<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="3" fill="${color}"/><text x="${p.split(',')[0]}" y="${H-4}" text-anchor="middle" font-size="8" fill="#786C60">${data[i].l}</text>`).join('')}
+    ${pts.map((p,i)=>`<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="3" fill="${color}"/><text x="${p.split(',')[0]}" y="${H-4}" text-anchor="middle" font-size="8" fill="#666666">${data[i].l}</text>`).join('')}
   </svg>`;
 }
 
@@ -4906,7 +4921,7 @@ const Client = {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
         <h2 class="section-title" style="margin:0;">Calendário de Posts</h2>
         <div style="display:flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;">
-          ${views.map(vv=>`<button onclick="Client._clientView='${vv}';Client._clientWeekOffset=0;Client._renderClientPostsView()" style="padding:6px 11px;font-size:11px;border:none;cursor:pointer;background:${v===vv?'var(--brown)':'var(--surface)'};color:${v===vv?'#F5EDD8':'var(--muted)'};border-right:1px solid var(--border);">${viewLabels[vv]}</button>`).join('')}
+          ${views.map(vv=>`<button onclick="Client._clientView='${vv}';Client._clientWeekOffset=0;Client._renderClientPostsView()" style="padding:6px 11px;font-size:11px;border:none;cursor:pointer;background:${v===vv?'var(--brown)':'var(--surface)'};color:${v===vv?'#F5F5F5':'var(--muted)'};border-right:1px solid var(--border);">${viewLabels[vv]}</button>`).join('')}
         </div>
       </div>
       ${stats ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">${stats}</div>` : ''}
@@ -5119,7 +5134,7 @@ const Client = {
     document.getElementById('client-post-modal')?.remove();
 
     const imgs = this.postMedia(p);
-    console.log(`%c[MKT Primor] Post #${p.id} — ${imgs.length} mídia(s)`, 'color:#C4967A;font-weight:bold;', imgs);
+    console.log(`%c[MKT Primor] Post #${p.id} — ${imgs.length} mídia(s)`, 'color:#C9A800;font-weight:bold;', imgs);
     console.log('  midia_urls raw:', p.midia_urls, '| img_url raw:', p.img_url, '| capa_url:', p.capa_url);
     const st = this.statusInfo(p.status);
     const date = p.data_post ? new Date(p.data_post+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'}) : '';
@@ -5594,7 +5609,7 @@ ${text}`,
       db.from('arquivos_cliente').select('url').eq('client_email',App.user.email).eq('nome','__metricool__').maybeSingle()
     ]);
     const metricoolUrl = metricoolRow?.url || '';
-    const metricoolBtn = metricoolUrl ? `<a href="${metricoolUrl}" target="_blank" style="display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#4B2D22,#7a4b2f);color:#F5EDD8;border-radius:12px;padding:16px 20px;text-decoration:none;margin-bottom:20px;">
+    const metricoolBtn = metricoolUrl ? `<a href="${metricoolUrl}" target="_blank" style="display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#7A5C00,#9B7500);color:#F5F5F5;border-radius:12px;padding:16px 20px;text-decoration:none;margin-bottom:20px;">
       <div>
         <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;margin-bottom:2px;">Ver relatório completo</div>
         <div style="font-size:11px;opacity:.7;">Abre o Metricool com todas as métricas do seu perfil</div>
@@ -5619,9 +5634,9 @@ ${text}`,
         <div class="met-card"><div class="met-n">${(last.engajamento||0).toFixed(1)}%</div><div class="met-l">Engajamento</div>${prev?delta(last.engajamento,prev.engajamento):''}</div>
         <div class="met-card"><div class="met-n">${(last.impressoes||0).toLocaleString('pt-BR')}</div><div class="met-l">Impressões</div>${prev?delta(last.impressoes,prev.impressoes):''}</div>
       </div>
-      <div class="chart-wrap"><div class="chart-title">Crescimento de Seguidores</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.seguidores})),'#C4967A')}</div>
-      <div class="chart-wrap"><div class="chart-title">Alcance por Mês</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.alcance})),'#4B2D22')}</div>
-      <div class="chart-wrap"><div class="chart-title">Impressões</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.impressoes})),'#6B3E28')}</div>
+      <div class="chart-wrap"><div class="chart-title">Crescimento de Seguidores</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.seguidores})),'#C9A800')}</div>
+      <div class="chart-wrap"><div class="chart-title">Alcance por Mês</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.alcance})),'#7A5C00')}</div>
+      <div class="chart-wrap"><div class="chart-title">Impressões</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.impressoes})),'#9B7500')}</div>
       ${topHtml ? `<div class="chart-wrap"><div class="chart-title">Top Posts do Mês</div><div class="top-post-grid">${topHtml}</div></div>` : ''}`;
   },
 
@@ -5640,7 +5655,7 @@ ${text}`,
         <div style="display:flex;gap:8px;align-items:center;margin-top:10px;">
           <input id="cl-link-nome" type="text" placeholder="Nome do link" style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;"/>
           <input id="cl-link-url" type="url" placeholder="https://..." style="flex:2;padding:10px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);font-family:Poppins,sans-serif;"/>
-          <button onclick="Client.adicionarLink()" style="padding:10px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;white-space:nowrap;">+ Link</button>
+          <button onclick="Client.adicionarLink()" style="padding:10px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;white-space:nowrap;">+ Link</button>
         </div>
       </div>
       <div class="table-wrap">${
@@ -5766,7 +5781,7 @@ ${text}`,
       const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const hasSol = solDates.includes(dateStr);
       const isToday = d===today.getDate();
-      calDays += `<div style="aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;cursor:default;${hasSol?'background:var(--brown);color:#F5EDD8;font-weight:600;':''}${isToday&&!hasSol?'border:1px solid var(--copper);color:var(--copper);':''}">${d}</div>`;
+      calDays += `<div style="aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;cursor:default;${hasSol?'background:var(--brown);color:#F5F5F5;font-weight:600;':''}${isToday&&!hasSol?'border:1px solid var(--copper);color:var(--copper);':''}">${d}</div>`;
     }
     const icons = {foto:'📷',video:'🎥',documento:'📄',feedback:'💬',aprovacao:'✅',outro:'📌'};
     const todayStr = today.toISOString().slice(0,10);
@@ -5793,10 +5808,10 @@ ${text}`,
             <span style="font-size:10px;padding:3px 10px;border-radius:20px;background:${s.status==='concluido'?'#E8F5E9':'#FFF3E0'};color:${s.status==='concluido'?'#2E7D32':'#E65100'};">${s.status==='concluido'?'✓ Concluído':'● Pendente'}</span>
           </div>
           ${s.descricao?`<p style="font-size:12px;color:var(--muted);margin:4px 0 6px;">${s.descricao}</p>`:''}
-          ${s.resposta?`<div style="padding:8px 10px;background:rgba(196,150,122,.08);border-radius:8px;font-size:12px;color:var(--text);"><strong>Sua resposta:</strong> ${s.resposta}</div>`:''}
+          ${s.resposta?`<div style="padding:8px 10px;background:rgba(201,162,39,.08);border-radius:8px;font-size:12px;color:var(--text);"><strong>Sua resposta:</strong> ${s.resposta}</div>`:''}
           ${s.status==='pendente'?`<div style="margin-top:10px;display:flex;gap:6px;">
             <input id="resp-${s.id}" type="text" placeholder="Deixe uma resposta ou observação..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);font-family:Poppins,sans-serif;"/>
-            <button onclick="Client.concluirSolicitacao('${s.id}')" style="padding:8px 14px;border-radius:8px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;cursor:pointer;white-space:nowrap;">Concluir →</button>
+            <button onclick="Client.concluirSolicitacao('${s.id}')" style="padding:8px 14px;border-radius:8px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;cursor:pointer;white-space:nowrap;">Concluir →</button>
           </div>`:''}
         </div>`;
       }).join('')}</div>`;
@@ -5817,7 +5832,7 @@ ${text}`,
     el.innerHTML = `
       <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:12px;color:var(--muted);">${list.length} ideia${list.length!==1?'s':''} no laboratório</span>
-        <button onclick="Client.abrirNovaIdeia()" style="padding:9px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Nova Ideia</button>
+        <button onclick="Client.abrirNovaIdeia()" style="padding:9px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">+ Nova Ideia</button>
       </div>
       ${!list.length ? '<p style="color:var(--muted);font-size:14px;text-align:center;padding:40px;font-style:italic;font-family:Cormorant Garamond,serif;">O laboratório está vazio — adicione a primeira ideia! ✦</p>' :
         list.map(i=>`<div class="idea-card">
@@ -5931,7 +5946,7 @@ const Theme = {
 Theme.init();
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('%c✦ MKT PRIMOR PORTAL v5.10 — build 20260510 ✦', 'background:#4B2D22;color:#F1C5AF;padding:4px 12px;border-radius:4px;font-weight:bold;');
+  console.log('%c✦ MKT PRIMOR PORTAL v5.10 — build 20260510 ✦', 'background:#7A5C00;color:#D4AF37;padding:4px 12px;border-radius:4px;font-weight:bold;');
   App.init();
   // Persist scroll position per tab
   const adminMain = document.getElementById('admin-main');
@@ -6000,7 +6015,7 @@ document.addEventListener('keydown', e => {
       <div class="modal-field"><label>Observação (opcional)</label><input type="text" id="mf-obs" placeholder="Ex: Pago via Pix"/></div>
       <div class="modal-err" id="mf-err"></div>
       <div style="display:flex;gap:10px;">
-        <button onclick="Admin.salvarFinanceiro()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Salvar →</button>
+        <button onclick="Admin.salvarFinanceiro()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Salvar →</button>
         <button onclick="Admin.fecharModalFin()" style="padding:11px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;">Cancelar</button>
       </div>
     </div>
@@ -6021,7 +6036,7 @@ document.addEventListener('keydown', e => {
       </div>
       <div class="modal-err" id="mi-err"></div>
       <div style="display:flex;gap:10px;">
-        <button id="mi-btn" onclick="Admin.salvarIdeia()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Salvar →</button>
+        <button id="mi-btn" onclick="Admin.salvarIdeia()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Salvar →</button>
         <button onclick="Admin.fecharModalIdeia()" style="padding:11px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;">Cancelar</button>
       </div>
     </div>
@@ -6034,7 +6049,7 @@ document.addEventListener('keydown', e => {
       <p>Descreva o que você gostaria de ajustar neste post.</p>
       <textarea data-rich id="ajuste-text" rows="4" placeholder="Ex: Mudar a cor do texto, ajustar a legenda para mencionar a promoção de maio..."></textarea>
       <div style="display:flex;gap:10px;margin-top:14px;">
-        <button onclick="Client.confirmarAjuste()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Enviar pedido →</button>
+        <button onclick="Client.confirmarAjuste()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;text-transform:uppercase;">Enviar pedido →</button>
         <button onclick="Client.fecharAjuste()" style="padding:11px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;">Cancelar</button>
       </div>
     </div>
@@ -6255,7 +6270,7 @@ document.addEventListener('keydown', e => {
 
       <div class="modal-err" id="mp-err"></div>
       <div style="display:flex;gap:10px;margin-top:4px;">
-        <button onclick="Admin.salvarPost()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;font-weight:300;letter-spacing:.08em;text-transform:uppercase;" id="mp-btn">Criar post →</button>
+        <button onclick="Admin.salvarPost()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;font-weight:300;letter-spacing:.08em;text-transform:uppercase;" id="mp-btn">Criar post →</button>
         <button onclick="Admin.fecharModalPost()" style="padding:11px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;">Cancelar</button>
       </div>
     </div>
@@ -6280,7 +6295,7 @@ document.addEventListener('keydown', e => {
       <div class="modal-field"><label>Senha temporária</label><input type="text" id="mc-senha" placeholder="Ex: Primor2026!" value="Primor2026!"/></div>
       <div class="modal-err" id="mc-err"></div>
       <div style="display:flex;gap:10px;">
-        <button onclick="Admin.salvarCliente()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;font-weight:300;letter-spacing:.08em;text-transform:uppercase;">Criar cliente →</button>
+        <button onclick="Admin.salvarCliente()" style="flex:1;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;font-weight:300;letter-spacing:.08em;text-transform:uppercase;">Criar cliente →</button>
         <button onclick="Admin.fecharModal()" style="padding:11px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;">Cancelar</button>
       </div>
     </div>
@@ -6325,7 +6340,7 @@ document.addEventListener('keydown', e => {
       <div style="margin-bottom:16px;"><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Observações</div><textarea data-rich id="mnl-obs" rows="2" placeholder="Notas sobre o lead..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;resize:none;"></textarea></div>
       <div style="display:flex;gap:8px;">
         <button onclick="Admin.fecharModalLead()" style="flex:1;padding:11px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;">Cancelar</button>
-        <button onclick="Admin.salvarNovoLead()" style="flex:2;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5EDD8;font-size:12px;letter-spacing:.06em;cursor:pointer;">Salvar lead →</button>
+        <button onclick="Admin.salvarNovoLead()" style="flex:2;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.06em;cursor:pointer;">Salvar lead →</button>
       </div>
     </div>
   </div>
@@ -6411,7 +6426,7 @@ document.addEventListener('keydown', e => {
   }
   .re-link-ok{
     padding:6px 14px;border-radius:7px;border:none;
-    background:var(--brown);color:#F5EDD8;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;
+    background:var(--brown);color:#F5F5F5;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;
   }
 </style>
 
