@@ -3395,7 +3395,7 @@ const Admin = {
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
           ${(mapas||[]).map(m => {
             let d = {}; try { d = JSON.parse(m.conteudo||'{}'); } catch {}
-            return `<div onclick="Admin._bcAbrirMapa(${m.id},'${c.email}')"
+            return `<div onclick="Admin._bcAbrirMapa('${m.id}','${c.email}')"
               style="border-radius:14px;border:1px solid var(--border);background:var(--surface);padding:18px;cursor:pointer;transition:all .18s;"
               onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.08)'"
               onmouseleave="this.style.transform='';this.style.boxShadow=''">
@@ -3452,7 +3452,7 @@ const Admin = {
           <button onclick="Admin._bcMmAddChild()" style="padding:7px 14px;border-radius:9px;background:var(--brown);color:#fff;border:none;cursor:pointer;font-size:11px;" title="Selecione um nó primeiro">+ Filho</button>
           <button onclick="Admin._bcMmAddRoot()" style="padding:7px 14px;border-radius:9px;background:var(--beige);border:1px solid var(--border);font-size:11px;cursor:pointer;color:var(--text);">+ Nó livre</button>
           <button onclick="Admin._bcSalvarMapa()" style="padding:7px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:500;">Salvar ✓</button>
-          <button onclick="Admin._bcExcluirMapa(${mapaId},'${email}')" style="padding:7px 12px;border-radius:9px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;font-size:11px;cursor:pointer;">Excluir</button>
+          <button onclick="Admin._bcExcluirMapa('${mapaId}','${email}')" style="padding:7px 12px;border-radius:9px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;font-size:11px;cursor:pointer;">Excluir</button>
         </div>
         <div style="display:flex;gap:10px;">
           <!-- Canvas -->
