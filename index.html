@@ -69,19 +69,26 @@
 
     /* ── SIDEBAR ICON-ONLY ── */
     html.dark .sidebar{
-      width:68px!important;
-      padding:16px 0!important;
+      width:78px!important;
+      padding:14px 4px!important;
       background:#111111;
       border-right:1px solid rgba(255,255,255,0.05);
       display:flex;flex-direction:column;align-items:center;overflow:visible;
     }
     html.dark .nav-section{display:none!important;}
-    html.dark .nl{display:none!important;}
+    html.dark .nl{
+      display:block!important;font-size:7px!important;text-align:center!important;
+      line-height:1.15!important;letter-spacing:0!important;white-space:nowrap!important;
+      overflow:hidden!important;text-overflow:ellipsis!important;max-width:66px!important;
+      margin-top:2px!important;opacity:.7;
+    }
+    html.dark .nav-item.active .nl{opacity:1!important;}
     html.dark .nav-item{
-      width:46px!important;height:46px!important;
+      width:62px!important;height:auto!important;min-height:44px!important;
       border-radius:12px!important;
-      padding:0!important;gap:0!important;
-      justify-content:center!important;
+      padding:6px 4px 5px!important;gap:2px!important;
+      flex-direction:column!important;
+      align-items:center!important;justify-content:center!important;
       color:#555555;margin-bottom:3px!important;
       position:relative;
     }
@@ -447,6 +454,76 @@
     .cb-post-cap{font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
     .cb-empty{padding:20px 18px;font-size:13px;color:var(--muted);font-style:italic;font-family:"Cormorant Garamond",serif;}
     @media(max-width:860px){.client-layout{grid-template-columns:1fr;}}
+
+    /* ── Sidebar toggle button (desktop light mode) ── */
+    .sidebar-toggle-btn{
+      display:flex;align-items:center;justify-content:flex-end;
+      width:100%;padding:0 2px 8px;box-sizing:border-box;
+      background:none;border:none;cursor:pointer;flex-shrink:0;
+    }
+    .stb-inner{
+      width:26px;height:26px;border-radius:7px;
+      border:1px solid var(--border);background:var(--bg);
+      color:var(--muted);font-size:11px;
+      display:flex;align-items:center;justify-content:center;
+      transition:all .18s;
+    }
+    .sidebar-toggle-btn:hover .stb-inner{background:var(--beige);color:var(--brown);}
+    .stb-icon{transition:transform .25s;display:inline-block;}
+
+    /* Collapsed: 78px icon+label (light mode desktop) */
+    #admin-view.sidebar-collapsed .sidebar{width:78px;padding:14px 4px;}
+    #admin-view.sidebar-collapsed .nav-section{display:none;}
+    #admin-view.sidebar-collapsed .nav-item{
+      flex-direction:column;padding:6px 4px 5px;gap:2px;
+      align-items:center;justify-content:center;margin-bottom:3px;
+    }
+    #admin-view.sidebar-collapsed .ni{font-size:18px;}
+    #admin-view.sidebar-collapsed .nl{
+      font-size:7px;text-align:center;line-height:1.15;letter-spacing:0;
+      display:block!important;white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;max-width:68px;opacity:.75;
+    }
+    #admin-view.sidebar-collapsed .nav-badge{display:none!important;}
+    #admin-view.sidebar-collapsed .sidebar-toggle-btn{justify-content:center;padding:0 0 8px;}
+    #admin-view.sidebar-collapsed .stb-icon{transform:rotate(180deg);}
+
+    /* ── Tablet hamburger (641-860px): sidebar becomes dropdown overlay ── */
+    @media(max-width:860px){
+      #admin-hamburger{display:flex!important;}
+      .sidebar{
+        display:none;position:absolute;top:0;left:0;right:0;z-index:400;
+        width:100%!important;height:auto;flex-direction:column;
+        background:var(--surface);
+        box-shadow:0 8px 28px rgba(10,10,0,.18);
+        border-bottom:1px solid var(--border);
+        padding:8px 0;overflow-y:auto;max-height:80vh;
+      }
+      #admin-view.sidebar-open .sidebar{display:flex;}
+      #admin-view.sidebar-collapsed .sidebar{width:100%!important;padding:8px 0!important;flex-direction:column!important;}
+      #admin-view.sidebar-collapsed .nav-section{display:block;}
+      #admin-view.sidebar-collapsed .nav-item{flex-direction:row!important;padding:12px 16px!important;gap:10px!important;align-items:center!important;justify-content:flex-start!important;margin-bottom:0!important;border-radius:0!important;}
+      #admin-view.sidebar-collapsed .ni{font-size:16px!important;}
+      #admin-view.sidebar-collapsed .nl{font-size:13px!important;text-align:left!important;opacity:1!important;max-width:none!important;white-space:normal!important;}
+      #admin-view.sidebar-collapsed .nav-badge{display:inline!important;}
+      .nav-section{display:block;font-size:9px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;padding:10px 16px 4px;}
+      .nav-item{flex-direction:row;padding:12px 16px;gap:10px;font-size:13px;border-radius:0;margin-bottom:0;border-bottom:1px solid var(--border);}
+      .nav-item:last-child{border-bottom:none;}
+      .ni{font-size:16px;}
+      .nl{font-size:13px;letter-spacing:0;}
+      .nav-badge{font-size:10px;padding:1px 7px;}
+      .admin-body{position:relative;}
+      .sidebar-toggle-btn{display:none!important;}
+      /* Dark mode: restore dropdown layout */
+      html.dark .sidebar{display:none!important;width:100%!important;padding:8px 0!important;flex-direction:column!important;align-items:stretch!important;background:#060606!important;}
+      html.dark #admin-view.sidebar-open .sidebar{display:flex!important;}
+      html.dark .nl{display:block!important;font-size:13px!important;text-align:left!important;line-height:1.4!important;letter-spacing:0!important;max-width:none!important;white-space:normal!important;opacity:1!important;margin-top:0!important;}
+      html.dark .nav-item{width:auto!important;height:auto!important;min-height:0!important;flex-direction:row!important;padding:12px 16px!important;gap:10px!important;align-items:center!important;justify-content:flex-start!important;border-radius:0!important;color:#aaa!important;}
+      html.dark .nav-item.active{background:rgba(212,168,67,0.12)!important;color:#D4A843!important;box-shadow:none!important;}
+      html.dark .nav-item:hover{color:#D4A843!important;}
+      html.dark .ni{font-size:16px!important;}
+      html.dark #admin-hamburger{background:#000000!important;border-bottom-color:#1A1500!important;}
+    }
     .cp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);transition:all .22s;display:flex;flex-direction:column;animation:fadeIn .4s ease;}
     .cp-card:hover{box-shadow:var(--sh2);}
     .cp-compact-hd{display:none;}
@@ -904,7 +981,7 @@
       <button class="btn-out" onclick="App.logout()">Sair</button>
     </div>
   </div>
-  <!-- Admin hamburger (mobile only) -->
+  <!-- Admin hamburger (tablet/mobile) -->
   <div id="admin-hamburger" style="display:none;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--brown);letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--surface);" onclick="document.getElementById('admin-view').classList.toggle('sidebar-open')">
     <span id="admin-active-tab-name">Leads</span>
     <span style="font-size:22px;color:var(--muted);">☰</span>
@@ -912,6 +989,9 @@
   <div class="admin-body">
     <!-- Sidebar -->
     <div class="sidebar" id="admin-sidebar">
+      <button class="sidebar-toggle-btn" onclick="Admin.toggleSidebar()" title="Recolher/expandir menu">
+        <span class="stb-inner"><span class="stb-icon">◀</span></span>
+      </button>
       <div class="nav-section">Menu</div>
       <div class="nav-item active" onclick="Admin.tab('leads')" id="nav-leads" title="Leads"><span class="ni">◉</span><span class="nl">Leads</span></div>
       <div class="nav-item" onclick="Admin.tab('followup')" id="nav-followup" title="Follow-up"><span class="ni">↗</span><span class="nl">Follow-up <span class="nav-badge" id="nb-fu" style="display:none">0</span></span></div>
@@ -1131,6 +1211,15 @@ const App = {
     ['login-view','admin-view','client-view'].forEach(v =>
       document.getElementById(v).classList.toggle('hidden', v !== id)
     );
+    if (id === 'admin-view') {
+      const saved = localStorage.getItem('sb-collapsed');
+      const isTablet = window.innerWidth <= 860;
+      if (saved === '1' || (saved === null && isTablet)) {
+        document.getElementById('admin-view')?.classList.add('sidebar-collapsed');
+      } else {
+        document.getElementById('admin-view')?.classList.remove('sidebar-collapsed');
+      }
+    }
   },
 
   loader(show) {
@@ -1145,6 +1234,12 @@ const Admin = {
   currentTab: 'leads',
   isEquipe: false,
   leads: [], followups: [], posts: [],
+
+  toggleSidebar() {
+    const v = document.getElementById('admin-view'); if (!v) return;
+    v.classList.toggle('sidebar-collapsed');
+    localStorage.setItem('sb-collapsed', v.classList.contains('sidebar-collapsed') ? '1' : '0');
+  },
 
   async tab(name) {
     this.currentTab = name;
