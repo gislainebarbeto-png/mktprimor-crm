@@ -3489,26 +3489,39 @@ const Admin = {
     const py = node.y + (this._bcMapaData.panY||0);
     const clr = node.color || '#B8820A';
     const bxShadow = (isSel ? '0 0 0 3px '+clr+',' : '') + '0 3px 14px rgba(0,0,0,0.22)';
-    const borderR = (isRoot ? 22 : 12);
-    const imgR = isRoot ? 19 : 9;
-    const imgHtml = node.imgUrl ? '<img src="'+node.imgUrl+'" style="width:100%;border-radius:'+imgR+'px '+imgR+'px 0 0;max-height:90px;object-fit:cover;display:block;pointer-events:none;"/>' : '';
+    const shape = node.shape || 'rounded';
+    const borderR = shape==='square' ? '5px' : shape==='circle' ? '50%' : (isRoot ? '22px' : '12px');
+    const outlineStyle = node.borderStyle==='solid' ? '2px solid rgba(255,255,255,0.4)'
+                       : node.borderStyle==='dotted' ? '2px dotted rgba(255,255,255,0.65)'
+                       : node.borderStyle==='dashed' ? '2px dashed rgba(255,255,255,0.65)' : 'none';
+    const imgR = shape==='circle' ? '50%' : (isRoot ? '19px 19px 0 0' : '9px 9px 0 0');
+    const imgHtml = node.imgUrl ? '<img src="'+node.imgUrl+'" style="width:100%;border-radius:'+imgR+';max-height:90px;object-fit:cover;display:block;pointer-events:none;"/>' : '';
     const pad = isRoot ? '10px 16px' : '6px 11px';
     const fs = isRoot ? 13 : 11;
-    const fw = isRoot ? 600 : 400;
-    const mw = isRoot ? 110 : 72;
+    const fw = node.bold ? (isRoot ? 800 : 700) : (isRoot ? 600 : 400);
+    const fStyle = node.italic ? 'italic' : 'normal';
+    const mw = shape==='circle' ? (isRoot?80:54) : (isRoot ? 110 : 72);
+    const addBtn = '<div onclick="event.stopPropagation();Admin._bcMmAddChild('+node.id+')" '
+      +'style="position:absolute;right:-12px;top:50%;transform:translateY(-50%);'
+      +'width:20px;height:20px;border-radius:50%;background:'+clr+';border:2px solid #fff;'
+      +'color:#fff;font-size:14px;font-weight:700;cursor:pointer;text-align:center;line-height:16px;'
+      +'z-index:20;pointer-events:auto;user-select:none;">+</div>';
     return '<div id="mm-node-'+node.id+'" class="mm-node" data-id="'+node.id+'"'
       +' style="position:absolute;left:'+px+'px;top:'+py+'px;transform:translate(-50%,-50%);'
-      +'min-width:'+mw+'px;max-width:200px;border-radius:'+borderR+'px;background:'+clr+';'
-      +'pointer-events:auto;cursor:pointer;'
+      +'min-width:'+mw+'px;max-width:200px;border-radius:'+borderR+';background:'+clr+';'
+      +'pointer-events:auto;cursor:pointer;overflow:hidden;'
       +'border:3px solid '+(isSel?'rgba(255,255,255,0.9)':'transparent')+';'
+      +'outline:'+outlineStyle+';outline-offset:-4px;'
       +'box-shadow:'+bxShadow+';transition:border-color .1s,box-shadow .1s;z-index:'+(isSel?10:5)+';"'
       +' onclick="Admin._bcMmNodeClick(event,'+node.id+')"'
       +' ondblclick="Admin._bcMmNodeDblClick(event,'+node.id+')"'
       +' onmousedown="Admin._bcMmNodeDown(event,'+node.id+')">'
       + imgHtml
       +'<div class="mm-node-text" style="padding:'+pad+';color:#fff;font-size:'+fs+'px;font-weight:'+fw+';'
-      +'font-family:Poppins,sans-serif;text-align:center;line-height:1.35;word-break:break-word;pointer-events:none;">'
-      +(node.text||'')+'</div></div>';
+      +'font-style:'+fStyle+';font-family:Poppins,sans-serif;text-align:center;line-height:1.35;word-break:break-word;pointer-events:none;">'
+      +(node.text||'')+'</div>'
+      + addBtn
+      +'</div>';
   },
 
   _bcMmRenderAll() {
@@ -3656,27 +3669,51 @@ const Admin = {
       ${node.imgUrl ? `<button onclick="Admin._bcMmRemoveImg(${node.id})" style="width:100%;padding:5px;border-radius:7px;background:var(--beige);border:1px solid var(--border);font-size:10px;cursor:pointer;color:var(--muted);margin-bottom:4px;">× Remover foto</button>` : ''}
       <button onclick="Admin._bcMmDelete(${node.id})" style="width:100%;padding:6px;border-radius:7px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;font-size:11px;cursor:pointer;margin-bottom:10px;font-family:Poppins,sans-serif;" ${node.parentId===null?'disabled':''}>× Excluir nó</button>
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Cor do nó</div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:10px;">
         ${colors.map(c=>`<div onclick="Admin._bcMmSetColor('${c}')" style="height:22px;border-radius:5px;background:${c};cursor:pointer;border:2px solid ${node.color===c?'#fff':'transparent'};transition:border-color .1s;" title="${c}"></div>`).join('')}
+      </div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Forma</div>
+      <div style="display:flex;gap:3px;margin-bottom:8px;">
+        ${[['rounded','⬭','Arred.'],['square','◼','Quad.'],['circle','●','Círculo']].map(([s,icon,lbl])=>'<button onclick="Admin._bcMmSetStyle(\'shape\',\''+s+'\')" style="flex:1;padding:4px 2px;border-radius:5px;border:2px solid '+((node.shape||'rounded')===s?'var(--brown)':'var(--border)')+';background:'+((node.shape||'rounded')===s?'var(--brown)':'var(--beige)')+';color:'+((node.shape||'rounded')===s?'#fff':'var(--text)')+';font-size:13px;cursor:pointer;" title="'+lbl+'">'+icon+'</button>').join('')}
+      </div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Borda</div>
+      <div style="display:flex;gap:3px;margin-bottom:8px;">
+        ${[['none','—'],['solid','▬'],['dotted','···'],['dashed','- -']].map(([k,lbl])=>'<button onclick="Admin._bcMmSetStyle(\'border\',\''+k+'\')" style="flex:1;padding:4px 2px;border-radius:5px;border:2px solid '+((node.borderStyle||'none')===k?'var(--brown)':'var(--border)')+';background:'+((node.borderStyle||'none')===k?'var(--brown)':'var(--beige)')+';color:'+((node.borderStyle||'none')===k?'#fff':'var(--text)')+';font-size:11px;cursor:pointer;">'+lbl+'</button>').join('')}
+      </div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Texto</div>
+      <div style="display:flex;gap:4px;">
+        <button onclick="Admin._bcMmSetStyle('bold',${!node.bold})" style="flex:1;padding:5px;border-radius:6px;border:2px solid ${node.bold?'var(--brown)':'var(--border)'};background:${node.bold?'var(--brown)':'var(--beige)'};color:${node.bold?'#fff':'var(--text)'};font-size:13px;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif;">N</button>
+        <button onclick="Admin._bcMmSetStyle('italic',${!node.italic})" style="flex:1;padding:5px;border-radius:6px;border:2px solid ${node.italic?'var(--brown)':'var(--border)'};background:${node.italic?'var(--brown)':'var(--beige)'};color:${node.italic?'#fff':'var(--text)'};font-size:13px;font-style:italic;cursor:pointer;font-family:Poppins,sans-serif;">I</button>
       </div>`;
   },
 
-  _bcMmAddChild() {
-    if (!this._bcMapaSel || !this._bcMapaData) { this._showToast('Selecione um nó primeiro'); return; }
-    const parent = this._bcMapaData.nodes.find(n=>n.id===this._bcMapaSel); if (!parent) return;
+  _bcMmAddChild(parentId) {
+    const selId = (parentId !== undefined && parentId !== null) ? parentId : this._bcMapaSel;
+    if (!selId || !this._bcMapaData) { this._showToast('Selecione um nó primeiro'); return; }
+    const parent = this._bcMapaData.nodes.find(n=>n.id===selId); if (!parent) return;
     const palette = ['#7C3AED','#0891B2','#059669','#DC2626','#EC4899','#F97316','#6366F1','#0F766E'];
     const color = palette[this._bcMapaData.nextId % palette.length];
     const id = this._bcMapaData.nextId++;
-    const siblings = this._bcMapaData.nodes.filter(n=>n.parentId===this._bcMapaSel).length;
+    const siblings = this._bcMapaData.nodes.filter(n=>n.parentId===selId).length;
     const side = parent.x < 0 ? -1 : 1;
     const x = parent.x + side * (180 + (siblings%2)*30);
     const y = parent.y + (Math.floor(siblings/2)*100) - (Math.ceil(siblings/2)*50);
-    const newNode = {id, text:'Novo ramo', x, y, parentId:this._bcMapaSel, color, imgUrl:null};
+    const newNode = {id, text:'Novo ramo', x, y, parentId:selId, color, imgUrl:null};
     this._bcMapaData.nodes.push(newNode);
     this._bcMapaSel = id;
     this._bcMmRenderAll();
     this._bcMmUpdatePanel();
     setTimeout(()=>this._bcMmNodeDblClick({stopPropagation:()=>{}},id),80);
+  },
+
+  _bcMmSetStyle(prop, value) {
+    if (!this._bcMapaSel || !this._bcMapaData) return;
+    const node = this._bcMapaData.nodes.find(n=>n.id===this._bcMapaSel); if (!node) return;
+    if (prop==='shape') node.shape = value;
+    else if (prop==='border') node.borderStyle = value;
+    else if (prop==='bold') node.bold = value;
+    else if (prop==='italic') node.italic = value;
+    this._bcMmRenderAll(); this._bcMmUpdatePanel();
   },
 
   _bcMmAddRoot() {
