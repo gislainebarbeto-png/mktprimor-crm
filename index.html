@@ -3541,31 +3541,45 @@ const Admin = {
     const content = document.getElementById('cli-tab-content');
     content.innerHTML = `
       <div style="max-width:1040px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+        <style>
+          .mm-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+          .mm-outer{display:flex;gap:10px;align-items:flex-start;}
+          .mm-canvas-area{flex:1;position:relative;height:530px;overflow:hidden;border-radius:14px;border:1px solid var(--border);background:var(--bg);cursor:grab;user-select:none;touch-action:none;}
+          .mm-panel-area{width:168px;flex-shrink:0;}
+          @media(max-width:700px){
+            .mm-outer{flex-direction:column;}
+            .mm-canvas-area{width:100%;height:52vh;min-height:260px;box-sizing:border-box;}
+            .mm-panel-area{width:100%;}
+            .mm-header .mm-title{font-size:16px!important;}
+            .mm-header button{padding:6px 10px!important;font-size:10px!important;}
+          }
+        </style>
+        <div class="mm-header">
           <button onclick="Admin._bcMapaSel=null;Admin._bcMapaData=null;Admin._bcSection='estrategias';Admin._bcEstrategias(Admin._cliCurrentId,Admin._cliClienteData)" style="width:34px;height:34px;border-radius:10px;background:var(--beige);border:1px solid var(--border);font-size:18px;cursor:pointer;color:var(--muted);flex-shrink:0;">←</button>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--brown);flex:1;">${data.title||'Mapa Mental'}</div>
+          <div class="mm-title" style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--brown);flex:1;">${data.title||'Mapa Mental'}</div>
           <button onclick="Admin._bcMmAddChild()" style="padding:7px 14px;border-radius:9px;background:var(--brown);color:#fff;border:none;cursor:pointer;font-size:11px;" title="Selecione um nó primeiro">+ Filho</button>
           <button onclick="Admin._bcMmAddRoot()" style="padding:7px 14px;border-radius:9px;background:var(--beige);border:1px solid var(--border);font-size:11px;cursor:pointer;color:var(--text);">+ Nó livre</button>
           <button onclick="Admin._bcSalvarMapa()" style="padding:7px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:500;">Salvar ✓</button>
           <button onclick="Admin._bcExcluirMapa('${mapaId}','${email}')" style="padding:7px 12px;border-radius:9px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;font-size:11px;cursor:pointer;">Excluir</button>
         </div>
-        <div style="display:flex;gap:10px;">
+        <div class="mm-outer">
           <!-- Canvas -->
-          <div id="bc-mm-wrap" style="flex:1;position:relative;height:530px;overflow:hidden;border-radius:14px;border:1px solid var(--border);background:var(--bg);cursor:grab;user-select:none;"
+          <div id="bc-mm-wrap" class="mm-canvas-area"
             onmousedown="Admin._bcMmWrapDown(event)"
             onmousemove="Admin._bcMmWrapMove(event)"
             onmouseup="Admin._bcMmWrapUp(event)"
-            onmouseleave="Admin._bcMmWrapUp(event)">
-            <!-- dot grid background -->
+            onmouseleave="Admin._bcMmWrapUp(event)"
+            ontouchstart="Admin._bcMmWrapTouchDown(event)"
+            ontouchmove="Admin._bcMmWrapTouchMove(event)"
+            ontouchend="Admin._bcMmWrapTouchUp(event)"
+            onclick="Admin._bcMmWrapClick(event)">
             <div style="position:absolute;inset:0;background-image:radial-gradient(circle,var(--muted) 1px,transparent 1px);background-size:28px 28px;opacity:0.18;pointer-events:none;"></div>
-            <!-- SVG connections layer -->
             <svg id="bc-mm-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:1;"></svg>
-            <!-- Nodes layer -->
             <div id="bc-mm-nodes" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;"></div>
-            <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted);pointer-events:none;white-space:nowrap;opacity:0.7;">Duplo clique para editar · Tab = filho · Arraste para mover · Fundo = navegar</div>
+            <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted);pointer-events:none;white-space:nowrap;opacity:0.7;">Toque 2× para editar · + para filho · Arraste para mover</div>
           </div>
           <!-- Panel -->
-          <div style="width:168px;flex-shrink:0;">
+          <div class="mm-panel-area">
             <div id="bc-mm-panel" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;">
               <div style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">Clique em<br>um nó para editar</div>
             </div>
@@ -3625,7 +3639,8 @@ const Admin = {
       +'box-shadow:'+bxShadow+';transition:border-color .1s,box-shadow .1s;z-index:'+(isSel?10:5)+';"'
       +' onclick="Admin._bcMmNodeClick(event,'+node.id+')"'
       +' ondblclick="Admin._bcMmNodeDblClick(event,'+node.id+')"'
-      +' onmousedown="Admin._bcMmNodeDown(event,'+node.id+')">'
+      +' onmousedown="Admin._bcMmNodeDown(event,'+node.id+')"'
+      +' ontouchstart="Admin._bcMmNodeTouchDown(event,'+node.id+')">'
       + imgHtml
       +'<div class="mm-node-text" style="padding:'+pad+';color:'+textClr+';font-size:'+fs+'px;font-weight:'+fw+';'
       +'font-style:'+fStyle+';font-family:Poppins,sans-serif;text-align:center;line-height:1.35;word-break:break-word;pointer-events:none;">'
@@ -3715,9 +3730,63 @@ const Admin = {
     if (wrap) wrap.style.cursor = 'grab';
   },
 
+  /* ── Touch events (mobile) ── */
+  _bcMmNodeTouchDown(e, nodeId) {
+    e.stopPropagation();
+    const t = e.touches[0];
+    this._bcMapaDrag = nodeId;
+    const wrap = document.getElementById('bc-mm-wrap'); if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    const node = this._bcMapaData?.nodes.find(n=>n.id===nodeId); if (!node) return;
+    const panX = this._bcMapaData.panX||0, panY = this._bcMapaData.panY||0;
+    this._bcMapaDragOff = {x: t.clientX - rect.left - node.x - panX, y: t.clientY - rect.top - node.y - panY};
+    this._bcMmTouchMoved = false;
+  },
+
+  _bcMmWrapTouchDown(e) {
+    if (e.target.closest('.mm-node')) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    this._bcMmPanning = true;
+    this._bcMmPanOrigin = {x: t.clientX - (this._bcMapaData?.panX||0), y: t.clientY - (this._bcMapaData?.panY||0)};
+  },
+
+  _bcMmWrapTouchMove(e) {
+    e.preventDefault();
+    const t = e.touches[0];
+    this._bcMmTouchMoved = true;
+    if (this._bcMapaDrag && this._bcMapaData) {
+      const wrap = document.getElementById('bc-mm-wrap'); if (!wrap) return;
+      const rect = wrap.getBoundingClientRect();
+      const node = this._bcMapaData.nodes.find(n=>n.id===this._bcMapaDrag); if (!node) return;
+      node.x = t.clientX - rect.left - (this._bcMapaData.panX||0) - this._bcMapaDragOff.x;
+      node.y = t.clientY - rect.top  - (this._bcMapaData.panY||0) - this._bcMapaDragOff.y;
+      this._bcMmUpdateNodePos(node);
+      this._bcMmUpdateSvg();
+    } else if (this._bcMmPanning && this._bcMapaData) {
+      this._bcMapaData.panX = t.clientX - this._bcMmPanOrigin.x;
+      this._bcMapaData.panY = t.clientY - this._bcMmPanOrigin.y;
+      this._bcMapaData.nodes.forEach(n => this._bcMmUpdateNodePos(n));
+      this._bcMmUpdateSvg();
+    }
+  },
+
+  _bcMmWrapTouchUp(e) {
+    this._bcMapaDrag = null;
+    this._bcMmPanning = false;
+  },
+
   _bcMmNodeClick(e, nodeId) {
     e.stopPropagation();
     if (this._bcMapaDrag) return;
+    // Double-tap detection for mobile
+    const now = Date.now();
+    if (this._bcLastTap && this._bcLastTap.id === nodeId && now - this._bcLastTap.t < 380) {
+      this._bcLastTap = null;
+      this._bcMmNodeDblClick(e, nodeId);
+      return;
+    }
+    this._bcLastTap = {id: nodeId, t: now};
     this._bcMapaSel = nodeId;
     document.querySelectorAll('.mm-node').forEach(el => {
       const nid = parseInt(el.dataset.id);
@@ -3786,7 +3855,11 @@ const Admin = {
   _bcMmUpdatePanel() {
     const panel = document.getElementById('bc-mm-panel'); if (!panel) return;
     const node = this._bcMapaData?.nodes.find(n=>n.id===this._bcMapaSel);
-    if (!node) { panel.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">Clique em<br>um nó para editar</div>'; return; }
+    if (!node) { panel.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">Toque em<br>um nó para editar</div>'; return; }
+    // On mobile, scroll panel into view when a node is selected
+    if (window.innerWidth <= 700) {
+      setTimeout(() => panel.scrollIntoView({behavior:'smooth', block:'nearest'}), 60);
+    }
     const colors = ['#F9A8D4','#FCA5A5','#FCD09A','#FDE68A','#A7F3D0','#BAE6FD','#C4B5FD','#F0ABFC','#6EE7B7','#93C5FD'];
     const textColors = ['#ffffff','#333333','#7B2D8B','#0C4A6E','#166534','#92400E','#BE185D','#1D4ED8','#065F46','#991B1B'];
     const curBw = node.borderWidth||2;
