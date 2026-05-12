@@ -1958,7 +1958,12 @@ const Admin = {
   },
 
   async openPost(id) {
-    const p = this.posts.find(x=>x.id===id); if(!p) return;
+    let p = this.posts.find(x=>x.id===id);
+    if (!p) {
+      const { data } = await db.from('posts').select('*').eq('id', id).single();
+      if (!data) return;
+      p = data;
+    }
     const SM = {criacao:{l:'Aprovar',c:'#92400E'},revisao:{l:'Revisar',c:'#9A3412'},aprovado:{l:'Aprovado',c:'#14532D'},publicado:{l:'Publicado',c:'#1E3A8A'}};
     const m = SM[p.status]||SM.criacao;
     const postMedia = this._parsePostMedia(p.midia_urls || p.img_url);
@@ -4486,7 +4491,12 @@ const Admin = {
     await db.from('posts').update({status}).eq('id',id);
     this.loader(false);
     this.closeDetail();
-    this.tab('posts');
+    // Se está na view de cliente, volta para os posts do cliente; senão vai para a aba Posts global
+    if (this._cliCurrentId && this._cliClienteData) {
+      this._cliTabPosts(this._cliCurrentId, this._cliClienteData);
+    } else {
+      this.tab('posts');
+    }
   },
 
   _dragPostId: null,
@@ -4509,7 +4519,12 @@ const Admin = {
 
   _editPostId: null,
   async editarPost(id) {
-    const p = this.posts.find(x=>x.id===id); if(!p) return;
+    let p = this.posts.find(x=>x.id===id);
+    if (!p) {
+      const { data } = await db.from('posts').select('*').eq('id', id).single();
+      if (!data) return;
+      p = data;
+    }
     await this.abrirModalPost();
     this._editPostId = id;
     // Pre-fill fields
@@ -4556,7 +4571,11 @@ const Admin = {
     await db.from('posts').delete().eq('id',id);
     this.loader(false);
     this.closeDetail();
-    this.tab('posts');
+    if (this._cliCurrentId && this._cliClienteData) {
+      this._cliTabPosts(this._cliCurrentId, this._cliClienteData);
+    } else {
+      this.tab('posts');
+    }
   },
   async excluirCliente(id) {
     if (!confirm('Excluir este cliente? Todos os dados vinculados a ele permanecerão no banco.')) return;
