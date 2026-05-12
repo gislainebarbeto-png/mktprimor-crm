@@ -3488,12 +3488,16 @@ const Admin = {
     const px = node.x + (this._bcMapaData.panX||0);
     const py = node.y + (this._bcMapaData.panY||0);
     const clr = node.color || '#B8820A';
-    const bxShadow = (isSel ? '0 0 0 3px '+clr+',' : '') + '0 3px 14px rgba(0,0,0,0.22)';
+    const noFill = !!node.noFill;
+    const bg = noFill ? 'transparent' : clr;
+    const textClr = noFill ? clr : '#fff';
+    const selBorder = isSel ? (noFill ? '3px solid '+clr : '3px solid rgba(255,255,255,0.9)') : (noFill ? '2px solid '+clr : '3px solid transparent');
+    const bxShadow = (isSel ? '0 0 0 3px '+clr+',' : '') + '0 3px 14px rgba(0,0,0,0.18)';
     const shape = node.shape || 'rounded';
     const borderR = shape==='square' ? '5px' : shape==='circle' ? '50%' : (isRoot ? '22px' : '12px');
-    const outlineStyle = node.borderStyle==='solid' ? '2px solid rgba(255,255,255,0.4)'
-                       : node.borderStyle==='dotted' ? '2px dotted rgba(255,255,255,0.65)'
-                       : node.borderStyle==='dashed' ? '2px dashed rgba(255,255,255,0.65)' : 'none';
+    const outlineStyle = node.borderStyle==='solid' ? '2px solid '+(noFill?clr:'rgba(255,255,255,0.4)')
+                       : node.borderStyle==='dotted' ? '2px dotted '+(noFill?clr:'rgba(255,255,255,0.65)')
+                       : node.borderStyle==='dashed' ? '2px dashed '+(noFill?clr:'rgba(255,255,255,0.65)') : 'none';
     const imgR = shape==='circle' ? '50%' : (isRoot ? '19px 19px 0 0' : '9px 9px 0 0');
     const imgHtml = node.imgUrl ? '<img src="'+node.imgUrl+'" style="width:100%;border-radius:'+imgR+';max-height:90px;object-fit:cover;display:block;pointer-events:none;"/>' : '';
     const pad = isRoot ? '10px 16px' : '6px 11px';
@@ -3508,16 +3512,16 @@ const Admin = {
       +'z-index:20;pointer-events:auto;user-select:none;">+</div>';
     return '<div id="mm-node-'+node.id+'" class="mm-node" data-id="'+node.id+'"'
       +' style="position:absolute;left:'+px+'px;top:'+py+'px;transform:translate(-50%,-50%);'
-      +'min-width:'+mw+'px;max-width:200px;border-radius:'+borderR+';background:'+clr+';'
+      +'min-width:'+mw+'px;max-width:200px;border-radius:'+borderR+';background:'+bg+';'
       +'pointer-events:auto;cursor:pointer;overflow:hidden;'
-      +'border:3px solid '+(isSel?'rgba(255,255,255,0.9)':'transparent')+';'
+      +selBorder+';'
       +'outline:'+outlineStyle+';outline-offset:-4px;'
       +'box-shadow:'+bxShadow+';transition:border-color .1s,box-shadow .1s;z-index:'+(isSel?10:5)+';"'
       +' onclick="Admin._bcMmNodeClick(event,'+node.id+')"'
       +' ondblclick="Admin._bcMmNodeDblClick(event,'+node.id+')"'
       +' onmousedown="Admin._bcMmNodeDown(event,'+node.id+')">'
       + imgHtml
-      +'<div class="mm-node-text" style="padding:'+pad+';color:#fff;font-size:'+fs+'px;font-weight:'+fw+';'
+      +'<div class="mm-node-text" style="padding:'+pad+';color:'+textClr+';font-size:'+fs+'px;font-weight:'+fw+';'
       +'font-style:'+fStyle+';font-family:Poppins,sans-serif;text-align:center;line-height:1.35;word-break:break-word;pointer-events:none;">'
       +(node.text||'')+'</div>'
       + addBtn
@@ -3669,8 +3673,11 @@ const Admin = {
       ${node.imgUrl ? `<button onclick="Admin._bcMmRemoveImg(${node.id})" style="width:100%;padding:5px;border-radius:7px;background:var(--beige);border:1px solid var(--border);font-size:10px;cursor:pointer;color:var(--muted);margin-bottom:4px;">× Remover foto</button>` : ''}
       <button onclick="Admin._bcMmDelete(${node.id})" style="width:100%;padding:6px;border-radius:7px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;font-size:11px;cursor:pointer;margin-bottom:10px;font-family:Poppins,sans-serif;" ${node.parentId===null?'disabled':''}>× Excluir nó</button>
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Cor do nó</div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:10px;">
-        ${colors.map(c=>`<div onclick="Admin._bcMmSetColor('${c}')" style="height:22px;border-radius:5px;background:${c};cursor:pointer;border:2px solid ${node.color===c?'#fff':'transparent'};transition:border-color .1s;" title="${c}"></div>`).join('')}
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:4px;">
+        ${colors.map(c=>`<div onclick="Admin._bcMmSetColor('${c}')" style="height:22px;border-radius:5px;background:${c};cursor:pointer;border:2px solid ${(!node.noFill&&node.color===c)?'#fff':'transparent'};transition:border-color .1s;" title="${c}"></div>`).join('')}
+      </div>
+      <div onclick="Admin._bcMmSetNoFill()" style="height:22px;border-radius:5px;cursor:pointer;border:2px solid ${node.noFill?'var(--brown)':'var(--border)'};background:transparent;display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:10px;transition:border-color .1s;">
+        <span style="font-size:9px;color:${node.noFill?'var(--brown)':'var(--muted)'};text-transform:uppercase;letter-spacing:.06em;font-weight:${node.noFill?'600':'400'};">⊘ Sem cor</span>
       </div>
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Forma</div>
       <div style="display:flex;gap:3px;margin-bottom:8px;">
@@ -3744,9 +3751,15 @@ const Admin = {
     if (!this._bcMapaSel || !this._bcMapaData) return;
     const node = this._bcMapaData.nodes.find(n=>n.id===this._bcMapaSel); if (!node) return;
     node.color = color;
-    const el = document.getElementById('mm-node-'+this._bcMapaSel);
-    if (el) { el.style.background=color; el.style.boxShadow=`0 0 0 3px ${color},0 3px 14px rgba(0,0,0,0.22)`; }
-    this._bcMmUpdateSvg(); this._bcMmUpdatePanel();
+    node.noFill = false;
+    this._bcMmRenderAll(); this._bcMmUpdatePanel();
+  },
+
+  _bcMmSetNoFill() {
+    if (!this._bcMapaSel || !this._bcMapaData) return;
+    const node = this._bcMapaData.nodes.find(n=>n.id===this._bcMapaSel); if (!node) return;
+    node.noFill = !node.noFill;
+    this._bcMmRenderAll(); this._bcMmUpdatePanel();
   },
 
   async _bcMmUploadImg(input, nodeId) {
