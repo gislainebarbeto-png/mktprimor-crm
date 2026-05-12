@@ -2603,6 +2603,7 @@ const Admin = {
       { key:'posicionamento',icon:'✦',title:'Posicionamento de Imagem',desc:'Identidade, voz e expressão visual', color:'#B8820A', bg:'rgba(184,130,10,0.08)' },
       { key:'esteira',     icon:'◈', title:'Esteira de Produtos',    desc:'Portfólio de produtos e serviços',    color:'#059669', bg:'rgba(5,150,105,0.08)' },
       { key:'arquivos_bc', icon:'▤', title:'Arquivos',               desc:'Documentos e referências do projeto', color:'#6B7280', bg:'rgba(107,114,128,0.08)' },
+      { key:'estrategias', icon:'🗺', title:'Estratégias',           desc:'Mapas mentais e planejamento visual',  color:'#0891B2', bg:'rgba(8,145,178,0.08)' },
     ];
     content.innerHTML = `
       <div style="max-width:800px;">
@@ -2632,6 +2633,7 @@ const Admin = {
     else if (section==='posicionamento') this._bcPosicionamento(id, c);
     else if (section==='esteira')  this._bcEsteira(id, c);
     else if (section==='arquivos_bc') this._bcArquivos(id, c);
+    else if (section==='estrategias') this._bcEstrategias(id, c);
   },
 
   _bcBack(id, c) {
@@ -2704,7 +2706,8 @@ const Admin = {
     const tabGeral = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
         ${this._bcField('URL do Instagram', this._bcInput('bc-dg-ig', dg.instagram,'https://instagram.com/...'))}
-        ${this._bcField('Print do perfil (URL da imagem)', this._bcInput('bc-dg-print',dg.print_url,'Cole a URL do print'))}
+        ${this._bcImgUploadField('bc-dg-print', dg.print_url, 'Print do perfil', `Admin._bcUploadSingle(this,'bc-dg-print','bc-dg-print-prev','${c.email}')`)}
+        <div id="bc-dg-print-prev" style="${dg.print_url?'':'display:none;'}grid-column:span 1;margin-bottom:14px;"><img src="${dg.print_url||''}" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;border:1px solid var(--border);"/></div>
         <div style="grid-column:span 2;"><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);">Identidade Visual</div></div>
         ${this._bcField('Qualidade da identidade visual', this._bcRadio('bc-dg-iv',qualOpts,dg.identidade_visual), 2)}
         ${this._bcField('Observações (Identidade Visual)', this._bcTextarea('bc-dg-iv-obs',dg.iv_obs,'Coerência, paleta, tipografia...'), 2)}
@@ -2875,7 +2878,10 @@ const Admin = {
 
     const tabVisao = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
-        ${this._bcField('Foto da Persona (URL)', this._bcInput('bc-pv-foto',pv.foto_url,'URL da imagem'))}
+        <div style="grid-column:span 1;">
+          ${this._bcImgUploadField('bc-pv-foto', pv.foto_url, 'Foto da Persona', `Admin._bcUploadSingle(this,'bc-pv-foto','bc-pv-foto-prev','${c.email}')`)}
+          <div id="bc-pv-foto-prev" style="${pv.foto_url?'':'display:none;'}margin-top:6px;"><img src="${pv.foto_url||''}" style="width:100%;height:140px;object-fit:cover;border-radius:10px;border:1px solid var(--border);"/></div>
+        </div>
         ${this._bcField('Nome da Persona', this._bcInput('bc-pv-nome',pv.nome,'Ex: Mariana, 34 anos'))}
         ${this._bcField('Idade', this._bcInput('bc-pv-idade',pv.idade,'Ex: 28-40 anos'))}
         ${this._bcField('Localização', this._bcInput('bc-pv-local',pv.localizacao,'Cidade/Região'))}
@@ -2919,16 +2925,23 @@ const Admin = {
         ${this._bcField('Palavras que descrevem o visual ideal', this._bcTextarea('bc-pvi-palavras',pvi.palavras,'Ex: Minimalista, sofisticado, caloroso...',3), 2)}
         ${this._bcField('Paleta de cores referência', this._bcInput('bc-pvi-paleta',pvi.paleta,'Ex: Terracota, off-white, dourado'))}
         ${this._bcField('Tipografia / Estilo de fonte', this._bcInput('bc-pvi-tipo',pvi.tipografia,'Ex: Serif elegante, sans-serif clean'))}
-        ${this._bcField('Referências visuais (URLs separadas por vírgula)', this._bcTextarea('bc-pvi-refs',pvi.referencias,'https://..., https://...',3), 2)}
         <div style="grid-column:span 2;">
           <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Moodboard de referências</div>
-          <div id="bc-moodboard" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-            ${(pvi.referencias||'').split(',').filter(u=>u.trim()).map(u => `
-              <div style="border-radius:10px;overflow:hidden;aspect-ratio:1;background:var(--beige);">
-                <img src="${u.trim()}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'"/>
-              </div>`).join('')}
-            ${!(pvi.referencias||'').trim() ? `<div style="border-radius:10px;background:var(--beige);aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">Cole URLs acima</div>` : ''}
+          <div id="bc-moodboard" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;">
+            ${(()=>{
+              const urls = Array.isArray(pvi.referencias) ? pvi.referencias : (pvi.referencias||'').split(',').map(u=>u.trim()).filter(Boolean);
+              return urls.map((u,i) => `
+                <div style="border-radius:10px;overflow:hidden;aspect-ratio:1;background:var(--beige);position:relative;">
+                  <img src="${u}" style="width:100%;height:100%;object-fit:cover;"/>
+                  <button onclick="Admin._bcMoodRemove(${i},'${c.email}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.5);border:none;color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;cursor:pointer;line-height:1;">×</button>
+                </div>`).join('') || '<div style="border-radius:10px;background:var(--beige);aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">Adicione imagens abaixo</div>';
+            })()}
           </div>
+          <label style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px dashed var(--border);border-radius:9px;cursor:pointer;font-size:11px;color:var(--muted);background:var(--bg);" onmouseenter="this.style.borderColor='var(--brown)'" onmouseleave="this.style.borderColor='var(--border)'">
+            🖼 Adicionar imagem ao moodboard
+            <input type="file" accept="image/*" multiple style="display:none" onchange="Admin._bcMoodUpload(this,'${c.email}')"/>
+          </label>
+          <input type="hidden" id="bc-pvi-refs" value="${(()=>{ const u = Array.isArray(pvi.referencias)?pvi.referencias:(pvi.referencias||'').split(',').map(s=>s.trim()).filter(Boolean); return JSON.stringify(u).replace(/"/g,'&quot;'); })()}"/>
         </div>
         ${this._bcField('Elementos visuais a evitar', this._bcTextarea('bc-pvi-evitar',pvi.evitar,'O que não combina com a persona?',3), 2)}
       </div>
@@ -2964,7 +2977,8 @@ const Admin = {
   },
   async _bcSalvarPersonaVisual(email) {
     const g = v => document.getElementById(v)?.value||'';
-    await this._bcSave(email,'bc_persona_visual',{palavras:g('bc-pvi-palavras'),paleta:g('bc-pvi-paleta'),tipografia:g('bc-pvi-tipo'),referencias:g('bc-pvi-refs'),evitar:g('bc-pvi-evitar')});
+    let refs = []; try { refs = JSON.parse(g('bc-pvi-refs')||'[]'); } catch { refs = []; }
+    await this._bcSave(email,'bc_persona_visual',{palavras:g('bc-pvi-palavras'),paleta:g('bc-pvi-paleta'),tipografia:g('bc-pvi-tipo'),referencias:refs,evitar:g('bc-pvi-evitar')});
     this._showToast('Recursos Visuais salvos ✓');
   },
 
@@ -3287,6 +3301,314 @@ const Admin = {
     if (!confirm('Excluir este arquivo?')) return;
     await db.from('arquivos_cliente').delete().eq('id',id);
     this._bcArquivos(this._cliCurrentId,this._cliClienteData);
+  },
+
+  /* ─── IMAGE UPLOAD HELPERS ─── */
+  _bcImgUploadField(fieldId, currentUrl, label, onchangeHandler) {
+    return `<div style="margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">${label}</div>
+      <label style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px dashed var(--border);border-radius:9px;cursor:pointer;font-size:11px;color:var(--muted);background:var(--bg);transition:border-color .15s;" onmouseenter="this.style.borderColor='var(--brown)'" onmouseleave="this.style.borderColor='var(--border)'">
+        📷 ${currentUrl ? 'Trocar imagem' : 'Fazer upload'}
+        <input type="file" accept="image/*" style="display:none" onchange="${onchangeHandler}"/>
+      </label>
+      <input type="hidden" id="${fieldId}" value="${currentUrl||''}"/>
+    </div>`;
+  },
+
+  async _bcUploadSingle(input, fieldId, prevId, email) {
+    const file = input.files[0]; if (!file) return;
+    const ext = file.name.split('.').pop();
+    const path = `brand-core/${email}/${fieldId}_${Date.now()}.${ext}`;
+    const { error } = await db.storage.from('posts-media').upload(path, file, {cacheControl:'3600',upsert:true});
+    if (error) { alert('Erro no upload: '+error.message); return; }
+    const { data: urlData } = db.storage.from('posts-media').getPublicUrl(path);
+    const url = urlData.publicUrl;
+    const inp = document.getElementById(fieldId);
+    if (inp) inp.value = url;
+    const prev = document.getElementById(prevId);
+    if (prev) {
+      prev.style.display = '';
+      const img = prev.querySelector('img');
+      if (img) img.src = url;
+      else prev.innerHTML = `<img src="${url}" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;border:1px solid var(--border);"/>`;
+    }
+    const lbl = input.closest('label');
+    if (lbl) lbl.innerHTML = lbl.innerHTML.replace('Fazer upload','Trocar imagem');
+    this._showToast('Imagem enviada ✓');
+  },
+
+  async _bcMoodUpload(input, email) {
+    const files = [...input.files]; if (!files.length) return;
+    const refsInp = document.getElementById('bc-pvi-refs');
+    let urls = []; try { urls = JSON.parse(refsInp?.value||'[]'); } catch {}
+    for (const file of files) {
+      const ext = file.name.split('.').pop();
+      const path = `brand-core/${email}/mood_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await db.storage.from('posts-media').upload(path, file, {cacheControl:'3600',upsert:true});
+      if (error) continue;
+      const { data: urlData } = db.storage.from('posts-media').getPublicUrl(path);
+      urls.push(urlData.publicUrl);
+    }
+    if (refsInp) refsInp.value = JSON.stringify(urls);
+    const grid = document.getElementById('bc-moodboard');
+    if (grid) grid.innerHTML = urls.map((u,i) => `
+      <div style="border-radius:10px;overflow:hidden;aspect-ratio:1;background:var(--beige);position:relative;">
+        <img src="${u}" style="width:100%;height:100%;object-fit:cover;"/>
+        <button onclick="Admin._bcMoodRemove(${i},'${email}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.5);border:none;color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;cursor:pointer;line-height:1;">×</button>
+      </div>`).join('');
+    this._showToast(`${files.length} imagem(ns) adicionada(s) ✓`);
+  },
+
+  _bcMoodRemove(index, email) {
+    const refsInp = document.getElementById('bc-pvi-refs');
+    let urls = []; try { urls = JSON.parse(refsInp?.value||'[]'); } catch {}
+    urls.splice(index, 1);
+    if (refsInp) refsInp.value = JSON.stringify(urls);
+    const grid = document.getElementById('bc-moodboard');
+    if (grid) grid.innerHTML = urls.map((u,i) => `
+      <div style="border-radius:10px;overflow:hidden;aspect-ratio:1;background:var(--beige);position:relative;">
+        <img src="${u}" style="width:100%;height:100%;object-fit:cover;"/>
+        <button onclick="Admin._bcMoodRemove(${i},'${email}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.5);border:none;color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;cursor:pointer;line-height:1;">×</button>
+      </div>`).join('') || '<div style="border-radius:10px;background:var(--beige);aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">Adicione imagens abaixo</div>';
+  },
+
+  /* ─── ESTRATÉGIAS / MAPA MENTAL ─── */
+  _bcMapaData: null,
+  _bcMapaSel: null,
+  _bcMapaDrag: null,
+  _bcMapaDragOff: {x:0,y:0},
+  _bcMapaCurrentId: null,
+
+  async _bcEstrategias(id, c) {
+    const content = document.getElementById('cli-tab-content');
+    const { data: mapas } = await db.from('informacoes_cliente')
+      .select('*').eq('client_email', c.email).eq('tipo', 'bc_mapa')
+      .order('created_at', {ascending:false});
+
+    content.innerHTML = `
+      <div style="max-width:820px;">
+        ${this._bcHeader('Estratégias — Mapas Mentais','🗺',id,c)}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="font-size:12px;color:var(--muted);">${(mapas||[]).length} mapa(s) criado(s)</div>
+          <button onclick="Admin._bcNovoMapa('${c.email}')" style="padding:8px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;border:none;cursor:pointer;font-size:12px;">+ Novo mapa mental</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+          ${(mapas||[]).map(m => {
+            let d = {}; try { d = JSON.parse(m.conteudo||'{}'); } catch {}
+            return `<div onclick="Admin._bcAbrirMapa(${m.id},'${c.email}')"
+              style="border-radius:14px;border:1px solid var(--border);background:var(--surface);padding:18px;cursor:pointer;transition:all .18s;"
+              onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.08)'"
+              onmouseleave="this.style.transform='';this.style.boxShadow=''">
+              <div style="font-size:24px;margin-bottom:10px;">🗺</div>
+              <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">${d.title||m.titulo}</div>
+              <div style="font-size:11px;color:var(--muted);">${(d.nodes||[]).length} nós</div>
+              <div style="margin-top:10px;font-size:10px;color:var(--brown);font-weight:500;text-transform:uppercase;letter-spacing:.08em;">Abrir →</div>
+            </div>`;
+          }).join('')}
+        </div>
+        ${!(mapas||[]).length ? `<div style="text-align:center;padding:60px 20px;color:var(--muted);font-style:italic;font-size:14px;">Nenhum mapa mental criado ainda.<br>Clique em "+ Novo mapa mental" para começar.</div>` : ''}
+      </div>`;
+  },
+
+  async _bcNovoMapa(email) {
+    const titulo = prompt('Título do mapa mental:','Estratégia');
+    if (!titulo) return;
+    const data = {
+      title: titulo,
+      nodes: [{id:1, text: titulo, x:400, y:250, parentId:null, color:'#B8820A'}],
+      nextId: 2
+    };
+    const { data: row, error } = await db.from('informacoes_cliente').insert([{
+      client_email: email, tipo: 'bc_mapa', titulo,
+      conteudo: JSON.stringify(data)
+    }]).select().single();
+    if (!error && row) {
+      this._bcAbrirMapa(row.id, email);
+    }
+  },
+
+  async _bcAbrirMapa(mapaId, email) {
+    const { data: row } = await db.from('informacoes_cliente').select('*').eq('id', mapaId).single();
+    if (!row) return;
+    let data = {}; try { data = JSON.parse(row.conteudo||'{}'); } catch {}
+    this._bcMapaData = data;
+    this._bcMapaSel = data.nodes?.[0]?.id || null;
+    this._bcMapaCurrentId = mapaId;
+
+    const content = document.getElementById('cli-tab-content');
+    content.innerHTML = `
+      <div style="max-width:1000px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <button onclick="Admin._bcMapaSel=null;Admin._bcMapaData=null;Admin._bcSection='estrategias';Admin._bcEstrategias(Admin._cliCurrentId,Admin._cliClienteData)" style="width:34px;height:34px;border-radius:10px;background:var(--beige);border:1px solid var(--border);font-size:18px;cursor:pointer;color:var(--muted);">←</button>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--brown);flex:1;">${data.title||'Mapa Mental'}</div>
+          <button onclick="Admin._bcSalvarMapa()" style="padding:8px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;border:none;cursor:pointer;font-size:12px;">Salvar ✓</button>
+          <button onclick="Admin._bcExcluirMapa(${mapaId},'${email}')" style="padding:8px 14px;border-radius:9px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;font-size:12px;cursor:pointer;">Excluir</button>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;border-radius:16px;border:1px solid var(--border);overflow:hidden;background:var(--surface);position:relative;">
+            <div style="font-size:10px;color:var(--muted);padding:8px 12px;border-bottom:1px solid var(--border);letter-spacing:.08em;text-transform:uppercase;">Clique para selecionar · Duplo clique para editar · Arraste para mover</div>
+            <svg id="bc-mm-svg" viewBox="0 0 800 500" style="width:100%;height:500px;display:block;cursor:default;"
+              onmousemove="Admin._bcMmMouseMove(event)"
+              onmouseup="Admin._bcMmMouseUp(event)"
+              onclick="Admin._bcMmBgClick(event)">
+            </svg>
+          </div>
+          <div style="width:180px;flex-shrink:0;">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Ferramentas</div>
+              <button onclick="Admin._bcMmAddRoot()" style="width:100%;padding:8px;border-radius:8px;background:var(--beige);border:1px solid var(--border);font-size:11px;cursor:pointer;color:var(--text);margin-bottom:5px;">+ Nó solto</button>
+            </div>
+            <div id="bc-mm-panel" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;">
+              <div style="font-size:11px;color:var(--muted);text-align:center;">Selecione um nó</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    this._bcMmRender();
+    this._bcMmUpdatePanel();
+  },
+
+  _bcMmRender() {
+    const svg = document.getElementById('bc-mm-svg'); if (!svg || !this._bcMapaData) return;
+    const {nodes} = this._bcMapaData;
+    const sel = this._bcMapaSel;
+    const lines = nodes.filter(n=>n.parentId!==null).map(n=>{
+      const p = nodes.find(x=>x.id===n.parentId); if (!p) return '';
+      const x1=p.x,y1=p.y,x2=n.x,y2=n.y,mx=(x1+x2)/2;
+      return `<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" fill="none" stroke="${n.color||'#888'}" stroke-width="2.5" opacity="0.5"/>`;
+    }).join('');
+    const nodesSvg = nodes.map(n=>{
+      const isRoot = n.parentId===null;
+      const isSel = n.id===sel;
+      const txt = (n.text||'').substring(0,22);
+      const w = Math.max(isRoot?100:70, txt.length*(isRoot?9:8)+28);
+      const h = isRoot?46:34; const rx = isRoot?23:10;
+      return `<g transform="translate(${n.x-w/2},${n.y-h/2})" style="cursor:pointer;user-select:none;"
+        onmousedown="Admin._bcMmDragStart(event,${n.id})"
+        onclick="event.stopPropagation();Admin._bcMmSelect(${n.id})"
+        ondblclick="event.stopPropagation();Admin._bcMmEditText(${n.id})">
+        <rect width="${w}" height="${h}" rx="${rx}" fill="${n.color||'#B8820A'}" opacity="${isSel?1:0.88}" stroke="${isSel?'#fff':'transparent'}" stroke-width="${isSel?2.5:0}" filter="${isSel?'url(#glow)':''}"/>
+        <text x="${w/2}" y="${h/2+5}" text-anchor="middle" font-family="Poppins,sans-serif" font-size="${isRoot?13:11}" fill="#fff" font-weight="${isRoot?600:400}" pointer-events="none">${txt}</text>
+      </g>`;
+    }).join('');
+    svg.innerHTML = `<defs><filter id="glow"><feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#fff" flood-opacity="0.4"/></filter></defs>
+      <rect width="800" height="500" fill="transparent" onclick="Admin._bcMmBgClick(event)"/>
+      ${lines}${nodesSvg}`;
+  },
+
+  _bcMmDragStart(e, nodeId) {
+    e.stopPropagation();
+    this._bcMapaDrag = nodeId;
+    const svg = document.getElementById('bc-mm-svg'); if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = 800/rect.width, scaleY = 500/rect.height;
+    const node = this._bcMapaData.nodes.find(n=>n.id===nodeId);
+    if (!node) return;
+    this._bcMapaDragOff = {x:(e.clientX-rect.left)*scaleX - node.x, y:(e.clientY-rect.top)*scaleY - node.y};
+  },
+
+  _bcMmMouseMove(e) {
+    if (!this._bcMapaDrag || !this._bcMapaData) return;
+    const svg = document.getElementById('bc-mm-svg'); if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = 800/rect.width, scaleY = 500/rect.height;
+    const node = this._bcMapaData.nodes.find(n=>n.id===this._bcMapaDrag); if (!node) return;
+    node.x = Math.max(40, Math.min(760, (e.clientX-rect.left)*scaleX - this._bcMapaDragOff.x));
+    node.y = Math.max(20, Math.min(480, (e.clientY-rect.top)*scaleY - this._bcMapaDragOff.y));
+    this._bcMmRender();
+  },
+
+  _bcMmMouseUp() { this._bcMapaDrag = null; },
+
+  _bcMmBgClick() { this._bcMapaSel = null; this._bcMmRender(); this._bcMmUpdatePanel(); },
+
+  _bcMmSelect(nodeId) {
+    this._bcMapaSel = nodeId;
+    this._bcMmRender();
+    this._bcMmUpdatePanel();
+  },
+
+  _bcMmEditText(nodeId) {
+    const node = this._bcMapaData?.nodes.find(n=>n.id===nodeId); if (!node) return;
+    const txt = prompt('Editar texto:', node.text);
+    if (txt !== null) { node.text = txt; this._bcMmRender(); }
+  },
+
+  _bcMmUpdatePanel() {
+    const panel = document.getElementById('bc-mm-panel'); if (!panel) return;
+    const node = this._bcMapaData?.nodes.find(n=>n.id===this._bcMapaSel);
+    if (!node) { panel.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;">Selecione um nó</div>'; return; }
+    const colors = ['#B8820A','#7C3AED','#0891B2','#059669','#DC2626','#EC4899','#6366F1','#F97316','#0F766E'];
+    panel.innerHTML = `
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Nó selecionado</div>
+      <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:10px;word-break:break-word;">${node.text}</div>
+      <button onclick="Admin._bcMmAddChild()" style="width:100%;padding:7px;border-radius:8px;background:var(--brown);color:#fff;border:none;cursor:pointer;font-size:11px;margin-bottom:5px;">+ Filho</button>
+      <button onclick="Admin._bcMmEditText(${node.id})" style="width:100%;padding:7px;border-radius:8px;background:var(--beige);border:1px solid var(--border);font-size:11px;cursor:pointer;color:var(--text);margin-bottom:5px;">✎ Editar</button>
+      <button onclick="Admin._bcMmDelete(${node.id})" style="width:100%;padding:7px;border-radius:8px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;font-size:11px;cursor:pointer;margin-bottom:10px;" ${node.parentId===null?'disabled title="Não é possível excluir o nó raiz"':''}>× Excluir</button>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Cor</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
+        ${colors.map(c=>`<div onclick="Admin._bcMmSetColor('${c}')" style="height:26px;border-radius:6px;background:${c};cursor:pointer;border:2px solid ${node.color===c?'#fff':'transparent'};transition:border-color .1s;"></div>`).join('')}
+      </div>`;
+  },
+
+  _bcMmAddChild() {
+    if (!this._bcMapaSel || !this._bcMapaData) return;
+    const parent = this._bcMapaData.nodes.find(n=>n.id===this._bcMapaSel); if (!parent) return;
+    const txt = prompt('Texto do novo nó:','Novo ramo'); if (!txt) return;
+    const palette = ['#7C3AED','#0891B2','#059669','#DC2626','#EC4899','#F97316','#6366F1','#0F766E'];
+    const color = palette[Math.floor(Math.random()*palette.length)];
+    const id = this._bcMapaData.nextId++;
+    const siblings = this._bcMapaData.nodes.filter(n=>n.parentId===this._bcMapaSel).length;
+    const angle = (siblings - 2) * 0.5 + (parent.x < 400 ? Math.PI : 0);
+    const dist = 160;
+    const x = Math.max(50, Math.min(750, parent.x + Math.cos(angle)*dist));
+    const y = Math.max(20, Math.min(480, parent.y + Math.sin(angle)*dist));
+    this._bcMapaData.nodes.push({id, text:txt, x, y, parentId:this._bcMapaSel, color});
+    this._bcMapaSel = id;
+    this._bcMmRender(); this._bcMmUpdatePanel();
+  },
+
+  _bcMmAddRoot() {
+    if (!this._bcMapaData) return;
+    const txt = prompt('Texto do nó:','Novo nó'); if (!txt) return;
+    const id = this._bcMapaData.nextId++;
+    this._bcMapaData.nodes.push({id, text:txt, x:200+Math.random()*400, y:100+Math.random()*300, parentId:null, color:'#6B7280'});
+    this._bcMapaSel = id;
+    this._bcMmRender(); this._bcMmUpdatePanel();
+  },
+
+  _bcMmDelete(nodeId) {
+    if (!this._bcMapaData) return;
+    const node = this._bcMapaData.nodes.find(n=>n.id===nodeId);
+    if (!node || node.parentId===null) return;
+    const toDelete = new Set();
+    const collect = id => { toDelete.add(id); this._bcMapaData.nodes.filter(n=>n.parentId===id).forEach(n=>collect(n.id)); };
+    collect(nodeId);
+    this._bcMapaData.nodes = this._bcMapaData.nodes.filter(n=>!toDelete.has(n.id));
+    this._bcMapaSel = null;
+    this._bcMmRender(); this._bcMmUpdatePanel();
+  },
+
+  _bcMmSetColor(color) {
+    if (!this._bcMapaSel || !this._bcMapaData) return;
+    const node = this._bcMapaData.nodes.find(n=>n.id===this._bcMapaSel); if (!node) return;
+    node.color = color;
+    this._bcMmRender(); this._bcMmUpdatePanel();
+  },
+
+  async _bcSalvarMapa() {
+    if (!this._bcMapaCurrentId || !this._bcMapaData) return;
+    await db.from('informacoes_cliente').update({conteudo:JSON.stringify(this._bcMapaData),titulo:this._bcMapaData.title}).eq('id',this._bcMapaCurrentId);
+    this._showToast('Mapa salvo ✓');
+  },
+
+  async _bcExcluirMapa(id, email) {
+    if (!confirm('Excluir este mapa?')) return;
+    await db.from('informacoes_cliente').delete().eq('id',id);
+    this._bcMapaData = null; this._bcMapaSel = null; this._bcMapaCurrentId = null;
+    this._bcSection = 'estrategias';
+    this._bcEstrategias(this._cliCurrentId, this._cliClienteData);
   },
 
   _showToast(msg) {
