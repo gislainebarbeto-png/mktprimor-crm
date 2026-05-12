@@ -43,46 +43,58 @@
     }
     input::placeholder, textarea::placeholder { color: var(--muted) !important; }
     html.dark {
-      --bg:      #0D0D0D;
-      --surface: #161616;
-      --beige:   #1A1A1A;
-      --brown:   #D4AF37;
-      --brown2:  #C9A800;
-      --copper:  #D4AF37;
-      --text:    #F5F5F5;
+      --bg:      #191919;
+      --surface: #222222;
+      --beige:   #2A2A2A;
+      --brown:   #D4A843;
+      --brown2:  #B8820A;
+      --copper:  #D4A843;
+      --text:    #F0F0F0;
       --muted:   #888888;
-      --border:  rgba(212,175,55,0.18);
+      --border:  rgba(255,255,255,0.07);
       --sh:      0 4px 16px rgba(0,0,0,.5);
       --sh2:     0 8px 32px rgba(0,0,0,.7);
     }
 
     /* ── DARK THEME AESTHETIC ── */
-    html.dark body{background:#0D0D0D;}
+    html.dark body{background:#191919;}
     html.dark #admin-view,
-    html.dark #client-view {
-      background:#0D0D0D;
-    }
+    html.dark #client-view { background:#191919; }
 
-    html.dark .login-box{background:#111111;border:1px solid rgba(212,175,55,0.2);box-shadow:0 8px 40px rgba(0,0,0,0.8);}
-    html.dark .app-header{background:#111111;border-bottom:1px solid rgba(212,175,55,0.15);}
+    html.dark .login-box{background:#222222;border:1px solid rgba(255,255,255,0.08);box-shadow:0 12px 48px rgba(0,0,0,0.7);}
+    html.dark .app-header{background:#111111;border-bottom:1px solid rgba(255,255,255,0.06);}
     html.dark .admin-main,html.dark .client-main{background:transparent!important;}
     html.dark .client-main *:not(button):not(input):not(textarea):not(select):not(.badge-aprovado):not(.badge-revisao):not(.badge-criacao):not(.badge-publicado){color:var(--text);}
-    html.dark .client-main .muted, html.dark .client-main [style*='color:var(--muted)']{color:#AAAAAA!important;}
+    html.dark .client-main .muted, html.dark .client-main [style*='color:var(--muted)']{color:#888888!important;}
 
-    /* Sidebar */
+    /* ── SIDEBAR ICON-ONLY ── */
     html.dark .sidebar{
+      width:68px!important;
+      padding:16px 0!important;
       background:#111111;
-      border-right:1px solid rgba(212,175,55,0.15);
+      border-right:1px solid rgba(255,255,255,0.05);
+      display:flex;flex-direction:column;align-items:center;overflow:visible;
     }
-    html.dark .nav-item{color:#888888;}
-    html.dark .nav-item:hover{background:rgba(212,175,55,0.08);color:#D4AF37;}
+    html.dark .nav-section{display:none!important;}
+    html.dark .nl{display:none!important;}
+    html.dark .nav-item{
+      width:46px!important;height:46px!important;
+      border-radius:12px!important;
+      padding:0!important;gap:0!important;
+      justify-content:center!important;
+      color:#555555;margin-bottom:3px!important;
+      position:relative;
+    }
+    html.dark .nav-item:hover{background:rgba(212,168,67,0.12)!important;color:#D4A843!important;}
     html.dark .nav-item.active{
-      background:rgba(212,175,55,0.12);
-      color:#D4AF37;
-      border-left:2px solid #D4AF37;
+      background:linear-gradient(135deg,#B8820A 0%,#E8B84B 100%)!important;
+      color:#1A1400!important;
+      border-left:none!important;
+      box-shadow:0 4px 16px rgba(212,168,67,0.35)!important;
     }
-    html.dark .nav-section{color:#555555;opacity:1;}
-    html.dark .section-title{color:#D4AF37!important;}
+    html.dark .ni{font-size:18px!important;line-height:1;}
+    html.dark .nav-section{color:#444444;opacity:1;}
+    html.dark .section-title{color:#D4A843!important;}
 
     /* Cards */
     html.dark .stat-card,
@@ -96,9 +108,9 @@
     html.dark .ajuste-box,
     html.dark .welcome-banner,
     html.dark .progress-wrap {
-      background: #161616 !important;
-      border: 1px solid rgba(212,175,55,0.18) !important;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.4) !important;
+      background: #222222 !important;
+      border: 1px solid rgba(255,255,255,0.06) !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
       color: var(--text) !important;
     }
     html.dark .cal-wrap,
@@ -106,23 +118,23 @@
 
     /* ── DARK MODE CALENDAR CELLS ── */
     html.dark .cal-cell {
-      background: #161616 !important;
-      border-color: rgba(212,175,55,0.15) !important;
+      background: #262626 !important;
+      border-color: rgba(255,255,255,0.06) !important;
       box-shadow: none !important;
     }
     html.dark .cal-cell:hover {
-      border-color: rgba(212,175,55,0.4) !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+      border-color: rgba(212,168,67,0.35) !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
     }
     html.dark .cal-cell.today {
-      background: rgba(212,175,55,0.07) !important;
-      border-color: rgba(212,175,55,0.5) !important;
+      background: rgba(212,168,67,0.08) !important;
+      border-color: rgba(212,168,67,0.4) !important;
     }
     html.dark .cal-cell.outro-mes { opacity: 0.2 !important; }
-    html.dark .cal-day-num { color: #AA9940 !important; }
-    html.dark .cal-cell.today .cal-day-num { color: #D4AF37 !important; }
-    html.dark .cal-add-btn { color: #D4AF37 !important; }
-    html.dark .cal-head-day { color: #887730 !important; }
+    html.dark .cal-day-num { color: #666666 !important; }
+    html.dark .cal-cell.today .cal-day-num { color: #D4A843 !important; }
+    html.dark .cal-add-btn { color: #D4A843 !important; }
+    html.dark .cal-head-day { color: #555555 !important; }
 
     /* ── DARK MODE CHIPS — bg e texto idênticos ao light mode ── */
     html.dark .pchip-st-criacao,
@@ -149,9 +161,31 @@
     html.dark .pchip-st-publicado .pchip-titulo { color: #5254cc !important; }
     /* ─────────────────────────────────────────────────── */
     html.dark .cal-cell.drag-over {
-      background: rgba(59,130,246,0.12) !important;
-      border-color: #3B82F6 !important;
+      background: rgba(59,130,246,0.1) !important;
+      border-color: rgba(59,130,246,0.5) !important;
     }
+    /* Nav badge dark mode */
+    html.dark .nav-badge { display:none!important; }
+    /* Botões primários dark — gradiente âmbar */
+    html.dark .btn-login,
+    html.dark .btn-advance {
+      background: linear-gradient(135deg, #B8820A 0%, #E8B84B 100%) !important;
+      color: #1A1400 !important;
+      box-shadow: 0 4px 16px rgba(212,168,67,0.3) !important;
+    }
+    html.dark .btn-login:hover,
+    html.dark .btn-advance:hover {
+      box-shadow: 0 6px 24px rgba(212,168,67,0.45) !important;
+    }
+    /* Task section label */
+    html.dark .task-section-lbl{color:#D4A843!important;}
+    /* Proj card dark */
+    html.dark .proj-card { background:#222222!important; }
+    /* Modal box dark */
+    html.dark .modal-box { background:#222222!important; border:1px solid rgba(255,255,255,0.06)!important; }
+    html.dark .task-modal { background:#222222!important; border:1px solid rgba(255,255,255,0.06)!important; }
+    /* Header logo filter */
+    html.dark .header-logo img { filter:brightness(2) saturate(0.5) !important; }
 
     /* Task modal glass */
     html.dark .task-modal {
@@ -166,13 +200,13 @@
 
     /* Inputs */
     html.dark input,html.dark textarea,html.dark select{
-      background:rgba(255,255,255,0.04)!important;
+      background:rgba(255,255,255,0.05)!important;
       color:var(--text)!important;
-      border-color:rgba(212,175,55,0.2)!important;
+      border-color:rgba(255,255,255,0.08)!important;
     }
     html.dark input:focus,html.dark textarea:focus,html.dark select:focus{
-      border-color:#D4AF37!important;
-      background:rgba(255,255,255,0.07)!important;
+      border-color:#D4A843!important;
+      background:rgba(255,255,255,0.08)!important;
     }
 
     /* Gradient border on proj cards */
@@ -182,8 +216,8 @@
     }
 
     /* Table rows */
-    html.dark .table-row{border-bottom:1px solid rgba(212,175,55,0.1)!important;}
-    html.dark .table-row:hover{background:rgba(212,175,55,0.05)!important;}
+    html.dark .table-row{border-bottom:1px solid rgba(255,255,255,0.05)!important;}
+    html.dark .table-row:hover{background:rgba(255,255,255,0.03)!important;}
 
     /* Day cols */
     html.dark .day-col-head{background:rgba(212,175,55,0.1)!important;}
@@ -879,24 +913,24 @@
     <!-- Sidebar -->
     <div class="sidebar" id="admin-sidebar">
       <div class="nav-section">Menu</div>
-      <div class="nav-item active" onclick="Admin.tab('leads')" id="nav-leads"><span class="ni">◉</span><span class="nl">Leads</span></div>
-      <div class="nav-item" onclick="Admin.tab('followup')" id="nav-followup"><span class="ni">↗</span><span class="nl">Follow-up <span class="nav-badge" id="nb-fu" style="display:none">0</span></span></div>
-      <div class="nav-item" onclick="Admin.tab('posts')" id="nav-posts"><span class="ni">▦</span><span class="nl">Posts <span class="nav-badge" id="nb-posts" style="display:none">0</span></span></div>
-      <div class="nav-item" onclick="Admin.tab('clientes')" id="nav-clientes"><span class="ni">◎</span><span class="nl">Clientes</span></div>
+      <div class="nav-item active" onclick="Admin.tab('leads')" id="nav-leads" title="Leads"><span class="ni">◉</span><span class="nl">Leads</span></div>
+      <div class="nav-item" onclick="Admin.tab('followup')" id="nav-followup" title="Follow-up"><span class="ni">↗</span><span class="nl">Follow-up <span class="nav-badge" id="nb-fu" style="display:none">0</span></span></div>
+      <div class="nav-item" onclick="Admin.tab('posts')" id="nav-posts" title="Posts"><span class="ni">▦</span><span class="nl">Posts <span class="nav-badge" id="nb-posts" style="display:none">0</span></span></div>
+      <div class="nav-item" onclick="Admin.tab('clientes')" id="nav-clientes" title="Clientes"><span class="ni">◎</span><span class="nl">Clientes</span></div>
       <div class="nav-section">Gestão</div>
-      <div class="nav-item" onclick="Admin.tab('financeiro')" id="nav-financeiro"><span class="ni">💰</span><span class="nl">Financeiro</span></div>
-      <div class="nav-item" onclick="Admin.tab('arquivos')" id="nav-arquivos"><span class="ni">📁</span><span class="nl">Arquivos</span></div>
+      <div class="nav-item" onclick="Admin.tab('financeiro')" id="nav-financeiro" title="Financeiro"><span class="ni">◈</span><span class="nl">Financeiro</span></div>
+      <div class="nav-item" onclick="Admin.tab('arquivos')" id="nav-arquivos" title="Arquivos"><span class="ni">▤</span><span class="nl">Arquivos</span></div>
       <div class="nav-section">Marketing</div>
-      <div class="nav-item" onclick="Admin.tab('automacoes')" id="nav-automacoes"><span class="ni">⚡</span><span class="nl">Automações</span></div>
-      <div class="nav-item" onclick="Admin.tab('metricas')" id="nav-metricas"><span class="ni">📊</span><span class="nl">Métricas</span></div>
-      <div class="nav-item" onclick="Admin.tab('comece')" id="nav-comece"><span class="ni">✦</span><span class="nl">Comece Aqui</span></div>
+      <div class="nav-item" onclick="Admin.tab('automacoes')" id="nav-automacoes" title="Automações"><span class="ni">✵</span><span class="nl">Automações</span></div>
+      <div class="nav-item" onclick="Admin.tab('metricas')" id="nav-metricas" title="Métricas"><span class="ni">△</span><span class="nl">Métricas</span></div>
+      <div class="nav-item" onclick="Admin.tab('comece')" id="nav-comece" title="Comece Aqui"><span class="ni">✦</span><span class="nl">Comece Aqui</span></div>
       <div class="nav-section">Colaboração</div>
-      <div class="nav-item" onclick="Admin.tab('lab')" id="nav-lab"><span class="ni">💡</span><span class="nl">Ideias</span></div>
-      <div class="nav-item" onclick="Admin.tab('info')" id="nav-info"><span class="ni">📋</span><span class="nl">Infos</span></div>
-      <div class="nav-item" onclick="Admin.tab('solicitacoes')" id="nav-solicitacoes"><span class="ni">📅</span><span class="nl">Solic.</span></div>
-      <div class="nav-item" onclick="Admin.tab('tarefas')" id="nav-tarefas"><span class="ni">✅</span><span class="nl">Tarefas</span></div>
-      <div class="nav-item" onclick="Admin.tab('demandas')" id="nav-demandas"><span class="ni">📋</span><span class="nl">Demandas</span></div>
-      <div class="nav-item" onclick="Admin.tab('chat')" id="nav-chat"><span class="ni">✉</span><span class="nl">Chat <span class="chat-badge hidden" id="nb-chat" style="background:#C62828;color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;"></span></span></div>
+      <div class="nav-item" onclick="Admin.tab('lab')" id="nav-lab" title="Ideias"><span class="ni">⊙</span><span class="nl">Ideias</span></div>
+      <div class="nav-item" onclick="Admin.tab('info')" id="nav-info" title="Infos"><span class="ni">≡</span><span class="nl">Infos</span></div>
+      <div class="nav-item" onclick="Admin.tab('solicitacoes')" id="nav-solicitacoes" title="Solicitações"><span class="ni">◫</span><span class="nl">Solic.</span></div>
+      <div class="nav-item" onclick="Admin.tab('tarefas')" id="nav-tarefas" title="Tarefas"><span class="ni">✓</span><span class="nl">Tarefas</span></div>
+      <div class="nav-item" onclick="Admin.tab('demandas')" id="nav-demandas" title="Demandas"><span class="ni">⊞</span><span class="nl">Demandas</span></div>
+      <div class="nav-item" onclick="Admin.tab('chat')" id="nav-chat" title="Chat"><span class="ni">◷</span><span class="nl">Chat <span class="chat-badge hidden" id="nb-chat" style="background:#C62828;color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;"></span></span></div>
     </div>
     <!-- Main -->
     <div class="admin-main" id="admin-main">
