@@ -6294,6 +6294,9 @@ const Client = {
   _mensagemGi: '',
   _arquivos: '[]',
   _ajusteId: null,
+  _bcSec: null,
+  _bcClient: null,
+  _bcAllRows: [],
   _clientView: 'mensal',
   _clientMonth: null,
   _clientWeekOffset: 0,
@@ -7336,42 +7339,252 @@ ${text}`,
   async renderComecePorAqui() {
     const el = document.getElementById('ctab-content-comece');
     if (!el) return;
+    if (this._bcSec) { this._cliBcRenderSection(this._bcSec); return; }
     el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Carregando...</p>';
-    const { data } = await db.from('arquivos_cliente').select('*').eq('client_email','__comece__').order('created_at',{ascending:true});
-    const rows = (data||[]).filter(r=>!['__video__','__titulo__','__desc__'].includes(r.nome));
-    if (!rows.length) { el.innerHTML='<p style="color:var(--muted);font-style:italic;text-align:center;padding:40px;font-family:Cormorant Garamond,serif;font-size:18px;">Conteúdo em breve ✦</p>'; return; }
-    const toEmbed = url => {
-      const m = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/);
-      return m ? `https://www.youtube-nocookie.com/embed/${m[1]}?rel=0` : url;
-    };
-    const items = rows.map(r => {
-      if (r.nome.startsWith('VIDEO::')) {
-        const titulo = r.nome.replace('VIDEO::','');
-        const embedUrl = toEmbed(r.url);
-        if (!embedUrl.includes('embed/')) return '';
-        return `<div style="margin-bottom:16px;">
-          ${titulo ? `<div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--brown);margin-bottom:8px;">${titulo}</div>` : ''}
-          <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;">
-            <iframe src="${embedUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe>
-          </div>
-        </div>`;
-      } else if (r.nome.startsWith('TEXTO::')) {
-        const titulo = r.nome.replace('TEXTO::','');
-        return `<div style="margin-bottom:16px;">
-          ${titulo ? `<div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--brown);margin-bottom:6px;">${titulo}</div>` : ''}
-          <p style="font-size:13px;color:var(--muted);line-height:1.7;white-space:pre-wrap;margin:0;">${r.url}</p>
-        </div>`;
-      } else {
-        const icon = r.nome.match(/\.pdf$/i) ? '📄' : r.nome.match(/\.(png|jpg|jpeg|gif|webp)$/i) ? '🖼️' : '📎';
-        return `<a href="${r.url}" target="_blank" class="file-item" style="margin-bottom:8px;">${icon} ${r.nome}</a>`;
-      }
-    }).join('');
+    const [{ data: c }, { data: bcRows }] = await Promise.all([
+      db.from('clients').select('*').eq('email', App.user.email).single(),
+      db.from('informacoes_cliente').select('*').eq('client_email', App.user.email).order('created_at',{ascending:true})
+    ]);
+    this._bcClient = c || {};
+    this._bcAllRows = bcRows || [];
+    const gradients = ['linear-gradient(135deg,#C9A800,#8B7200)','linear-gradient(135deg,#B5A0C8,#7B5EA7)','linear-gradient(135deg,#A8C5DA,#5B8FA8)','linear-gradient(135deg,#F0C27F,#C97B3A)'];
+    const grad = c?.capa_cor || gradients[0];
+    const coverStyle = c?.capa_url ? `background:url('${c.capa_url}') ${c.capa_pos||'50% 50%'}/cover no-repeat;` : `background:${grad};`;
+    const hasData = (...tipos) => tipos.some(t => this._bcAllRows.some(r => r.tipo === t && r.conteudo && r.conteudo !== '{}' && r.conteudo !== 'null'));
+    const sections = [
+      { key:'diagnostico', icon:'🔍', title:'Diagnóstico',          desc:'Análise da sua presença digital',       color:'#7C3AED', bg:'rgba(124,58,237,0.08)', tipos:['bc_diag_geral','bc_diag_conteudo','bc_diag_metricas'] },
+      { key:'persona',     icon:'👤', title:'Estudo de Persona',    desc:'Perfil do seu público-alvo',            color:'#0891B2', bg:'rgba(8,145,178,0.08)',   tipos:['bc_persona_visao','bc_persona_psico','bc_persona_conteudo','bc_persona_visual'] },
+      { key:'concorrencia',icon:'⚡', title:'Concorrência',         desc:'Benchmarking e oportunidades',          color:'#DC2626', bg:'rgba(220,38,38,0.08)',   tipos:['bc_concorrente'] },
+      { key:'posicionamento',icon:'✦',title:'Posicionamento',       desc:'Identidade, voz e expressão visual',    color:'#B8820A', bg:'rgba(184,130,10,0.08)', tipos:['bc_pos_conceito','bc_pos_expressao','bc_pos_estrategia','bc_pos_recursos'] },
+      { key:'esteira',     icon:'◈', title:'Esteira de Produtos',   desc:'Portfólio de produtos e serviços',      color:'#059669', bg:'rgba(5,150,105,0.08)',  tipos:['bc_produto'] },
+    ];
     el.innerHTML = `
-      <div style="margin-bottom:20px;">
-        <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-style:italic;color:var(--brown);margin-bottom:6px;">Por onde começar ✦</h2>
-        <p style="font-size:12px;color:var(--muted);">Tudo o que você precisa saber para aproveitar ao máximo o seu portal.</p>
+      <div style="border-radius:18px;overflow:hidden;border:1px solid var(--border);margin-bottom:28px;box-shadow:0 2px 16px rgba(0,0,0,.07);">
+        <div style="${coverStyle}height:160px;"></div>
+        <div style="padding:0 24px 20px;position:relative;">
+          <div style="display:flex;align-items:flex-end;gap:16px;margin-top:-36px;">
+            <div style="width:72px;height:72px;border-radius:50%;border:4px solid var(--surface);overflow:hidden;background:var(--beige);flex-shrink:0;">
+              ${c?.foto_url ? `<img src="${c.foto_url}" style="width:100%;height:100%;object-fit:cover;"/>` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;font-family:'Cormorant Garamond',serif;color:var(--copper);">${(c?.nome||'?')[0].toUpperCase()}</div>`}
+            </div>
+            <div style="flex:1;padding-top:10px;">
+              <div style="font-size:20px;font-weight:600;color:var(--text);">${c?.nome||'—'}</div>
+              <div style="font-size:13px;color:var(--muted);">${c?.instagram?'@ '+c.instagram.replace('@',''):''} ${c?.empresa?'· '+c.empresa:''}</div>
+            </div>
+          </div>
+          ${c?.mensagem_gi ? `<div style="margin-top:16px;padding:14px 16px;background:rgba(184,130,10,0.06);border-radius:12px;border-left:3px solid var(--copper);"><div style="font-size:10px;color:var(--copper);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Mensagem da Gi</div><div style="font-size:13px;color:var(--text);line-height:1.7;">${c.mensagem_gi}</div></div>` : ''}
+        </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:16px;">${items}</div>`;
+      <div style="text-align:center;margin-bottom:24px;padding:22px 20px;background:linear-gradient(135deg,rgba(184,130,10,0.06),rgba(232,184,75,0.03));border-radius:20px;border:1px solid rgba(184,130,10,0.12);">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-style:italic;color:var(--brown);">✦ Brand Core</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;letter-spacing:.06em;">A essência do seu negócio, documentada e organizada</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;">
+        ${sections.map(s => {
+          const filled = hasData(...s.tipos);
+          return `<div onclick="Client._bcSec='${s.key}';Client.renderComecePorAqui()"
+            style="border-radius:16px;border:1px solid ${filled?s.color+'44':'var(--border)'};background:var(--surface);padding:18px;cursor:pointer;transition:all .2s;position:relative;"
+            onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)'"
+            onmouseleave="this.style.transform='';this.style.boxShadow=''">
+            <div style="width:42px;height:42px;border-radius:12px;background:${s.bg};display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:10px;">${s.icon}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;">${s.title}</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.4;">${s.desc}</div>
+            <div style="margin-top:10px;font-size:10px;color:${s.color};letter-spacing:.08em;text-transform:uppercase;font-weight:500;">${filled?'Ver →':'Em breve'}</div>
+            ${filled?`<div style="position:absolute;top:12px;right:12px;width:7px;height:7px;border-radius:50%;background:${s.color};opacity:.8;"></div>`:''}
+          </div>`;
+        }).join('')}
+      </div>`;
+  },
+
+  _cliBcGet(tipo) {
+    const row = this._bcAllRows.find(r => r.tipo === tipo);
+    if (!row?.conteudo) return null;
+    try { return JSON.parse(row.conteudo); } catch { return null; }
+  },
+
+  _cliBcRows(tipo) {
+    return this._bcAllRows.filter(r => r.tipo === tipo);
+  },
+
+  _cliBcF(label, val) {
+    if (!val && val !== 0) return '';
+    return `<div style="margin-bottom:14px;"><div style="font-size:10px;color:var(--copper);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;">${label}</div><div style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;">${val}</div></div>`;
+  },
+
+  _cliBcRating(label, val) {
+    if (!val) return '';
+    const n = parseInt(val);
+    const color = n >= 4 ? '#22C55E' : n >= 3 ? '#F59E0B' : '#EF4444';
+    const bar = `<div style="display:inline-flex;gap:3px;vertical-align:middle;">${[1,2,3,4,5].map(i=>`<div style="width:8px;height:8px;border-radius:2px;background:${i<=n?color:'var(--border)'};"></div>`).join('')}</div>`;
+    return `<div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;"><span style="font-size:11px;color:var(--muted);min-width:140px;">${label}</span>${bar}<span style="font-size:11px;color:${color};font-weight:600;">${n}/5</span></div>`;
+  },
+
+  _cliBcBackBtn() {
+    return `<button onclick="Client._bcSec=null;Client.renderComecePorAqui()" style="width:34px;height:34px;border-radius:10px;background:var(--beige);border:1px solid var(--border);font-size:18px;cursor:pointer;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;">←</button>`;
+  },
+
+  _cliBcRenderSection(sec) {
+    const el = document.getElementById('ctab-content-comece'); if (!el) return;
+    if (sec === 'diagnostico')    this._cliBcDiagnostico(el);
+    else if (sec === 'persona')   this._cliBcPersona(el);
+    else if (sec === 'concorrencia') this._cliBcConcorrencia(el);
+    else if (sec === 'posicionamento') this._cliBcPosicionamento(el);
+    else if (sec === 'esteira')   this._cliBcEsteira(el);
+  },
+
+  _cliBcDiagnostico(el) {
+    const dg = this._cliBcGet('bc_diag_geral') || {};
+    const dc = this._cliBcGet('bc_diag_conteudo') || {};
+    const dm = this._cliBcGet('bc_diag_metricas') || {};
+    const card = (title, content) => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;"><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:var(--brown);margin-bottom:14px;">${title}</div>${content}</div>`;
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        ${this._cliBcBackBtn()}
+        <div style="font-size:20px;">🔍</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic;color:var(--brown);">Diagnóstico do Perfil</div>
+      </div>
+      ${card('Identidade Visual & Perfil',
+        this._cliBcRating('Identidade Visual', dg.identidade_visual) +
+        this._cliBcF('Observações IV', dg.iv_obs) +
+        this._cliBcRating('Bio e Clareza', dg.bio_clareza) +
+        this._cliBcF('Observações Bio', dg.bio_obs) +
+        this._cliBcRating('Destaques', dg.destaques) +
+        this._cliBcF('Observações Destaques', dg.dest_obs) +
+        this._cliBcRating('Posicionamento', dg.posicionamento) +
+        this._cliBcF('Observações Posicionamento', dg.pos_obs)
+      )}
+      ${card('Diagnóstico de Conteúdo',
+        this._cliBcRating('Pilares de Conteúdo', dc.pilares) +
+        this._cliBcF('Observações Pilares', dc.pilares_obs) +
+        this._cliBcRating('Formatos', dc.formatos) +
+        this._cliBcF('Observações Formatos', dc.formatos_obs) +
+        this._cliBcRating('Temas e Pauta', dc.temas) +
+        this._cliBcF('Observações Temas', dc.temas_obs) +
+        this._cliBcRating('Consistência', dc.consistencia) +
+        this._cliBcF('Observações Consistência', dc.cons_obs) +
+        this._cliBcF('Dicas', dc.dicas)
+      )}
+      ${dm.obs_gerais || (dm.meses && dm.meses.length) ? card('Métricas',
+        this._cliBcF('Observações gerais', dm.obs_gerais) +
+        (dm.meses && dm.meses.length ? `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>${['Mês','Seguidores','Alcance','Eng.','Obs'].map(h=>`<th style="text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:500;">${h}</th>`).join('')}</tr></thead><tbody>${dm.meses.map(m=>`<tr>${[m.mes,m.seg,m.alcance,m.eng,m.obs||'—'].map(v=>`<td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text);">${v||'—'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : '')
+      ) : ''}`;
+  },
+
+  _cliBcPersona(el) {
+    const pv = this._cliBcGet('bc_persona_visao') || {};
+    const pp = this._cliBcGet('bc_persona_psico') || {};
+    const pc = this._cliBcGet('bc_persona_conteudo') || {};
+    const pvi = this._cliBcGet('bc_persona_visual') || {};
+    const card = (title, content) => content.trim() ? `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;"><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:var(--brown);margin-bottom:14px;">${title}</div>${content}</div>` : '';
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        ${this._cliBcBackBtn()}
+        <div style="font-size:20px;">👤</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic;color:var(--brown);">Estudo de Persona</div>
+      </div>
+      ${card('Perfil',
+        (pv.foto_url ? `<img src="${pv.foto_url}" style="width:80px;height:80px;object-fit:cover;border-radius:50%;border:3px solid var(--border);margin-bottom:12px;display:block;"/>` : '') +
+        this._cliBcF('Nome', pv.nome) + this._cliBcF('Idade', pv.idade) +
+        this._cliBcF('Localização', pv.localizacao) + this._cliBcF('Profissão', pv.profissao) +
+        this._cliBcF('Renda', pv.renda) + this._cliBcF('Estado civil', pv.estado_civil) +
+        this._cliBcF('Escolaridade', pv.escolaridade) + this._cliBcF('Redes sociais', pv.redes) +
+        this._cliBcF('Consumo de conteúdo', pv.consumo) + this._cliBcF('Dores', pv.dores) +
+        this._cliBcF('Desejos', pv.desejos)
+      )}
+      ${card('Psicologia',
+        this._cliBcF('Frases que diz', pp.frases) + this._cliBcF('Objetivos', pp.objetivos) +
+        this._cliBcF('Obstáculos', pp.obstaculos) + this._cliBcF('Nível de consciência', pp.consciencia) +
+        this._cliBcF('Promessa de transformação', pp.promessa) + this._cliBcF('Gatilhos de compra', pp.gatilhos) +
+        this._cliBcF('Copy eficaz', pp.copy)
+      )}
+      ${card('Conteúdo',
+        this._cliBcF('Pilares', pc.pilares) + this._cliBcF('Formatos', pc.formatos) +
+        this._cliBcF('Temas recorrentes', pc.temas) + this._cliBcF('Tom de voz', pc.tom) +
+        this._cliBcF('Horários de consumo', pc.horarios) + this._cliBcF('Frequência', pc.frequencia) +
+        this._cliBcF('Pauta sugerida', pc.pauta)
+      )}
+      ${card('Visual',
+        this._cliBcF('Palavras que descrevem', pvi.palavras) + this._cliBcF('Paleta de cores', pvi.paleta) +
+        this._cliBcF('Tipografia', pvi.tipografia) +
+        (pvi.referencias && pvi.referencias.length ? this._cliBcF('Referências', pvi.referencias.join(', ')) : '') +
+        this._cliBcF('Evitar', pvi.evitar)
+      )}`;
+  },
+
+  _cliBcConcorrencia(el) {
+    const rows = this._cliBcRows('bc_concorrente');
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        ${this._cliBcBackBtn()}
+        <div style="font-size:20px;">⚡</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic;color:var(--brown);">Análise de Concorrência</div>
+      </div>
+      ${!rows.length ? '<p style="color:var(--muted);font-style:italic;text-align:center;padding:40px;font-size:15px;">Análise em breve ✦</p>' :
+        rows.map(r => {
+          let d = {}; try { d = JSON.parse(r.conteudo||'{}'); } catch {}
+          return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:var(--brown);margin-bottom:12px;">${r.titulo||d.nome||'Concorrente'}</div>
+            ${this._cliBcF('Instagram', d.instagram) + this._cliBcF('Seguidores', d.seguidores) +
+              this._cliBcF('Pontos fortes', d.pontos_fortes) + this._cliBcF('Pontos fracos', d.pontos_fracos) +
+              this._cliBcF('Diferenciais deles', d.diferenciais) + this._cliBcF('Oportunidades para você', d.oportunidades)}
+          </div>`;
+        }).join('')}`;
+  },
+
+  _cliBcPosicionamento(el) {
+    const pc = this._cliBcGet('bc_pos_conceito') || {};
+    const pe = this._cliBcGet('bc_pos_expressao') || {};
+    const ps = this._cliBcGet('bc_pos_estrategia') || {};
+    const pr = this._cliBcGet('bc_pos_recursos') || {};
+    const card = (title, content) => content.trim() ? `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;"><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:var(--brown);margin-bottom:14px;">${title}</div>${content}</div>` : '';
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        ${this._cliBcBackBtn()}
+        <div style="font-size:20px;">✦</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic;color:var(--brown);">Posicionamento de Imagem</div>
+      </div>
+      ${card('Conceito de Marca',
+        this._cliBcF('Arquétipo', pc.arquetipo) + this._cliBcF('Essência', pc.essencia) +
+        this._cliBcF('PVP — Proposta de Valor', pc.pvp) + this._cliBcF('Missão', pc.missao) +
+        this._cliBcF('Visão', pc.visao) + this._cliBcF('Valores', pc.valores) +
+        this._cliBcF('Diferencial único', pc.diferencial)
+      )}
+      ${card('Expressão Visual & Verbal',
+        this._cliBcF('Personalidade da marca', pe.personalidade) + this._cliBcF('Tom de voz', pe.tom) +
+        this._cliBcF('Adjetivos da marca', pe.adjetivos) + this._cliBcF('O que NÃO é', pe.nao_adjetivos) +
+        this._cliBcF('Paleta', pe.paleta) + this._cliBcF('Tipografia', pe.tipografia) +
+        this._cliBcF('Referências visuais', pe.referencias)
+      )}
+      ${card('Estratégia',
+        this._cliBcF('Nicho', ps.nicho) + this._cliBcF('Público-alvo', ps.publico) +
+        this._cliBcF('Canais principais', ps.canais) + this._cliBcF('Estratégia de conteúdo', ps.conteudo) +
+        this._cliBcF('Crescimento', ps.crescimento) + this._cliBcF('Objetivo 3 meses', ps.obj3) +
+        this._cliBcF('Objetivo 12 meses', ps.obj12)
+      )}
+      ${card('Recursos',
+        this._cliBcF('Guia de voz', pr.guia_voz) + this._cliBcF('Palavras proibidas', pr.proibidas) +
+        this._cliBcF('Hashtags padrão', pr.hashtags) + this._cliBcF('Links importantes', pr.links) +
+        this._cliBcF('Notas', pr.notas)
+      )}`;
+  },
+
+  _cliBcEsteira(el) {
+    const rows = this._cliBcRows('bc_produto');
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        ${this._cliBcBackBtn()}
+        <div style="font-size:20px;">◈</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic;color:var(--brown);">Esteira de Produtos</div>
+      </div>
+      ${!rows.length ? '<p style="color:var(--muted);font-style:italic;text-align:center;padding:40px;font-size:15px;">Esteira em construção ✦</p>' :
+        rows.map(r => {
+          let d = {}; try { d = JSON.parse(r.conteudo||'{}'); } catch {}
+          return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:var(--brown);margin-bottom:12px;">${r.titulo||d.nome||'Produto'}</div>
+            ${this._cliBcF('Descrição', d.descricao) + this._cliBcF('Preço', d.preco) +
+              this._cliBcF('Público', d.publico) + this._cliBcF('Diferenciais', d.diferenciais) +
+              this._cliBcF('Link', d.link)}
+          </div>`;
+        }).join('')}`;
   },
 
   async renderInfoTab() {
