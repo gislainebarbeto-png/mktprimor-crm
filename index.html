@@ -2557,8 +2557,10 @@ const Admin = {
         </div>`;
     }).join('');
 
-    const emptySlots = (3 - (allPosts.length % 3)) % 3;
-    const empties = Array(emptySlots).fill('<div style="aspect-ratio:1/1;background:var(--beige);border-radius:2px;opacity:0.3;"></div>').join('');
+    // Sempre pelo menos 9 slots (3x3), depois completa o múltiplo de 3
+    const minCells = Math.ceil(Math.max(9, allPosts.length) / 3) * 3;
+    const emptySlots = minCells - allPosts.length;
+    const empties = Array(emptySlots).fill('<div style="aspect-ratio:1/1;background:var(--beige);border-radius:2px;opacity:0.15;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,0.15);font-size:18px;">+</div>').join('');
 
     content.innerHTML = `
       <style>
