@@ -1730,13 +1730,14 @@ const Admin = {
         .cal-cell:hover .cal-add-btn{opacity:1;}
         .cal-add-btn:hover{background:rgba(201,162,39,0.15);}
         /* Post chip compacto (mensal/quinzenal) */
-        .pchip{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:8px;margin-bottom:4px;cursor:grab;overflow:visible;border:1px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,0.08);transition:all .15s;}
+        .pchip{display:flex;gap:5px;align-items:flex-start;padding:5px 7px;border-radius:8px;margin-bottom:4px;cursor:grab;overflow:hidden;border:1px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,0.08);transition:all .15s;}
         .pchip:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,0.12);}
         .pchip:active{cursor:grabbing;transform:scale(0.98);}
         .pchip.dragging{opacity:.35;transform:scale(0.96);}
-        .pchip-tipo{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;justify-content:space-between;}
-        .pchip-tema{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.7;}
-        .pchip-titulo{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;line-height:1.3;}
+        .pchip-tipo{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:3px;}
+        .pchip-tema{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.7;display:block;}
+        .pchip-titulo{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;line-height:1.3;display:block;}
+        .pchip-thumb{width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;}
         /* Drag-over highlight */
         .cal-cell.drag-over{background:rgba(59,130,246,0.08)!important;outline:2px dashed #3B82F6;outline-offset:-2px;}
         /* Post card visual (semanal/diario) */
@@ -1876,18 +1877,24 @@ const Admin = {
     };
     const chipCompact = (p, sm) => {
       const tipo = p.tipo||'Feed';
-      const tema = p.tema_titulo ? stripHtml(p.tema_titulo).slice(0,35) : '';
-      const titulo = stripHtml(p.legenda||'—').slice(0,42);
+      const tema = p.tema_titulo ? stripHtml(p.tema_titulo).slice(0,30) : '';
+      const titulo = stripHtml(p.legenda||'—').slice(0,36);
       const thumb = p.capa_url || parseFirst(p.midia_urls) || parseFirst(p.img_url) || '';
-      return `<div class="pchip pchip-st-${p.status||'criacao'}" style="background:${sm.bc};border-color:${sm.dot}40;${thumb?'padding:0;overflow:hidden;':''}"
+      const isVid = thumb && /\.(mp4|mov|webm|m4v)/i.test(thumb);
+      const showThumb = thumb && !isVid;
+      return `<div class="pchip pchip-st-${p.status||'criacao'}" style="background:${sm.bc};border-color:${sm.dot}40;display:flex;gap:5px;align-items:flex-start;padding:5px 7px;"
         draggable="true"
         ondragstart="event.stopPropagation();event.dataTransfer.setData('postId','${p.id}');this.classList.add('dragging');Admin._dragPostId=${p.id}"
         ondragend="this.classList.remove('dragging')"
         onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()"
         onclick="event.stopPropagation();Admin.openPost(${p.id})">
-        ${thumb?`<div style="position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;"><img src="${thumb}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentNode.style.display='none'"/><div style="position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,0.6));"><span style="font-size:9px;color:#fff;font-weight:600;">${tipoIco(tipo)}${tipo}</span></div><div style="position:absolute;top:4px;right:4px;">${statusDot(p.status||'criacao', sm.dot)}</div></div>`:`<span class="pchip-tipo" style="color:${sm.dot};padding:6px 8px;display:block;">${tipoIco(tipo)} ${tipo}${statusDot(p.status||'criacao', sm.dot)}</span>`}
-        ${!thumb&&tema?`<span class="pchip-tema" style="color:${sm.c};padding:0 8px;display:block;">${tema}</span>`:''}
-        ${!thumb?`<span class="pchip-titulo" style="color:${sm.c};padding:0 8px 6px;display:block;">${titulo}</span>`:''}
+        ${showThumb?`<img src="${thumb}" class="pchip-thumb" onerror="this.style.display='none'" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;"/>`:''}
+        ${isVid?`<span style="width:36px;height:36px;border-radius:5px;flex-shrink:0;background:${sm.bc};border:1px solid ${sm.dot}40;display:flex;align-items:center;justify-content:center;font-size:14px;">🎬</span>`:''}
+        <div style="flex:1;min-width:0;">
+          <span class="pchip-tipo" style="color:${sm.dot};">${tipoIco(tipo)} ${tipo} ${statusDot(p.status||'criacao', sm.dot)}</span>
+          ${tema?`<span class="pchip-tema" style="color:${sm.c};">${tema}</span>`:''}
+          <span class="pchip-titulo" style="color:${sm.c};">${titulo}</span>
+        </div>
       </div>`;
     };
 
@@ -6719,7 +6726,12 @@ const Client = {
         .cli-cal-cell.today{border-color:var(--copper)!important;background:rgba(212,168,130,0.05);}
         .cli-cal-cell.outro-mes{opacity:.3;}
         .cli-cal-cell.mensal{min-height:90px;}
-        @media(max-width:700px){.cli-cal-cell.mensal{min-height:0!important;aspect-ratio:1;}}
+        @media(max-width:700px){
+          .cli-cal-cell.mensal{min-height:0!important;aspect-ratio:1;}
+          .cli-pchip-tema,.cli-pchip-titulo{display:none!important;}
+          .cli-pchip-thumb{width:22px!important;height:22px!important;}
+          .cli-pchip{padding:3px 4px!important;gap:3px!important;}
+        }
         .cli-cal-cell.semanal{min-height:140px;}
         .cli-cal-cell.diario-cell{min-height:180px;}
         .cli-day-num{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:700;line-height:1;}
@@ -6770,9 +6782,10 @@ const Client = {
   _showClientPreview(id, e) {
     const p = this._posts.find(x=>x.id===id); if(!p) return;
     const SM = {
-      criacao:{l:'Aprovar',c:'#c9a800',bc:'#fffae6'},
+      criacao:{l:'Criação',c:'#c9a800',bc:'#fffae6'},
       revisao:{l:'Revisar',c:'#d4762a',bc:'#fdf1e7'},
       aprovado:{l:'Aprovado',c:'#1db855',bc:'#e9f9ee'},
+      design:{l:'Design',c:'#7c3aed',bc:'#f3e8ff'},
       publicado:{l:'Publicado',c:'#5254cc',bc:'#e7e6f5'}
     };
     const m = SM[p.status||'criacao']||SM.criacao;
@@ -6850,12 +6863,19 @@ const Client = {
       const tipo = p.tipo||'Feed';
       const tema = p.tema_titulo ? stripHtml(p.tema_titulo).slice(0,22) : '';
       const titulo = stripHtml(p.legenda||'—').slice(0,26);
-      return `<div class="cli-pchip" style="background:${sm.bc};"
+      const thumb = p.capa_url || parseFirst(p.midia_urls) || parseFirst(p.img_url) || '';
+      const isVid = thumb && /\.(mp4|mov|webm|m4v)/i.test(thumb);
+      const showThumb = thumb && !isVid;
+      return `<div class="cli-pchip" style="background:${sm.bc};display:flex;gap:4px;align-items:flex-start;padding:4px 5px;"
         onmouseenter="Client._showClientPreview(${p.id},event)" onmouseleave="Client._hideClientPreview()"
         onclick="event.stopPropagation();Client.openClientPost(${p.id})">
-        <span class="cli-pchip-tipo" style="color:${sm.dot};">${cliTipoIco(tipo)} ${tipo}</span>
-        ${tema?`<span class="cli-pchip-tema" style="color:${sm.c};">${tema}</span>`:''}
-        <span class="cli-pchip-titulo" style="color:${sm.c};">${titulo}</span>
+        ${showThumb?`<img src="${thumb}" class="cli-pchip-thumb" onerror="this.style.display='none'" style="width:28px;height:28px;object-fit:cover;border-radius:4px;flex-shrink:0;"/>`:''}
+        ${isVid?`<span style="width:28px;height:28px;border-radius:4px;flex-shrink:0;background:${sm.bc};border:1px solid ${sm.dot}40;display:flex;align-items:center;justify-content:center;font-size:12px;">🎬</span>`:''}
+        <div style="flex:1;min-width:0;">
+          <span class="cli-pchip-tipo" style="color:${sm.dot};">${cliTipoIco(tipo)} ${tipo}</span>
+          ${tema?`<span class="cli-pchip-tema" style="color:${sm.c};">${tema}</span>`:''}
+          <span class="cli-pchip-titulo" style="color:${sm.c};">${titulo}</span>
+        </div>
       </div>`;
     };
 
@@ -7155,10 +7175,11 @@ const Client = {
         const firstPost = hp[0];
         const imgs = this.postMedia(firstPost);
         const thumb = imgs[0] || '';
-        if (thumb && !this.isVideo(thumb)) {
-          cells += `<div class="${cls}" ${onclick} style="padding:0;overflow:hidden;position:relative;background:none;">
-            <img src="${thumb}" style="width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;" onerror="this.style.display='none'"/>
-            <span style="position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,0.25);font-size:10px;color:#fff;font-weight:700;">${d}</span>
+        const hasPhoto = thumb && !this.isVideo(thumb);
+        if (hasPhoto) {
+          cells += `<div class="${cls}" ${onclick} style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px;">
+            <span style="font-size:10px;font-weight:700;line-height:1;">${d}</span>
+            <img src="${thumb}" style="width:100%;flex:1;min-height:0;object-fit:cover;border-radius:3px;display:block;" onerror="this.style.display='none'"/>
           </div>`;
         } else {
           const dot = `<span class="cal-dot"></span>`;
