@@ -997,8 +997,7 @@
         <span class="stb-inner"><span class="stb-icon">◀</span></span>
       </button>
       <div class="nav-section">Menu</div>
-      <div class="nav-item active" onclick="Admin.tab('leads')" id="nav-leads" title="Leads"><span class="ni">◉</span><span class="nl">Leads</span></div>
-      <div class="nav-item" onclick="Admin.tab('followup')" id="nav-followup" title="Follow-up"><span class="ni">↗</span><span class="nl">Follow-up <span class="nav-badge" id="nb-fu" style="display:none">0</span></span></div>
+      <div class="nav-item active" onclick="Admin.tab('followup')" id="nav-followup" title="Follow-up"><span class="ni">↗</span><span class="nl">Follow-up <span class="nav-badge" id="nb-fu" style="display:none">0</span></span></div>
       <div class="nav-item" onclick="Admin.tab('posts')" id="nav-posts" title="Posts"><span class="ni">▦</span><span class="nl">Posts <span class="nav-badge" id="nb-posts" style="display:none">0</span></span></div>
       <div class="nav-item" onclick="Admin.tab('clientes')" id="nav-clientes" title="Clientes"><span class="ni">◎</span><span class="nl">Clientes</span></div>
       <div class="nav-section">Gestão</div>
@@ -1012,7 +1011,6 @@
       <div class="nav-item" onclick="Admin.tab('lab')" id="nav-lab" title="Ideias"><span class="ni">⊙</span><span class="nl">Ideias</span></div>
       <div class="nav-item" onclick="Admin.tab('info')" id="nav-info" title="Infos"><span class="ni">≡</span><span class="nl">Infos</span></div>
       <div class="nav-item" onclick="Admin.tab('solicitacoes')" id="nav-solicitacoes" title="Solicitações"><span class="ni">◫</span><span class="nl">Solic.</span></div>
-      <div class="nav-item" onclick="Admin.tab('tarefas')" id="nav-tarefas" title="Tarefas"><span class="ni">✓</span><span class="nl">Tarefas</span></div>
       <div class="nav-item" onclick="Admin.tab('demandas')" id="nav-demandas" title="Demandas"><span class="ni">⊞</span><span class="nl">Demandas</span></div>
       <div class="nav-item" onclick="Admin.tab('chat')" id="nav-chat" title="Chat"><span class="ni">◷</span><span class="nl">Chat <span class="chat-badge hidden" id="nb-chat" style="background:#C62828;color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;"></span></span></div>
     </div>
@@ -1181,9 +1179,9 @@ const App = {
   },
 
   async route() {
-    const VALID_TABS = ['leads','followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','tarefas','demandas','chat'];
+    const VALID_TABS = ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat'];
     const savedTab = sessionStorage.getItem('adminTab');
-    const startTab = (savedTab && VALID_TABS.includes(savedTab)) ? savedTab : 'leads';
+    const startTab = (savedTab && VALID_TABS.includes(savedTab)) ? savedTab : 'followup';
     if (this.user.email === ADMIN_EMAIL) {
       document.getElementById('admin-email').textContent = this.user.email;
       this.show('admin-view');
@@ -1245,7 +1243,7 @@ const Admin = {
   async tab(name) {
     this.currentTab = name;
     sessionStorage.setItem('adminTab', name);
-    ['leads','followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','tarefas','demandas','chat'].forEach(t => {
+    ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat'].forEach(t => {
       document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
     });
     document.getElementById('admin-view')?.classList.remove('sidebar-open');
@@ -1254,7 +1252,6 @@ const Admin = {
     this.closeDetail();
     this.loader(true);
     try {
-      if (name === 'leads')      await this.renderLeads();
       if (name === 'followup')   await this.renderFollowup();
       if (name === 'posts')      await this.renderPosts();
       if (name === 'clientes')   await this.renderClientes();
@@ -1267,7 +1264,6 @@ const Admin = {
       if (name === 'lab')          await this.renderLab();
       if (name === 'info')         await this.renderInfoAdmin();
       if (name === 'solicitacoes') await this.renderSolicitacoesAdmin();
-      if (name === 'tarefas')      await this.renderTarefas();
       if (name === 'demandas')     await this.renderDemandas();
       if (name === 'chat')         await this.renderChat();
       // Restore saved scroll for this tab
@@ -1331,7 +1327,7 @@ const Admin = {
       }]);
       if (error) throw error;
       this.fecharModalLead();
-      this.tab('leads');
+      this.tab('clientes');
     } catch(e) { alert('Erro: '+e.message); }
     finally { this.loader(false); }
   },
@@ -2173,6 +2169,10 @@ const Admin = {
                 <div class="cli-stat" style="background:#e9f9ee;color:#1db855;border:1px solid #41ff7233;"><span class="cli-stat-label">Aprovação</span>—</div>
                 <div class="cli-stat" style="background:#e7e6f5;color:#5254cc;border:1px solid #8688ff33;"><span class="cli-stat-label">Aprovados</span>—</div>
               </div>
+              ${c.access_code ? `<div style="margin-top:10px;display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--beige);border-radius:9px;border:1px solid var(--border);">
+                <span style="font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;flex-shrink:0;">Acesso</span>
+                <code style="font-size:11px;font-family:monospace;color:var(--text);font-weight:600;letter-spacing:.04em;">${c.access_code}</code>
+              </div>` : ''}
             </div>
           </div>`;
         }).join('')}
@@ -2373,8 +2373,8 @@ const Admin = {
 
       <!-- TABS -->
       <div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;" id="cli-tabs">
-        ${['feed','posts','arquivos','tarefas','chat','info','brand'].map((t,i) => {
-          const labels = {feed:'▦ Feed',posts:'◫ Posts',arquivos:'▤ Arquivos',tarefas:'✓ Tarefas',chat:'◷ Chat',info:'⚙ Info',brand:'✦ Brand Core'};
+        ${['feed','posts','arquivos','chat','info','brand'].map((t,i) => {
+          const labels = {feed:'▦ Feed',posts:'◫ Posts',arquivos:'▤ Arquivos',chat:'◷ Chat',info:'⚙ Info',brand:'✦ Brand Core'};
           const isBrand = t==='brand';
           return `<button onclick="Admin._cliTab('${t}',${id})" id="clitab-${t}" style="padding:9px 16px;font-size:12px;border:none;${isBrand?'background:linear-gradient(135deg,rgba(184,130,10,0.08),rgba(232,184,75,0.12));':'background:none;'}cursor:pointer;border-bottom:2px solid ${i===0?'var(--copper)':'transparent'};color:${isBrand?'var(--brown)':(i===0?'var(--copper)':'var(--muted)')};transition:all .15s;font-family:Poppins,sans-serif;white-space:nowrap;${isBrand?'font-weight:500;border-radius:8px 8px 0 0;':''}">${labels[t]}</button>`;
         }).join('')}
@@ -2396,7 +2396,7 @@ const Admin = {
     this._bcContentId = 'cli-tab-content';
     id = id || this._cliCurrentId;
     const c = this._cliClienteData;
-    ['feed','posts','arquivos','tarefas','chat','info','brand'].forEach(t => {
+    ['feed','posts','arquivos','chat','info','brand'].forEach(t => {
       const el = document.getElementById('clitab-'+t);
       if (!el) return;
       el.style.borderBottomColor = t===tab ? 'var(--copper)' : 'transparent';
@@ -2407,7 +2407,6 @@ const Admin = {
     if (tab==='feed')     this._cliTabFeed(id, c);
     else if (tab==='posts') this._cliTabPosts(id, c);
     else if (tab==='arquivos') this._cliTabArquivos(id, c);
-    else if (tab==='tarefas') this._cliTabTarefas(id, c);
     else if (tab==='chat') this._cliTabChat(id, c);
     else if (tab==='info') this._cliTabInfo(id, c);
     else if (tab==='brand') this._cliTabBrandCore(id, c);
@@ -2479,7 +2478,7 @@ const Admin = {
     const list = tarefas || [];
     content.innerHTML = `
       <div style="margin-bottom:16px;">
-        <button onclick="Admin.tab('tarefas')" style="font-size:12px;color:var(--copper);background:none;border:1px solid rgba(201,162,39,.3);padding:8px 16px;border-radius:9px;cursor:pointer;">Ver todas as tarefas →</button>
+        <div style="font-size:11px;color:var(--muted);">Tarefas desta cliente</div>
       </div>
       ${!list.length ? '<p style="color:var(--muted);text-align:center;padding:40px 0;font-style:italic;">Nenhuma tarefa para esta cliente</p>' :
         `<div style="display:flex;flex-direction:column;gap:8px;">
@@ -2506,7 +2505,7 @@ const Admin = {
     const { data: posts } = await db.from('posts').select('*').eq('client_email', c.email).order('data_post',{ascending:false});
     if (!content) return;
 
-    const allPosts = posts || [];
+    const allPosts = (posts || []).slice(0, 9);
     // Helper to get the best image URL for a post
     const getImg = (p) => {
       if (p.capa_url) return p.capa_url;
@@ -2558,7 +2557,7 @@ const Admin = {
 
     content.innerHTML = `
       <style>
-        .feed-preview-wrap{max-width:400px;margin:0 auto;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh2);}
+        .feed-preview-wrap{max-width:400px;margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh2);}
         .feed-header{height:120px;background:${coverStyle};position:relative;}
         .feed-avatar-row{display:flex;align-items:flex-end;gap:14px;padding:0 16px 14px;margin-top:-36px;}
         .feed-avatar{width:72px;height:72px;border-radius:50%;border:3px solid var(--surface);overflow:hidden;flex-shrink:0;object-fit:cover;}
@@ -2715,19 +2714,22 @@ const Admin = {
       { key:'metricas',      icon:'📊', title:'Métricas',             desc:'Desempenho do perfil' },
     ];
     const isRO = this._bcReadOnly;
-    content.innerHTML = `
+    const wrapS = !isRO ? `<div style="background:#0a0a0a;border-radius:20px;padding:28px;margin:-4px;">` : '';
+    const wrapE = !isRO ? `</div>` : '';
+    content.innerHTML = wrapS + `
       <div style="max-width:900px;">
         <div style="margin-bottom:28px;">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--text);margin-bottom:4px;">✦ Brand Core</div>
-          <div style="font-size:12px;color:var(--muted);">${isRO ? 'A essência do seu negócio, documentada e organizada' : `Essência de ${c.nome||'sua cliente'} — documentada e acessível`}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:#ffffff;margin-bottom:4px;">✦ Brand Core</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.45);">${isRO ? 'A essência do seu negócio, documentada e organizada' : `Essência de ${c.nome||'sua cliente'} — documentada e acessível`}</div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;">
           ${sections.map((s,i) => `
             <div onclick="Admin._bcSection='${s.key}';Admin._bcSubSection=null;Admin._bcRenderSection('${s.key}',${id},Admin._cliClienteData)"
               style="border-radius:16px;border:1px solid rgba(255,255,255,0.07);background:#111111;padding:18px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;"
-              onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 30px rgba(0,0,0,0.4)';this.style.borderColor='rgba(241,197,175,0.25)'"
+              onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 30px rgba(0,0,0,0.4)';this.style.borderColor='rgba(241,197,175,0.35)'"
               onmouseleave="this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,255,255,0.07)'">
-              <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:100%;height:60px;background:radial-gradient(ellipse at 50% 0%,rgba(241,197,175,0.12),transparent 70%);pointer-events:none;"></div>
+              <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(241,197,175,0.7) 40%,rgba(241,197,175,0.7) 60%,transparent 95%);pointer-events:none;"></div>
+              <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:100%;height:70px;background:radial-gradient(ellipse at 50% 0%,rgba(241,197,175,0.14),transparent 70%);pointer-events:none;"></div>
               <div style="position:absolute;top:12px;right:14px;font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:.1em;font-weight:500;">${String(i+1).padStart(2,'0')}</div>
               <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#49362F,#F1C5AF);display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:14px;box-shadow:0 2px 14px rgba(241,197,175,0.25);">${s.icon}</div>
               <div style="font-size:13px;font-weight:700;color:#ffffff;margin-bottom:4px;">${s.title}</div>
@@ -2735,7 +2737,7 @@ const Admin = {
               <div style="margin-top:14px;font-size:10px;color:#F1C5AF;letter-spacing:.08em;text-transform:uppercase;font-weight:500;">Acessar →</div>
             </div>`).join('')}
         </div>
-      </div>`;
+      </div>` + wrapE;
   },
 
   _bcRenderSection(section, id, c) {
@@ -7932,7 +7934,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminMain = document.getElementById('admin-main');
   if (adminMain) {
     adminMain.addEventListener('scroll', () => {
-      const tab = sessionStorage.getItem('adminTab') || 'leads';
+      const tab = sessionStorage.getItem('adminTab') || 'followup';
       sessionStorage.setItem('scroll_' + tab, adminMain.scrollTop);
     }, { passive: true });
   }
