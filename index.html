@@ -2560,24 +2560,26 @@ const Admin = {
     // Sempre pelo menos 9 slots (3x3), depois completa o múltiplo de 3
     const minCells = Math.ceil(Math.max(9, allPosts.length) / 3) * 3;
     const emptySlots = minCells - allPosts.length;
-    const empties = Array(emptySlots).fill('<div style="aspect-ratio:1/1;background:var(--beige);border-radius:2px;opacity:0.15;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,0.15);font-size:18px;">+</div>').join('');
+    const empties = Array(emptySlots).fill('<div class="feed-empty-slot"></div>').join('');
 
     content.innerHTML = `
       <style>
-        .feed-preview-wrap{max-width:420px;margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh2);}
-        .feed-header{height:120px;background:${coverStyle};position:relative;}
-        .feed-avatar-row{display:flex;align-items:flex-end;gap:14px;padding:0 16px 14px;margin-top:-36px;}
-        .feed-avatar{width:72px;height:72px;border-radius:50%;border:3px solid var(--surface);overflow:hidden;flex-shrink:0;object-fit:cover;}
-        .feed-avatar-ph{width:72px;height:72px;border-radius:50%;border:3px solid var(--surface);background:${grad};display:flex;align-items:center;justify-content:center;font-size:26px;font-family:'Cormorant Garamond',serif;color:#fff;flex-shrink:0;}
-        .feed-info{flex:1;padding-top:8px;}
-        .feed-name{font-size:14px;font-weight:600;color:var(--text);}
+        .feed-preview-wrap{max-width:380px;margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh2);background:var(--surface);}
+        .feed-avatar-row{display:flex;align-items:center;gap:14px;padding:16px 16px 10px;}
+        .feed-avatar{width:64px;height:64px;border-radius:50%;border:2px solid var(--border);overflow:hidden;flex-shrink:0;object-fit:cover;}
+        .feed-avatar-ph{width:64px;height:64px;border-radius:50%;border:2px solid var(--border);background:${grad};display:flex;align-items:center;justify-content:center;font-size:24px;font-family:'Cormorant Garamond',serif;color:#fff;flex-shrink:0;}
+        .feed-info{flex:1;}
+        .feed-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;}
         .feed-ig{font-size:11px;color:var(--muted);}
-        .feed-bio{font-size:11px;color:var(--text);padding:0 16px 10px;line-height:1.5;}
+        .feed-bio-area{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:Poppins,sans-serif;color:var(--text);background:var(--bg);resize:none;line-height:1.5;box-sizing:border-box;}
+        .feed-bio-area:focus{outline:none;border-color:var(--copper);}
+        .feed-bio-wrap{padding:0 16px 12px;}
         .feed-stats-row{display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
         .feed-stat{flex:1;text-align:center;padding:10px 0;}
         .feed-stat-n{font-size:15px;font-weight:700;color:var(--text);font-family:'Cormorant Garamond',serif;}
         .feed-stat-l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
-        .feed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--beige);max-height:600px;overflow-y:auto;}
+        .feed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--border);max-height:600px;overflow-y:auto;}
+        .feed-empty-slot{aspect-ratio:1/1;background:var(--beige);border:1px dashed var(--border);}
         .feed-cell:hover .feed-overlay,.feed-cell:hover .feed-meta{opacity:1!important;}
         .feed-cell{transition:transform .15s;cursor:grab!important;}
         .feed-cell:active{cursor:grabbing!important;transform:scale(0.97);}
@@ -2594,27 +2596,25 @@ const Admin = {
         </div>
       </div>
       <div class="feed-preview-wrap">
-        <div class="feed-header"></div>
-        <div style="background:var(--surface);padding-bottom:4px;">
-          <div class="feed-avatar-row">
-            ${c.foto_url
-              ? `<img class="feed-avatar" src="${c.foto_url}" alt="${c.nome}"/>`
-              : `<div class="feed-avatar-ph">${(c.nome||'?')[0].toUpperCase()}</div>`}
-            <div class="feed-info">
-              <div class="feed-name">${c.nome||'—'}</div>
-              <div class="feed-ig">${c.instagram ? '@'+c.instagram.replace('@','') : ''}</div>
-            </div>
-          </div>
-          ${c.bio ? `<div class="feed-bio">${c.bio}</div>` : c.empresa ? `<div class="feed-bio" style="color:var(--muted);">${c.empresa}</div>` : ''}
-          <div class="feed-stats-row">
-            <div class="feed-stat"><div class="feed-stat-n">${allPosts.length}${allPosts.length===30?'+':''}</div><div class="feed-stat-l">posts</div></div>
-            <div class="feed-stat"><div class="feed-stat-n">${allPosts.filter(p=>p.status==='aprovado').length}</div><div class="feed-stat-l">aprovados</div></div>
-            <div class="feed-stat"><div class="feed-stat-n">${allPosts.filter(p=>p.status==='publicado').length}</div><div class="feed-stat-l">publicados</div></div>
+        <div class="feed-avatar-row">
+          ${c.foto_url
+            ? `<img class="feed-avatar" src="${c.foto_url}" alt="${c.nome}"/>`
+            : `<div class="feed-avatar-ph">${(c.nome||'?')[0].toUpperCase()}</div>`}
+          <div class="feed-info">
+            <div class="feed-name">${c.nome||'—'}</div>
+            <div class="feed-ig">${c.instagram ? '@'+c.instagram.replace('@','') : ''}</div>
           </div>
         </div>
-        ${allPosts.length
-          ? `<div class="feed-grid">${cells}${empties}</div>`
-          : `<div style="padding:40px;text-align:center;color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:16px;">Nenhum post criado ainda ✦</div>`}
+        <div class="feed-bio-wrap">
+          <textarea class="feed-bio-area" rows="2" placeholder="Bio do Instagram — clique para editar e salvar..."
+            onblur="Admin._saveFeedBio(${id},this.value)">${(c.empresa||'').replace(/</g,'&lt;')}</textarea>
+        </div>
+        <div class="feed-stats-row">
+          <div class="feed-stat"><div class="feed-stat-n">${allPosts.length}${allPosts.length===30?'+':''}</div><div class="feed-stat-l">posts</div></div>
+          <div class="feed-stat"><div class="feed-stat-n">${allPosts.filter(p=>p.status==='aprovado').length}</div><div class="feed-stat-l">aprovados</div></div>
+          <div class="feed-stat"><div class="feed-stat-n">${allPosts.filter(p=>p.status==='publicado').length}</div><div class="feed-stat-l">publicados</div></div>
+        </div>
+        <div class="feed-grid">${cells}${empties}</div>
         <div class="feed-hint">⠿ arraste para reordenar — as datas são trocadas automaticamente</div>
       </div>`;
   },
@@ -2652,6 +2652,13 @@ const Admin = {
     this._feedDragDate = null;
     // Reload feed
     this._cliTabFeed(this._cliCurrentId, this._cliClienteData);
+  },
+
+  async _saveFeedBio(id, value) {
+    const bio = value.trim();
+    await db.from('clients').update({ empresa: bio }).eq('id', id);
+    if (this._cliClienteData) this._cliClienteData.empresa = bio;
+    this._showToast('Bio salva ✓');
   },
 
   _cliTabInfo(id, c) {
