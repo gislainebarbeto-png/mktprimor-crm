@@ -1055,12 +1055,10 @@
       <div class="client-tab" id="ctab-comece" onclick="Client.clientTab('comece')">🌱 Início</div>
       <div class="client-tab" id="ctab-onboarding" onclick="Client.clientTab('onboarding')">🌿 Onboarding</div>
       <div class="client-tab" id="ctab-financeiro" onclick="Client.clientTab('financeiro')">💰 Financeiro</div>
-      <div class="client-tab" id="ctab-metricas" onclick="Client.clientTab('metricas')">📊 Métricas</div>
       <div class="client-tab" id="ctab-arquivos" onclick="Client.clientTab('arquivos')">📁 Arquivos</div>
       <div class="client-tab" id="ctab-ideias" onclick="Client.clientTab('ideias')">💡 Ideias</div>
       <div class="client-tab" id="ctab-info" onclick="Client.clientTab('info')">📋 Informações</div>
       <div class="client-tab" id="ctab-solicitacoes" onclick="Client.clientTab('solicitacoes')">📅 Solicitações <span class="ctab-badge hidden" id="ctab-sol-badge"></span></div>
-      <div class="client-tab" id="ctab-tarefas" onclick="Client.clientTab('tarefas')">✅ Tarefas</div>
       <div class="client-tab" id="ctab-brand" onclick="Client.clientTab('brand')">✦ Brand Core</div>
       <div class="client-tab" id="ctab-chat" onclick="Client.clientTab('chat')">✉ Chat <span class="ctab-badge hidden" id="ctab-chat-badge"></span></div>
     </div>
@@ -1103,11 +1101,9 @@
         </div>
       </div>
     </div>
-    <!-- Tab: Métricas -->
     <div id="ctab-content-comece" class="hidden"></div>
     <div id="ctab-content-onboarding" class="hidden"></div>
     <div id="ctab-content-financeiro" class="hidden"></div>
-    <div id="ctab-content-metricas" class="hidden"></div>
     <!-- Tab: Arquivos -->
     <div id="ctab-content-arquivos" class="hidden"></div>
     <!-- Tab: Ideias -->
@@ -1116,8 +1112,6 @@
     <div id="ctab-content-info" class="hidden"></div>
     <!-- Tab: Solicitações -->
     <div id="ctab-content-solicitacoes" class="hidden"></div>
-    <!-- Tab: Tarefas -->
-    <div id="ctab-content-tarefas" class="hidden"></div>
     <!-- Tab: Brand Core -->
     <div id="ctab-content-brand" class="hidden"></div>
     <!-- Tab: Chat -->
@@ -2711,30 +2705,34 @@ const Admin = {
       return;
     }
     const sections = [
-      { key:'diagnostico', icon:'🔍', title:'Diagnóstico do Perfil', desc:'Análise completa da presença digital', color:'#7C3AED', bg:'rgba(124,58,237,0.08)' },
-      { key:'persona',     icon:'👤', title:'Estudo de Persona',     desc:'Perfil psicológico do público-alvo',  color:'#0891B2', bg:'rgba(8,145,178,0.08)' },
-      { key:'concorrencia',icon:'⚡', title:'Análise de Concorrência',desc:'Benchmarking e oportunidades',        color:'#DC2626', bg:'rgba(220,38,38,0.08)' },
-      { key:'posicionamento',icon:'✦',title:'Posicionamento de Imagem',desc:'Identidade, voz e expressão visual', color:'#B8820A', bg:'rgba(184,130,10,0.08)' },
-      { key:'esteira',     icon:'◈', title:'Esteira de Produtos',    desc:'Portfólio de produtos e serviços',    color:'#059669', bg:'rgba(5,150,105,0.08)' },
-      { key:'arquivos_bc', icon:'▤', title:'Arquivos',               desc:'Documentos e referências do projeto', color:'#6B7280', bg:'rgba(107,114,128,0.08)' },
-      { key:'estrategias', icon:'🗺', title:'Estratégias',           desc:'Mapas mentais e planejamento visual',  color:'#0891B2', bg:'rgba(8,145,178,0.08)' },
+      { key:'diagnostico',   icon:'🔍', title:'Diagnóstico',          desc:'Presença e perfil digital' },
+      { key:'persona',       icon:'👤', title:'Persona',              desc:'Perfil do público-alvo' },
+      { key:'concorrencia',  icon:'⚡', title:'Concorrência',         desc:'Benchmarking e oportunidades' },
+      { key:'posicionamento',icon:'✦',  title:'Posicionamento',       desc:'Identidade, voz e visual' },
+      { key:'esteira',       icon:'◈',  title:'Esteira de Produtos',  desc:'Portfólio e serviços' },
+      { key:'estrategias',   icon:'🗺', title:'Estratégias',          desc:'Mapas mentais e planejamento' },
+      { key:'arquivos_bc',   icon:'▤',  title:'Arquivos',             desc:'Documentos e referências' },
+      { key:'metricas',      icon:'📊', title:'Métricas',             desc:'Desempenho do perfil' },
     ];
+    const isRO = this._bcReadOnly;
     content.innerHTML = `
-      <div style="max-width:800px;">
-        <div style="text-align:center;margin-bottom:32px;padding:28px 20px;background:linear-gradient(135deg,rgba(184,130,10,0.06),rgba(232,184,75,0.03));border-radius:20px;border:1px solid rgba(184,130,10,0.12);">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-style:italic;color:var(--brown);line-height:1.2;">✦ Brand Core</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:6px;letter-spacing:.08em;">O lugar onde a essência de ${c.nome||'sua cliente'} é documentada, organizada e sempre acessível</div>
+      <div style="max-width:900px;">
+        <div style="margin-bottom:28px;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--text);margin-bottom:4px;">✦ Brand Core</div>
+          <div style="font-size:12px;color:var(--muted);">${isRO ? 'A essência do seu negócio, documentada e organizada' : `Essência de ${c.nome||'sua cliente'} — documentada e acessível`}</div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;">
-          ${sections.map(s => `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;">
+          ${sections.map((s,i) => `
             <div onclick="Admin._bcSection='${s.key}';Admin._bcSubSection=null;Admin._bcRenderSection('${s.key}',${id},Admin._cliClienteData)"
-              style="border-radius:16px;border:1px solid var(--border);background:var(--surface);padding:20px;cursor:pointer;transition:all .2s;hover:transform:translateY(-3px);"
-              onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)'"
-              onmouseleave="this.style.transform='';this.style.boxShadow=''">
-              <div style="width:44px;height:44px;border-radius:12px;background:${s.bg};display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px;">${s.icon}</div>
-              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">${s.title}</div>
-              <div style="font-size:11px;color:var(--muted);line-height:1.4;">${s.desc}</div>
-              <div style="margin-top:12px;font-size:10px;color:${s.color};letter-spacing:.08em;text-transform:uppercase;font-weight:500;">Acessar →</div>
+              style="border-radius:16px;border:1px solid rgba(255,255,255,0.07);background:#111111;padding:18px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;"
+              onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 30px rgba(0,0,0,0.4)';this.style.borderColor='rgba(241,197,175,0.25)'"
+              onmouseleave="this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,255,255,0.07)'">
+              <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:100%;height:60px;background:radial-gradient(ellipse at 50% 0%,rgba(241,197,175,0.12),transparent 70%);pointer-events:none;"></div>
+              <div style="position:absolute;top:12px;right:14px;font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:.1em;font-weight:500;">${String(i+1).padStart(2,'0')}</div>
+              <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#49362F,#F1C5AF);display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:14px;box-shadow:0 2px 14px rgba(241,197,175,0.25);">${s.icon}</div>
+              <div style="font-size:13px;font-weight:700;color:#ffffff;margin-bottom:4px;">${s.title}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.45);line-height:1.4;">${s.desc}</div>
+              <div style="margin-top:14px;font-size:10px;color:#F1C5AF;letter-spacing:.08em;text-transform:uppercase;font-weight:500;">Acessar →</div>
             </div>`).join('')}
         </div>
       </div>`;
@@ -2748,6 +2746,7 @@ const Admin = {
     else if (section==='esteira')  this._bcEsteira(id, c);
     else if (section==='arquivos_bc') this._bcArquivos(id, c);
     else if (section==='estrategias') this._bcEstrategias(id, c);
+    else if (section==='metricas')    this._bcMetricas(id, c);
   },
 
   _bcBack(id, c) {
@@ -2763,6 +2762,42 @@ const Admin = {
       return;
     }
     this._cliTabBrandCore(id, c);
+  },
+
+  async _bcMetricas(id, c) {
+    const el = document.getElementById(this._bcContentId); if (!el) return;
+    const email = c?.email || '';
+    el.innerHTML = this._bcHeader('Métricas','📊',id,c) + '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Carregando...</p>';
+    const [{ data: mets }, { data: posts }, { data: metricoolRow }] = await Promise.all([
+      db.from('metricas').select('*').eq('client_email', email).order('mes',{ascending:true}),
+      db.from('posts').select('id,legenda,img_url').eq('client_email', email),
+      db.from('arquivos_cliente').select('url').eq('client_email',email).eq('nome','__metricool__').maybeSingle()
+    ]);
+    const metricoolUrl = metricoolRow?.url || '';
+    const metricoolBtn = metricoolUrl ? `<a href="${metricoolUrl}" target="_blank" style="display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#7A5C00,#9B7500);color:#F5F5F5;border-radius:12px;padding:16px 20px;text-decoration:none;margin-bottom:20px;"><div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;margin-bottom:2px;">Ver relatório completo</div><div style="font-size:11px;opacity:.7;">Abre o Metricool com todas as métricas do seu perfil</div></div><span style="font-size:22px;">📊 →</span></a>` : '';
+    const list = mets||[], pList = posts||[];
+    const header = this._bcHeader('Métricas','📊',id,c);
+    if (!list.length) { el.innerHTML = header + metricoolBtn + '<p style="color:var(--muted);font-size:14px;text-align:center;padding:40px;font-style:italic;font-family:Cormorant Garamond,serif;">Métricas ainda não disponíveis ✦</p>'; return; }
+    const last = list[list.length-1];
+    const prev = list[list.length-2];
+    const delta = (cur,ant) => ant>0 ? `<span style="color:${cur>=ant?'#2E7D32':'#C62828'};font-size:11px;">${cur>=ant?'↑':'↓'}${Math.abs(Math.round((cur-ant)/ant*100))}%</span>` : '';
+    const parseFirst = raw => { try { const a=JSON.parse(raw); return Array.isArray(a)?a[0]:raw; } catch{return raw;} };
+    let tops=[]; try { tops=JSON.parse(last.top_posts||'[]'); } catch{}
+    const topHtml = tops.map((pid,i)=>{
+      const p=pList.find(x=>String(x.id)===String(pid));
+      return p ? `<div class="top-post-item">${parseFirst(p.img_url)?`<img src="${parseFirst(p.img_url)}" class="top-post-thumb"/>`:`<div style="aspect-ratio:1/1;background:var(--beige);display:flex;align-items:center;justify-content:center;color:var(--copper);">✦</div>`}<div style="font-size:14px;padding:4px;">${['🥇','🥈','🥉'][i]}</div><div style="font-size:10px;color:var(--muted);padding:0 6px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(p.legenda||'').substring(0,20)}</div></div>` : '';
+    }).join('');
+    el.innerHTML = header + metricoolBtn + `
+      <div class="met-grid">
+        <div class="met-card"><div class="met-n">${(last.seguidores||0).toLocaleString('pt-BR')}</div><div class="met-l">Seguidores</div>${prev?delta(last.seguidores,prev.seguidores):''}</div>
+        <div class="met-card"><div class="met-n">${(last.alcance||0).toLocaleString('pt-BR')}</div><div class="met-l">Alcance</div>${prev?delta(last.alcance,prev.alcance):''}</div>
+        <div class="met-card"><div class="met-n">${(last.engajamento||0).toFixed(1)}%</div><div class="met-l">Engajamento</div>${prev?delta(last.engajamento,prev.engajamento):''}</div>
+        <div class="met-card"><div class="met-n">${(last.impressoes||0).toLocaleString('pt-BR')}</div><div class="met-l">Impressões</div>${prev?delta(last.impressoes,prev.impressoes):''}</div>
+      </div>
+      <div class="chart-wrap"><div class="chart-title">Crescimento de Seguidores</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.seguidores})),'#C9A800')}</div>
+      <div class="chart-wrap"><div class="chart-title">Alcance por Mês</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.alcance})),'#7A5C00')}</div>
+      <div class="chart-wrap"><div class="chart-title">Impressões</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.impressoes})),'#9B7500')}</div>
+      ${topHtml ? `<div class="chart-wrap"><div class="chart-title">Top Posts do Mês</div><div class="top-post-grid">${topHtml}</div></div>` : ''}`;
   },
 
   _bcHeader(title, icon, id, c) {
@@ -6322,7 +6357,8 @@ const Client = {
       this.render(posts);
       this.checkChatBadge();
       Admin.refreshChatBadge();
-      const savedTab = localStorage.getItem('clientTab') || 'posts';
+      const validClientTabs = ['posts','comece','onboarding','financeiro','arquivos','ideias','info','solicitacoes','brand','chat'];
+      const savedTab = validClientTabs.includes(localStorage.getItem('clientTab')) ? localStorage.getItem('clientTab') : 'posts';
       if (savedTab !== 'posts') this.clientTab(savedTab);
     } finally { App.loader(false); }
   },
@@ -6571,6 +6607,7 @@ const Client = {
         .cli-cal-cell.today{border-color:var(--copper)!important;background:rgba(212,168,130,0.05);}
         .cli-cal-cell.outro-mes{opacity:.3;}
         .cli-cal-cell.mensal{min-height:90px;}
+        @media(max-width:700px){.cli-cal-cell.mensal{min-height:0!important;aspect-ratio:1;}}
         .cli-cal-cell.semanal{min-height:140px;}
         .cli-cal-cell.diario-cell{min-height:180px;}
         .cli-day-num{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:700;line-height:1;}
@@ -7185,7 +7222,7 @@ ${text}`,
     document.getElementById('portal-nav')?.classList.remove('open');
     const activeEl = document.getElementById('ctab-'+name);
     if (activeEl) document.getElementById('portal-active-name').textContent = activeEl.textContent.trim();
-    ['posts','comece','onboarding','financeiro','metricas','arquivos','ideias','info','solicitacoes','tarefas','brand','chat'].forEach(t => {
+    ['posts','comece','onboarding','financeiro','arquivos','ideias','info','solicitacoes','brand','chat'].forEach(t => {
       document.getElementById('ctab-'+t)?.classList.toggle('active', t===name);
       const c = document.getElementById('ctab-content-'+t);
       if (c) c.classList.toggle('hidden', t!==name);
@@ -7193,12 +7230,10 @@ ${text}`,
     if (name==='comece')        this.renderComecePorAqui();
     if (name==='onboarding')    this.renderOnboardingTab();
     if (name==='financeiro')    this.renderFinanceiroTab();
-    if (name==='metricas')      this.renderMetricasTab();
     if (name==='arquivos')      this.renderArquivosTab();
     if (name==='ideias')        this.renderIdeiasTab();
     if (name==='info')          this.renderInfoTab();
     if (name==='solicitacoes')  this.renderSolicitacoesTab();
-    if (name==='tarefas')     this.renderTarefasTab();
     if (name==='brand')       this.renderBrandCoreTab();
     if (name==='chat')        this.renderChatTab();
   },
