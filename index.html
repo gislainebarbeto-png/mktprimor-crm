@@ -64,7 +64,7 @@
     html.dark .login-box{background:#222222;border:1px solid rgba(255,255,255,0.08);box-shadow:0 12px 48px rgba(0,0,0,0.7);}
     html.dark .app-header{background:#111111;border-bottom:1px solid rgba(255,255,255,0.06);}
     html.dark .admin-main,html.dark .client-main{background:transparent!important;}
-    html.dark .client-main *:not(button):not(input):not(textarea):not(select):not(.badge-aprovado):not(.badge-revisao):not(.badge-criacao):not(.badge-publicado){color:var(--text);}
+    html.dark .client-main *:not(button):not(input):not(textarea):not(select):not(.badge-aprovado):not(.badge-revisao):not(.badge-criacao):not(.badge-design):not(.badge-publicado){color:var(--text);}
     html.dark .client-main .muted, html.dark .client-main [style*='color:var(--muted)']{color:#888888!important;}
 
     /* ── SIDEBAR ICON-ONLY ── */
@@ -183,12 +183,14 @@
     html.dark .pchip-st-rascunho  { background: #fffae6 !important; }
     html.dark .pchip-st-revisao   { background: #fdf1e7 !important; }
     html.dark .pchip-st-aprovado  { background: #e9f9ee !important; }
+    html.dark .pchip-st-design    { background: #f3e8ff !important; }
     html.dark .pchip-st-publicado { background: #e7e6f5 !important; }
 
     html.dark .pchip-st-criacao   .pchip-tipo,
     html.dark .pchip-st-rascunho  .pchip-tipo  { color: #f6d12d !important; }
     html.dark .pchip-st-revisao   .pchip-tipo  { color: #ffa14e !important; }
     html.dark .pchip-st-aprovado  .pchip-tipo  { color: #41ff72 !important; }
+    html.dark .pchip-st-design    .pchip-tipo  { color: #c084fc !important; }
     html.dark .pchip-st-publicado .pchip-tipo  { color: #8688ff !important; }
 
     html.dark .pchip-st-criacao   .pchip-tema,
@@ -199,6 +201,8 @@
     html.dark .pchip-st-revisao   .pchip-titulo { color: #d4762a !important; }
     html.dark .pchip-st-aprovado  .pchip-tema,
     html.dark .pchip-st-aprovado  .pchip-titulo { color: #1db855 !important; }
+    html.dark .pchip-st-design    .pchip-tema,
+    html.dark .pchip-st-design    .pchip-titulo { color: #7c3aed !important; }
     html.dark .pchip-st-publicado .pchip-tema,
     html.dark .pchip-st-publicado .pchip-titulo { color: #5254cc !important; }
     /* ─────────────────────────────────────────────────── */
@@ -492,6 +496,7 @@
     .client-status-pill.aprovado{background:rgba(34,197,94,0.15);color:#14532D;border-color:#86EFAC;}
     .client-status-pill.revisar{background:rgba(249,115,22,0.15);color:#9A3412;border-color:#FED7AA;}
     .client-status-pill.producao{background:rgba(251,191,36,0.15);color:#92400E;border-color:#FDE68A;}
+    .client-status-pill.design{background:rgba(168,85,247,0.15);color:#5b21b6;border-color:#d8b4fe;}
     .client-status-pill.publicado{background:rgba(59,130,246,0.15);color:#1E3A8A;border-color:#BFDBFE;}
     .client-post-note{background:rgba(201,162,39,.08);border:1px solid rgba(201,162,39,.24);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:11px;color:var(--text);line-height:1.55;}
     .client-post-note strong{display:block;font-size:9px;color:var(--copper);letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px;}
@@ -827,6 +832,7 @@
     .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:400;letter-spacing:.04em;}
     .badge-revisao{background:#FCE4EC;color:#AD1457;}
     .badge-aprovado{background:#E8F5E9;color:#2E7D32;}
+    .badge-design{background:#F3E8FF;color:#6b21a8;}
     .badge-publicado{background:#E0F7FA;color:#00838F;}
     .badge-criacao{background:#FFF3E0;color:#E65100;}
     .cp-actions{border-top:1px solid var(--border);padding-top:12px;margin-top:auto;}
@@ -1680,10 +1686,11 @@ const Admin = {
     // Save scroll position before re-render
     const savedScroll = main ? main.scrollTop : 0;
     const SM = {
-      criacao:  {l:'Aprovar',   c:'#c9a800', bc:'#fffae6', dot:'#f6d12d'},
+      criacao:  {l:'Criação',   c:'#c9a800', bc:'#fffae6', dot:'#f6d12d'},
       rascunho: {l:'Rascunho',  c:'#c9a800', bc:'#fffae6', dot:'#f6d12d'},
       revisao:  {l:'Revisar',   c:'#d4762a', bc:'#fdf1e7', dot:'#ffa14e'},
       aprovado: {l:'Aprovado',  c:'#1db855', bc:'#e9f9ee', dot:'#41ff72'},
+      design:   {l:'Design',    c:'#7c3aed', bc:'#f3e8ff', dot:'#a855f7'},
       publicado:{l:'Publicado', c:'#5254cc', bc:'#e7e6f5', dot:'#8688ff'}
     };
     const v = this._postsView;
@@ -1783,7 +1790,7 @@ const Admin = {
 
   _showCalPreview(postId, e) {
     const p = this.posts.find(x=>x.id===postId); if (!p) return;
-    const SM = {criacao:{l:'Aprovar',c:'#c9a800',bc:'#fffae6',dot:'#f6d12d'},rascunho:{l:'Rascunho',c:'#c9a800',bc:'#fffae6',dot:'#f6d12d'},revisao:{l:'Revisar',c:'#d4762a',bc:'#fdf1e7',dot:'#ffa14e'},aprovado:{l:'Aprovado',c:'#1db855',bc:'#e9f9ee',dot:'#41ff72'},publicado:{l:'Publicado',c:'#5254cc',bc:'#e7e6f5',dot:'#8688ff'}};
+    const SM = {criacao:{l:'Criação',c:'#c9a800',bc:'#fffae6',dot:'#f6d12d'},rascunho:{l:'Rascunho',c:'#c9a800',bc:'#fffae6',dot:'#f6d12d'},revisao:{l:'Revisar',c:'#d4762a',bc:'#fdf1e7',dot:'#ffa14e'},aprovado:{l:'Aprovado',c:'#1db855',bc:'#e9f9ee',dot:'#41ff72'},design:{l:'Design',c:'#7c3aed',bc:'#f3e8ff',dot:'#a855f7'},publicado:{l:'Publicado',c:'#5254cc',bc:'#e7e6f5',dot:'#8688ff'}};
     const m = SM[p.status||'criacao']||SM.criacao;
     let img = ''; try { const a=JSON.parse(p.img_url); img=Array.isArray(a)?a[0]:p.img_url; } catch{img=p.img_url||'';}
     const el = document.getElementById('cal-preview'); if (!el) return;
@@ -1863,6 +1870,7 @@ const Admin = {
       const s = `width:14px;height:14px;border-radius:50%;background:${color};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;vertical-align:middle;font-size:9px;font-weight:800;color:white;line-height:1;font-style:normal;`;
       if (status==='publicado') return `<span style="${s}">&#10003;</span>`;
       if (status==='aprovado')  return `<span style="${s}; font-size:8px;">&#10003;</span>`;
+      if (status==='design')    return `<span style="${s}; font-size:9px;">D</span>`;
       if (status==='revisao')   return `<span style="${s}">!</span>`;
       return `<span style="${s}"><span style="width:5px;height:5px;border-radius:50%;background:white;display:block;flex-shrink:0;"></span></span>`;
     };
@@ -1870,15 +1878,16 @@ const Admin = {
       const tipo = p.tipo||'Feed';
       const tema = p.tema_titulo ? stripHtml(p.tema_titulo).slice(0,35) : '';
       const titulo = stripHtml(p.legenda||'—').slice(0,42);
-      return `<div class="pchip pchip-st-${p.status||'criacao'}" style="background:${sm.bc};border-color:${sm.dot}40;"
+      const thumb = p.capa_url || parseFirst(p.midia_urls) || parseFirst(p.img_url) || '';
+      return `<div class="pchip pchip-st-${p.status||'criacao'}" style="background:${sm.bc};border-color:${sm.dot}40;${thumb?'padding:0;overflow:hidden;':''}"
         draggable="true"
         ondragstart="event.stopPropagation();event.dataTransfer.setData('postId','${p.id}');this.classList.add('dragging');Admin._dragPostId=${p.id}"
         ondragend="this.classList.remove('dragging')"
         onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()"
         onclick="event.stopPropagation();Admin.openPost(${p.id})">
-        <span class="pchip-tipo" style="color:${sm.dot};">${tipoIco(tipo)} ${tipo}${statusDot(p.status||'criacao', sm.dot)}</span>
-        ${tema?`<span class="pchip-tema" style="color:${sm.c};">${tema}</span>`:''}
-        <span class="pchip-titulo" style="color:${sm.c};">${titulo}</span>
+        ${thumb?`<div style="position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;"><img src="${thumb}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentNode.style.display='none'"/><div style="position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,0.6));"><span style="font-size:9px;color:#fff;font-weight:600;">${tipoIco(tipo)}${tipo}</span></div><div style="position:absolute;top:4px;right:4px;">${statusDot(p.status||'criacao', sm.dot)}</div></div>`:`<span class="pchip-tipo" style="color:${sm.dot};padding:6px 8px;display:block;">${tipoIco(tipo)} ${tipo}${statusDot(p.status||'criacao', sm.dot)}</span>`}
+        ${!thumb&&tema?`<span class="pchip-tema" style="color:${sm.c};padding:0 8px;display:block;">${tema}</span>`:''}
+        ${!thumb?`<span class="pchip-titulo" style="color:${sm.c};padding:0 8px 6px;display:block;">${titulo}</span>`:''}
       </div>`;
     };
 
@@ -2036,7 +2045,7 @@ const Admin = {
     const { data: fresh } = await db.from('posts').select('*').eq('id', id).single();
     if (!fresh) { const cached = this.posts.find(x=>x.id===id); if (!cached) return; }
     const p = fresh || this.posts.find(x=>x.id===id);
-    const SM = {criacao:{l:'Aprovar',c:'#92400E'},revisao:{l:'Revisar',c:'#9A3412'},aprovado:{l:'Aprovado',c:'#14532D'},publicado:{l:'Publicado',c:'#1E3A8A'}};
+    const SM = {criacao:{l:'Criação',c:'#92400E'},revisao:{l:'Revisar',c:'#9A3412'},aprovado:{l:'Aprovado',c:'#14532D'},design:{l:'Design',c:'#5b21b6'},publicado:{l:'Publicado',c:'#1E3A8A'}};
     const m = SM[p.status]||SM.criacao;
     const postMedia = this._parsePostMedia(p.midia_urls || p.img_url);
     const cover = p.capa_url || postMedia[0] || p.tema_imagem_url || '';
@@ -2059,7 +2068,8 @@ const Admin = {
           <button class="btn-ok" onclick="Admin.updatePost(${p.id},'aprovado')">✓ Aprovar Post</button>
           <button class="btn-soft-dp" onclick="Admin.updatePost(${p.id},'criacao')">← Solicitar Ajuste</button>
         ` : ''}
-        ${p.status==='aprovado' ? `<button class="btn-advance" onclick="Admin.publicarNoInstagram(${p.id})">✦ Publicar no Instagram</button>` : ''}
+        ${p.status==='aprovado' ? `<button class="btn-advance" style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;" onclick="Admin.updatePost(${p.id},'design')">🎨 Marcar Design Pronto</button>` : ''}
+        ${p.status==='design' ? `<button class="btn-advance" onclick="Admin.publicarNoInstagram(${p.id})">✦ Publicar no Instagram</button>` : ''}
         ${p.status==='publicado' ? `<div style="padding:9px;border-radius:9px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);text-align:center;font-size:11px;color:#1E3A8A;">✦ Publicado no Instagram!</div>` : ''}
         <div style="display:flex;gap:8px;margin-top:10px;">
           <button onclick="Admin.editarPost(${p.id})" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--surface);font-size:12px;cursor:pointer;color:var(--text);">✏ Editar</button>
@@ -2499,9 +2509,10 @@ const Admin = {
     const { data: posts } = await db.from('posts').select('*').eq('client_email', c.email).order('data_post',{ascending:true});
     const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const SM = {
-      criacao:  {l:'Aprovar',  dot:'#F59E0B', bc:'rgba(251,191,36,0.12)'},
+      criacao:  {l:'Criação',  dot:'#F59E0B', bc:'rgba(251,191,36,0.12)'},
       revisao:  {l:'Revisar',  dot:'#F97316', bc:'rgba(249,115,22,0.12)'},
       aprovado: {l:'Aprovado', dot:'#22C55E', bc:'rgba(34,197,94,0.12)'},
+      design:   {l:'Design',   dot:'#a855f7', bc:'rgba(168,85,247,0.12)'},
       publicado:{l:'Publicado',dot:'#3B82F6', bc:'rgba(59,130,246,0.12)'},
     };
     if (!posts?.length) {
@@ -2601,6 +2612,7 @@ const Admin = {
       rascunho: {dot:'#f6d12d',bc:'#fffae6'},
       revisao:  {dot:'#ffa14e',bc:'#fdf1e7'},
       aprovado: {dot:'#41ff72',bc:'#e9f9ee'},
+      design:   {dot:'#a855f7',bc:'#f3e8ff'},
       publicado:{dot:'#8688ff',bc:'#e7e6f5'},
     };
     const gradients = ['linear-gradient(135deg,#C9A800,#8B7200)','linear-gradient(135deg,#B5A0C8,#7B5EA7)','linear-gradient(135deg,#A8C5DA,#5B8FA8)','linear-gradient(135deg,#F0C27F,#C97B3A)'];
@@ -6507,6 +6519,7 @@ const Client = {
       aprovado: { label:'APROVADO', cls:'aprovado' },
       revisao: { label:'REVISAR', cls:'revisar' },
       criacao: { label:'EM PRODUÇÃO', cls:'producao' },
+      design: { label:'EM DESIGN', cls:'design' },
       publicado: { label:'PUBLICADO', cls:'publicado' }
     };
     return map[status] || map.criacao;
@@ -6953,8 +6966,8 @@ const Client = {
     const note = obsTxt ? `<div style="background:rgba(196,150,122,0.08);border:1px solid rgba(196,150,122,0.25);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--text);line-height:1.6;"><div style="font-size:9px;color:var(--copper);letter-spacing:.12em;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Observações da equipe</div>${obsTxt}</div>` : '';
 
     // Status color
-    const stColor = p.status==='revisao'?'#F97316':p.status==='aprovado'?'#22C55E':p.status==='publicado'?'#3B82F6':'#F59E0B';
-    const stBg    = p.status==='revisao'?'rgba(249,115,22,0.1)':p.status==='aprovado'?'rgba(34,197,94,0.1)':p.status==='publicado'?'rgba(59,130,246,0.1)':'rgba(251,191,36,0.1)';
+    const stColor = p.status==='revisao'?'#F97316':p.status==='aprovado'?'#22C55E':p.status==='design'?'#a855f7':p.status==='publicado'?'#3B82F6':'#F59E0B';
+    const stBg    = p.status==='revisao'?'rgba(249,115,22,0.1)':p.status==='aprovado'?'rgba(34,197,94,0.1)':p.status==='design'?'rgba(168,85,247,0.1)':p.status==='publicado'?'rgba(59,130,246,0.1)':'rgba(251,191,36,0.1)';
 
     // Action buttons
     let actions = '';
@@ -6962,6 +6975,8 @@ const Client = {
       actions = `<button class="cp-btn-ok" onclick="Client.abrirAprovacao(${p.id})" style="width:100%;padding:13px;margin-bottom:8px;">✓ Aprovar este post</button><button class="cp-btn-adj" onclick="Client.solicitarAjuste(${p.id})" style="width:100%;padding:13px;">← Solicitar ajuste</button>`;
     } else if (p.status === 'aprovado') {
       actions = `<div style="padding:13px;border-radius:10px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);text-align:center;color:#14532D;font-size:13px;font-weight:500;">✓ Post aprovado — aguardando publicação</div>`;
+    } else if (p.status === 'design') {
+      actions = `<div style="padding:13px;border-radius:10px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);text-align:center;color:#5b21b6;font-size:13px;font-weight:500;">🎨 Em finalização do design</div>`;
     } else if (p.status === 'publicado') {
       actions = `<div style="padding:13px;border-radius:10px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);text-align:center;color:#1E3A8A;font-size:13px;font-weight:500;">✦ Publicado!</div>`;
     } else {
@@ -7098,7 +7113,7 @@ const Client = {
     const now = new Date();
     const m = now.getMonth(), y = now.getFullYear();
     const monthPosts = posts.filter(p => { const d=new Date(p.created_at); return d.getMonth()===m && d.getFullYear()===y; });
-    const approved = monthPosts.filter(p => p.status==='aprovado' || p.status==='publicado').length;
+    const approved = monthPosts.filter(p => p.status==='aprovado' || p.status==='design' || p.status==='publicado').length;
     const total = monthPosts.length;
     const pct = total ? Math.round(approved/total*100) : 0;
     el.innerHTML = `
@@ -7135,9 +7150,23 @@ const Client = {
       const firstStatus = hp?.[0]?.status || '';
       const stCls = firstStatus ? ' st-' + this.statusInfo(firstStatus).cls : '';
       const cls = `cal-day${hp?' has-post':''}${stCls}${ds===today?' today':''}`;
-      const dot = hp ? `<span class="cal-dot"></span>` : '';
       const onclick = hp ? `onclick="Client.calDay('${ds}')"` : '';
-      cells += `<div class="${cls}" ${onclick}>${d}${dot}</div>`;
+      if (hp) {
+        const firstPost = hp[0];
+        const imgs = this.postMedia(firstPost);
+        const thumb = imgs[0] || '';
+        if (thumb && !this.isVideo(thumb)) {
+          cells += `<div class="${cls}" ${onclick} style="padding:0;overflow:hidden;position:relative;background:none;">
+            <img src="${thumb}" style="width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;" onerror="this.style.display='none'"/>
+            <span style="position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,0.25);font-size:10px;color:#fff;font-weight:700;">${d}</span>
+          </div>`;
+        } else {
+          const dot = `<span class="cal-dot"></span>`;
+          cells += `<div class="${cls}" ${onclick}>${d}${dot}</div>`;
+        }
+      } else {
+        cells += `<div class="${cls}" ${onclick}>${d}</div>`;
+      }
     }
     el.innerHTML = `
       <div class="cal-hd"><div class="cal-title">${monthName.charAt(0).toUpperCase()+monthName.slice(1)}</div></div>
@@ -8310,6 +8339,7 @@ document.addEventListener('keydown', e => {
                   <option value="revisao">Em Revisão — cliente pode aprovar</option>
                   <option value="criacao">Em Criação — ainda não mostrar pro cliente</option>
                   <option value="aprovado">Aprovado</option>
+                  <option value="design">Design — finalizando artes</option>
                 </select>
               </div>
               <div class="modal-field">
