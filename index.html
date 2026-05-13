@@ -1992,7 +1992,12 @@ const Admin = {
   },
 
   async publicarNoInstagram(id) {
-    const p = this.posts.find(x => x.id === id);
+    // Busca o post — primeiro no cache, depois direto no banco
+    let p = this.posts?.find(x => x.id === id);
+    if (!p) {
+      const { data } = await db.from('posts').select('*').eq('id', id).single();
+      p = data;
+    }
     if (!p) { alert('Post não encontrado.'); return; }
 
     if (!confirm(`Publicar "${(p.tema_titulo || p.legenda || 'este post').substring(0,50)}" no Instagram agora?`)) return;
@@ -2502,7 +2507,7 @@ const Admin = {
     const content = document.getElementById(this._bcContentId||'cli-tab-content');
     content.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:20px 0;">Carregando feed…</div>`;
 
-    const { data: posts } = await db.from('posts').select('*').eq('client_email', c.email).order('data_post',{ascending:false}).limit(9);
+    const { data: posts } = await db.from('posts').select('*').eq('client_email', c.email).order('data_post',{ascending:false}).limit(30);
     if (!content) return;
 
     const allPosts = posts || [];
@@ -2557,7 +2562,7 @@ const Admin = {
 
     content.innerHTML = `
       <style>
-        .feed-preview-wrap{max-width:400px;margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh2);}
+        .feed-preview-wrap{max-width:420px;margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh2);}
         .feed-header{height:120px;background:${coverStyle};position:relative;}
         .feed-avatar-row{display:flex;align-items:flex-end;gap:14px;padding:0 16px 14px;margin-top:-36px;}
         .feed-avatar{width:72px;height:72px;border-radius:50%;border:3px solid var(--surface);overflow:hidden;flex-shrink:0;object-fit:cover;}
@@ -2565,11 +2570,12 @@ const Admin = {
         .feed-info{flex:1;padding-top:8px;}
         .feed-name{font-size:14px;font-weight:600;color:var(--text);}
         .feed-ig{font-size:11px;color:var(--muted);}
+        .feed-bio{font-size:11px;color:var(--text);padding:0 16px 10px;line-height:1.5;}
         .feed-stats-row{display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
         .feed-stat{flex:1;text-align:center;padding:10px 0;}
         .feed-stat-n{font-size:15px;font-weight:700;color:var(--text);font-family:'Cormorant Garamond',serif;}
         .feed-stat-l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
-        .feed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--beige);}
+        .feed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--beige);max-height:600px;overflow-y:auto;}
         .feed-cell:hover .feed-overlay,.feed-cell:hover .feed-meta{opacity:1!important;}
         .feed-cell{transition:transform .15s;cursor:grab!important;}
         .feed-cell:active{cursor:grabbing!important;transform:scale(0.97);}
@@ -2597,8 +2603,9 @@ const Admin = {
               <div class="feed-ig">${c.instagram ? '@'+c.instagram.replace('@','') : ''}</div>
             </div>
           </div>
+          ${c.bio ? `<div class="feed-bio">${c.bio}</div>` : c.empresa ? `<div class="feed-bio" style="color:var(--muted);">${c.empresa}</div>` : ''}
           <div class="feed-stats-row">
-            <div class="feed-stat"><div class="feed-stat-n">${allPosts.length}</div><div class="feed-stat-l">posts</div></div>
+            <div class="feed-stat"><div class="feed-stat-n">${allPosts.length}${allPosts.length===30?'+':''}</div><div class="feed-stat-l">posts</div></div>
             <div class="feed-stat"><div class="feed-stat-n">${allPosts.filter(p=>p.status==='aprovado').length}</div><div class="feed-stat-l">aprovados</div></div>
             <div class="feed-stat"><div class="feed-stat-n">${allPosts.filter(p=>p.status==='publicado').length}</div><div class="feed-stat-l">publicados</div></div>
           </div>
