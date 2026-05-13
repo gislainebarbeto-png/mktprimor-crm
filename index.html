@@ -1057,6 +1057,7 @@
       <div class="client-tab" id="ctab-info" onclick="Client.clientTab('info')">📋 Informações</div>
       <div class="client-tab" id="ctab-solicitacoes" onclick="Client.clientTab('solicitacoes')">📅 Solicitações <span class="ctab-badge hidden" id="ctab-sol-badge"></span></div>
       <div class="client-tab" id="ctab-tarefas" onclick="Client.clientTab('tarefas')">✅ Tarefas</div>
+      <div class="client-tab" id="ctab-brand" onclick="Client.clientTab('brand')">✦ Brand Core</div>
       <div class="client-tab" id="ctab-chat" onclick="Client.clientTab('chat')">✉ Chat <span class="ctab-badge hidden" id="ctab-chat-badge"></span></div>
     </div>
   </div>
@@ -1113,6 +1114,8 @@
     <div id="ctab-content-solicitacoes" class="hidden"></div>
     <!-- Tab: Tarefas -->
     <div id="ctab-content-tarefas" class="hidden"></div>
+    <!-- Tab: Brand Core -->
+    <div id="ctab-content-brand" class="hidden"></div>
     <!-- Tab: Chat -->
     <div id="ctab-content-chat" class="hidden">
       <div class="chat-wrap">
@@ -2004,7 +2007,7 @@ const Admin = {
     try {
       // Busca dados da cliente
       const { data: clientes } = await db.from('clients')
-        .select('instagram,nome,empresa')
+        .select('instagram,nome,empresa,make_webhook')
         .eq('email', p.client_email);
       const cliente = clientes?.[0] || {};
 
@@ -2053,9 +2056,14 @@ const Admin = {
       console.log('%c[MKT Primor] Enviando pro Make:', 'color:#C9A800;font-weight:bold;', payload);
 
       // Envia pro Make webhook
+      // Usa webhook específico da cliente ou o padrão
+      const webhookUrl = cliente.make_webhook || 'https://hook.us2.make.com/c5af6m8byb7spirq3ri61q28yvrhfyas';
+      if (!cliente.make_webhook) {
+        console.warn('[MKT Primor] Cliente sem webhook — usando padrão (vai pro seu Instagram!)');
+      }
       let resp;
       try {
-        resp = await fetch('https://hook.us2.make.com/c5af6m8byb7spirq3ri61q28yvrhfyas', {
+        resp = await fetch(webhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -2386,6 +2394,8 @@ const Admin = {
   _cliClienteData: null,
 
   _cliTab(tab, id) {
+    this._bcReadOnly = false;
+    this._bcContentId = 'cli-tab-content';
     id = id || this._cliCurrentId;
     const c = this._cliClienteData;
     ['feed','posts','arquivos','tarefas','chat','info','brand'].forEach(t => {
@@ -2394,7 +2404,7 @@ const Admin = {
       el.style.borderBottomColor = t===tab ? 'var(--copper)' : 'transparent';
       el.style.color = t===tab ? 'var(--copper)' : (t==='brand' ? 'var(--brown)' : 'var(--muted)');
     });
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     if (!content) return;
     if (tab==='feed')     this._cliTabFeed(id, c);
     else if (tab==='posts') this._cliTabPosts(id, c);
@@ -2407,7 +2417,7 @@ const Admin = {
 
   async _cliTabPosts(id, c) {
     const { data: posts } = await db.from('posts').select('*').eq('client_email', c.email).order('data_post',{ascending:true});
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const SM = {
       criacao:  {l:'Aprovar',  dot:'#F59E0B', bc:'rgba(251,191,36,0.12)'},
       revisao:  {l:'Revisar',  dot:'#F97316', bc:'rgba(249,115,22,0.12)'},
@@ -2444,7 +2454,7 @@ const Admin = {
 
   async _cliTabArquivos(id, c) {
     const { data: arqs } = await db.from('arquivos_cliente').select('*').eq('client_email', c.email).order('created_at',{ascending:false});
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const list = arqs?.filter(a=>a.nome!=='__metricool__') || [];
     content.innerHTML = `
       <div style="margin-bottom:16px;display:flex;gap:10px;">
@@ -2467,7 +2477,7 @@ const Admin = {
 
   async _cliTabTarefas(id, c) {
     const { data: tarefas } = await db.from('tarefas').select('*').eq('client_email', c.email).order('created_at',{ascending:false});
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const list = tarefas || [];
     content.innerHTML = `
       <div style="margin-bottom:16px;">
@@ -2484,7 +2494,7 @@ const Admin = {
   },
 
   async _cliTabChat(id, c) {
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     content.innerHTML = `<div style="text-align:center;padding:60px 0;color:var(--muted);font-size:13px;">
       <div style="font-size:32px;margin-bottom:12px;">💬</div>
       <button onclick="Admin.tab('chat')" style="font-size:13px;color:var(--copper);background:none;border:1px solid rgba(201,162,39,.3);padding:10px 20px;border-radius:10px;cursor:pointer;">Abrir Chat Completo →</button>
@@ -2492,7 +2502,7 @@ const Admin = {
   },
 
   async _cliTabFeed(id, c) {
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     content.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:20px 0;">Carregando feed…</div>`;
 
     const { data: posts } = await db.from('posts').select('*').eq('client_email', c.email).order('data_post',{ascending:false});
@@ -2639,7 +2649,7 @@ const Admin = {
   },
 
   _cliTabInfo(id, c) {
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const inp = (elId,val,ph,type='text') => `<input type="${type}" id="${elId}" value="${(val||'').replace(/"/g,'&quot;')}" placeholder="${ph}" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);color:var(--text);margin-top:4px;box-sizing:border-box;"/>`;
     const fld = (lbl,content2) => `<div style="margin-bottom:12px;"><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;">${lbl}</div>${content2}</div>`;
     content.innerHTML = `
@@ -2653,6 +2663,7 @@ const Admin = {
       </div>
       <div style="max-width:700px;">
         ${fld('✉ E-mail / Login', `<div style="padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;background:var(--bg);color:var(--muted);margin-top:4px;">${c.email}</div>`)}
+        ${fld('🔗 Webhook Make (Instagram)', inp('dp-webhook',c.make_webhook||'','https://hook.us2.make.com/...'))}
         ${fld('Mensagem para a cliente', `<textarea data-rich id="dp-mensagem-gi" rows="3" placeholder="Ex: Essa semana trabalhamos muito no seu posicionamento 🌿" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);color:var(--text);resize:none;margin-top:4px;">${c.mensagem_gi||''}</textarea>`)}
       </div>
       <div style="display:flex;gap:10px;margin-top:16px;max-width:700px;">
@@ -2667,6 +2678,8 @@ const Admin = {
   /* ===== BRAND CORE ===== */
   _bcSection: null,
   _bcSubSection: null,
+  _bcReadOnly: false,
+  _bcContentId: 'cli-tab-content',
 
   async _bcLoad(email, tipo) {
     const { data } = await db.from('informacoes_cliente')
@@ -2687,7 +2700,7 @@ const Admin = {
   },
 
   async _cliTabBrandCore(id, c) {
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     if (!content) return;
     if (this._bcSection) {
       this._bcRenderSection(this._bcSection, id, c);
@@ -2736,6 +2749,7 @@ const Admin = {
   _bcBack(id, c) {
     this._bcSection = null;
     this._bcSubSection = null;
+    if (this._bcReadOnly) { Client.renderBrandCoreTab(); return; }
     this._cliTabBrandCore(id, c);
   },
 
@@ -2759,11 +2773,13 @@ const Admin = {
   },
 
   _bcInput(id, val, ph, type='text') {
+    if (this._bcReadOnly) return `<div style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;background:var(--beige);color:var(--text);box-sizing:border-box;margin-top:4px;min-height:36px;">${val ? String(val).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '<span style="color:var(--muted);font-style:italic;">—</span>'}</div>`;
     return `<input type="${type}" id="${id}" value="${(val||'').replace(/"/g,'&quot;')}" placeholder="${ph}"
       style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);box-sizing:border-box;margin-top:4px;"/>`;
   },
 
   _bcTextarea(id, val, ph, rows=3) {
+    if (this._bcReadOnly) return `<div style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;background:var(--beige);color:var(--text);resize:none;box-sizing:border-box;margin-top:4px;min-height:${rows*24}px;white-space:pre-wrap;">${val ? val.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '<span style="color:var(--muted);font-style:italic;">—</span>'}</div>`;
     return `<textarea id="${id}" rows="${rows}" placeholder="${ph}"
       style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);resize:vertical;box-sizing:border-box;margin-top:4px;">${val||''}</textarea>`;
   },
@@ -2776,6 +2792,9 @@ const Admin = {
   },
 
   _bcRadio(name, options, selected) {
+    if (this._bcReadOnly) return `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+      ${options.map(o => `<span style="font-size:12px;padding:5px 10px;border:1px solid ${selected===o?'var(--brown)':'var(--border)'};border-radius:8px;background:${selected===o?'rgba(184,130,10,0.12)':'var(--bg)'};color:${selected===o?'var(--brown)':'var(--muted)'};">${o}</span>`).join('')}
+    </div>`;
     return `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
       ${options.map(o => `<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text);cursor:pointer;padding:5px 10px;border:1px solid ${selected===o?'var(--brown)':'var(--border)'};border-radius:8px;background:${selected===o?'rgba(184,130,10,0.08)':'var(--bg)'};">
         <input type="radio" name="${name}" value="${o}" ${selected===o?'checked':''} style="accent-color:var(--brown);"> ${o}
@@ -2784,13 +2803,14 @@ const Admin = {
   },
 
   _bcSaveBtn(onclick) {
+    if (this._bcReadOnly) return '';
     return `<button onclick="${onclick}" style="padding:11px 24px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;font-size:12px;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;margin-top:16px;">Salvar ✓</button>`;
   },
 
   /* ─── DIAGNÓSTICO DO PERFIL ─── */
   async _bcDiagnostico(id, c) {
     const sub = this._bcSubSection || 'geral';
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const tabs = [{key:'geral',label:'Diagnóstico Geral'},{key:'conteudo',label:'Conteúdo'},{key:'metricas',label:'Métricas'}];
     const [dg, dc, dm] = await Promise.all([
       this._bcLoad(c.email,'bc_diag_geral'),
@@ -2858,22 +2878,22 @@ const Admin = {
                   <th style="padding:8px 10px;text-align:left;border:1px solid var(--border);color:var(--muted);font-weight:500;">Alcance</th>
                   <th style="padding:8px 10px;text-align:left;border:1px solid var(--border);color:var(--muted);font-weight:500;">Engajamento</th>
                   <th style="padding:8px 10px;text-align:left;border:1px solid var(--border);color:var(--muted);font-weight:500;">Observação</th>
-                  <th style="padding:8px 10px;border:1px solid var(--border);"></th>
+                  ${this._bcReadOnly ? '' : '<th style="padding:8px 10px;border:1px solid var(--border);"></th>'}
                 </tr>
               </thead>
               <tbody id="bc-meses-tbody">
                 ${(dm.meses||[]).map((m,i) => `
                   <tr>
-                    <td style="padding:6px 8px;border:1px solid var(--border);"><input value="${m.mes||''}" onchange="Admin._bcMesUpdate(${i},'mes',this.value)" style="width:90px;border:none;background:transparent;font-size:12px;color:var(--text);"/></td>
-                    <td style="padding:6px 8px;border:1px solid var(--border);"><input value="${m.seg||''}" onchange="Admin._bcMesUpdate(${i},'seg',this.value)" style="width:70px;border:none;background:transparent;font-size:12px;color:var(--text);"/></td>
-                    <td style="padding:6px 8px;border:1px solid var(--border);"><input value="${m.alcance||''}" onchange="Admin._bcMesUpdate(${i},'alcance',this.value)" style="width:70px;border:none;background:transparent;font-size:12px;color:var(--text);"/></td>
-                    <td style="padding:6px 8px;border:1px solid var(--border);"><input value="${m.eng||''}" onchange="Admin._bcMesUpdate(${i},'eng',this.value)" style="width:70px;border:none;background:transparent;font-size:12px;color:var(--text);"/></td>
-                    <td style="padding:6px 8px;border:1px solid var(--border);"><input value="${m.obs||''}" onchange="Admin._bcMesUpdate(${i},'obs',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;color:var(--text);"/></td>
-                    <td style="padding:6px 8px;border:1px solid var(--border);text-align:center;"><button onclick="Admin._bcMesRemove(${i},'${c.email}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;">×</button></td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);">${this._bcReadOnly ? (m.mes||'—') : `<input value="${m.mes||''}" onchange="Admin._bcMesUpdate(${i},'mes',this.value)" style="width:90px;border:none;background:transparent;font-size:12px;color:var(--text);"/>`}</td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);">${this._bcReadOnly ? (m.seg||'—') : `<input value="${m.seg||''}" onchange="Admin._bcMesUpdate(${i},'seg',this.value)" style="width:70px;border:none;background:transparent;font-size:12px;color:var(--text);"/>`}</td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);">${this._bcReadOnly ? (m.alcance||'—') : `<input value="${m.alcance||''}" onchange="Admin._bcMesUpdate(${i},'alcance',this.value)" style="width:70px;border:none;background:transparent;font-size:12px;color:var(--text);"/>`}</td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);">${this._bcReadOnly ? (m.eng||'—') : `<input value="${m.eng||''}" onchange="Admin._bcMesUpdate(${i},'eng',this.value)" style="width:70px;border:none;background:transparent;font-size:12px;color:var(--text);"/>`}</td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);">${this._bcReadOnly ? (m.obs||'—') : `<input value="${m.obs||''}" onchange="Admin._bcMesUpdate(${i},'obs',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;color:var(--text);"/>`}</td>
+                    ${this._bcReadOnly ? '' : `<td style="padding:6px 8px;border:1px solid var(--border);text-align:center;"><button onclick="Admin._bcMesRemove(${i},'${c.email}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;">×</button></td>`}
                   </tr>`).join('')}
               </tbody>
             </table>
-            <button onclick="Admin._bcMesAdd('${c.email}')" style="margin-top:8px;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--beige);font-size:11px;cursor:pointer;color:var(--muted);">+ Adicionar mês</button>
+            ${this._bcReadOnly ? '' : `<button onclick="Admin._bcMesAdd('${c.email}')" style="margin-top:8px;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--beige);font-size:11px;cursor:pointer;color:var(--muted);">+ Adicionar mês</button>`}
           </div>
         </div>
         ${this._bcField('Observações gerais de métricas', this._bcTextarea('bc-dm-obs',dm.obs_gerais,'Tendências, picos, quedas...', 3), 3)}
@@ -2959,7 +2979,7 @@ const Admin = {
   /* ─── ESTUDO DE PERSONA ─── */
   async _bcPersona(id, c) {
     const sub = this._bcSubSection || 'visao';
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const tabs = [
       {key:'visao',label:'Visão Geral'},
       {key:'psico',label:'Psicologia'},
@@ -3030,14 +3050,14 @@ const Admin = {
               return urls.map((u,i) => `
                 <div style="border-radius:10px;overflow:hidden;aspect-ratio:1;background:var(--beige);position:relative;">
                   <img src="${u}" style="width:100%;height:100%;object-fit:cover;"/>
-                  <button onclick="Admin._bcMoodRemove(${i},'${c.email}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.5);border:none;color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;cursor:pointer;line-height:1;">×</button>
-                </div>`).join('') || '<div style="border-radius:10px;background:var(--beige);aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">Adicione imagens abaixo</div>';
+                  ${this._bcReadOnly ? '' : `<button onclick="Admin._bcMoodRemove(${i},'${c.email}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.5);border:none;color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;cursor:pointer;line-height:1;">×</button>`}
+                </div>`).join('') || '<div style="border-radius:10px;background:var(--beige);aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">Nenhuma imagem ainda</div>';
             })()}
           </div>
-          <label style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px dashed var(--border);border-radius:9px;cursor:pointer;font-size:11px;color:var(--muted);background:var(--bg);" onmouseenter="this.style.borderColor='var(--brown)'" onmouseleave="this.style.borderColor='var(--border)'">
+          ${this._bcReadOnly ? '' : `<label style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px dashed var(--border);border-radius:9px;cursor:pointer;font-size:11px;color:var(--muted);background:var(--bg);" onmouseenter="this.style.borderColor='var(--brown)'" onmouseleave="this.style.borderColor='var(--border)'">
             🖼 Adicionar imagem ao moodboard
             <input type="file" accept="image/*" multiple style="display:none" onchange="Admin._bcMoodUpload(this,'${c.email}')"/>
-          </label>
+          </label>`}
           <input type="hidden" id="bc-pvi-refs" value="${(()=>{ const u = Array.isArray(pvi.referencias)?pvi.referencias:(pvi.referencias||'').split(',').map(s=>s.trim()).filter(Boolean); return JSON.stringify(u).replace(/"/g,'&quot;'); })()}"/>
         </div>
         ${this._bcField('Elementos visuais a evitar', this._bcTextarea('bc-pvi-evitar',pvi.evitar,'O que não combina com a persona?',3), 2)}
@@ -3085,7 +3105,7 @@ const Admin = {
 
   async _bcConcorrencia(id, c) {
     const sub = this._bcSubSection || 'lista';
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const { data: concorr } = await db.from('informacoes_cliente')
       .select('*').eq('client_email', c.email).eq('tipo', 'bc_concorrente')
       .order('created_at',{ascending:true});
@@ -3098,7 +3118,7 @@ const Admin = {
         <div style="flex:1;min-width:240px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <div style="font-size:13px;font-weight:500;color:var(--text);">Concorrentes mapeados</div>
-            <button onclick="Admin._bcAddConcorrente('${c.email}')" style="font-size:11px;padding:5px 12px;border-radius:8px;background:var(--brown);color:#fff;border:none;cursor:pointer;">+ Adicionar</button>
+            ${this._bcReadOnly ? '' : `<button onclick="Admin._bcAddConcorrente('${c.email}')" style="font-size:11px;padding:5px 12px;border-radius:8px;background:var(--brown);color:#fff;border:none;cursor:pointer;">+ Adicionar</button>`}
           </div>
           ${this._bcConcorrList.length ? `
             <div style="display:flex;flex-direction:column;gap:6px;">
@@ -3116,7 +3136,7 @@ const Admin = {
         <div style="flex:2;min-width:300px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <div style="font-size:13px;font-weight:500;color:var(--text);">${detailData.nome||sel.titulo}</div>
-            <button onclick="Admin._bcExcluirConcorrente(${sel.id},'${c.email}')" style="font-size:11px;padding:4px 10px;border-radius:8px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;cursor:pointer;">Excluir</button>
+            ${this._bcReadOnly ? '' : `<button onclick="Admin._bcExcluirConcorrente(${sel.id},'${c.email}')" style="font-size:11px;padding:4px 10px;border-radius:8px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;cursor:pointer;">Excluir</button>`}
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             ${this._bcField('Nome/Perfil', this._bcInput('bc-cc-nome',detailData.nome,'@nomeperfil'))}
@@ -3168,7 +3188,7 @@ const Admin = {
   /* ─── POSICIONAMENTO DE IMAGEM ─── */
   async _bcPosicionamento(id, c) {
     const sub = this._bcSubSection || 'conceito';
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const tabs = [
       {key:'conceito',label:'Conceituação'},
       {key:'expressao',label:'Expressão'},
@@ -3270,7 +3290,7 @@ const Admin = {
   _bcEsteiraList: [],
 
   async _bcEsteira(id, c) {
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const { data: prods } = await db.from('informacoes_cliente')
       .select('*').eq('client_email', c.email).eq('tipo', 'bc_produto')
       .order('created_at',{ascending:true});
@@ -3288,7 +3308,7 @@ const Admin = {
           <div style="width:220px;flex-shrink:0;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
               <div style="font-size:12px;font-weight:500;color:var(--text);">Produtos</div>
-              <button onclick="Admin._bcAddProduto('${c.email}')" style="font-size:10px;padding:4px 10px;border-radius:7px;background:var(--brown);color:#fff;border:none;cursor:pointer;">+ Novo</button>
+              ${this._bcReadOnly ? '' : `<button onclick="Admin._bcAddProduto('${c.email}')" style="font-size:10px;padding:4px 10px;border-radius:7px;background:var(--brown);color:#fff;border:none;cursor:pointer;">+ Novo</button>`}
             </div>
             <div style="display:flex;flex-direction:column;gap:5px;">
               ${this._bcEsteiraList.map((p,i) => {
@@ -3311,7 +3331,7 @@ const Admin = {
           <div style="flex:1;min-width:300px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
               <div style="font-size:13px;font-weight:500;color:var(--text);">${pd.nome||'Produto'}</div>
-              <button onclick="Admin._bcExcluirProduto(${sel.id},'${c.email}')" style="font-size:10px;padding:4px 10px;border-radius:7px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;cursor:pointer;">Excluir</button>
+              ${this._bcReadOnly ? '' : `<button onclick="Admin._bcExcluirProduto(${sel.id},'${c.email}')" style="font-size:10px;padding:4px 10px;border-radius:7px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;cursor:pointer;">Excluir</button>`}
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
               ${this._bcField('Nome do produto/serviço', this._bcInput('bc-ep-nome',pd.nome,'Ex: Mentoria VIP 1:1'), 2)}
@@ -3356,7 +3376,7 @@ const Admin = {
 
   /* ─── ARQUIVOS BRAND CORE ─── */
   async _bcArquivos(id, c) {
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const { data: arqs } = await db.from('arquivos_cliente')
       .select('*').eq('client_email', c.email+'__bc').order('created_at',{ascending:false});
     const { data: arqsNorm } = await db.from('arquivos_cliente')
@@ -3365,11 +3385,11 @@ const Admin = {
     content.innerHTML = `
       <div style="max-width:700px;">
         ${this._bcHeader('Arquivos do Brand Core','▤',id,c)}
-        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        ${this._bcReadOnly ? '' : `<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
           <input id="bc-arq-nome" placeholder="Nome do arquivo/documento" style="flex:2;min-width:180px;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);" />
           <input id="bc-arq-url" placeholder="URL do arquivo / Google Drive / Figma" style="flex:3;min-width:220px;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);" />
           <button onclick="Admin._bcAddArquivo('${c.email}')" style="padding:9px 16px;border-radius:9px;background:var(--brown);color:#fff;border:none;cursor:pointer;font-size:12px;white-space:nowrap;">+ Adicionar</button>
-        </div>
+        </div>`}
         <div style="display:flex;flex-direction:column;gap:8px;">
           ${todos.map(a => `
             <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);">
@@ -3379,7 +3399,7 @@ const Admin = {
                 <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:350px;">${a.url}</div>
               </div>
               <a href="${a.url}" target="_blank" style="font-size:11px;padding:5px 12px;border-radius:7px;background:var(--beige);border:1px solid var(--border);color:var(--text);text-decoration:none;">Abrir →</a>
-              <button onclick="Admin._bcDelArquivo(${a.id},'${c.email}')" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--muted);">×</button>
+              ${this._bcReadOnly ? '' : `<button onclick="Admin._bcDelArquivo(${a.id},'${c.email}')" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--muted);">×</button>`}
             </div>`).join('')}
           ${!todos.length ? `<div style="text-align:center;padding:40px;color:var(--muted);font-style:italic;font-size:13px;">Nenhum arquivo adicionado ainda</div>` : ''}
         </div>
@@ -3402,6 +3422,9 @@ const Admin = {
 
   /* ─── IMAGE UPLOAD HELPERS ─── */
   _bcImgUploadField(fieldId, currentUrl, label, onchangeHandler) {
+    if (this._bcReadOnly) return currentUrl
+      ? `<div style="margin-bottom:14px;"><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">${label}</div><img src="${currentUrl}" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;border:1px solid var(--border);"/></div>`
+      : '';
     return `<div style="margin-bottom:14px;">
       <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">${label}</div>
       <label style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px dashed var(--border);border-radius:9px;cursor:pointer;font-size:11px;color:var(--muted);background:var(--bg);transition:border-color .15s;" onmouseenter="this.style.borderColor='var(--brown)'" onmouseleave="this.style.borderColor='var(--border)'">
@@ -3477,7 +3500,7 @@ const Admin = {
   _bcMapaCurrentId: null,
 
   async _bcEstrategias(id, c) {
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const { data: mapas } = await db.from('informacoes_cliente')
       .select('*').eq('client_email', c.email).eq('tipo', 'bc_mapa')
       .order('created_at', {ascending:false});
@@ -3487,7 +3510,7 @@ const Admin = {
         ${this._bcHeader('Estratégias — Mapas Mentais','🗺',id,c)}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
           <div style="font-size:12px;color:var(--muted);">${(mapas||[]).length} mapa(s) criado(s)</div>
-          <button onclick="Admin._bcNovoMapa('${c.email}')" style="padding:8px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;border:none;cursor:pointer;font-size:12px;">+ Novo mapa mental</button>
+          ${this._bcReadOnly ? '' : `<button onclick="Admin._bcNovoMapa('${c.email}')" style="padding:8px 18px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;border:none;cursor:pointer;font-size:12px;">+ Novo mapa mental</button>`}
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
           ${(mapas||[]).map(m => {
@@ -3540,7 +3563,7 @@ const Admin = {
     this._bcMapaData = data;
     this._bcMapaSel = null;
     this._bcMapaCurrentId = mapaId;
-    const content = document.getElementById('cli-tab-content');
+    const content = document.getElementById(this._bcContentId||'cli-tab-content');
     content.innerHTML = `
       <div style="max-width:1040px;">
         <style>
@@ -3559,10 +3582,12 @@ const Admin = {
         <div class="mm-header">
           <button onclick="Admin._bcMapaSel=null;Admin._bcMapaData=null;Admin._bcSection='estrategias';Admin._bcEstrategias(Admin._cliCurrentId,Admin._cliClienteData)" style="width:34px;height:34px;border-radius:10px;background:var(--beige);border:1px solid var(--border);font-size:18px;cursor:pointer;color:var(--muted);flex-shrink:0;">←</button>
           <div class="mm-title" style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--brown);flex:1;">${data.title||'Mapa Mental'}</div>
+          ${this._bcReadOnly ? '' : `
           <button onclick="Admin._bcMmAddChild()" style="padding:7px 14px;border-radius:9px;background:var(--brown);color:#fff;border:none;cursor:pointer;font-size:11px;" title="Selecione um nó primeiro">+ Filho</button>
           <button onclick="Admin._bcMmAddRoot()" style="padding:7px 14px;border-radius:9px;background:var(--beige);border:1px solid var(--border);font-size:11px;cursor:pointer;color:var(--text);">+ Nó livre</button>
           <button onclick="Admin._bcSalvarMapa()" style="padding:7px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:500;">Salvar ✓</button>
           <button onclick="Admin._bcExcluirMapa('${mapaId}','${email}')" style="padding:7px 12px;border-radius:9px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;font-size:11px;cursor:pointer;">Excluir</button>
+          `}
         </div>
         <div class="mm-outer">
           <!-- Canvas -->
@@ -3578,14 +3603,14 @@ const Admin = {
             <div style="position:absolute;inset:0;background-image:radial-gradient(circle,var(--muted) 1px,transparent 1px);background-size:28px 28px;opacity:0.18;pointer-events:none;"></div>
             <svg id="bc-mm-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:1;"></svg>
             <div id="bc-mm-nodes" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;"></div>
-            <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted);pointer-events:none;white-space:nowrap;opacity:0.7;">Toque 2× para editar · + para filho · Arraste para mover</div>
+            <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted);pointer-events:none;white-space:nowrap;opacity:0.7;">${this._bcReadOnly ? 'Arraste para navegar pelo mapa' : 'Toque 2× para editar · + para filho · Arraste para mover'}</div>
           </div>
           <!-- Panel -->
-          <div class="mm-panel-area">
+          ${this._bcReadOnly ? '' : `<div class="mm-panel-area">
             <div id="bc-mm-panel" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;">
               <div style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">Clique em<br>um nó para editar</div>
             </div>
-          </div>
+          </div>`}
         </div>
       </div>`;
     requestAnimationFrame(() => { try { this._bcMmRenderAll(); } catch(re) { this._showToast('Erro ao renderizar: '+re.message); } });
@@ -3627,7 +3652,7 @@ const Admin = {
         +'color:'+clr+';font-size:10px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;'
         +'z-index:15;pointer-events:auto;user-select:none;box-shadow:0 1px 4px rgba(0,0,0,0.15);">'+(node.collapsed?'▶':'−')+'</div>'
       : '';
-    const addBtn = '<div onclick="event.stopPropagation();Admin._bcMmAddChild('+node.id+')" onmousedown="event.stopPropagation()" title="Adicionar filho" '
+    const addBtn = this._bcReadOnly ? '' : '<div onclick="event.stopPropagation();Admin._bcMmAddChild('+node.id+')" onmousedown="event.stopPropagation()" title="Adicionar filho" '
       +'style="position:absolute;right:-40px;top:50%;transform:translateY(-50%);'
       +'width:22px;height:22px;border-radius:50%;background:'+clr+';border:2.5px solid #fff;'
       +'color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;'
@@ -3639,8 +3664,7 @@ const Admin = {
       +'border:'+selBorderVal+';'
       +'outline:'+outlineStyle+';outline-offset:-1px;'
       +'box-shadow:'+bxShadow+';transition:border-color .1s,box-shadow .1s;z-index:'+(isSel?10:5)+';"'
-      +' onclick="Admin._bcMmNodeClick(event,'+node.id+')"'
-      +' ondblclick="Admin._bcMmNodeDblClick(event,'+node.id+')"'
+      +(this._bcReadOnly ? '' : ' onclick="Admin._bcMmNodeClick(event,'+node.id+')" ondblclick="Admin._bcMmNodeDblClick(event,'+node.id+')"')
       +' onmousedown="Admin._bcMmNodeDown(event,'+node.id+')"'
       +' ontouchstart="Admin._bcMmNodeTouchDown(event,'+node.id+')">'
       + imgHtml
@@ -3692,6 +3716,7 @@ const Admin = {
   /* ── Events ── */
   _bcMmNodeDown(e, nodeId) {
     e.stopPropagation();
+    if (this._bcReadOnly) return;
     this._bcMapaDrag = nodeId;
     const wrap = document.getElementById('bc-mm-wrap'); if (!wrap) return;
     const rect = wrap.getBoundingClientRect();
@@ -3735,6 +3760,7 @@ const Admin = {
   /* ── Touch events (mobile) ── */
   _bcMmNodeTouchDown(e, nodeId) {
     e.stopPropagation();
+    if (this._bcReadOnly) return;
     const t = e.touches[0];
     this._bcMapaDrag = nodeId;
     const wrap = document.getElementById('bc-mm-wrap'); if (!wrap) return;
@@ -4462,6 +4488,7 @@ const Admin = {
     const data_inicio = document.getElementById('dp-inicio')?.value || null;
     const access_code = document.getElementById('dp-senha')?.value.trim() || null;
     const mensagem_gi = document.getElementById('dp-mensagem-gi')?.value.trim() || null;
+    const make_webhook = document.getElementById('dp-webhook')?.value.trim() || null;
     const metricoolUrl = document.getElementById('dp-metricool')?.value.trim() || '';
     const arquivosRaw = document.getElementById('dp-arquivos')?.value.trim() || null;
     if (arquivosRaw) {
@@ -4471,7 +4498,7 @@ const Admin = {
     try {
       const { data: clientData } = await db.from('clients').select('email').eq('id',id).single();
       const clientEmail = clientData?.email;
-      const { error } = await db.from('clients').update({ nome, empresa, instagram, nome_projeto, data_inicio, access_code, mensagem_gi, arquivos: arquivosRaw }).eq('id', id);
+      const { error } = await db.from('clients').update({ nome, empresa, instagram, nome_projeto, data_inicio, access_code, mensagem_gi, arquivos: arquivosRaw, make_webhook }).eq('id', id);
       if (error) throw error;
       if (clientEmail) {
         await db.from('arquivos_cliente').delete().eq('client_email',clientEmail).eq('nome','__metricool__');
@@ -7140,12 +7167,13 @@ ${text}`,
   // ── CLIENT TABS ──
   _activeTab: 'posts',
   clientTab(name) {
+    if (name !== 'brand') { Admin._bcReadOnly = false; Admin._bcContentId = 'cli-tab-content'; Admin._bcSection = null; }
     this._activeTab = name;
     localStorage.setItem('clientTab', name);
     document.getElementById('portal-nav')?.classList.remove('open');
     const activeEl = document.getElementById('ctab-'+name);
     if (activeEl) document.getElementById('portal-active-name').textContent = activeEl.textContent.trim();
-    ['posts','comece','onboarding','financeiro','metricas','arquivos','ideias','info','solicitacoes','tarefas','chat'].forEach(t => {
+    ['posts','comece','onboarding','financeiro','metricas','arquivos','ideias','info','solicitacoes','tarefas','brand','chat'].forEach(t => {
       document.getElementById('ctab-'+t)?.classList.toggle('active', t===name);
       const c = document.getElementById('ctab-content-'+t);
       if (c) c.classList.toggle('hidden', t!==name);
@@ -7159,7 +7187,27 @@ ${text}`,
     if (name==='info')          this.renderInfoTab();
     if (name==='solicitacoes')  this.renderSolicitacoesTab();
     if (name==='tarefas')     this.renderTarefasTab();
+    if (name==='brand')       this.renderBrandCoreTab();
     if (name==='chat')        this.renderChatTab();
+  },
+
+  async renderBrandCoreTab() {
+    const el = document.getElementById('ctab-content-brand'); if (!el) return;
+    el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:40px;">Carregando Brand Core...</p>';
+    try {
+      const { data: clientData } = await db.from('clients').select('*').eq('email', App.user.email).single();
+      if (!clientData) { el.innerHTML = '<p style="color:var(--muted);text-align:center;padding:40px;">Dados não encontrados.</p>'; return; }
+      Admin._bcReadOnly = true;
+      Admin._bcContentId = 'ctab-content-brand';
+      Admin._bcSection = null;
+      Admin._bcSubSection = null;
+      Admin._cliCurrentId = clientData.id;
+      Admin._cliClienteData = clientData;
+      Admin._cliTabBrandCore(clientData.id, clientData);
+    } catch(e) {
+      el.innerHTML = '<p style="color:var(--muted);text-align:center;padding:40px;">Erro ao carregar Brand Core.</p>';
+      console.error(e);
+    }
   },
 
   async renderOnboardingTab() {
