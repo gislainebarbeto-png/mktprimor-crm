@@ -3148,12 +3148,14 @@ const Admin = {
     const tabs = [
       {key:'visao',label:'Visão Geral'},
       {key:'psico',label:'Psicologia'},
+      {key:'nicho',label:'Nicho | Subnicho'},
       {key:'conteudo',label:'Estratégia de Conteúdo'},
       {key:'visual',label:'Recursos Visuais'},
     ];
-    const [pv, pp, pc, pvi] = await Promise.all([
+    const [pv, pp, pn, pc, pvi] = await Promise.all([
       this._bcLoad(c.email,'bc_persona_visao'),
       this._bcLoad(c.email,'bc_persona_psico'),
+      this._bcLoad(c.email,'bc_persona_nicho'),
       this._bcLoad(c.email,'bc_persona_conteudo'),
       this._bcLoad(c.email,'bc_persona_visual'),
     ]);
@@ -3202,6 +3204,18 @@ const Admin = {
       </div>
       ${this._bcSaveBtn(`Admin._bcSalvarPersonaConteudo('${c.email}')`)}`;
 
+    const tabNicho = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
+        ${this._bcField('Nicho da empresa', this._bcInput('bc-pn-nicho',pn.nicho,'Ex: Estética, Nutrição, Moda feminina, Educação financeira...'))}
+        ${this._bcField('Subnicho', this._bcInput('bc-pn-subnicho',pn.subnicho,'Ex: Estética vegana premium para mulheres 30+, Moda plus size casual...'))}
+        ${this._bcField('Como o nicho conecta com a persona', this._bcTextarea('bc-pn-conexao',pn.conexao,'Por que este nicho resolve a dor/desejo da persona?',3), 2)}
+        ${this._bcField('Linguagem do nicho (termos, jargões)', this._bcTextarea('bc-pn-linguagem',pn.linguagem,'Palavras e expressões que o público deste nicho usa e reconhece...',3), 2)}
+        ${this._bcField('Exemplos de uso em conteúdo', this._bcTextarea('bc-pn-exemplos',pn.exemplos,'Ex:\n• Reels: "3 erros que mulheres [subnicho] cometem em [problema do nicho]"\n• Carrossel: "O guia completo de [serviço] para [persona do subnicho]"\n• Stories: Enquete — "Você já tentou [solução do nicho]?"\n• Caption: "Se você é [perfil do subnicho], isso é pra você..."',6), 2)}
+        ${this._bcField('Tendências do nicho', this._bcTextarea('bc-pn-tendencias',pn.tendencias,'O que está em alta neste mercado agora? O que a concorrência está explorando?',3), 2)}
+        ${this._bcField('Palavras-chave e hashtags do nicho', this._bcTextarea('bc-pn-hashtags',pn.hashtags,'#nicho #subnicho — termos de busca do seu mercado...',2), 2)}
+      </div>
+      ${this._bcSaveBtn(`Admin._bcSalvarPersonaNicho('${c.email}')`)}`;
+
     const tabVisual = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;">
         ${this._bcField('Palavras que descrevem o visual ideal', this._bcTextarea('bc-pvi-palavras',pvi.palavras,'Ex: Minimalista, sofisticado, caloroso...',3), 2)}
@@ -3229,7 +3243,7 @@ const Admin = {
       </div>
       ${this._bcSaveBtn(`Admin._bcSalvarPersonaVisual('${c.email}')`)}`;
 
-    const views = {visao:tabVisao,psico:tabPsico,conteudo:tabConteudo,visual:tabVisual};
+    const views = {visao:tabVisao,psico:tabPsico,nicho:tabNicho,conteudo:tabConteudo,visual:tabVisual};
     content.innerHTML = `
       <div style="max-width:800px;">
         ${this._bcHeader('Estudo de Persona','👤',id,c)}
@@ -3250,6 +3264,11 @@ const Admin = {
     const r = n => document.querySelector(`input[name="${n}"]:checked`)?.value||'';
     await this._bcSave(email,'bc_persona_psico',{frases:g('bc-pp-frases'),objetivos:g('bc-pp-obj'),obstaculos:g('bc-pp-obs'),consciencia:r('bc-pp-consc'),promessa:g('bc-pp-promessa'),gatilhos:g('bc-pp-gatilhos'),copy:g('bc-pp-copy')});
     this._showToast('Psicologia da Persona salva ✓');
+  },
+  async _bcSalvarPersonaNicho(email) {
+    const g = v => document.getElementById(v)?.value||'';
+    await this._bcSave(email,'bc_persona_nicho',{nicho:g('bc-pn-nicho'),subnicho:g('bc-pn-subnicho'),conexao:g('bc-pn-conexao'),linguagem:g('bc-pn-linguagem'),exemplos:g('bc-pn-exemplos'),tendencias:g('bc-pn-tendencias'),hashtags:g('bc-pn-hashtags')});
+    this._showToast('Nicho | Subnicho salvo ✓');
   },
   async _bcSalvarPersonaConteudo(email) {
     const g = v => document.getElementById(v)?.value||'';
@@ -7755,6 +7774,7 @@ ${text}`,
   _cliBcPersona(el) {
     const pv = this._cliBcGet('bc_persona_visao') || {};
     const pp = this._cliBcGet('bc_persona_psico') || {};
+    const pn = this._cliBcGet('bc_persona_nicho') || {};
     const pc = this._cliBcGet('bc_persona_conteudo') || {};
     const pvi = this._cliBcGet('bc_persona_visual') || {};
     const card = (title, content) => content.trim() ? `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;"><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:var(--brown);margin-bottom:14px;">${title}</div>${content}</div>` : '';
@@ -7778,6 +7798,14 @@ ${text}`,
         this._cliBcF('Obstáculos', pp.obstaculos) + this._cliBcF('Nível de consciência', pp.consciencia) +
         this._cliBcF('Promessa de transformação', pp.promessa) + this._cliBcF('Gatilhos de compra', pp.gatilhos) +
         this._cliBcF('Copy eficaz', pp.copy)
+      )}
+      ${card('Nicho | Subnicho',
+        this._cliBcF('Nicho', pn.nicho) + this._cliBcF('Subnicho', pn.subnicho) +
+        this._cliBcF('Conexão com a persona', pn.conexao) +
+        this._cliBcF('Linguagem do nicho', pn.linguagem) +
+        this._cliBcF('Exemplos de uso em conteúdo', pn.exemplos) +
+        this._cliBcF('Tendências do nicho', pn.tendencias) +
+        this._cliBcF('Hashtags do nicho', pn.hashtags)
       )}
       ${card('Conteúdo',
         this._cliBcF('Pilares', pc.pilares) + this._cliBcF('Formatos', pc.formatos) +
