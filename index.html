@@ -2090,6 +2090,7 @@ const Admin = {
           <button onclick="Admin.excluirPost(${p.id})" style="flex:1;padding:9px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;font-size:12px;cursor:pointer;color:#C62828;">🗑 Excluir</button>
         </div>
         <button onclick="Admin.publicarNoInstagram(${p.id})" style="width:100%;margin-top:8px;padding:9px;border-radius:9px;border:1px solid rgba(99,102,241,0.35);background:rgba(99,102,241,0.08);font-size:12px;cursor:pointer;color:#4338ca;">📤 Enviar pro Make (qualquer status)</button>
+        <button onclick="Admin._diagPublicacao(${p.id})" style="width:100%;margin-top:6px;padding:9px;border-radius:9px;border:1px solid rgba(234,179,8,0.35);background:rgba(234,179,8,0.06);font-size:12px;cursor:pointer;color:#92400e;">🔍 Diagnóstico do Make</button>
       </div>
     `);
   },
@@ -2214,6 +2215,107 @@ const Admin = {
     }
   },
 
+  async _diagPublicacao(id) {
+    const overlay = document.createElement('div');
+    overlay.id = 'diag-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = `<div style="background:#0f0f0f;border:1px solid #333;border-radius:16px;padding:24px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;color:#e5e5e5;font-family:monospace;font-size:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <span style="font-size:14px;font-weight:700;color:#f0c27f;font-family:sans-serif;">🔍 Diagnóstico Make</span>
+        <button onclick="document.getElementById('diag-overlay').remove()" style="background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;">×</button>
+      </div>
+      <div id="diag-body" style="white-space:pre-wrap;line-height:1.7;">Carregando...</div>
+    </div>`;
+    document.body.appendChild(overlay);
+
+    const log = (msg, color='#e5e5e5') => {
+      const el = document.getElementById('diag-body');
+      if (el) el.innerHTML += `<span style="color:${color};">${msg}</span>\n`;
+    };
+
+    try {
+      document.getElementById('diag-body').innerHTML = '';
+      log('▶ Buscando post #' + id + '...', '#aaa');
+
+      let p = this.posts?.find(x => x.id === id);
+      if (!p) {
+        const { data } = await db.from('posts').select('*').eq('id', id).single();
+        p = data;
+      }
+      if (!p) { log('✗ Post não encontrado no banco.', '#f87171'); return; }
+
+      log(`✓ Post encontrado: "${(p.tema_titulo||p.legenda||'').substring(0,50)}"`, '#86efac');
+      log(`  Status: ${p.status} | Tipo: ${p.tipo} | Data: ${p.data_post}`, '#aaa');
+
+      log('\n▶ Buscando dados da cliente...', '#aaa');
+      const { data: clientes } = await db.from('clients')
+        .select('instagram,nome,empresa,make_webhook,email')
+        .eq('email', p.client_email);
+      const cliente = clientes?.[0] || {};
+
+      const webhookUrl = cliente.make_webhook || 'https://hook.us2.make.com/c5af6m8byb7spirq3ri61q28yvrhfyas';
+      log(`  Cliente: ${cliente.nome||'—'} (${p.client_email})`, '#aaa');
+      log(`  Instagram: @${cliente.instagram||'não configurado'}`, cliente.instagram?'#86efac':'#f87171');
+      log(`\n▶ Webhook URL:`, '#aaa');
+      log(`  ${webhookUrl}`, cliente.make_webhook?'#86efac':'#fbbf24');
+      if (!cliente.make_webhook) log('  ⚠ Usando webhook padrão — pode ir pro Instagram errado!', '#fbbf24');
+
+      const parseMedia = (raw) => {
+        if (!raw) return [];
+        if (Array.isArray(raw)) return raw.filter(Boolean);
+        try { const a = JSON.parse(raw); return Array.isArray(a) ? a.filter(Boolean) : [raw]; } catch { return [raw]; }
+      };
+      const midias = parseMedia(p.midia_urls);
+      const todasMidias = midias.length ? midias : parseMedia(p.img_url);
+      const capaUrl = p.capa_url || todasMidias[0] || '';
+
+      log(`\n▶ Mídias encontradas: ${todasMidias.length}`, todasMidias.length?'#86efac':'#f87171');
+      if (!todasMidias.length) log('  ✗ Nenhuma mídia — Make pode rejeitar sem imagem!', '#f87171');
+      todasMidias.forEach((u,i) => log(`  [${i+1}] ${u.substring(0,80)}`, '#93c5fd'));
+
+      const stripHtml = h => h ? h.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').trim() : '';
+      const payload = {
+        post_id: String(id),
+        instagram: String(cliente.instagram||'').replace('@',''),
+        cliente_nome: String(cliente.nome||''),
+        tipo: String(p.tipo||'Feed · Foto'),
+        tema: String(p.tema_titulo||''),
+        legenda: [stripHtml(p.legenda), stripHtml(p.hashtags)].filter(Boolean).join('\n\n'),
+        capa_url: capaUrl,
+        midias: todasMidias,
+        total_midias: todasMidias.length,
+        eh_carrossel: todasMidias.length > 1,
+        data_post: String(p.data_post||'')
+      };
+
+      log('\n▶ Payload que será enviado:', '#aaa');
+      log(JSON.stringify(payload, null, 2), '#d4d4d4');
+
+      log('\n▶ Testando conexão com o Make...', '#aaa');
+      let resp, txt;
+      try {
+        resp = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        txt = await resp.text().catch(() => '(sem corpo)');
+        log(`  HTTP Status: ${resp.status} ${resp.statusText}`, resp.ok?'#86efac':'#f87171');
+        log(`  Resposta: ${txt.substring(0,300)}`, resp.ok?'#86efac':'#fbbf24');
+        if (resp.ok) {
+          log('\n✓ Make aceitou o envio! Se não publicou, o problema está dentro do cenário Make.', '#86efac');
+          log('  → Abra o Make e veja o histórico de execuções do cenário.', '#86efac');
+        } else {
+          log('\n✗ Make rejeitou a requisição. Verifique se o webhook está ativo.', '#f87171');
+        }
+      } catch(fetchErr) {
+        log(`\n✗ Erro de conexão: ${fetchErr.message}`, '#f87171');
+        log('  → Pode ser CORS, URL errada, ou Make offline.', '#fbbf24');
+      }
+    } catch(err) {
+      log('\n✗ Erro inesperado: ' + err.message, '#f87171');
+    }
+  },
 
   async renderClientes() {
     const main = document.getElementById('admin-main');
