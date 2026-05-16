@@ -2124,6 +2124,10 @@ const Admin = {
       const midias = parseMedia(p.midia_urls);
       const todasMidias = midias.length ? midias : parseMedia(p.img_url);
       const capaUrl = p.capa_url || todasMidias[0] || '';
+      const tipoPost = String(p.tipo || 'Feed · Foto');
+      const isReel = tipoPost.toLowerCase().includes('reels');
+      // Para Reels, url_video é a primeira mídia (arquivo de vídeo)
+      const urlVideo = isReel ? (todasMidias[0] || capaUrl) : '';
       // Limpa HTML da legenda
       const stripHtml = (html) => {
         if (!html) return '';
@@ -2146,10 +2150,11 @@ const Admin = {
         post_id:      String(id),
         instagram:    String(cliente.instagram || '').replace('@',''),
         cliente_nome: String(cliente.nome || ''),
-        tipo:         String(p.tipo || 'Feed · Foto'),
+        tipo:         tipoPost,
         tema:         String(p.tema_titulo || ''),
         legenda:      legendaCompleta,
         capa_url:     capaUrl,
+        url_video:    urlVideo,
         midias:       todasMidias,
         total_midias: todasMidias.length,
         eh_carrossel: todasMidias.length > 1,
@@ -2268,20 +2273,25 @@ const Admin = {
       const midias = parseMedia(p.midia_urls);
       const todasMidias = midias.length ? midias : parseMedia(p.img_url);
       const capaUrl = p.capa_url || todasMidias[0] || '';
+      const tipoPostDiag = String(p.tipo||'Feed · Foto');
+      const isReelDiag = tipoPostDiag.toLowerCase().includes('reels');
+      const urlVideoDiag = isReelDiag ? (todasMidias[0] || capaUrl) : '';
 
       log(`\n▶ Mídias encontradas: ${todasMidias.length}`, todasMidias.length?'#86efac':'#f87171');
       if (!todasMidias.length) log('  ✗ Nenhuma mídia — Make pode rejeitar sem imagem!', '#f87171');
       todasMidias.forEach((u,i) => log(`  [${i+1}] ${u.substring(0,80)}`, '#93c5fd'));
+      if (isReelDiag) log(`  🎬 url_video: ${urlVideoDiag.substring(0,80)}`, '#c084fc');
 
       const stripHtml = h => h ? h.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').trim() : '';
       const payload = {
         post_id: String(id),
         instagram: String(cliente.instagram||'').replace('@',''),
         cliente_nome: String(cliente.nome||''),
-        tipo: String(p.tipo||'Feed · Foto'),
+        tipo: tipoPostDiag,
         tema: String(p.tema_titulo||''),
         legenda: [stripHtml(p.legenda), stripHtml(p.hashtags)].filter(Boolean).join('\n\n'),
         capa_url: capaUrl,
+        url_video: urlVideoDiag,
         midias: todasMidias,
         total_midias: todasMidias.length,
         eh_carrossel: todasMidias.length > 1,
