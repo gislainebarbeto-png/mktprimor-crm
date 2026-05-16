@@ -2089,6 +2089,7 @@ const Admin = {
           <button onclick="Admin.editarPost(${p.id})" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--surface);font-size:12px;cursor:pointer;color:var(--text);">✏ Editar</button>
           <button onclick="Admin.excluirPost(${p.id})" style="flex:1;padding:9px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;font-size:12px;cursor:pointer;color:#C62828;">🗑 Excluir</button>
         </div>
+        <button onclick="Admin.publicarNoInstagram(${p.id})" style="width:100%;margin-top:8px;padding:9px;border-radius:9px;border:1px solid rgba(99,102,241,0.35);background:rgba(99,102,241,0.08);font-size:12px;cursor:pointer;color:#4338ca;">📤 Enviar pro Make (qualquer status)</button>
       </div>
     `);
   },
