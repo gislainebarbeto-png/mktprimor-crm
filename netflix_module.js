@@ -54,16 +54,47 @@
     html.dark .admin-main,
     html.dark .client-main { background:#0D0D0D !important; }
 
-    /* ── BOTÃO HOME FLUTUANTE ── */
+    /* ── BOTÃO VOLTAR NO HEADER ── */
     #nf-admin-back {
-      position:fixed;bottom:24px;left:24px;z-index:1000;
-      display:none;align-items:center;gap:8px;
-      background:#1A1A1A;border:1px solid rgba(255,255,255,0.12);
-      color:#F2F0F2;font-size:12px;font-weight:500;
-      padding:10px 18px;border-radius:30px;cursor:pointer;
-      box-shadow:0 4px 20px rgba(0,0,0,0.6);transition:all .2s;
+      display:none;align-items:center;gap:7px;
+      background:rgba(255,214,186,0.1);
+      border:1px solid rgba(255,214,186,0.28);
+      color:#ffd6ba;font-size:13px;font-weight:500;
+      padding:8px 16px;border-radius:20px;cursor:pointer;
+      transition:all .2s;white-space:nowrap;flex-shrink:0;
+      margin-right:10px;
     }
-    #nf-admin-back:hover { background:#2a2a2a;border-color:rgba(255,255,255,0.25);transform:translateY(-2px); }
+    #nf-admin-back:hover { background:rgba(255,214,186,0.18);border-color:rgba(255,214,186,0.5); }
+    #nf-admin-back .nf-back-arrow { font-size:16px;line-height:1; }
+    html:not(.dark) #nf-admin-back { background:rgba(140,114,52,0.1);border-color:rgba(140,114,52,0.3);color:#8C7234; }
+    html:not(.dark) #nf-admin-back:hover { background:rgba(140,114,52,0.18); }
+
+    /* ── MOBILE RESPONSIVO ── */
+    @media(max-width:768px){
+      .admin-main,.client-main{padding:0!important;}
+      .table-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch;}
+      table{min-width:500px;}
+      .modal-box,[class*="modal-box"]{width:calc(100vw - 24px)!important;max-width:100%!important;max-height:90vh!important;overflow-y:auto!important;margin:12px!important;}
+      .kanban{padding-bottom:20px!important;}
+      .k-col{min-width:220px!important;}
+      .dh-kpis,.dh-charts,.dh-bottom{grid-template-columns:1fr!important;}
+      .nf-hero{padding:24px 16px 20px!important;margin:0 12px 20px!important;}
+      .nf-hero-title{font-size:22px!important;}
+      .nf-section{padding:0 12px!important;}
+      .nf-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important;}
+      #nf-admin-back{font-size:12px!important;padding:7px 12px!important;}
+      .app-header{padding:0 12px!important;}
+      .header-logo img{height:40px!important;}
+      .header-logo span{display:none!important;}
+      .header-right{gap:8px!important;}
+      .header-user{display:none!important;}
+      .btn-out{padding:6px 10px!important;font-size:11px!important;}
+      .detail-panel{width:100%!important;position:fixed!important;inset:0!important;z-index:800!important;}
+    }
+    @media(max-width:420px){
+      .nf-grid{grid-template-columns:repeat(2,1fr)!important;}
+      .nf-card-label{font-size:11px!important;}
+    }
 
     /* ── NETFLIX GRID ── */
     .nf-home { padding:0;animation:nfIn .4s ease; }
@@ -435,12 +466,16 @@
   // ── BOTÃO HOME FLUTUANTE ─────────────────────────────────────────────
   function ensureAdminBack(){
     if(document.getElementById('nf-admin-back'))return;
-    const btn=document.createElement('div');
-    btn.id='nf-admin-back';btn.innerHTML='⊟ Home';
+    const btn=document.createElement('button');
+    btn.id='nf-admin-back';
+    btn.innerHTML='<span class="nf-back-arrow">←</span> Voltar';
     btn.onclick=()=>{Admin.loader&&Admin.loader(true);renderAdminGrid().then(()=>Admin.loader&&Admin.loader(false));};
-    document.body.appendChild(btn);
+    // Inject before header-right inside app-header
+    const headerRight=document.querySelector('#admin-view .header-right');
+    if(headerRight) headerRight.prepend(btn);
+    else document.body.appendChild(btn);
   }
-  function showAdminBack(){ensureAdminBack();document.getElementById('nf-admin-back').style.display='inline-flex';}
+  function showAdminBack(){ensureAdminBack();const b=document.getElementById('nf-admin-back');if(b)b.style.display='inline-flex';}
   function hideAdminBack(){const b=document.getElementById('nf-admin-back');if(b)b.style.display='none';}
 
   // ── SHOW / HIDE ──────────────────────────────────────────────────────

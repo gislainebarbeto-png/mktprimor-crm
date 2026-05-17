@@ -191,3 +191,9 @@ CSS custom properties em `:root`:
 ## CLAUDE.md Auto-Update
 
 Este arquivo deve ser atualizado sempre que novas features, tabelas, ou padrões relevantes forem adicionados ao projeto.
+## Módulos protegidos
+Nunca remover ou sobrescrever:
+- relatorio_equipe_module.js
+- A linha <script src="relatorio_equipe_module.js"></script> no index.html
+- O nav-item id="nav-relatorio" no sidebar
+- O case 'relatorio' no Admin.tab()

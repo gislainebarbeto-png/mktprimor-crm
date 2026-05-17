@@ -117,6 +117,26 @@
     .theme-toggle:hover .tt-icon{transform:rotate(20deg);}
     html.dark .logo-light{display:none!important;}
     html:not(.dark) .logo-dark{display:none!important;}
+
+    /* ── RESPONSIVO MOBILE GERAL ── */
+    @media(max-width:768px){
+      .admin-main{padding:16px!important;}
+      .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+      .table-wrap table{min-width:480px;}
+      .section-header{flex-wrap:wrap;gap:8px;}
+      [class*="modal"]{width:calc(100vw - 20px)!important;max-height:88vh!important;overflow-y:auto!important;margin:10px auto!important;border-radius:14px!important;}
+      .ig-inline{position:static!important;margin-top:16px;}
+      .client-board{margin-bottom:14px;}
+      .cb-posts-row{gap:8px!important;}
+      .cb-post{width:110px!important;}
+      h1,h2{font-size:1.2em!important;}
+      .k-col{min-width:200px;}
+      .kanban{padding-bottom:24px;}
+    }
+    @media(max-width:480px){
+      [class*="modal"]{border-radius:10px!important;}
+      .cb-post{width:95px!important;}
+    }
   `;
 
   function inject(){
