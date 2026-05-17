@@ -2121,13 +2121,44 @@ const Admin = {
         try { const a = JSON.parse(raw); return Array.isArray(a) ? a.filter(Boolean) : [raw]; }
         catch { return [raw]; }
       };
+
+      // Converte URL PNG → JPEG via canvas + re-upload Supabase
+      const _convertUrlToJpeg = async (url) => {
+        if (!url || !url.match(/\.png(\?|$)/i)) return url;
+        try {
+          const resp = await fetch(url);
+          const blob = await resp.blob();
+          const img = await new Promise((res, rej) => {
+            const i = new Image(); const u = URL.createObjectURL(blob);
+            i.onload = () => { URL.revokeObjectURL(u); res(i); };
+            i.onerror = () => { URL.revokeObjectURL(u); rej(); };
+            i.src = u;
+          });
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          const jpegBlob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 1.0));
+          const path = `posts/converted/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+          const { error } = await db.storage.from('posts-media').upload(path, jpegBlob, { cacheControl: '3600', upsert: false, contentType: 'image/jpeg' });
+          if (error) return url;
+          const { data: urlData } = db.storage.from('posts-media').getPublicUrl(path);
+          return urlData.publicUrl;
+        } catch { return url; }
+      };
+
       const midias = parseMedia(p.midia_urls);
       const todasMidias = midias.length ? midias : parseMedia(p.img_url);
       const capaUrl = p.capa_url || todasMidias[0] || '';
       const tipoPost = String(p.tipo || 'Feed · Foto');
       const isReel = tipoPost.toLowerCase().includes('reels');
-      // Para Reels, url_video é a primeira mídia (arquivo de vídeo)
       const urlVideo = isReel ? (todasMidias[0] || capaUrl) : '';
+
+      // Converte PNGs → JPEG antes de mandar pro Make
+      const capaFinal   = await _convertUrlToJpeg(capaUrl);
+      const midiasFinal = await Promise.all(todasMidias.map(_convertUrlToJpeg));
+
       // Limpa HTML da legenda
       const stripHtml = (html) => {
         if (!html) return '';
@@ -2153,11 +2184,11 @@ const Admin = {
         tipo:         tipoPost,
         tema:         String(p.tema_titulo || ''),
         legenda:      legendaCompleta,
-        capa_url:     capaUrl,
+        capa_url:     capaFinal,
         url_video:    urlVideo,
-        midias:       todasMidias,
-        total_midias: todasMidias.length,
-        eh_carrossel: todasMidias.length > 1,
+        midias:       midiasFinal,
+        total_midias: midiasFinal.length,
+        eh_carrossel: midiasFinal.length > 1,
         data_post:    String(p.data_post || '')
       };
 
@@ -2273,25 +2304,20 @@ const Admin = {
       const midias = parseMedia(p.midia_urls);
       const todasMidias = midias.length ? midias : parseMedia(p.img_url);
       const capaUrl = p.capa_url || todasMidias[0] || '';
-      const tipoPostDiag = String(p.tipo||'Feed · Foto');
-      const isReelDiag = tipoPostDiag.toLowerCase().includes('reels');
-      const urlVideoDiag = isReelDiag ? (todasMidias[0] || capaUrl) : '';
 
       log(`\n▶ Mídias encontradas: ${todasMidias.length}`, todasMidias.length?'#86efac':'#f87171');
       if (!todasMidias.length) log('  ✗ Nenhuma mídia — Make pode rejeitar sem imagem!', '#f87171');
       todasMidias.forEach((u,i) => log(`  [${i+1}] ${u.substring(0,80)}`, '#93c5fd'));
-      if (isReelDiag) log(`  🎬 url_video: ${urlVideoDiag.substring(0,80)}`, '#c084fc');
 
       const stripHtml = h => h ? h.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').trim() : '';
       const payload = {
         post_id: String(id),
         instagram: String(cliente.instagram||'').replace('@',''),
         cliente_nome: String(cliente.nome||''),
-        tipo: tipoPostDiag,
+        tipo: String(p.tipo||'Feed · Foto'),
         tema: String(p.tema_titulo||''),
         legenda: [stripHtml(p.legenda), stripHtml(p.hashtags)].filter(Boolean).join('\n\n'),
         capa_url: capaUrl,
-        url_video: urlVideoDiag,
         midias: todasMidias,
         total_midias: todasMidias.length,
         eh_carrossel: todasMidias.length > 1,
