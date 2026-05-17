@@ -230,8 +230,8 @@
     /* Modal box dark */
     html.dark .modal-box { background:#222222!important; border:1px solid rgba(255,255,255,0.06)!important; }
     html.dark .task-modal { background:#222222!important; border:1px solid rgba(255,255,255,0.06)!important; }
-    /* Header logo filter */
-    html.dark .header-logo img { filter:none !important; }
+    /* Header logo filter — invert para remover fundo branco no escuro */
+    html.dark .header-logo img { filter:invert(1) brightness(1.08) !important; mix-blend-mode:normal!important; }
 
     /* Task modal glass */
     html.dark .task-modal {
@@ -364,8 +364,8 @@
 
     /* ── SHARED HEADER ── */
     .app-header{background:var(--surface);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);box-shadow:0 2px 12px rgba(10,10,0,.04);}
-    .header-logo img{height:54px;max-width:200px;object-fit:contain;mix-blend-mode:multiply;}
-    html.dark .header-logo img{mix-blend-mode:screen;filter:brightness(1.15);}
+    .header-logo img{height:54px;max-width:200px;object-fit:contain;mix-blend-mode:multiply;cursor:pointer;}
+    html.dark .header-logo img{mix-blend-mode:normal;}
     .header-logo span{display:block;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--copper);margin-top:3px;}
     .header-right{display:flex;align-items:center;gap:14px;}
     .header-user{font-size:12px;color:var(--muted);}
@@ -1055,8 +1055,8 @@
 <!-- ADMIN CRM -->
 <div id="admin-view" class="hidden">
   <div class="app-header">
-    <div class="header-logo">
-      <img src="logo-texto.png.jpeg" alt="Agência Primor" style="height:44px;object-fit:contain;">
+    <div class="header-logo" id="admin-header-logo">
+      <img src="logo-texto.png.jpeg" alt="Agência Primor" style="height:54px;object-fit:contain;">
       <span>Portal Interno</span>
     </div>
     <div class="header-right">
@@ -1085,7 +1085,7 @@
 <div id="client-view" class="hidden">
   <div class="app-header">
     <div class="header-logo">
-      <img src="logo-texto.png.jpeg" alt="Agência Primor" style="height:44px;object-fit:contain;">
+      <img src="logo-texto.png.jpeg" alt="Agência Primor" style="height:54px;object-fit:contain;">
       <span>Portal do Cliente</span>
     </div>
     <div class="header-right">
@@ -9037,7 +9037,7 @@ document.addEventListener('keydown', e => {
 
   document.addEventListener('DOMContentLoaded', () => RichEditor.init());
 </script>
-<script src="netflix_module.js?v=20260517e"></script>
+<script src="netflix_module.js?v=20260517f"></script>
 <script src="theme_module.js?v=20260517d"></script>
 <script src="dashboard_module.js?v=20260517c"></script>
 <script src="relatorio_equipe_module.js?v=20260517"></script>

@@ -395,6 +395,7 @@
     const el=document.getElementById('admin-main');
     if(!el)return;
     hideAdminBack();
+    history.replaceState({crm:'grid'},'');
     await loadRemoteCovers();
 
     let badges={};
@@ -522,9 +523,33 @@
     if(typeof Admin==='undefined'||typeof db==='undefined'){setTimeout(injectAdmin,200);return;}
     if(!Admin._nfPatched){
       Admin._nfPatched=true;
-      // Intercepta Admin.tab para mostrar botão Home ao entrar num módulo
       const orig=Admin.tab.bind(Admin);
-      Admin.tab=async function(name,...args){ showAdminBack(); return orig(name,...args); };
+      Admin.tab=async function(name,...args){
+        history.pushState({crm:'tab',tab:name},'');
+        showAdminBack();
+        return orig(name,...args);
+      };
+      // Browser back/forward dentro do SPA
+      if(!window._nfPopstate){
+        window._nfPopstate=true;
+        window.addEventListener('popstate',function(e){
+          const adminVisible=document.getElementById('admin-view')&&!document.getElementById('admin-view').classList.contains('hidden');
+          if(!adminVisible)return;
+          if(!e.state||e.state.crm==='grid'){
+            renderAdminGrid();
+          } else if(e.state.crm==='tab'){
+            // já está no tab certo, só garante botão visível
+            showAdminBack();
+          }
+        });
+      }
+    }
+    // Logo admin clicável → grid
+    const logoEl=document.getElementById('admin-header-logo');
+    if(logoEl&&!logoEl._nfClick){
+      logoEl._nfClick=true;
+      logoEl.style.cursor='pointer';
+      logoEl.addEventListener('click',()=>renderAdminGrid());
     }
     // index.html já chama NFModule.refresh() no login — isso é só fallback
     window.NFModule.refresh=function(){
