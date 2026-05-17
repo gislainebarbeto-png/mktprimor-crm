@@ -1081,15 +1081,13 @@
         <span class="stb-inner"><span class="stb-icon">◀</span></span>
       </button>
       <div class="nav-section">Menu</div>
-      <div class="nav-item active" onclick="Admin.tab('followup')" id="nav-followup" title="Follow-up"><span class="ni">↗</span><span class="nl">Follow-up <span class="nav-badge" id="nb-fu" style="display:none">0</span></span></div>
-      <div class="nav-item" onclick="Admin.tab('posts')" id="nav-posts" title="Posts"><span class="ni">▦</span><span class="nl">Posts <span class="nav-badge" id="nb-posts" style="display:none">0</span></span></div>
+      <div class="nav-item active" onclick="Admin.tab('posts')" id="nav-posts" title="Posts"><span class="ni">▦</span><span class="nl">Posts <span class="nav-badge" id="nb-posts" style="display:none">0</span></span></div>
       <div class="nav-item" onclick="Admin.tab('clientes')" id="nav-clientes" title="Clientes"><span class="ni">◎</span><span class="nl">Clientes</span></div>
       <div class="nav-section">Gestão</div>
       <div class="nav-item" onclick="Admin.tab('financeiro')" id="nav-financeiro" title="Financeiro"><span class="ni">◈</span><span class="nl">Financeiro</span></div>
       <div class="nav-item" onclick="Admin.tab('arquivos')" id="nav-arquivos" title="Arquivos"><span class="ni">▤</span><span class="nl">Arquivos</span></div>
       <div class="nav-section">Marketing</div>
       <div class="nav-item" onclick="Admin.tab('automacoes')" id="nav-automacoes" title="Automações"><span class="ni">✵</span><span class="nl">Automações</span></div>
-      <div class="nav-item" onclick="Admin.tab('metricas')" id="nav-metricas" title="Métricas"><span class="ni">△</span><span class="nl">Métricas</span></div>
       <div class="nav-item" onclick="Admin.tab('comece')" id="nav-comece" title="Comece Aqui"><span class="ni">✦</span><span class="nl">Comece Aqui</span></div>
       <div class="nav-section">Colaboração</div>
       <div class="nav-item" onclick="Admin.tab('lab')" id="nav-lab" title="Ideias"><span class="ni">⊙</span><span class="nl">Ideias</span></div>
@@ -1210,6 +1208,12 @@
       </div>
     </div>
   </div>
+  <footer style="background:#1a0f0a;padding:32px 24px 24px;text-align:center;margin-top:auto;border-top:1px solid rgba(255,255,255,0.06);">
+    <img src="Logo.png" alt="Agência Primor" style="height:52px;object-fit:contain;opacity:0.92;margin-bottom:12px;filter:brightness(0) invert(1);">
+    <p style="font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:.18em;color:#c9a87c;text-transform:uppercase;margin:0 0 6px;">Agência Primor</p>
+    <p style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:.1em;margin:0;">© <span id="footer-year"></span> Agência Primor · Todos os direitos reservados</p>
+    <script>document.getElementById('footer-year').textContent=new Date().getFullYear();</script>
+  </footer>
 </div>
 
 <script>
@@ -1268,7 +1272,7 @@ const App = {
   async route() {
     const VALID_TABS = ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat'];
     const savedTab = sessionStorage.getItem('adminTab');
-    const startTab = (savedTab && VALID_TABS.includes(savedTab)) ? savedTab : 'followup';
+    const startTab = (savedTab && VALID_TABS.includes(savedTab) && savedTab !== 'followup' && savedTab !== 'metricas') ? savedTab : 'posts';
     if (this.user.email === ADMIN_EMAIL) {
       document.getElementById('admin-email').textContent = this.user.email;
       this.show('admin-view');
@@ -8274,7 +8278,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminMain = document.getElementById('admin-main');
   if (adminMain) {
     adminMain.addEventListener('scroll', () => {
-      const tab = sessionStorage.getItem('adminTab') || 'followup';
+      const tab = sessionStorage.getItem('adminTab') || 'posts';
       sessionStorage.setItem('scroll_' + tab, adminMain.scrollTop);
     }, { passive: true });
   }
