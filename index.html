@@ -1471,7 +1471,7 @@ const Admin = {
     const active = this.followups.filter(f=>!f.feito);
     const badge = document.getElementById('nb-fu');
     const atrasado = active.filter(f=>f.urgencia==='atrasado').length;
-    badge.textContent = atrasado; badge.style.display = atrasado ? 'inline' : 'none';
+    if(badge){ badge.textContent = atrasado; badge.style.display = atrasado ? 'inline' : 'none'; }
 
     const pessoas = [
       ...(leads||[]).map(l=>({nome:l.nome,wpp:l.whatsapp,tipo:'Lead'})),
@@ -1657,7 +1657,7 @@ const Admin = {
     this._clientList = clients || [];
     const rev = this.posts.filter(p=>p.status==='revisao').length;
     const badge = document.getElementById('nb-posts');
-    badge.textContent = rev; badge.style.display = rev ? 'inline' : 'none';
+    if(badge){ badge.textContent = rev; badge.style.display = rev ? 'inline' : 'none'; }
     if (!this._postsMonth) {
       const now = new Date();
       this._postsMonth = { y: now.getFullYear(), m: now.getMonth() };
@@ -9037,9 +9037,9 @@ document.addEventListener('keydown', e => {
 
   document.addEventListener('DOMContentLoaded', () => RichEditor.init());
 </script>
-<script src="netflix_module.js?v=20260517c"></script>
-<script src="theme_module.js?v=20260517b"></script>
-<script src="dashboard_module.js?v=20260517b"></script>
+<script src="netflix_module.js?v=20260517d"></script>
+<script src="theme_module.js?v=20260517c"></script>
+<script src="dashboard_module.js?v=20260517c"></script>
 <script src="relatorio_equipe_module.js?v=20260517"></script>
 <script src="comercial_hub_module.js"></script>
 <script src="agentes_workspace_module.js"></script>

@@ -7,7 +7,7 @@
 
   // ── CSS ──────────────────────────────────────────────────────────────
   /* Paleta dourado frio */
-  const G1='#C4A352', G2='#D4B870', G3='#8C7234', GB='rgba(196,163,82,0.22)', GBG='rgba(196,163,82,0.07)';
+  const G1='#ffd6ba', G2='#d4896a', G3='#68462f', GB='rgba(255,214,186,0.18)', GBG='rgba(104,70,47,0.15)';
 
   const CSS=`
     .dh-wrap{padding:20px 0;animation:dhIn .35s ease;}
@@ -15,64 +15,64 @@
 
     /* HEADER */
     .dh-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px;}
-    .dh-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:#C4A352;letter-spacing:.02em;}
-    .dh-subtitle{font-size:11px;color:rgba(196,163,82,0.5);margin-top:2px;letter-spacing:.08em;text-transform:uppercase;}
-    .dh-date{font-size:11px;color:#C4A352;background:#000;border:1px solid rgba(196,163,82,0.28);border-radius:8px;padding:6px 12px;}
+    .dh-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:#ffd6ba;letter-spacing:.02em;}
+    .dh-subtitle{font-size:11px;color:rgba(255,214,186,0.5);margin-top:2px;letter-spacing:.08em;text-transform:uppercase;}
+    .dh-date{font-size:11px;color:#ffd6ba;background:#000;border:1px solid rgba(196,163,82,0.28);border-radius:8px;padding:6px 12px;}
 
     /* KPIs */
     .dh-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
-    .dh-kpi{background:#000;border:1px solid rgba(196,163,82,0.22);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden;transition:border-color .2s,box-shadow .2s;}
-    .dh-kpi:hover{border-color:rgba(196,163,82,0.5);box-shadow:0 0 20px rgba(196,163,82,0.08);}
+    .dh-kpi{background:linear-gradient(135deg,rgba(104,70,47,0.25),rgba(0,0,0,0.9));border:1px solid rgba(255,214,186,0.18);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden;transition:border-color .2s,box-shadow .2s;}
+    .dh-kpi:hover{border-color:rgba(255,214,186,0.45);box-shadow:0 0 20px rgba(104,70,47,0.2);}
     .dh-kpi-accent{position:absolute;top:0;left:0;right:0;height:2px;border-radius:12px 12px 0 0;}
     .dh-kpi-icon{font-size:18px;margin-bottom:6px;opacity:0.7;}
-    .dh-kpi-val{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:#C4A352;line-height:1;}
-    .dh-kpi-lbl{font-size:9px;color:rgba(196,163,82,0.5);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
+    .dh-kpi-val{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:#ffd6ba;line-height:1;}
+    .dh-kpi-lbl{font-size:9px;color:rgba(255,214,186,0.5);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
     .dh-kpi-delta{font-size:10px;margin-top:7px;display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;}
-    .dh-kpi-delta.up{background:rgba(196,163,82,0.12);color:#C4A352;}
-    .dh-kpi-delta.neu{background:rgba(196,163,82,0.07);color:rgba(196,163,82,0.6);}
+    .dh-kpi-delta.up{background:rgba(104,70,47,0.3);color:#ffd6ba;}
+    .dh-kpi-delta.neu{background:rgba(104,70,47,0.15);color:rgba(255,214,186,0.5);}
 
     /* CHARTS ROW */
     .dh-charts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
-    .dh-chart-box{background:#000;border:1px solid rgba(196,163,82,0.22);border-radius:12px;padding:14px;}
-    .dh-chart-title{font-size:10px;font-weight:500;color:rgba(196,163,82,0.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;}
+    .dh-chart-box{background:linear-gradient(135deg,rgba(104,70,47,0.2),rgba(0,0,0,0.9));border:1px solid rgba(255,214,186,0.15);border-radius:12px;padding:14px;}
+    .dh-chart-title{font-size:10px;font-weight:500;color:rgba(255,214,186,0.5);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;}
     .dh-donut-wrap{display:flex;align-items:center;gap:14px;}
     .dh-legend{display:flex;flex-direction:column;gap:6px;flex:1;}
-    .dh-leg-item{display:flex;align-items:center;gap:7px;font-size:11px;color:#C4A352;}
+    .dh-leg-item{display:flex;align-items:center;gap:7px;font-size:11px;color:#ffd6ba;}
     .dh-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-    .dh-leg-pct{margin-left:auto;color:rgba(196,163,82,0.5);font-size:10px;}
+    .dh-leg-pct{margin-left:auto;color:rgba(255,214,186,0.5);font-size:10px;}
     .dh-bar-wrap{width:100%;}
 
     /* BOTTOM GRID */
     .dh-bottom{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-    .dh-list-box{background:#000;border:1px solid rgba(196,163,82,0.22);border-radius:12px;padding:14px;}
-    .dh-list-title{font-size:10px;font-weight:500;color:rgba(196,163,82,0.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
-    .dh-list-title a{font-size:10px;color:#C4A352;cursor:pointer;font-weight:400;text-decoration:none;opacity:0.7;}
+    .dh-list-box{background:linear-gradient(135deg,rgba(104,70,47,0.2),rgba(0,0,0,0.9));border:1px solid rgba(255,214,186,0.15);border-radius:12px;padding:14px;}
+    .dh-list-title{font-size:10px;font-weight:500;color:rgba(255,214,186,0.5);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+    .dh-list-title a{font-size:10px;color:#ffd6ba;cursor:pointer;font-weight:400;text-decoration:none;opacity:0.7;}
     .dh-list-title a:hover{opacity:1;}
-    .dh-list-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(196,163,82,0.1);}
+    .dh-list-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,214,186,0.1);}
     .dh-list-item:last-child{border-bottom:none;}
     .dh-list-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
     .dh-list-body{flex:1;min-width:0;}
-    .dh-list-name{font-size:12px;font-weight:500;color:#C4A352;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .dh-list-meta{font-size:10px;color:rgba(196,163,82,0.45);margin-top:2px;}
+    .dh-list-name{font-size:12px;font-weight:500;color:#ffd6ba;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .dh-list-meta{font-size:10px;color:rgba(255,214,186,0.45);margin-top:2px;}
     .dh-badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:500;letter-spacing:.04em;}
-    .dh-b-pend{background:rgba(196,163,82,0.12);color:#D4B870;}
-    .dh-b-prod{background:rgba(140,114,52,0.15);color:#C4A352;}
-    .dh-b-aprov{background:rgba(196,163,82,0.18);color:#D4B870;}
-    .dh-b-rev{background:rgba(140,114,52,0.1);color:rgba(196,163,82,0.7);}
+    .dh-b-pend{background:rgba(104,70,47,0.3);color:#D4B870;}
+    .dh-b-prod{background:rgba(140,114,52,0.15);color:#ffd6ba;}
+    .dh-b-aprov{background:rgba(255,214,186,0.15);color:#D4B870;}
+    .dh-b-rev{background:rgba(104,70,47,0.15);color:rgba(255,214,186,0.6);}
 
     /* MINI CALENDAR */
     .dh-cal{font-size:11px;}
     .dh-cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-    .dh-cal-month{font-size:12px;font-weight:500;color:#C4A352;}
+    .dh-cal-month{font-size:12px;font-weight:500;color:#ffd6ba;}
     .dh-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;}
-    .dh-cal-dow{font-size:9px;color:rgba(196,163,82,0.4);padding:2px 0;letter-spacing:.06em;}
+    .dh-cal-dow{font-size:9px;color:rgba(255,214,186,0.4);padding:2px 0;letter-spacing:.06em;}
     .dh-cal-day{padding:4px 2px;border-radius:6px;color:rgba(196,163,82,0.7);cursor:default;font-size:11px;line-height:1.4;}
-    .dh-cal-day.today{background:rgba(196,163,82,0.2);border:1px solid rgba(196,163,82,0.5);color:#C4A352!important;font-weight:600;}
-    .dh-cal-day.other{color:rgba(196,163,82,0.2);}
-    .dh-empty{text-align:center;color:rgba(196,163,82,0.4);padding:20px;font-size:12px;}
+    .dh-cal-day.today{background:rgba(255,214,186,0.2);border:1px solid rgba(196,163,82,0.5);color:#C4A352!important;font-weight:600;}
+    .dh-cal-day.other{color:rgba(255,214,186,0.2);}
+    .dh-empty{text-align:center;color:rgba(255,214,186,0.4);padding:20px;font-size:12px;}
 
     /* LOADING SKELETON */
-    .dh-skel{background:linear-gradient(90deg,#111 25%,#1a1600 50%,#111 75%);background-size:200% 100%;animation:skelAnim 1.5s infinite;border-radius:8px;height:14px;margin:4px 0;}
+    .dh-skel{background:linear-gradient(90deg,#140a05 25%,#2d1508 50%,#140a05 75%);background-size:200% 100%;animation:skelAnim 1.5s infinite;border-radius:8px;height:14px;margin:4px 0;}
     @keyframes skelAnim{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
     @media(max-width:600px){
@@ -95,10 +95,10 @@
       return s;
     });
     return `<svg viewBox="0 0 110 110" width="${size}" height="${size}" style="flex-shrink:0">
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(196,163,82,0.12)" stroke-width="${sw}"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(104,70,47,0.3)" stroke-width="${sw}"/>
       ${segs.join('')}
-      <text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="18" font-weight="600" fill="#C4A352" font-family="Cormorant Garamond,serif">${total}</text>
-      <text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="8" fill="rgba(196,163,82,0.5)" letter-spacing="0.05em" font-family="Poppins,sans-serif">TOTAL</text>
+      <text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="18" font-weight="600" fill="#ffd6ba" font-family="Cormorant Garamond,serif">${total}</text>
+      <text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="8" fill="rgba(255,214,186,0.45)" letter-spacing="0.05em" font-family="Poppins,sans-serif">TOTAL</text>
     </svg>`;
   }
 
@@ -107,14 +107,14 @@
     const max=Math.max(...data.map(d=>d.v),1);
     const W=280,PAD=4,n=data.length;
     const bw=(W-(n-1)*PAD)/n;
-    const WINE='#C4A352',ROSE='#D4B870',ROSELT='rgba(196,163,82,0.45)';
+    const WINE='#68462f',ROSE='#d4896a',ROSELT='rgba(255,214,186,0.4)';
     const colors=[WINE,ROSE,ROSELT,WINE,ROSE,ROSELT,WINE,ROSE,ROSELT,WINE,ROSE,ROSELT];
     const rects=data.map((d,i)=>{
       const bh=Math.max((d.v/max)*(h-24),2);
       const x=i*(bw+PAD),y=h-24-bh;
       return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${colors[i%3]}"/>
-              <text x="${(x+bw/2).toFixed(1)}" y="${(h-6).toFixed(1)}" text-anchor="middle" font-size="8" fill="rgba(196,163,82,0.5)" font-family="Poppins,sans-serif">${d.l}</text>
-              ${d.v>0?`<text x="${(x+bw/2).toFixed(1)}" y="${(y-3).toFixed(1)}" text-anchor="middle" font-size="8" fill="#C4A352" font-family="Poppins,sans-serif">${d.v}</text>`:''}`;
+              <text x="${(x+bw/2).toFixed(1)}" y="${(h-6).toFixed(1)}" text-anchor="middle" font-size="8" fill="rgba(255,214,186,0.45)" font-family="Poppins,sans-serif">${d.l}</text>
+              ${d.v>0?`<text x="${(x+bw/2).toFixed(1)}" y="${(y-3).toFixed(1)}" text-anchor="middle" font-size="8" fill="#ffd6ba" font-family="Poppins,sans-serif">${d.v}</text>`:''}`;
     });
     return `<svg viewBox="0 0 ${W} ${h}" width="100%" height="${h}" preserveAspectRatio="none">${rects.join('')}</svg>`;
   }
@@ -200,7 +200,7 @@
       meses.push({l:lbl,v:count});
     }
 
-    const WINE='#C4A352',ROSE='#D4B870',ROSELT='rgba(196,163,82,0.5)';
+    const WINE='#68462f',ROSE='#d4896a',ROSELT='rgba(255,214,186,0.35)';
 
     document.getElementById('dh-kpis').innerHTML=`
       <div class="dh-kpi">
@@ -233,11 +233,11 @@
       </div>`;
 
     const postData=[
-      {label:'Criação',value:pCriacao,color:'#C4A352'},
-      {label:'Design',value:pDesign,color:'#D4B870'},
-      {label:'Revisão',value:pRevisao,color:'#8C7234'},
-      {label:'Aprovado',value:pAprov,color:'rgba(196,163,82,0.5)'},
-      {label:'Publicado',value:pPub,color:'rgba(196,163,82,0.25)'},
+      {label:'Criação',value:pCriacao,color:'#ffd6ba'},
+      {label:'Design',value:pDesign,color:'#d4896a'},
+      {label:'Revisão',value:pRevisao,color:'#68462f'},
+      {label:'Aprovado',value:pAprov,color:'rgba(255,214,186,0.35)'},
+      {label:'Publicado',value:pPub,color:'rgba(255,214,186,0.2)'},
     ].filter(d=>d.value>0);
 
     const totalDonut=postData.reduce((s,d)=>s+d.value,0)||1;
@@ -260,7 +260,7 @@
         <div class="dh-chart-title">Atividade — Últimos 6 Meses</div>
         <div class="dh-bar-wrap">${bars(meses)}</div>
         <div style="margin-top:8px;display:flex;gap:12px;font-size:10px;color:var(--muted)">
-          <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#C4A352;margin-right:4px;"></span><span style="color:rgba(196,163,82,0.5);font-size:10px">Posts + Demandas</span></div>
+          <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#C4A352;margin-right:4px;"></span><span style="color:rgba(255,214,186,0.5);font-size:10px">Posts + Demandas</span></div>
         </div>
       </div>`;
 

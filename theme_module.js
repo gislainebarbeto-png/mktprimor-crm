@@ -1,6 +1,6 @@
 // ───────────────────────────────────────────────────────────────────────
 // THEME MODULE — Marketing Primor CRM
-// Tema Escuro: Preto + Dourado Frio (#C4A352)
+// Tema Escuro: Preto + #68462f → #ffd6ba
 // Tema Claro:  Bege + Dourado (#8C7234)
 // ───────────────────────────────────────────────────────────────────────
 (function(){
@@ -9,57 +9,57 @@
   const DARK=`
     html.dark{
       --bg:#000000;
-      --surface:#0A0A08;
-      --beige:#111108;
-      --brown:#C4A352;
-      --brown2:#D4B870;
-      --copper:#C4A352;
-      --text:#EDE8D8;
-      --muted:rgba(196,163,82,0.5);
-      --border:rgba(196,163,82,0.15);
+      --surface:#140a05;
+      --beige:#1e1008;
+      --brown:#ffd6ba;
+      --brown2:rgba(255,214,186,0.75);
+      --copper:#ffd6ba;
+      --text:#ffd6ba;
+      --muted:rgba(255,214,186,0.45);
+      --border:rgba(255,214,186,0.15);
       --r:12px;
       --sh:0 4px 24px rgba(0,0,0,0.6);
       --sh2:0 12px 48px rgba(0,0,0,0.8);
-      --wine:#8C7234;
-      --rose:#C4A352;
-      --rose-light:#D4B870;
+      --wine:#68462f;
+      --rose:#d4896a;
+      --rose-light:#ffd6ba;
       --sidebar-bg:#000000;
-      --sidebar-text:#C4A352;
-      --sidebar-muted:rgba(196,163,82,0.45);
-      --sidebar-active:rgba(196,163,82,0.14);
-      --sidebar-active-text:#D4B870;
+      --sidebar-text:#ffd6ba;
+      --sidebar-muted:rgba(255,214,186,0.4);
+      --sidebar-active:rgba(104,70,47,0.35);
+      --sidebar-active-text:#ffd6ba;
       --logo-filter:brightness(1.1);
-      --accent:#C4A352;
-      --accent2:#8C7234;
+      --accent:#d4896a;
+      --accent2:#68462f;
     }
     html.dark body{background:#000000!important;}
     html.dark #admin-view,html.dark #client-view{background:#000000!important;}
     html.dark .admin-main,html.dark .client-main{background:#000000!important;}
-    html.dark .login-box{background:#0A0A08!important;border:1px solid rgba(196,163,82,0.2)!important;}
-    html.dark .app-header{background:#000000!important;border-bottom:1px solid rgba(196,163,82,0.12)!important;}
+    html.dark .login-box{background:#140a05!important;border:1px solid rgba(255,214,186,0.2)!important;}
+    html.dark .app-header{background:#000000!important;border-bottom:1px solid rgba(255,214,186,0.1)!important;}
     html.dark input,html.dark textarea,html.dark select{
-      color:var(--text)!important;background:#111108!important;border-color:rgba(196,163,82,0.2)!important;
+      color:#ffd6ba!important;
+      background:linear-gradient(135deg,rgba(104,70,47,0.5),rgba(255,214,186,0.04))!important;
+      border-color:rgba(255,214,186,0.2)!important;
     }
-    html.dark input::placeholder,html.dark textarea::placeholder{color:rgba(196,163,82,0.35)!important;}
-    html.dark .nav-item{color:var(--sidebar-muted)!important;}
-    html.dark .nav-item:hover{background:rgba(196,163,82,0.08)!important;color:#D4B870!important;}
-    html.dark .nav-item.active{background:var(--sidebar-active)!important;color:var(--sidebar-active-text)!important;}
-    html.dark #admin-sidebar,html.dark aside{background:var(--sidebar-bg)!important;}
-    html.dark .client-tab.active{background:rgba(196,163,82,0.18)!important;color:#D4B870!important;}
-    html.dark .client-tab:hover{color:#D4B870!important;}
-    html.dark .status-badge,.aw2-btn,.fsc-btn{background:#8C7234!important;}
-    html.dark ::-webkit-scrollbar-thumb{background:#8C7234!important;}
-    html.dark .table-wrap,html.dark .dh-kpi,html.dark .dh-chart-box,html.dark .dh-list-box{
-      background:#000000!important;border-color:rgba(196,163,82,0.15)!important;
-    }
-    html.dark .modal-box,html.dark .modal,html.dark [class*="modal"]{
-      background:#0A0A08!important;border-color:rgba(196,163,82,0.2)!important;
+    html.dark input::placeholder,html.dark textarea::placeholder{color:rgba(255,214,186,0.3)!important;}
+    html.dark .nav-item{color:rgba(255,214,186,0.4)!important;}
+    html.dark .nav-item:hover{background:rgba(104,70,47,0.3)!important;color:#ffd6ba!important;}
+    html.dark .nav-item.active{background:rgba(104,70,47,0.35)!important;color:#ffd6ba!important;}
+    html.dark #admin-sidebar,html.dark aside{background:#000000!important;}
+    html.dark .client-tab.active{background:rgba(104,70,47,0.35)!important;color:#ffd6ba!important;}
+    html.dark .client-tab:hover{color:#ffd6ba!important;}
+    html.dark .status-badge,.aw2-btn,.fsc-btn{background:#68462f!important;}
+    html.dark ::-webkit-scrollbar-thumb{background:#68462f!important;}
+    html.dark .table-wrap{background:#140a05!important;border-color:rgba(255,214,186,0.12)!important;}
+    html.dark .modal-box,html.dark [class*="modal-box"]{
+      background:#140a05!important;border-color:rgba(255,214,186,0.2)!important;
     }
     html.dark .btn,html.dark button[class*="btn"],html.dark .save-btn,html.dark .primary-btn{
-      background:#8C7234!important;color:#EDE8D8!important;border-color:#8C7234!important;
+      background:#68462f!important;color:#ffd6ba!important;border-color:#68462f!important;
     }
-    html.dark .btn:hover,html.dark button[class*="btn"]:hover{background:#C4A352!important;}
-    html.dark h1,html.dark h2,html.dark h3,html.dark h4{color:#C4A352!important;}
+    html.dark .btn:hover,html.dark button[class*="btn"]:hover{background:#d4896a!important;}
+    html.dark h1,html.dark h2,html.dark h3,html.dark h4{color:#ffd6ba!important;}
     html.dark ::-webkit-scrollbar-track{background:transparent;}
   `;
 
@@ -101,12 +101,10 @@
     html:not(.dark) input,html:not(.dark) textarea,html:not(.dark) select{
       background:#FBF7EE!important;border-color:rgba(140,114,52,0.25)!important;color:#2A1F0A!important;
     }
-    html:not(.dark) .btn,html:not(.dark) button[class*="btn"],html:not(.dark) .save-btn,html:not(.dark) .primary-btn{
+    html:not(.dark) .btn,html:not(.dark) button[class*="btn"],html:not(.dark) .save-btn{
       background:#8C7234!important;color:#fff!important;
     }
     html:not(.dark) .btn:hover{background:#C4A352!important;}
-    html:not(.dark) .modal-box,html:not(.dark) .modal{background:#FFFFFF!important;}
-    html:not(.dark) h1,html:not(.dark) h2,html:not(.dark) h3,html:not(.dark) h4{color:#8C7234!important;}
   `;
 
   const COMMON=`
@@ -119,8 +117,6 @@
     .theme-toggle:hover .tt-icon{transform:rotate(20deg);}
     html.dark .logo-light{display:none!important;}
     html:not(.dark) .logo-dark{display:none!important;}
-    html.dark [data-logo-dark]{display:block!important;}
-    html:not(.dark) [data-logo-dark]{display:none!important;}
   `;
 
   function inject(){
@@ -134,14 +130,11 @@
     const topbar=document.querySelector('#admin-topbar,[id*="topbar"],[class*="topbar"],.topbar')
       ||document.querySelector('header')||document.querySelector('#admin-view > div:first-child');
     if(!topbar||document.getElementById('theme-toggle-btn'))return;
-
     const isDark=document.documentElement.classList.contains('dark');
     const btn=document.createElement('div');
-    btn.id='theme-toggle-btn';
-    btn.className='theme-toggle';
+    btn.id='theme-toggle-btn';btn.className='theme-toggle';
     btn.innerHTML=`<span class="tt-icon">${isDark?'☀️':'🌙'}</span><span class="tt-label">${isDark?'Claro':'Escuro'}</span>`;
     btn.onclick=toggleTheme;
-
     const target=topbar.querySelector('.flex-end,.actions,[class*="right"],[class*="user"]')||topbar;
     target.style.display='flex';target.style.alignItems='center';target.style.gap='8px';
     target.appendChild(btn);
@@ -153,10 +146,7 @@
     html.classList.toggle('dark',going);
     localStorage.setItem('primor_theme',going?'dark':'light');
     const btn=document.getElementById('theme-toggle-btn');
-    if(btn){
-      btn.querySelector('.tt-icon').textContent=going?'☀️':'🌙';
-      btn.querySelector('.tt-label').textContent=going?'Claro':'Escuro';
-    }
+    if(btn){btn.querySelector('.tt-icon').textContent=going?'☀️':'🌙';btn.querySelector('.tt-label').textContent=going?'Claro':'Escuro';}
     swapLogo(going);
   }
 
@@ -178,14 +168,12 @@
 
   function init(){
     if(typeof Admin==='undefined'){setTimeout(init,150);return;}
-    inject();
-    applyStored();
+    inject();applyStored();
     setTimeout(addToggle,800);
     setTimeout(()=>{if(!document.getElementById('theme-toggle-btn'))addToggle();},1800);
   }
 
-  inject();
-  applyStored();
+  inject();applyStored();
   document.addEventListener('DOMContentLoaded',init);
   if(document.readyState!=='loading')init();
 })();
