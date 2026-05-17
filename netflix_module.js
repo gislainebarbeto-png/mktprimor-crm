@@ -121,7 +121,7 @@
       background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);
       border:1px solid rgba(255,255,255,0.15);color:#fff;
       font-size:10px;padding:4px 8px;border-radius:8px;
-      cursor:pointer;opacity:0;transition:opacity .2s;
+      cursor:pointer;opacity:0.55;transition:opacity .2s;
       display:flex;align-items:center;gap:4px;
     }
     .nf-card:hover .nf-card-edit { opacity:1; }
