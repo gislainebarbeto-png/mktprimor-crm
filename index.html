@@ -43,9 +43,9 @@
     }
     input::placeholder, textarea::placeholder { color: var(--muted) !important; }
     html.dark {
-      --bg:      #1c0e09;
-      --surface: #261410;
-      --beige:   #331a12;
+      --bg:      #0D0D0D;
+      --surface: #1A1A1A;
+      --beige:   #242424;
       --brown:   #e2d9cc;
       --brown2:  #d6cab4;
       --copper:  #d6cab4;
@@ -57,12 +57,12 @@
     }
 
     /* ── DARK THEME AESTHETIC ── */
-    html.dark body{background:#1c0e09;}
+    html.dark body{background:#0D0D0D;}
     html.dark #admin-view,
-    html.dark #client-view { background:#1c0e09; }
+    html.dark #client-view { background:#0D0D0D; }
 
-    html.dark .login-box{background:#261410;border:1px solid rgba(255,255,255,0.08);box-shadow:0 12px 48px rgba(0,0,0,0.7);}
-    html.dark .app-header{background:#140c07;border-bottom:1px solid rgba(255,255,255,0.06);}
+    html.dark .login-box{background:#1A1A1A;border:1px solid rgba(255,255,255,0.08);box-shadow:0 12px 48px rgba(0,0,0,0.7);}
+    html.dark .app-header{background:#111111;border-bottom:1px solid rgba(255,255,255,0.06);}
     html.dark .admin-main,html.dark .client-main{background:transparent!important;}
     html.dark .client-main *:not(button):not(input):not(textarea):not(select):not(.badge-aprovado):not(.badge-revisao):not(.badge-criacao):not(.badge-design):not(.badge-publicado){color:var(--text);}
     html.dark .client-main .muted, html.dark .client-main [style*='color:var(--muted)']{color:#888888!important;}
@@ -71,7 +71,7 @@
     html.dark .sidebar{
       width:78px!important;
       padding:14px 4px!important;
-      background:#140c07;
+      background:#111111;
       border-right:1px solid rgba(255,255,255,0.05);
       display:flex;flex-direction:column;align-items:center;overflow:visible;
     }
@@ -1069,36 +1069,7 @@
       <button class="btn-out" onclick="App.logout()">Sair</button>
     </div>
   </div>
-  <!-- Admin hamburger (tablet/mobile) -->
-  <div id="admin-hamburger" style="display:none;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--brown);letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--surface);" onclick="document.getElementById('admin-view').classList.toggle('sidebar-open')">
-    <span id="admin-active-tab-name">Leads</span>
-    <span style="font-size:22px;color:var(--muted);">☰</span>
-  </div>
   <div class="admin-body">
-    <!-- Sidebar -->
-    <div class="sidebar" id="admin-sidebar">
-      <button class="sidebar-toggle-btn" onclick="Admin.toggleSidebar()" title="Recolher/expandir menu">
-        <span class="stb-inner"><span class="stb-icon">◀</span></span>
-      </button>
-      <div class="nav-section">Menu</div>
-      <div class="nav-item active" onclick="Admin.tab('posts')" id="nav-posts" title="Posts"><span class="ni">▦</span><span class="nl">Posts <span class="nav-badge" id="nb-posts" style="display:none">0</span></span></div>
-      <div class="nav-item" onclick="Admin.tab('clientes')" id="nav-clientes" title="Clientes"><span class="ni">◎</span><span class="nl">Clientes</span></div>
-      <div class="nav-section">Gestão</div>
-      <div class="nav-item" onclick="Admin.tab('financeiro')" id="nav-financeiro" title="Financeiro"><span class="ni">◈</span><span class="nl">Financeiro</span></div>
-      <div class="nav-item" onclick="Admin.tab('arquivos')" id="nav-arquivos" title="Arquivos"><span class="ni">▤</span><span class="nl">Arquivos</span></div>
-      <div class="nav-section">Marketing</div>
-      <div class="nav-item" onclick="Admin.tab('automacoes')" id="nav-automacoes" title="Automações"><span class="ni">✵</span><span class="nl">Automações</span></div>
-      <div class="nav-item" onclick="Admin.tab('comece')" id="nav-comece" title="Comece Aqui"><span class="ni">✦</span><span class="nl">Comece Aqui</span></div>
-      <div class="nav-section">Colaboração</div>
-      <div class="nav-item" onclick="Admin.tab('lab')" id="nav-lab" title="Ideias"><span class="ni">⊙</span><span class="nl">Ideias</span></div>
-      <div class="nav-item" onclick="Admin.tab('info')" id="nav-info" title="Infos"><span class="ni">≡</span><span class="nl">Infos</span></div>
-      <div class="nav-item" onclick="Admin.tab('solicitacoes')" id="nav-solicitacoes" title="Solicitações"><span class="ni">◫</span><span class="nl">Solic.</span></div>
-      <div class="nav-item" onclick="Admin.tab('demandas')" id="nav-demandas" title="Demandas"><span class="ni">⊞</span><span class="nl">Demandas</span></div>
-      <div class="nav-item" onclick="Admin.tab('chat')" id="nav-chat" title="Chat"><span class="ni">◷</span><span class="nl">Chat <span class="chat-badge hidden" id="nb-chat" style="background:#C62828;color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;"></span></span></div>
-      <div class="nav-item" onclick="Admin.tab('relatorio')" id="nav-relatorio" title="Relatório da Equipe"><span class="ni">📝</span><span class="nl">Diário</span></div>
-      <div class="nav-item" onclick="Admin.tab('comercial')" id="nav-comercial" title="Comercial"><span class="ni">◈</span><span class="nl">Comercial</span></div>
-      <div class="nav-item" onclick="Admin.tab('agentes')" id="nav-agentes" title="Agentes IA"><span class="ni">✦</span><span class="nl">Agentes</span></div>
-    </div>
     <!-- Main -->
     <div class="admin-main" id="admin-main">
       <!-- conteúdo injetado aqui -->
@@ -1208,7 +1179,7 @@
       </div>
     </div>
   </div>
-  <footer style="background:#1c0e09;padding:32px 24px 24px;text-align:center;margin-top:auto;border-top:1px solid rgba(255,255,255,0.06);">
+  <footer style="background:#111111;padding:32px 24px 24px;text-align:center;margin-top:auto;border-top:1px solid rgba(255,255,255,0.06);">
     <img src="logo-rodape.png" alt="Agência Primor" style="height:52px;object-fit:contain;opacity:0.92;margin-bottom:12px;">
     <p style="font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:.18em;color:#c9a87c;text-transform:uppercase;margin:0 0 6px;">Agência Primor</p>
     <p style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:.1em;margin:0;">© <span id="footer-year"></span> Agência Primor · Todos os direitos reservados</p>
