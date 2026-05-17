@@ -108,7 +108,7 @@
     .nf-card:hover { transform:translateY(-6px) scale(1.02);box-shadow:0 14px 36px rgba(0,0,0,0.55); }
     .nf-card:active { transform:scale(0.97); }
 
-    .nf-card-bg { position:absolute;inset:0;background-size:cover;background-position:center;transition:transform .4s; }
+    .nf-card-bg { position:absolute;inset:0;background-size:cover;background-position:center;transition:transform .4s;pointer-events:none; }
     .nf-card:hover .nf-card-bg { transform:scale(1.07); }
     .nf-card-overlay { position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.18) 55%,transparent 100%);pointer-events:none; }
 

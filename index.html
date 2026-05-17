@@ -1307,7 +1307,7 @@ const Admin = {
   async tab(name) {
     this.currentTab = name;
     sessionStorage.setItem('adminTab', name);
-    ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','relatorio','comercial','agentes'].forEach(t => {
+    ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','relatorio','comercial','agentes','tarefas'].forEach(t => {
       document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
     });
     document.getElementById('admin-view')?.classList.remove('sidebar-open');
@@ -1333,6 +1333,7 @@ const Admin = {
       if (name === 'relatorio')    await this.renderRelatorioEquipe();
       if (name === 'comercial')    await this.renderComercial();
       if (name === 'agentes')      await this.renderAgentes();
+      if (name === 'tarefas')      await this.renderTarefas();
       // Restore saved scroll for this tab
       const savedScroll = parseInt(sessionStorage.getItem('scroll_' + name)) || 0;
       if (savedScroll) requestAnimationFrame(() => {
@@ -9036,8 +9037,8 @@ document.addEventListener('keydown', e => {
 
   document.addEventListener('DOMContentLoaded', () => RichEditor.init());
 </script>
-<script src="netflix_module.js?v=20260517b"></script>
-<script src="theme_module.js?v=20260517"></script>
+<script src="netflix_module.js?v=20260517c"></script>
+<script src="theme_module.js?v=20260517b"></script>
 <script src="dashboard_module.js?v=20260517b"></script>
 <script src="relatorio_equipe_module.js?v=20260517"></script>
 <script src="comercial_hub_module.js"></script>
