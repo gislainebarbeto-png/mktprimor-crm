@@ -214,10 +214,33 @@
     }
   `;
 
-  // ── COVER STORAGE ────────────────────────────────────────────────────
+  // ── COVER STORAGE (localStorage + Supabase sync) ─────────────────────
+  const INDEX_PATH = 'module-covers/index.json';
+
   function getCovers(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')}catch{return{}} }
-  function saveCover(id,url){ const c=getCovers();c[id]=url;localStorage.setItem(STORAGE_KEY,JSON.stringify(c)); }
-  function removeCover(id){ const c=getCovers();delete c[id];localStorage.setItem(STORAGE_KEY,JSON.stringify(c)); }
+
+  async function persistIndex(covers){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(covers));
+    try{
+      const blob = new Blob([JSON.stringify(covers)],{type:'application/json'});
+      await db.storage.from(BUCKET).upload(INDEX_PATH, blob, {upsert:true, contentType:'application/json'});
+    }catch(e){ /* silently ignore — localStorage already saved */ }
+  }
+
+  function saveCover(id,url){ const c=getCovers();c[id]=url;persistIndex(c); }
+  function removeCover(id){ const c=getCovers();delete c[id];persistIndex(c); }
+
+  async function loadRemoteCovers(){
+    try{
+      const {data,error}=await db.storage.from(BUCKET).download(INDEX_PATH);
+      if(error||!data)return;
+      const text=await data.text();
+      const remote=JSON.parse(text);
+      const local=getCovers();
+      const merged={...local,...remote};
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(merged));
+    }catch(e){}
+  }
 
   // ── UPLOAD SUPABASE STORAGE ──────────────────────────────────────────
   async function uploadCover(file, moduleId){
@@ -341,6 +364,7 @@
     const el=document.getElementById('admin-main');
     if(!el)return;
     hideAdminBack();
+    await loadRemoteCovers();
 
     let badges={};
     try{
@@ -372,6 +396,7 @@
   async function renderClientGrid(){
     const wrap=document.getElementById('nf-client-home');
     if(!wrap)return;
+    await loadRemoteCovers();
 
     let badges={};
     try{
