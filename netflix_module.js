@@ -297,12 +297,9 @@
       ?`background-image:url('${cover}');background-size:cover;background-position:center;`
       :`${mod.gradient};`;
     const editBtn=isAdmin
-      ?`<div class="nf-card-edit" onclick="event.stopPropagation();NFModule._openEdit('${mod.id}','admin')">✎ Capa</div>`:'';
+      ?`<div class="nf-card-edit" data-edit="${mod.id}">✎ Capa</div>`:'';
     const badgeHtml=badge?`<div class="nf-card-badge">${badge}</div>`:'';
-    const clickFn=isAdmin
-      ?`Admin.tab('${mod.id}');NFModule._hideGrid('admin')`
-      :`Client.clientTab('${mod.id}');NFModule._hideGrid('client')`;
-    return `<div class="nf-card" onclick="${clickFn}">
+    return `<div class="nf-card" data-id="${mod.id}" data-admin="${isAdmin}">
       <div class="nf-card-bg" style="${bgStyle}"></div>
       <div class="nf-card-overlay"></div>
       ${editBtn}${badgeHtml}
@@ -312,6 +309,23 @@
         <span class="nf-card-desc">${mod.desc}</span>
       </div>
     </div>`;
+  }
+
+  // ── ATTACH CARD LISTENERS ────────────────────────────────────────────
+  function attachCardListeners(container){
+    container.querySelectorAll('.nf-card').forEach(card=>{
+      card.addEventListener('click', e=>{
+        const editEl=e.target.closest('[data-edit]');
+        if(editEl){
+          _openEdit(editEl.dataset.edit, 'admin');
+          return;
+        }
+        const id=card.dataset.id;
+        const isAdmin=card.dataset.admin==='true';
+        if(isAdmin){ Admin.tab(id); _hideGrid('admin'); }
+        else { Client.clientTab(id); _hideGrid('client'); }
+      });
+    });
   }
 
   // ── RENDER ADMIN GRID ────────────────────────────────────────────────
@@ -343,6 +357,7 @@
         </div>`:'';
       }).join('')}
     </div>`;
+    attachCardListeners(el);
   }
 
   // ── RENDER CLIENT GRID ───────────────────────────────────────────────
@@ -381,6 +396,7 @@
       }).join('')}
     </div>`;
     wrap.classList.remove('hidden');
+    attachCardListeners(wrap);
   }
 
   // ── BOTÃO HOME FLUTUANTE ─────────────────────────────────────────────
