@@ -364,11 +364,7 @@
       return origTab(name,...args);
     };
 
-    setTimeout(()=>{
-      if(!location.hash||location.hash==='#'||location.hash==='#inicio'){
-        Admin.tab('inicio');
-      }
-    },600);
+    // Abertura controlada pelo netflix_module (grid de cards)
   }
 
   if(document.readyState!=='loading')inject();
