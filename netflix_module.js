@@ -436,30 +436,17 @@
     if(typeof Admin==='undefined'||typeof db==='undefined'){setTimeout(injectAdmin,200);return;}
     if(!Admin._nfPatched){
       Admin._nfPatched=true;
-      // Intercepta tab() para mostrar botão Home
+      // Intercepta Admin.tab para mostrar botão Home ao entrar num módulo
       const orig=Admin.tab.bind(Admin);
       Admin.tab=async function(name,...args){ showAdminBack(); return orig(name,...args); };
-      // Intercepta App.route para abrir o grid em vez da última aba salva
-      if(typeof App!=='undefined' && App.route && !App._nfRoutePatched){
-        App._nfRoutePatched=true;
-        const origRoute=App.route.bind(App);
-        App.route=async function(...args){
-          const result=await origRoute(...args);
-          setTimeout(()=>{
-            const el=document.getElementById('admin-main');
-            const visible=document.getElementById('admin-view')&&!document.getElementById('admin-view').classList.contains('hidden');
-            if(el&&visible) renderAdminGrid();
-          },200);
-          return result;
-        };
-      }
     }
-    // Fallback: abre grid se admin-main estiver vazio ou com placeholder
-    setTimeout(()=>{
+    // index.html já chama NFModule.refresh() no login — isso é só fallback
+    window.NFModule.refresh=function(){
       const el=document.getElementById('admin-main');
       const visible=document.getElementById('admin-view')&&!document.getElementById('admin-view').classList.contains('hidden');
       if(el&&visible) renderAdminGrid();
-    },750);
+      renderClientGrid();
+    };
   }
 
   // ── INJEÇÃO CLIENTE ──────────────────────────────────────────────────

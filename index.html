@@ -1248,7 +1248,8 @@ const App = {
       document.getElementById('admin-email').textContent = this.user.email;
       this.show('admin-view');
       Admin.isEquipe = false;
-      Admin.tab(startTab);
+      // Sempre abre o grid de cards (netflix_module), nunca uma aba direta
+      setTimeout(()=>{ if(window.NFModule) NFModule.refresh(); else Admin.tab(startTab); }, 80);
     } else {
       // Check if team member
       const { data: equipe } = await db.from('equipe').select('email').ilike('email', this.user.email).maybeSingle();
@@ -1257,7 +1258,8 @@ const App = {
         this.show('admin-view');
         Admin.isEquipe = true;
         document.getElementById('nav-financeiro').style.display = 'none';
-        Admin.tab(startTab);
+        // Sempre abre o grid de cards (netflix_module)
+        setTimeout(()=>{ if(window.NFModule) NFModule.refresh(); else Admin.tab(startTab); }, 80);
       } else {
         document.getElementById('client-email-display').textContent = this.user.email;
         const name = this.user.user_metadata?.nome || this.user.email.split('@')[0];
