@@ -70,16 +70,24 @@
     @keyframes nfIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
 
     .nf-hero {
-      background:linear-gradient(135deg,#111 0%,#1a1a2a 60%,#111 100%);
-      padding:32px 28px 24px;margin-bottom:24px;
-      border-radius:0 0 20px 20px;position:relative;overflow:hidden;
+      background:#000000;
+      border:1px solid rgba(196,163,82,0.38);
+      box-shadow:0 0 0 1px rgba(196,163,82,0.07), inset 0 0 60px rgba(0,0,0,0.9);
+      padding:36px 32px 28px;margin:0 20px 28px;
+      border-radius:16px;position:relative;overflow:hidden;
     }
     .nf-hero::before {
       content:'';position:absolute;inset:0;
-      background:radial-gradient(ellipse at 70% 50%,rgba(212,86,122,0.12),transparent 60%);
+      background:radial-gradient(ellipse at 50% 100%,rgba(196,163,82,0.06),transparent 65%);
+      pointer-events:none;
     }
-    .nf-hero-title { font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:#FAF8F2;position:relative;margin-bottom:4px; }
-    .nf-hero-sub   { font-size:11px;color:rgba(250,248,242,0.45);letter-spacing:.12em;text-transform:uppercase;position:relative; }
+    .nf-hero::after {
+      content:'';position:absolute;top:0;left:10%;right:10%;height:1px;
+      background:linear-gradient(90deg,transparent,rgba(196,163,82,0.55),transparent);
+      pointer-events:none;
+    }
+    .nf-hero-title { font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;color:#C4A352;position:relative;margin-bottom:6px;letter-spacing:.02em; }
+    .nf-hero-sub   { font-size:10px;color:rgba(196,163,82,0.48);letter-spacing:.2em;text-transform:uppercase;position:relative; }
 
     .nf-section { margin-bottom:28px;padding:0 20px; }
     .nf-section-title {
