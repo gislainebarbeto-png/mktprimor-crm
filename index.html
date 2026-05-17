@@ -1097,6 +1097,7 @@
       <div class="nav-item" onclick="Admin.tab('solicitacoes')" id="nav-solicitacoes" title="Solicitações"><span class="ni">◫</span><span class="nl">Solic.</span></div>
       <div class="nav-item" onclick="Admin.tab('demandas')" id="nav-demandas" title="Demandas"><span class="ni">⊞</span><span class="nl">Demandas</span></div>
       <div class="nav-item" onclick="Admin.tab('chat')" id="nav-chat" title="Chat"><span class="ni">◷</span><span class="nl">Chat <span class="chat-badge hidden" id="nb-chat" style="background:#C62828;color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;"></span></span></div>
+      <div class="nav-item" onclick="Admin.tab('relatorio')" id="nav-relatorio" title="Relatório da Equipe"><span class="ni">📝</span><span class="nl">Diário</span></div>
     </div>
     <!-- Main -->
     <div class="admin-main" id="admin-main">
@@ -1263,7 +1264,7 @@ const App = {
   },
 
   async route() {
-    const VALID_TABS = ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat'];
+    const VALID_TABS = ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','relatorio'];
     const savedTab = sessionStorage.getItem('adminTab');
     const startTab = (savedTab && VALID_TABS.includes(savedTab)) ? savedTab : 'followup';
     if (this.user.email === ADMIN_EMAIL) {
@@ -1327,7 +1328,7 @@ const Admin = {
   async tab(name) {
     this.currentTab = name;
     sessionStorage.setItem('adminTab', name);
-    ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat'].forEach(t => {
+    ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','relatorio'].forEach(t => {
       document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
     });
     document.getElementById('admin-view')?.classList.remove('sidebar-open');
@@ -1350,6 +1351,7 @@ const Admin = {
       if (name === 'solicitacoes') await this.renderSolicitacoesAdmin();
       if (name === 'demandas')     await this.renderDemandas();
       if (name === 'chat')         await this.renderChat();
+      if (name === 'relatorio')    await this.renderRelatorioEquipe();
       // Restore saved scroll for this tab
       const savedScroll = parseInt(sessionStorage.getItem('scroll_' + name)) || 0;
       if (savedScroll) requestAnimationFrame(() => {
@@ -9053,5 +9055,6 @@ document.addEventListener('keydown', e => {
 
   document.addEventListener('DOMContentLoaded', () => RichEditor.init());
 </script>
+<script src="relatorio_equipe_module.js"></script>
 </body>
 </html>
