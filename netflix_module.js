@@ -102,9 +102,9 @@
 
     .nf-card-bg { position:absolute;inset:0;background-size:cover;background-position:center;transition:transform .4s; }
     .nf-card:hover .nf-card-bg { transform:scale(1.07); }
-    .nf-card-overlay { position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.18) 55%,transparent 100%); }
+    .nf-card-overlay { position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.18) 55%,transparent 100%);pointer-events:none; }
 
-    .nf-card-body   { position:absolute;bottom:0;left:0;right:0;padding:12px 12px 14px; }
+    .nf-card-body   { position:absolute;bottom:0;left:0;right:0;padding:12px 12px 14px;pointer-events:none; }
     .nf-card-icon   { font-size:22px;margin-bottom:5px;display:block;opacity:0.9; }
     .nf-card-label  { font-size:13px;font-weight:500;color:#fff;display:block;line-height:1.2;margin-bottom:3px; }
     .nf-card-desc   { font-size:9px;color:rgba(255,255,255,0.5);line-height:1.4;display:block; }
@@ -117,12 +117,14 @@
 
     /* BOTÃO EDITAR CAPA */
     .nf-card-edit {
-      position:absolute;top:8px;left:8px;
+      position:absolute;top:8px;left:8px;z-index:10;
       background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);
       border:1px solid rgba(255,255,255,0.15);color:#fff;
-      font-size:10px;padding:4px 8px;border-radius:8px;
+      font-size:10px;padding:6px 10px;border-radius:8px;
       cursor:pointer;opacity:0.55;transition:opacity .2s;
       display:flex;align-items:center;gap:4px;
+      min-height:30px;min-width:52px;
+      -webkit-tap-highlight-color:transparent;
     }
     .nf-card:hover .nf-card-edit { opacity:1; }
 
