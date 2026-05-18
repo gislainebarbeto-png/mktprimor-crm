@@ -762,11 +762,11 @@
           method:'POST',
           headers:{
             'Content-Type':'application/json',
-            'x-api-key':key,
+            'x-api-key':window.PRIMOR_CONFIG?.anthropicKey||key,
             'anthropic-version':'2023-06-01',
             'anthropic-dangerous-direct-browser-calls':'true'
           },
-          body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:systemPrompt,messages:_chatHist[_ag.id]})
+          body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:systemPrompt,messages:_chatHist[_ag.id]})
         });
         const data=await res.json();
         document.getElementById('aw2td')?.remove();
