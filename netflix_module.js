@@ -31,11 +31,10 @@
 
   // ── SEÇÕES ADMIN ─────────────────────────────────────────────────────
   const ADMIN_SECTIONS = [
-    { title:'Visão Geral',       ids:['inicio'] },
-    { title:'Conteúdo',          ids:['posts','automacoes','comece'] },
+    { title:'Visão Geral',       ids:['inicio','posts','relatorio','agentes','comercial'] },
     { title:'Clientes & Gestão', ids:['clientes','financeiro','arquivos','info'] },
-    { title:'Equipe',            ids:['demandas','tarefas','solicitacoes','chat','relatorio'] },
-    { title:'Estratégia & IA',   ids:['lab','comercial','agentes'] },
+    { title:'Equipe',            ids:['demandas','tarefas','solicitacoes','chat'] },
+    { title:'Conteúdo & Mais',   ids:['automacoes','comece','lab'] },
   ];
 
   // ── MÓDULOS DO PORTAL CLIENTE ─────────────────────────────────────────
@@ -457,10 +456,8 @@
     }catch(e){}
 
     const sections=[
-      {title:'Conteúdo',      ids:['posts','brand','ideias']},
-      {title:'Relacionamento',ids:['chat','solicitacoes']},
-      {title:'Recursos',      ids:['arquivos','info','financeiro','tarefas']},
-      {title:'Boas-vindas',   ids:['comece','onboarding']},
+      {title:'Para começar',  ids:['comece','onboarding','brand','posts','chat','solicitacoes']},
+      {title:'Recursos',      ids:['arquivos','info','financeiro','tarefas','ideias']},
     ];
 
     wrap.innerHTML=`<div class="nf-home">
