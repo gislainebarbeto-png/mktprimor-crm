@@ -21,6 +21,8 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           protocol: ftps
+          security: loose
+          timeout: 60000
           server-dir: crm/
           exclude: |
             **/.git*
