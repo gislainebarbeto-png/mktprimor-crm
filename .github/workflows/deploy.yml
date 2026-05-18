@@ -22,7 +22,7 @@ jobs:
           port: 21
           protocol: ftps
           security: loose
-          timeout: 60000
+          timeout: 120000
           server-dir: crm/
           exclude: |
             **/.git*
