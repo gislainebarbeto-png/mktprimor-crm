@@ -38,6 +38,21 @@
     { title:'Estratégia & IA',   ids:['lab','comercial','agentes'] },
   ];
 
+  // ── MÓDULOS DO PORTAL CLIENTE ─────────────────────────────────────────
+  const CLIENT_MODULES = [
+    { id:'posts',        icon:'▦',  label:'Posts',         desc:'Seu conteúdo e aprovações',            gradient:'linear-gradient(145deg,#1a0830,#4a1060,#8B2FC9)' },
+    { id:'brand',        icon:'✦',  label:'Brand Core',    desc:'Identidade e posicionamento da marca',  gradient:'linear-gradient(145deg,#0a1628,#1a3a6a,#2E6FD4)' },
+    { id:'ideias',       icon:'⊙',  label:'Ideias',        desc:'Banco de ideias e brainstorm',          gradient:'linear-gradient(145deg,#0d1a0d,#2a4a10,#6B8E23)' },
+    { id:'chat',         icon:'◷',  label:'Chat',          desc:'Mensagens com a equipe',                gradient:'linear-gradient(145deg,#081a1a,#104040,#1A8FA0)' },
+    { id:'solicitacoes', icon:'◫',  label:'Solicitações',  desc:'Seus pedidos e ajustes',                gradient:'linear-gradient(145deg,#1a1008,#4a2a08,#D4567A)' },
+    { id:'arquivos',     icon:'▤',  label:'Arquivos',      desc:'Arquivos e links compartilhados',       gradient:'linear-gradient(145deg,#1a1408,#4a3a10,#B8860B)' },
+    { id:'info',         icon:'≡',  label:'Informações',   desc:'Documentos e informações',              gradient:'linear-gradient(145deg,#1a0d18,#4a1a45,#8B3A8B)' },
+    { id:'financeiro',   icon:'◈',  label:'Financeiro',    desc:'Cobranças e histórico',                 gradient:'linear-gradient(145deg,#0d1f0d,#1a4a1a,#2E8B57)' },
+    { id:'tarefas',      icon:'✓',  label:'Tarefas',       desc:'Projetos e tarefas em andamento',       gradient:'linear-gradient(145deg,#0d1a1f,#1a4a5a,#1A8FA0)' },
+    { id:'comece',       icon:'🌱', label:'Início',        desc:'Onboarding e boas-vindas',              gradient:'linear-gradient(145deg,#1f1408,#5a3a10,#D4567A)' },
+    { id:'onboarding',   icon:'🌿', label:'Onboarding',    desc:'Guia de materiais e início',            gradient:'linear-gradient(145deg,#0d1f0d,#2a4a1a,#4A8C30)' },
+  ];
+
   // ── CSS ──────────────────────────────────────────────────────────────
   const CSS = `
     /* ── REMOVE SIDEBAR COMPLETAMENTE ── */
@@ -379,7 +394,8 @@
       card.addEventListener('click', e=>{
         const editEl=e.target.closest('[data-edit]');
         if(editEl){
-          _openEdit(editEl.dataset.edit, 'admin');
+          const isAdminCard=card.dataset.admin==='true';
+          _openEdit(editEl.dataset.edit, isAdminCard?'admin':'client');
           return;
         }
         const id=card.dataset.id;
@@ -395,7 +411,7 @@
     const el=document.getElementById('admin-main');
     if(!el)return;
     hideAdminBack();
-    history.replaceState({crm:'grid'},'');
+    try{history.replaceState({crm:'grid'},'');}catch(e){}
     await loadRemoteCovers();
 
     let badges={};
@@ -444,7 +460,7 @@
       {title:'Conteúdo',      ids:['posts','brand','ideias']},
       {title:'Relacionamento',ids:['chat','solicitacoes']},
       {title:'Recursos',      ids:['arquivos','info','financeiro','tarefas']},
-      {title:'Boas-vindas',   ids:['comece']},
+      {title:'Boas-vindas',   ids:['comece','onboarding']},
     ];
 
     wrap.innerHTML=`<div class="nf-home">
@@ -525,7 +541,7 @@
       Admin._nfPatched=true;
       const orig=Admin.tab.bind(Admin);
       Admin.tab=async function(name,...args){
-        history.pushState({crm:'tab',tab:name},'');
+        try{history.pushState({crm:'tab',tab:name},'');}catch(e){}
         showAdminBack();
         return orig(name,...args);
       };
