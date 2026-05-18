@@ -188,20 +188,66 @@
     </div>`;
   }
 
+  function _arquivosListHtml(arqs,email){
+    if(!arqs||!arqs.length)return'<p style="color:var(--muted);text-align:center;padding:24px 0;font-size:12px;font-style:italic;">Nenhum arquivo ainda</p>';
+    return`<div style="display:flex;flex-direction:column;gap:7px;">${arqs.map(a=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);">
+      <span style="font-size:18px;">📄</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:500;color:var(--text);">${a.nome}</div>
+        <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.url}</div>
+      </div>
+      <a href="${a.url}" target="_blank" style="font-size:11px;color:var(--copper);text-decoration:none;padding:4px 10px;border:1px solid rgba(201,162,39,.3);border-radius:7px;white-space:nowrap;">↗ Abrir</a>
+      <button onclick="_FSC.delArquivo(${a.id},'${email}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:4px;" title="Remover">✕</button>
+    </div>`).join('')}</div>`;
+  }
+
+  function _arquivosHtml(arqs,email){
+    return`<div class="fsc-form">
+      <div class="fsc-sec"><span class="fsc-sec-icon">📁</span>Arquivos do Cliente</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input id="fsc-arq-nome" placeholder="Nome do arquivo" class="fsc-in" style="flex:1;"/>
+        <input id="fsc-arq-url" placeholder="https://..." class="fsc-in" style="flex:2;"/>
+        <button class="fsc-btn" onclick="_FSC.addArquivo('${email}')">+ Adicionar</button>
+      </div>
+      <div id="fsc-arq-list">${_arquivosListHtml(arqs,email)}</div>
+    </div>`;
+  }
+
   // API PÚBLICA
   window._FSC={
     async render(email){
       const el=document.getElementById('fsc-container');if(!el)return;
       el.innerHTML='<div style="color:var(--muted);padding:24px;text-align:center;font-size:12px;">Carregando dossiê...</div>';
-      let f={}, p={};
+      let f={}, p={}, arqs=[];
       try{
-        const[r1,r2]=await Promise.all([
+        const[r1,r2,r3]=await Promise.all([
           db.from('clientes_fiscal').select('*').eq('client_email',email).maybeSingle(),
-          db.from('agentes_trabalhos').select('conteudo').eq('agente_id','dossie').eq('aba_id','perfil').eq('client_email',email).eq('data',DOSSIE_DATE).maybeSingle()
+          db.from('agentes_trabalhos').select('conteudo').eq('agente_id','dossie').eq('aba_id','perfil').eq('client_email',email).eq('data',DOSSIE_DATE).maybeSingle(),
+          db.from('arquivos_cliente').select('*').eq('client_email',email).order('created_at',{ascending:false})
         ]);
         f=r1.data||{};p=r2.data?.conteudo||{};
+        arqs=(r3.data||[]).filter(a=>a.nome!=='__metricool__');
       }catch{}
-      el.innerHTML=_form(f,p,email);
+      el.innerHTML=_form(f,p,email)+_arquivosHtml(arqs,email);
+    },
+
+    async addArquivo(email){
+      const nome=document.getElementById('fsc-arq-nome')?.value.trim();
+      const url=document.getElementById('fsc-arq-url')?.value.trim();
+      if(!nome||!url){alert('Preencha nome e URL');return;}
+      await db.from('arquivos_cliente').insert([{client_email:email,nome,url}]);
+      const {data}=await db.from('arquivos_cliente').select('*').eq('client_email',email).order('created_at',{ascending:false});
+      const list=document.getElementById('fsc-arq-list');
+      if(list)list.innerHTML=_arquivosListHtml((data||[]).filter(a=>a.nome!=='__metricool__'),email);
+      const ni=document.getElementById('fsc-arq-nome'),ui=document.getElementById('fsc-arq-url');
+      if(ni)ni.value='';if(ui)ui.value='';
+    },
+
+    async delArquivo(id,email){
+      await db.from('arquivos_cliente').delete().eq('id',id);
+      const {data}=await db.from('arquivos_cliente').select('*').eq('client_email',email).order('created_at',{ascending:false});
+      const list=document.getElementById('fsc-arq-list');
+      if(list)list.innerHTML=_arquivosListHtml((data||[]).filter(a=>a.nome!=='__metricool__'),email);
     },
 
     async save(email){
@@ -245,7 +291,7 @@
   // Não patcha Admin._cliTab — evita interferir no Brand Core e demais abas.
   // O botão Dossiê tem seu próprio onclick completo.
   function _openDossie(){
-    ['feed','posts','arquivos','chat','info','brand','dossie'].forEach(t=>{
+    ['feed','posts','chat','info','brand','dossie'].forEach(t=>{
       const el=document.getElementById('clitab-'+t);if(!el)return;
       el.style.borderBottomColor=t==='dossie'?'var(--copper)':'transparent';
       el.style.color=t==='dossie'?'var(--copper)':(t==='brand'?'var(--brown)':'var(--muted)');

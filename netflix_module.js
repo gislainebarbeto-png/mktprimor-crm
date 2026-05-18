@@ -21,7 +21,6 @@
     { id:'posts',        icon:'▦',  label:'Posts',         desc:'Calendário e gestão de conteúdo',       gradient:'linear-gradient(145deg,#1a0830,#4a1060,#8B2FC9)' },
     { id:'clientes',     icon:'◎',  label:'Clientes',      desc:'Contas e portais dos clientes',          gradient:'linear-gradient(145deg,#0a1628,#1a3a6a,#2E6FD4)' },
     { id:'financeiro',   icon:'◈',  label:'Financeiro',    desc:'Cobranças, vencimentos e status',        gradient:'linear-gradient(145deg,#0d1f0d,#1a4a1a,#2E8B57)' },
-    { id:'arquivos',     icon:'▤',  label:'Arquivos',      desc:'Arquivos e links por cliente',           gradient:'linear-gradient(145deg,#1a1408,#4a3a10,#B8860B)' },
     { id:'automacoes',   icon:'✵',  label:'Automações',    desc:'Posts agendados para automação',         gradient:'linear-gradient(145deg,#0d0d1f,#1a1a5a,#4040C0)' },
     { id:'comece',       icon:'✦',  label:'Comece Aqui',   desc:'Onboarding e boas-vindas',               gradient:'linear-gradient(145deg,#1f1408,#5a3a10,#D4567A)' },
     { id:'lab',          icon:'⊙',  label:'Ideias',        desc:'Banco de ideias e brainstorm',           gradient:'linear-gradient(145deg,#0d1a0d,#2a4a10,#6B8E23)' },
@@ -40,7 +39,7 @@
   // ── SEÇÕES ADMIN ─────────────────────────────────────────────────────
   const ADMIN_SECTIONS = [
     { title:'Visão Geral',       ids:['inicio','posts','relatorio','agentes','comercial'] },
-    { title:'Clientes & Gestão', ids:['clientes','financeiro','arquivos','info','brand','trafego'] },
+    { title:'Clientes & Gestão', ids:['clientes','financeiro','info','brand','trafego'] },
     { title:'Equipe',            ids:['demandas','tarefas','solicitacoes','chat'] },
     { title:'Conteúdo & Mais',   ids:['automacoes','comece','lab'] },
   ];
