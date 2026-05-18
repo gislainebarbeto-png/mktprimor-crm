@@ -651,12 +651,15 @@
   // CHAT
   function _chat(){
     const cliNome=_cliente?(_clientes.find(c=>c.email===_cliente)?.nome||_cliente):'';
-    const hasKey=!!(window.ANTHROPIC_KEY||localStorage.getItem('primor_anthropic_key'));
-    const keyBox=hasKey?'':`<div class="aw2-key-box">
-      <div class="aw2-key-title">🔑 Configurar chave da API Anthropic</div>
-      <input class="aw2-key-in" id="aw2ki" type="password" placeholder="sk-ant-api03-...">
-      <button class="aw2-key-btn" onclick="_AW2.saveKey()">Salvar chave</button>
-      <div class="aw2-key-hint">A chave é salva apenas neste navegador (localStorage). Obtenha em console.anthropic.com → API Keys.</div>
+    const savedKey=window.ANTHROPIC_KEY||localStorage.getItem('primor_anthropic_key')||'';
+    const hasKey=!!savedKey;
+    const keyPreview=hasKey?savedKey.substring(0,18)+'…':'';
+    const keyBox=`<div class="aw2-key-box">
+      <div class="aw2-key-title">🔑 Chave API Anthropic${hasKey?` <span style="font-size:10px;color:#4aab2a;font-weight:400">✓ configurada</span>`:''}</div>
+      ${hasKey?`<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">${keyPreview}</div>`:''}
+      <input class="aw2-key-in" id="aw2ki" type="password" placeholder="sk-ant-api03-..." ${hasKey?'':'required'}>
+      <button class="aw2-key-btn" onclick="_AW2.saveKey()">${hasKey?'Atualizar chave':'Salvar chave'}</button>
+      <div class="aw2-key-hint">Obtenha em console.anthropic.com → API Keys. Salva só neste navegador.</div>
     </div>`;
     const cliBox=!_cliente?`<div style="background:rgba(212,137,106,0.08);border:1px solid rgba(212,137,106,0.3);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
       <div style="font-size:11px;color:#d4896a;font-weight:500;margin-bottom:8px;">👤 Selecione o cliente para eu ter contexto</div>
@@ -757,6 +760,8 @@
         const systemPrompt=await _buildSystemPrompt(_ag.id,_cliente);
         const res=await fetch('https://api.anthropic.com/v1/messages',{
           method:'POST',
+          mode:'cors',
+          credentials:'omit',
           headers:{
             'Content-Type':'application/json',
             'x-api-key':key,
@@ -767,6 +772,11 @@
         });
         const data=await res.json();
         document.getElementById('aw2td')?.remove();
+        if(!res.ok){
+          const errDetail=data.error?.message||`HTTP ${res.status}`;
+          _addMsg('agent',`⚠️ Erro da API: ${errDetail}`);
+          _chatLoad=false;document.getElementById('aw2cs').disabled=false;return;
+        }
         const reply=data.content?.[0]?.text||data.error?.message||'Erro ao processar.';
         _chatHist[_ag.id].push({role:'assistant',content:reply});_addMsg('agent',reply);
       }catch(e){
