@@ -56,7 +56,7 @@
     try{const{data}=await db.from('agentes_trabalhos').select('conteudo').eq('agente_id',_ag.id).eq('aba_id',_aba).eq('client_email',_cliente).eq('data',_data).maybeSingle();return data?.conteudo||fb;}catch{return fb;}
   }
   async function _loadClientes(){
-    try{const{data}=await db.from('clientes').select('email,nome').order('nome');_clientes=data||[];}catch{_clientes=[];}
+    try{const{data}=await db.from('clients').select('email,nome').order('nome');_clientes=data||[];}catch{_clientes=[];}
   }
   async function _loadFiscal(email){
     if(!email){_fiscal={};return;}
@@ -758,7 +758,7 @@
           _chatLoad=false;document.getElementById('aw2cs').disabled=false;return;
         }
         const systemPrompt=await _buildSystemPrompt(_ag.id,_cliente);
-        const model='gemini-1.5-flash';
+        const model='gemini-2.0-flash';
         const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
           method:'POST',
           headers:{'Content-Type':'application/json'},
