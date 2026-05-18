@@ -34,12 +34,13 @@
     { id:'agentes',      icon:'✦',  label:'Agentes IA',    desc:'Automações e agentes inteligentes',      gradient:'linear-gradient(145deg,#0a0a1f,#1a1040,#6030C0)' },
     { id:'tarefas',      icon:'✓',  label:'Tarefas',       desc:'Projetos e kanban da equipe',            gradient:'linear-gradient(145deg,#0d1a1f,#1a4a5a,#1A8FA0)' },
     { id:'brand',        icon:'✦',  label:'Brand Core',    desc:'Identidade e posicionamento da marca',   gradient:'linear-gradient(145deg,#0a1628,#1a3a6a,#2E6FD4)' },
+    { id:'trafego',      icon:'📡', label:'Tráfego',       desc:'Campanhas, análises e relatórios',        gradient:'linear-gradient(145deg,#0f1a0a,#1e3a10,#2d6a1a)' },
   ];
 
   // ── SEÇÕES ADMIN ─────────────────────────────────────────────────────
   const ADMIN_SECTIONS = [
     { title:'Visão Geral',       ids:['inicio','posts','relatorio','agentes','comercial'] },
-    { title:'Clientes & Gestão', ids:['clientes','financeiro','arquivos','info','brand'] },
+    { title:'Clientes & Gestão', ids:['clientes','financeiro','arquivos','info','brand','trafego'] },
     { title:'Equipe',            ids:['demandas','tarefas','solicitacoes','chat'] },
     { title:'Conteúdo & Mais',   ids:['automacoes','comece','lab'] },
   ];

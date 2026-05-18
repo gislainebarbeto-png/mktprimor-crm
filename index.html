@@ -1307,7 +1307,7 @@ const Admin = {
   async tab(name) {
     this.currentTab = name;
     sessionStorage.setItem('adminTab', name);
-    ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','relatorio','comercial','agentes','tarefas','brand'].forEach(t => {
+    ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','relatorio','comercial','agentes','tarefas','brand','trafego'].forEach(t => {
       document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
     });
     document.getElementById('admin-view')?.classList.remove('sidebar-open');
@@ -1335,6 +1335,7 @@ const Admin = {
       if (name === 'agentes')      await this.renderAgentes();
       if (name === 'tarefas')      await this.renderTarefas();
       if (name === 'brand')        await this.renderBrandCoreAdmin();
+      if (name === 'trafego')      await this.renderTrafego();
       // Restore saved scroll for this tab
       const savedScroll = parseInt(sessionStorage.getItem('scroll_' + name)) || 0;
       if (savedScroll) requestAnimationFrame(() => {
@@ -5790,6 +5791,445 @@ const Admin = {
 
   // ── CHAT (ADMIN) ──
   // ── TAREFAS ──
+  // ── GESTÃO DE TRÁFEGO ───────────────────────────────────────────────────
+  async renderTrafego() {
+    const el = document.getElementById('admin-main'); if (!el) return;
+    el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando...</p>';
+    const { data: clients } = await db.from('clients').select('id,nome,empresa,email,foto_url').order('nome');
+    el.innerHTML = `<div style="padding:28px 32px;max-width:980px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+        <span style="font-size:26px;">📡</span>
+        <div>
+          <h2 style="font-size:19px;font-weight:500;color:var(--text);margin:0 0 2px;">Gestão de Tráfego Pago</h2>
+          <p style="font-size:11px;color:var(--muted);margin:0;">Selecione um cliente para gerenciar</p>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--border);margin:18px 0 22px;"></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px;">
+        ${(clients||[]).map(c=>`
+          <div onclick="Admin._trafegoOpen('${c.email.replace(/'/g,"\\'")}','${(c.nome||'').replace(/'/g,"\\'")}')"
+               style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:18px 14px;text-align:center;transition:all .2s;"
+               onmouseover="this.style.borderColor='var(--brown)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
+            ${c.foto_url?`<img src="${c.foto_url}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;margin-bottom:9px;">`
+              :`<div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#2d6a1a,#1e3a10);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#fff;margin:0 auto 9px;">${(c.nome||'?')[0].toUpperCase()}</div>`}
+            <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;">${c.nome}</div>
+            <div style="font-size:11px;color:var(--muted);">${c.empresa||''}</div>
+          </div>`).join('')}
+        ${!(clients||[]).length?'<p style="grid-column:1/-1;color:var(--muted);text-align:center;padding:32px;font-size:13px;">Nenhum cliente cadastrado.</p>':''}
+      </div>
+    </div>`;
+  },
+
+  async _trafegoOpen(email, nome) {
+    window._tf = window._tf||{};
+    window._tf.email = email; window._tf.nome = nome;
+    window._tf.tab = window._tf.tab||'briefing';
+    const el = document.getElementById('admin-main'); if (!el) return;
+    el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando dados...</p>';
+    // Load data from Supabase Storage
+    let data = {briefing:{},onboarding:{checklist:[]},campanhas:[],analises:[],relatorios:[]};
+    try {
+      const {data:blob} = await db.storage.from('posts-media').download(`trafego/${email}/data.json`);
+      if (blob) data = JSON.parse(await blob.text());
+    } catch(e) {}
+    window._tf.data = data;
+    this._trafegoRender();
+  },
+
+  async _trafegoSave() {
+    const tf = window._tf; if (!tf) return;
+    try {
+      const blob = new Blob([JSON.stringify(tf.data)],{type:'application/json'});
+      await db.storage.from('posts-media').upload(`trafego/${tf.email}/data.json`,blob,{upsert:true,contentType:'application/json'});
+    } catch(e) { console.error('Trafego save error',e); }
+  },
+
+  _trafegoRender() {
+    const tf = window._tf; if (!tf) return;
+    const el = document.getElementById('admin-main'); if (!el) return;
+    const tabs = [{k:'briefing',i:'📋',l:'Briefing'},{k:'onboarding',i:'🔧',l:'Onboarding'},{k:'campanhas',i:'🚀',l:'Campanhas'},{k:'analises',i:'📊',l:'Análises'},{k:'relatorios',i:'📄',l:'Relatórios'}];
+    const S = (s)=>`style="${s}"`;
+    el.innerHTML = `<div style="max-width:1000px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:20px 28px 0;">
+        <button onclick="Admin.renderTrafego()" ${S('background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:0;')}> ← Voltar</button>
+        <span style="color:var(--border)">|</span>
+        <span style="font-size:14px;font-weight:500;color:var(--text);">📡 ${tf.nome}</span>
+      </div>
+      <div style="display:flex;gap:0;padding:14px 28px 0;border-bottom:1px solid var(--border);overflow-x:auto;">
+        ${tabs.map(t=>`<button onclick="window._tf.tab='${t.k}';Admin._trafegoRender()" ${S(`padding:9px 16px;border:none;border-bottom:2px solid ${tf.tab===t.k?'var(--brown)':'transparent'};background:none;color:${tf.tab===t.k?'var(--brown)':'var(--muted)'};font-size:12px;cursor:pointer;white-space:nowrap;font-weight:${tf.tab===t.k?'500':'400'};font-family:Poppins,sans-serif;`)}>${t.i} ${t.l}</button>`).join('')}
+      </div>
+      <div style="padding:24px 28px;" id="tf-content"></div>
+    </div>`;
+    this._trafegoTabContent();
+  },
+
+  _trafegoTabContent() {
+    const tf = window._tf; const el = document.getElementById('tf-content'); if (!el||!tf) return;
+    if (tf.tab==='briefing')    this._trafegoTabBriefing(el);
+    if (tf.tab==='onboarding')  this._trafegoTabOnboarding(el);
+    if (tf.tab==='campanhas')   this._trafegoTabCampanhas(el);
+    if (tf.tab==='analises')    this._trafegoTabAnalises(el);
+    if (tf.tab==='relatorios')  this._trafegoTabRelatorios(el);
+  },
+
+  _trafegoTabBriefing(el) {
+    const b = window._tf.data.briefing||{};
+    const plats = ['Meta Ads','Google Ads','TikTok Ads','YouTube Ads','LinkedIn Ads','Pinterest Ads'];
+    el.innerHTML = `<div style="max-width:680px;">
+      <h3 style="font-size:14px;font-weight:500;color:var(--text);margin:0 0 18px;">📋 Briefing da Conta</h3>
+      <div style="display:grid;gap:14px;">
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">OBJETIVO DA CAMPANHA</label>
+          <textarea id="tf-objetivo" rows="2" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:13px;font-family:Poppins,sans-serif;resize:vertical;">${b.objetivo||''}</textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">PRODUTO / SERVIÇO</label>
+            <input id="tf-produto" value="${b.produto||''}" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">ORÇAMENTO MENSAL (R$)</label>
+            <input id="tf-orcamento" type="number" value="${b.orcamento||''}" placeholder="ex: 3000" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+        </div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">PÚBLICO-ALVO</label>
+          <textarea id="tf-publico" rows="2" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:13px;font-family:Poppins,sans-serif;resize:vertical;">${b.publico||''}</textarea></div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:8px;">PLATAFORMAS</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">${plats.map(p=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:20px;"><input type="checkbox" ${(b.plataformas||[]).includes(p)?'checked':''} data-plat="${p}" style="accent-color:var(--brown);"> ${p}</label>`).join('')}</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">META PRINCIPAL (CPA/ROAS/LEADS)</label>
+            <input id="tf-meta" value="${b.meta||''}" placeholder="ex: CPA máx R$40" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">DATA DE INÍCIO</label>
+            <input id="tf-inicio" type="date" value="${b.inicio||''}" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+        </div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">OBSERVAÇÕES / RESTRIÇÕES</label>
+          <textarea id="tf-obs" rows="3" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:13px;font-family:Poppins,sans-serif;resize:vertical;">${b.obs||''}</textarea></div>
+        <button onclick="Admin._trafegoSaveBriefing()" style="padding:11px 28px;background:var(--wine);color:#fff;border:none;border-radius:9px;font-size:13px;cursor:pointer;font-family:Poppins,sans-serif;align-self:start;">Salvar Briefing</button>
+      </div>
+    </div>`;
+  },
+
+  _trafegoSaveBriefing() {
+    const plats=[...document.querySelectorAll('[data-plat]:checked')].map(x=>x.dataset.plat);
+    window._tf.data.briefing = {
+      objetivo: document.getElementById('tf-objetivo')?.value||'',
+      produto:  document.getElementById('tf-produto')?.value||'',
+      orcamento:document.getElementById('tf-orcamento')?.value||'',
+      publico:  document.getElementById('tf-publico')?.value||'',
+      plataformas: plats,
+      meta:     document.getElementById('tf-meta')?.value||'',
+      inicio:   document.getElementById('tf-inicio')?.value||'',
+      obs:      document.getElementById('tf-obs')?.value||'',
+    };
+    this._trafegoSave();
+    const btn = document.querySelector('#tf-content button[onclick*="SaveBriefing"]');
+    if(btn){btn.textContent='✓ Salvo!';setTimeout(()=>{btn.textContent='Salvar Briefing';},1800);}
+  },
+
+  _trafegoTabOnboarding(el) {
+    const defaultItems = [
+      'Acesso ao Business Manager (Meta)','Conta de anúncios criada e verificada','Pixel instalado e testado no site',
+      'Domínio verificado no Meta','Catálogo de produtos configurado (e-commerce)','Públicos personalizados criados',
+      'Públicos semelhantes (lookalike) configurados','UTMs padronizados e documentados',
+      'Google Analytics / GA4 conectado','Google Tag Manager instalado','Conversões rastreadas e testadas',
+      'Conta Google Ads criada','Google Merchant Center configurado (e-commerce)','Conta TikTok Ads criada',
+      'Landing pages revisadas e otimizadas','Materiais criativos aprovados pelo cliente',
+      'Acesso ao Instagram Business concedido','WhatsApp integrado ao CRM/anúncios',
+    ];
+    const saved = window._tf.data.onboarding?.checklist||[];
+    const items = defaultItems.map((label,i)=>({label, done: saved.find(s=>s.label===label)?.done||false}));
+    window._tf.data.onboarding = {checklist: items};
+    const done = items.filter(i=>i.done).length;
+    el.innerHTML = `<div style="max-width:680px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <h3 style="font-size:14px;font-weight:500;color:var(--text);margin:0;">🔧 Checklist de Onboarding</h3>
+        <span style="font-size:12px;color:${done===items.length?'#2E8B57':'var(--muted)'};">${done}/${items.length} concluídos</span>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:4px;height:4px;margin-bottom:18px;overflow:hidden;">
+        <div style="height:100%;width:${Math.round(done/items.length*100)}%;background:linear-gradient(90deg,#2d6a1a,#5aab2a);transition:width .4s;"></div>
+      </div>
+      ${items.map((it,i)=>`
+        <label style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:9px;cursor:pointer;transition:background .15s;margin-bottom:4px;${it.done?'opacity:.6':''}background:var(--surface);border:1px solid var(--border);">
+          <input type="checkbox" ${it.done?'checked':''} onchange="Admin._trafegoToggleCheck(${i},this.checked)" style="accent-color:var(--brown);width:16px;height:16px;flex-shrink:0;">
+          <span style="font-size:13px;color:var(--text);${it.done?'text-decoration:line-through;':''}">${it.label}</span>
+        </label>`).join('')}
+    </div>`;
+  },
+
+  _trafegoToggleCheck(idx,done) {
+    if(window._tf?.data?.onboarding?.checklist?.[idx]!==undefined){
+      window._tf.data.onboarding.checklist[idx].done=done;
+      this._trafegoSave();
+      // re-render progress bar
+      const done2=window._tf.data.onboarding.checklist.filter(i=>i.done).length;
+      const tot=window._tf.data.onboarding.checklist.length;
+      const bar=document.querySelector('#tf-content [style*="height:100%;width:"]');
+      const cnt=document.querySelector('#tf-content span[style*="concluído"]')||document.querySelector('#tf-content span[style*="concluí"]');
+      if(bar)bar.style.width=Math.round(done2/tot*100)+'%';
+      if(cnt){cnt.textContent=`${done2}/${tot} concluídos`;cnt.style.color=done2===tot?'#2E8B57':'var(--muted)';}
+    }
+  },
+
+  _trafegoTabCampanhas(el) {
+    const camps = window._tf.data.campanhas||[];
+    const plats = ['Meta Ads','Google Ads','TikTok Ads','YouTube Ads','LinkedIn Ads','Outros'];
+    const objs  = ['Conversão','Tráfego','Leads','Reconhecimento','Remarketing','Engajamento','Vendas (catálogo)'];
+    const statColors = {ativa:'#2E8B57',pausada:'#B8860B',encerrada:'#888',rascunho:'#4A7CC7'};
+    el.innerHTML = `<div style="max-width:900px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="font-size:14px;font-weight:500;color:var(--text);margin:0;">🚀 Campanhas</h3>
+        <button onclick="Admin._trafegoNewCampanha()" style="padding:9px 18px;background:var(--wine);color:#fff;border:none;border-radius:9px;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;">+ Nova Campanha</button>
+      </div>
+      ${camps.length?`<div style="display:grid;gap:10px;">${camps.map((c,i)=>`
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <span style="font-size:14px;font-weight:500;color:var(--text);">${c.nome}</span>
+                <span style="font-size:10px;padding:2px 9px;border-radius:20px;background:${statColors[c.status]||'#888'}22;color:${statColors[c.status]||'#888'};font-weight:500;">${c.status||'rascunho'}</span>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--muted);">
+                <span>📱 ${c.plataforma||'-'}</span><span>🎯 ${c.objetivo||'-'}</span>
+                ${c.orcamento_diario?`<span>💰 R$${c.orcamento_diario}/dia</span>`:''}
+                ${c.inicio?`<span>📅 ${new Date(c.inicio+'T12:00').toLocaleDateString('pt-BR')}${c.fim?' → '+new Date(c.fim+'T12:00').toLocaleDateString('pt-BR'):''}</span>`:''}
+              </div>
+              ${c.obs?`<p style="font-size:12px;color:var(--muted);margin:8px 0 0;font-style:italic;">${c.obs}</p>`:''}
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+              <button onclick="Admin._trafegoEditCampanha(${i})" style="padding:6px 12px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:7px;font-size:11px;cursor:pointer;">Editar</button>
+              <button onclick="Admin._trafegoDelCampanha(${i})" style="padding:6px 12px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:7px;font-size:11px;cursor:pointer;">✕</button>
+            </div>
+          </div>
+        </div>`).join('')}</div>`
+      :`<div style="text-align:center;padding:48px;color:var(--muted);font-size:13px;background:var(--surface);border:1px dashed var(--border);border-radius:12px;">Nenhuma campanha cadastrada ainda.<br><br><button onclick="Admin._trafegoNewCampanha()" style="padding:9px 20px;background:var(--wine);color:#fff;border:none;border-radius:9px;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;">+ Criar primeira campanha</button></div>`}
+    </div>`;
+  },
+
+  _trafegoNewCampanha() { this._trafegoEditCampanha(null); },
+  _trafegoEditCampanha(idx) {
+    const camps = window._tf.data.campanhas||[];
+    const c = idx!==null ? (camps[idx]||{}) : {};
+    const plats = ['Meta Ads','Google Ads','TikTok Ads','YouTube Ads','LinkedIn Ads','Outros'];
+    const objs  = ['Conversão','Tráfego','Leads','Reconhecimento','Remarketing','Engajamento','Vendas (catálogo)'];
+    const stats = ['rascunho','ativa','pausada','encerrada'];
+    const modal = document.createElement('div');
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+    modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;">
+      <h3 style="font-size:14px;font-weight:500;color:var(--text);margin:0 0 18px;">${idx===null?'Nova Campanha':'Editar Campanha'}</h3>
+      <div style="display:grid;gap:12px;">
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">NOME DA CAMPANHA *</label>
+          <input id="tfc-nome" value="${c.nome||''}" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">PLATAFORMA</label>
+            <select id="tfc-plat" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;">
+              ${plats.map(p=>`<option${c.plataforma===p?' selected':''}>${p}</option>`).join('')}</select></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">OBJETIVO</label>
+            <select id="tfc-obj" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;">
+              ${objs.map(o=>`<option${c.objetivo===o?' selected':''}>${o}</option>`).join('')}</select></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">ORÇAMENTO DIÁRIO (R$)</label>
+            <input id="tfc-orc" type="number" value="${c.orcamento_diario||''}" placeholder="ex: 100" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">STATUS</label>
+            <select id="tfc-status" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;">
+              ${stats.map(s=>`<option${c.status===s?' selected':''}>${s}</option>`).join('')}</select></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">INÍCIO</label>
+            <input id="tfc-ini" type="date" value="${c.inicio||''}" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">FIM</label>
+            <input id="tfc-fim" type="date" value="${c.fim||''}" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+        </div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">OBSERVAÇÕES</label>
+          <textarea id="tfc-obs" rows="2" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;font-family:Poppins,sans-serif;resize:vertical;">${c.obs||''}</textarea></div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button onclick="Admin._trafegoSaveCampanha(${idx===null?'null':idx})" style="flex:1;padding:10px;background:var(--wine);color:#fff;border:none;border-radius:9px;font-size:13px;cursor:pointer;font-family:Poppins,sans-serif;">Salvar</button>
+          <button onclick="this.closest('[style*=fixed]').remove()" style="padding:10px 18px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:9px;font-size:13px;cursor:pointer;">Cancelar</button>
+        </div>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  },
+
+  _trafegoSaveCampanha(idx) {
+    const nome = document.getElementById('tfc-nome')?.value.trim();
+    if (!nome) { alert('Digite o nome da campanha.'); return; }
+    const c = {
+      nome, plataforma: document.getElementById('tfc-plat')?.value,
+      objetivo: document.getElementById('tfc-obj')?.value,
+      orcamento_diario: document.getElementById('tfc-orc')?.value||'',
+      status: document.getElementById('tfc-status')?.value,
+      inicio: document.getElementById('tfc-ini')?.value||'',
+      fim: document.getElementById('tfc-fim')?.value||'',
+      obs: document.getElementById('tfc-obs')?.value||'',
+    };
+    if (!window._tf.data.campanhas) window._tf.data.campanhas=[];
+    if (idx===null) window._tf.data.campanhas.push(c);
+    else window._tf.data.campanhas[idx]=c;
+    this._trafegoSave();
+    document.querySelector('[style*="position:fixed"][style*="inset:0"][style*="9999"]')?.remove();
+    window._tf.tab='campanhas'; this._trafegoRender();
+  },
+
+  _trafegoDelCampanha(idx) {
+    if (!confirm('Excluir esta campanha?')) return;
+    window._tf.data.campanhas.splice(idx,1);
+    this._trafegoSave();
+    window._tf.tab='campanhas'; this._trafegoRender();
+  },
+
+  _trafegoTabAnalises(el) {
+    const analises = window._tf.data.analises||[];
+    el.innerHTML = `<div style="max-width:900px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="font-size:14px;font-weight:500;color:var(--text);margin:0;">📊 Análises de Performance</h3>
+        <button onclick="Admin._trafegoNewAnalise()" style="padding:9px 18px;background:var(--wine);color:#fff;border:none;border-radius:9px;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;">+ Nova Análise</button>
+      </div>
+      ${analises.length?`<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="border-bottom:2px solid var(--border);">
+          ${['Mês','Plataforma','Invest.','Alcance','Impressões','Cliques','CTR','CPC','Conversões','CPA','ROAS',''].map(h=>`<th style="padding:8px 10px;text-align:left;color:var(--muted);font-weight:500;white-space:nowrap;">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody>${analises.map((a,i)=>`<tr style="border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--beige)'" onmouseout="this.style.background=''">
+          <td style="padding:10px;font-weight:500;color:var(--text);">${a.mes||'-'}</td>
+          <td style="padding:10px;color:var(--text);">${a.plataforma||'-'}</td>
+          <td style="padding:10px;color:var(--text);">R$${a.investimento||0}</td>
+          <td style="padding:10px;color:var(--muted);">${Number(a.alcance||0).toLocaleString('pt-BR')}</td>
+          <td style="padding:10px;color:var(--muted);">${Number(a.impressoes||0).toLocaleString('pt-BR')}</td>
+          <td style="padding:10px;color:var(--muted);">${Number(a.cliques||0).toLocaleString('pt-BR')}</td>
+          <td style="padding:10px;color:${a.ctr>=2?'#2E8B57':'var(--text)'};">${a.ctr||0}%</td>
+          <td style="padding:10px;">R$${a.cpc||0}</td>
+          <td style="padding:10px;font-weight:500;color:var(--brown);">${a.conversoes||0}</td>
+          <td style="padding:10px;">R$${a.cpa||0}</td>
+          <td style="padding:10px;font-weight:500;color:${a.roas>=3?'#2E8B57':a.roas>=1.5?'var(--brown)':'#C62828'};">${a.roas||0}x</td>
+          <td style="padding:10px;"><button onclick="Admin._trafegoDelAnalise(${i})" style="border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;">✕</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`
+      :`<div style="text-align:center;padding:48px;color:var(--muted);font-size:13px;background:var(--surface);border:1px dashed var(--border);border-radius:12px;">Nenhuma análise registrada.<br><br><button onclick="Admin._trafegoNewAnalise()" style="padding:9px 20px;background:var(--wine);color:#fff;border:none;border-radius:9px;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;">+ Adicionar análise</button></div>`}
+    </div>`;
+  },
+
+  _trafegoNewAnalise() {
+    const plats = ['Meta Ads','Google Ads','TikTok Ads','YouTube Ads','LinkedIn Ads','Outros'];
+    const modal = document.createElement('div');
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+    modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;">
+      <h3 style="font-size:14px;font-weight:500;color:var(--text);margin:0 0 18px;">Nova Análise de Performance</h3>
+      <div style="display:grid;gap:11px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">MÊS (AAAA-MM)</label>
+            <input id="tfa-mes" placeholder="ex: 2026-05" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">PLATAFORMA</label>
+            <select id="tfa-plat" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;">
+              ${plats.map(p=>`<option>${p}</option>`).join('')}</select></div>
+        </div>
+        ${[['tfa-inv','INVESTIMENTO (R$)','number'],['tfa-alc','ALCANCE','number'],['tfa-imp','IMPRESSÕES','number'],['tfa-cli','CLIQUES','number']].map(([id,lbl,type])=>`
+        <div style="display:inline-block;width:calc(50% - 5px);box-sizing:border-box;${['tfa-alc','tfa-cli'].includes(id)?'margin-left:10px':''}"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">${lbl}</label>
+          <input id="${id}" type="${type}" placeholder="0" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;"></div>`).join('')}
+        ${[['tfa-ctr','CTR (%)'],['tfa-cpc','CPC (R$)'],['tfa-conv','CONVERSÕES'],['tfa-cpa','CPA (R$)'],['tfa-roas','ROAS (x)']].map(([id,lbl])=>`
+        <div style="display:inline-block;width:calc(50% - 5px);box-sizing:border-box;${['tfa-cpc','tfa-cpa'].includes(id)?'margin-left:10px':''}"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">${lbl}</label>
+          <input id="${id}" type="number" step="0.01" placeholder="0" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;"></div>`).join('')}
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <button onclick="Admin._trafegoSaveAnalise()" style="flex:1;padding:10px;background:var(--wine);color:#fff;border:none;border-radius:9px;font-size:13px;cursor:pointer;font-family:Poppins,sans-serif;">Salvar</button>
+          <button onclick="this.closest('[style*=fixed]').remove()" style="padding:10px 18px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:9px;font-size:13px;cursor:pointer;">Cancelar</button>
+        </div>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  },
+
+  _trafegoSaveAnalise() {
+    const g = id => parseFloat(document.getElementById(id)?.value)||0;
+    const a = {
+      mes: document.getElementById('tfa-mes')?.value||'',
+      plataforma: document.getElementById('tfa-plat')?.value||'',
+      investimento:g('tfa-inv'), alcance:g('tfa-alc'), impressoes:g('tfa-imp'),
+      cliques:g('tfa-cli'), ctr:g('tfa-ctr'), cpc:g('tfa-cpc'),
+      conversoes:g('tfa-conv'), cpa:g('tfa-cpa'), roas:g('tfa-roas'),
+    };
+    if (!a.mes) { alert('Informe o mês.'); return; }
+    if (!window._tf.data.analises) window._tf.data.analises=[];
+    window._tf.data.analises.unshift(a);
+    this._trafegoSave();
+    document.querySelector('[style*="position:fixed"][style*="inset:0"][style*="9999"]')?.remove();
+    window._tf.tab='analises'; this._trafegoRender();
+  },
+
+  _trafegoDelAnalise(idx) {
+    if (!confirm('Excluir esta análise?')) return;
+    window._tf.data.analises.splice(idx,1);
+    this._trafegoSave();
+    window._tf.tab='analises'; this._trafegoRender();
+  },
+
+  _trafegoTabRelatorios(el) {
+    const rels = window._tf.data.relatorios||[];
+    el.innerHTML = `<div style="max-width:760px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="font-size:14px;font-weight:500;color:var(--text);margin:0;">📄 Relatórios</h3>
+        <button onclick="Admin._trafegoNewRel()" style="padding:9px 18px;background:var(--wine);color:#fff;border:none;border-radius:9px;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;">+ Novo Relatório</button>
+      </div>
+      ${rels.length?`<div style="display:grid;gap:10px;">${rels.map((r,i)=>`
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;align-items:flex-start;gap:14px;">
+          <div style="width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--wine),var(--rose));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📄</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px;">${r.titulo}</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">${r.mes||''} ${r.created_at?'· '+new Date(r.created_at).toLocaleDateString('pt-BR'):''}</div>
+            ${r.obs?`<p style="font-size:12px;color:var(--muted);margin:0 0 8px;font-style:italic;">${r.obs}</p>`:''}
+            ${r.link?`<a href="${r.link}" target="_blank" style="font-size:12px;color:var(--brown);text-decoration:none;">🔗 Abrir relatório →</a>`:''}
+          </div>
+          <button onclick="Admin._trafegoDelRel(${i})" style="border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;flex-shrink:0;padding:4px;">✕</button>
+        </div>`).join('')}</div>`
+      :`<div style="text-align:center;padding:48px;color:var(--muted);font-size:13px;background:var(--surface);border:1px dashed var(--border);border-radius:12px;">Nenhum relatório adicionado.<br><br><button onclick="Admin._trafegoNewRel()" style="padding:9px 20px;background:var(--wine);color:#fff;border:none;border-radius:9px;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;">+ Adicionar relatório</button></div>`}
+    </div>`;
+  },
+
+  _trafegoNewRel() {
+    const modal = document.createElement('div');
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+    modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;width:100%;max-width:440px;">
+      <h3 style="font-size:14px;font-weight:500;color:var(--text);margin:0 0 18px;">Novo Relatório</h3>
+      <div style="display:grid;gap:12px;">
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">TÍTULO *</label>
+          <input id="tfr-titulo" placeholder="ex: Relatório Maio 2026" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">MÊS REFERÊNCIA</label>
+            <input id="tfr-mes" placeholder="ex: Maio 2026" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">DATA</label>
+            <input id="tfr-data" type="date" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+        </div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">LINK (Google Drive, etc.)</label>
+          <input id="tfr-link" type="url" placeholder="https://..." style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;"></div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">OBSERVAÇÕES</label>
+          <textarea id="tfr-obs" rows="2" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;font-family:Poppins,sans-serif;resize:vertical;"></textarea></div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button onclick="Admin._trafegoSaveRel()" style="flex:1;padding:10px;background:var(--wine);color:#fff;border:none;border-radius:9px;font-size:13px;cursor:pointer;font-family:Poppins,sans-serif;">Salvar</button>
+          <button onclick="this.closest('[style*=fixed]').remove()" style="padding:10px 18px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:9px;font-size:13px;cursor:pointer;">Cancelar</button>
+        </div>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  },
+
+  _trafegoSaveRel() {
+    const titulo = document.getElementById('tfr-titulo')?.value.trim();
+    if (!titulo) { alert('Digite o título.'); return; }
+    const r = {
+      titulo, mes: document.getElementById('tfr-mes')?.value||'',
+      link: document.getElementById('tfr-link')?.value.trim()||'',
+      obs: document.getElementById('tfr-obs')?.value||'',
+      created_at: document.getElementById('tfr-data')?.value||new Date().toISOString().split('T')[0],
+    };
+    if (!window._tf.data.relatorios) window._tf.data.relatorios=[];
+    window._tf.data.relatorios.unshift(r);
+    this._trafegoSave();
+    document.querySelector('[style*="position:fixed"][style*="inset:0"][style*="9999"]')?.remove();
+    window._tf.tab='relatorios'; this._trafegoRender();
+  },
+
+  _trafegoDelRel(idx) {
+    if (!confirm('Excluir este relatório?')) return;
+    window._tf.data.relatorios.splice(idx,1);
+    this._trafegoSave();
+    window._tf.tab='relatorios'; this._trafegoRender();
+  },
+
   _tarefaId: null,
   _projetoId: null,
   _clientes: [],
@@ -9077,7 +9517,7 @@ document.addEventListener('keydown', e => {
 
   document.addEventListener('DOMContentLoaded', () => RichEditor.init());
 </script>
-<script src="netflix_module.js?v=20260518d"></script>
+<script src="netflix_module.js?v=20260518e"></script>
 <script src="theme_module.js?v=20260517d"></script>
 <script src="dashboard_module.js?v=20260517c"></script>
 <script src="relatorio_equipe_module.js?v=20260517"></script>
