@@ -243,7 +243,7 @@
     .aw2-chip{font-size:10px;color:var(--muted);background:transparent;padding:2px 8px;border-radius:20px;border:1px solid var(--border);}
     .aw2-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
     .aw2-back{background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;padding:6px 12px;transition:all .18s;}.aw2-back:hover{background:var(--beige);border-color:var(--accent);}
-    .aw2-ctx{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;}
+    .aw2-ctx{background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;}
     .aw2-cg2{display:flex;flex-direction:column;gap:3px;flex:1;min-width:130px;}
     .aw2-cl{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
     .aw2-sel,.aw2-di{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text);outline:none;width:100%;}.aw2-sel:focus,.aw2-di:focus{border-color:var(--accent);}
@@ -359,12 +359,15 @@
 
   function _ws(){
     const ab=_aba||_ag.abas[0];
+    const cliNomeWs=_cliente?(_clientes.find(c=>c.email===_cliente)?.nome||_cliente):'';
     document.getElementById('admin-main').innerHTML=`<div style="padding:20px 0">
       <div class="aw2-top">
         <button class="aw2-back" onclick="_AW2.goHub()">← Equipe</button>
         <div class="aw2-av ${_ag.tipo}" style="width:36px;height:36px;font-size:14px">${_ag.iniciais}</div>
-        <div><div style="font-size:16px;font-weight:500;color:var(--brown)">${_ag.nome}</div>
-             <div style="font-size:10px;color:var(--muted)">${_ag.cargo}</div></div>
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:500;color:var(--brown)">${_ag.nome}</div>
+          <div style="font-size:10px;color:var(--muted)">${_ag.cargo}${cliNomeWs?` · <span style="color:var(--accent)">👤 ${cliNomeWs}</span>`:' · <span style="color:#d4896a">⚠ Selecione um cliente abaixo</span>'}</div>
+        </div>
       </div>
       ${_ctx()}
       <div class="aw2-tabs">${_ag.abas.map(t=>`<div class="aw2-tab ${t===ab?'active':''}" onclick="_AW2.tab('${t}')">${_ag.labels[t]}</div>`).join('')}</div>
@@ -647,7 +650,7 @@
 
   // CHAT
   function _chat(){
-    const cliNome=_cliente?(_clientes.find(c=>c.email===_cliente)?.nome||_cliente):'sem cliente';
+    const cliNome=_cliente?(_clientes.find(c=>c.email===_cliente)?.nome||_cliente):'';
     const hasKey=!!(window.ANTHROPIC_KEY||localStorage.getItem('primor_anthropic_key'));
     const keyBox=hasKey?'':`<div class="aw2-key-box">
       <div class="aw2-key-title">🔑 Configurar chave da API Anthropic</div>
@@ -655,17 +658,25 @@
       <button class="aw2-key-btn" onclick="_AW2.saveKey()">Salvar chave</button>
       <div class="aw2-key-hint">A chave é salva apenas neste navegador (localStorage). Obtenha em console.anthropic.com → API Keys.</div>
     </div>`;
+    const cliBox=!_cliente?`<div style="background:rgba(212,137,106,0.08);border:1px solid rgba(212,137,106,0.3);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+      <div style="font-size:11px;color:#d4896a;font-weight:500;margin-bottom:8px;">👤 Selecione o cliente para eu ter contexto</div>
+      <select class="aw2-sel" onchange="_AW2.setCli(this.value)" style="width:100%;">
+        <option value="">— Selecionar cliente —</option>
+        ${_clientes.map(c=>`<option value="${c.email}">${c.nome||c.email}</option>`).join('')}
+      </select>
+    </div>`:'';
     return `<div class="aw2-chat">
       <div class="aw2-cb" id="aw2msgs">
         ${keyBox}
+        ${cliBox}
         <div class="aw2-intro">
           <strong style="font-size:14px;color:var(--text);display:block;margin-bottom:3px">✦ ${_ag.nome}</strong>
-          <span style="font-size:12px;color:var(--muted)">${_ag.cargo} · ${cliNome}</span><br>
-          <span style="font-size:11px;color:var(--muted)">${hasKey?'Pronta para receber sua tarefa.':'Configure a chave acima para começar.'}</span>
+          <span style="font-size:12px;color:var(--muted)">${_ag.cargo}${cliNome?` · 👤 ${cliNome}`:''}</span><br>
+          <span style="font-size:11px;color:var(--muted)">${hasKey?(cliNome?'Pronta para receber sua tarefa.':'Selecione um cliente acima para contexto completo.'):'Configure a chave acima para começar.'}</span>
         </div>
       </div>
       <div class="aw2-cf">
-        <textarea class="aw2-ci2" id="aw2ci" rows="1" placeholder="Digite sua tarefa..."
+        <textarea class="aw2-ci2" id="aw2ci" rows="1" placeholder="Digite sua tarefa ou pergunta..."
           onkeydown="_AW2.chatKey(event)" oninput="_AW2.chatRes(this)"></textarea>
         <button class="aw2-cs" id="aw2cs" onclick="_AW2.chatSend()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="#FAF8F2"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
@@ -752,13 +763,19 @@
             'anthropic-version':'2023-06-01',
             'anthropic-dangerous-direct-browser-access':'true'
           },
-          body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:systemPrompt,messages:_chatHist[_ag.id]})
+          body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,system:systemPrompt,messages:_chatHist[_ag.id]})
         });
         const data=await res.json();
         document.getElementById('aw2td')?.remove();
         const reply=data.content?.[0]?.text||data.error?.message||'Erro ao processar.';
         _chatHist[_ag.id].push({role:'assistant',content:reply});_addMsg('agent',reply);
-      }catch(e){document.getElementById('aw2td')?.remove();_addMsg('agent','Erro de conexão: '+e.message);}
+      }catch(e){
+        document.getElementById('aw2td')?.remove();
+        const isCORS=e.message==='Failed to fetch'||e.name==='TypeError';
+        _addMsg('agent',isCORS
+          ?'⚠️ Erro de rede/CORS — o navegador bloqueou a chamada à API. Verifique se a chave API (sk-ant-...) está salva corretamente e tente recarregar a página.'
+          :'Erro: '+e.message);
+      }
       _chatLoad=false;document.getElementById('aw2cs').disabled=false;document.getElementById('aw2ci')?.focus();
     }
   };
