@@ -72,8 +72,10 @@
 
     const cliNome=_clientes.find(c=>c.email===clienteEmail)?.nome||clienteEmail;
 
-    const [onb,brief,posts,demandas,metricas,conceito,plan,briefV,revis,lancs,perfil]=await Promise.all([
-      // Onboarding Pedro — base estratégica de qualquer agente
+    const [dossie,onb,brief,posts,demandas,metricas,conceito,plan,briefV,revis,lancs,perfil]=await Promise.all([
+      // Dossiê completo do cliente (fonte primária — salvo na aba Dossiê)
+      db.from('agentes_trabalhos').select('conteudo').eq('agente_id','dossie').eq('aba_id','perfil').eq('client_email',clienteEmail).eq('data','2099-12-31').maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
+      // Onboarding Pedro (complementar)
       db.from('agentes_trabalhos').select('conteudo').eq('agente_id','pedro').eq('aba_id','onboarding').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
       // Briefing mensal Pedro → Chloe
       db.from('agentes_trabalhos').select('conteudo').eq('agente_id','pedro').eq('aba_id','briefing').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
@@ -83,7 +85,7 @@
       db.from('demandas').select('titulo,status,prazo,membro').neq('status','concluída').order('prazo',{ascending:true}).limit(5).then(r=>r.data||[]).catch(()=>[]),
       // Métricas dos últimos 3 meses
       db.from('metricas').select('mes,seguidores,alcance,impressoes,engajamento').eq('client_email',clienteEmail).order('mes',{ascending:false}).limit(3).then(r=>r.data||[]).catch(()=>[]),
-      // Conceito visual Gabi
+      // Conceito visual Gabi (aba de trabalho)
       db.from('agentes_trabalhos').select('conteudo').eq('agente_id','gabi').eq('aba_id','conceito').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
       // Planejamento editorial Chloe
       db.from('agentes_trabalhos').select('conteudo').eq('agente_id','chloe').eq('aba_id','planejamento').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
@@ -93,26 +95,71 @@
       db.from('barbeto_revisoes').select('agente,entrega,status').eq('status','pendente').order('created_at',{ascending:false}).limit(4).then(r=>r.data||[]).catch(()=>[]),
       // Lançamentos financeiros recentes
       db.from('elvira_lancamentos').select('data,tipo,descricao,valor').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(5).then(r=>r.data||[]).catch(()=>[]),
-      // Perfil do cliente
+      // Perfil básico (tabela clients)
       db.from('clients').select('nome,empresa,instagram').eq('email',clienteEmail).maybeSingle().then(r=>r.data||{}).catch(()=>({})),
     ]);
 
-    let ctx=`\n\n━━━ CONTEXTO DO CLIENTE ━━━`;
-    ctx+=`\nCliente: ${perfil.nome||cliNome}${perfil.empresa?` · ${perfil.empresa}`:''}${perfil.instagram?` · @${perfil.instagram}`:''}`;
-    ctx+=`\nData: ${hoje}\n`;
+    // ── Cabeçalho ──────────────────────────────────────────────────────
+    let ctx=`\n\n━━━ DOSSIÊ DO CLIENTE ━━━`;
+    ctx+=`\nCliente: ${perfil.nome||cliNome}${perfil.empresa?` · ${perfil.empresa}`:''}`;
+    const ig=dossie.instagram||perfil.instagram;
+    if(ig) ctx+=` · @${ig}`;
+    ctx+=`\nData de hoje: ${hoje}\n`;
 
-    if(_fiscal?.cnpj||_fiscal?.razao_social)
-      ctx+=`\nFiscal: ${_fiscal.razao_social||''} · CNPJ ${_fiscal.cnpj||'N/A'} · ${_fiscal.regime_tributario||''} · R$${_fiscal.valor_mensal||'?'}/mês · venc. dia ${_fiscal.dia_vencimento||'?'}`;
-
-    if(onb.nicho||onb.persona||onb.posicionamento){
-      ctx+=`\n\nBase estratégica:`;
-      if(onb.contrato)       ctx+=`\n• Contrato: ${onb.contrato}`;
-      if(onb.nicho)          ctx+=`\n• Nicho: ${onb.nicho}${onb.subnicho?' · Sub: '+onb.subnicho:''}`;
-      if(onb.persona)        ctx+=`\n• Persona: ${onb.persona}`;
-      if(onb.posicionamento) ctx+=`\n• Posicionamento: ${onb.posicionamento}`;
-      if(onb.arcos)          ctx+=`\n• Arcos editoriais: ${onb.arcos}`;
+    // ── Fiscal (da tabela clientes_fiscal via _fiscal) ──────────────
+    if(_fiscal?.cnpj||_fiscal?.razao_social){
+      ctx+=`\nDados fiscais: ${_fiscal.razao_social||''} · CNPJ ${_fiscal.cnpj||'N/A'}`;
+      if(_fiscal.regime_tributario) ctx+=` · ${_fiscal.regime_tributario}`;
+      if(_fiscal.valor_mensal) ctx+=` · R$${_fiscal.valor_mensal}/mês`;
+      if(_fiscal.dia_vencimento) ctx+=` · venc. dia ${_fiscal.dia_vencimento}`;
+      if(_fiscal.contrato_inicio) ctx+=` · contrato desde ${_fiscal.contrato_inicio}`;
     }
 
+    // ── Dossiê principal (fonte primária) ──────────────────────────
+    const nicho=dossie.nicho||onb.nicho;
+    const persona=dossie.persona||onb.persona;
+    const posicionamento=dossie.posicionamento||onb.posicionamento;
+
+    if(nicho||persona||posicionamento){
+      ctx+=`\n\nPerfil estratégico:`;
+      if(nicho)         ctx+=`\n• Nicho: ${nicho}${(dossie.subnicho||onb.subnicho)?' · Sub: '+(dossie.subnicho||onb.subnicho):''}`;
+      if(dossie.tom_voz)ctx+=`\n• Tom de voz: ${dossie.tom_voz}`;
+      if(dossie.objetivo)ctx+=`\n• Objetivo: ${dossie.objetivo}`;
+      if(persona)       ctx+=`\n• Persona: ${persona}`;
+      if(posicionamento)ctx+=`\n• Posicionamento: ${posicionamento}`;
+      if(dossie.diferenciais) ctx+=`\n• Diferenciais: ${dossie.diferenciais}`;
+      if(dossie.concorrentes) ctx+=`\n• Concorrentes: ${dossie.concorrentes}`;
+      const arcos=dossie.arcos||onb.arcos;
+      if(arcos)         ctx+=`\n• Arcos editoriais: ${arcos}`;
+    }
+
+    // ── Redes sociais ──────────────────────────────────────────────
+    const redes=[dossie.instagram&&`IG:@${dossie.instagram}`,dossie.tiktok&&`TT:@${dossie.tiktok}`,dossie.youtube&&`YT:${dossie.youtube}`,dossie.facebook&&`FB:${dossie.facebook}`,dossie.site&&`Site:${dossie.site}`].filter(Boolean);
+    if(redes.length) ctx+=`\n• Redes: ${redes.join(' · ')}`;
+
+    // ── Serviços contratados ───────────────────────────────────────
+    if(dossie.servicos?.length){
+      ctx+=`\n\nServiços contratados: ${dossie.servicos.join(', ')}`;
+      if(dossie.qtd_posts) ctx+=`\n• ${dossie.qtd_posts} posts/mês`;
+      if(dossie.plataformas) ctx+=` · ${dossie.plataformas}`;
+    }
+
+    // ── Identidade visual (dossie > gabi/conceito) ─────────────────
+    const paleta=dossie.paleta||conceito.paleta;
+    const fontes=dossie.fontes||conceito.fontes;
+    const estetica=dossie.estetica||conceito.estetica;
+    if(paleta||estetica){
+      ctx+=`\n\nIdentidade visual:`;
+      if(paleta)  ctx+=`\n• Paleta: ${paleta}`;
+      if(fontes)  ctx+=`\n• Fontes: ${fontes}`;
+      if(estetica)ctx+=`\n• Estética: ${estetica}`;
+      const elem=dossie.elementos||conceito.elementos;
+      if(elem)    ctx+=`\n• Elementos: ${elem}`;
+      const nunca=dossie.nunca||conceito.nunca;
+      if(nunca)   ctx+=`\n• ⚠ NUNCA: ${nunca}`;
+    }
+
+    // ── Briefing mensal Pedro ──────────────────────────────────────
     if(brief.foco||brief.bom){
       ctx+=`\n\nBriefing mensal (Pedro):`;
       if(brief.bom)      ctx+=`\n• Performou bem: ${brief.bom}`;
@@ -121,16 +168,19 @@
       if(brief.campanha) ctx+=`\n• Campanha: ${brief.campanha}`;
     }
 
+    // ── Métricas recentes ──────────────────────────────────────────
     if(metricas.length){
       ctx+=`\n\nMétricas recentes:`;
       metricas.forEach(m=>ctx+=`\n• ${m.mes}: ${m.seguidores||'—'} seguidores · alcance ${m.alcance||'—'} · eng ${m.engajamento||'—'}%`);
     }
 
+    // ── Posts em produção ──────────────────────────────────────────
     if(posts.length){
       ctx+=`\n\nPosts em produção (${posts.length}):`;
       posts.forEach(p=>ctx+=`\n• [${p.status}] ${p.tema_titulo||'sem título'} · ${p.tipo||''} · ${p.data_post||''}`);
     }
 
+    // ── Planejamento Chloe ─────────────────────────────────────────
     if(plan.linha||plan.gancho){
       ctx+=`\n\nPlanejamento editorial (Chloe):`;
       if(plan.linha)  ctx+=`\n• Linha: ${plan.linha}`;
@@ -139,37 +189,34 @@
         ctx+=`\n• Qtd: ${plan.qtd_feed||0} feed · ${plan.qtd_car||0} carrossel · ${plan.qtd_reels||0} reels`;
     }
 
-    if(conceito.paleta||conceito.estetica){
-      ctx+=`\n\nIdentidade visual (Gabi):`;
-      if(conceito.paleta)    ctx+=`\n• Paleta: ${conceito.paleta}`;
-      if(conceito.fontes)    ctx+=`\n• Fontes: ${conceito.fontes}`;
-      if(conceito.estetica)  ctx+=`\n• Estética: ${conceito.estetica}`;
-      if(conceito.elementos) ctx+=`\n• Elementos: ${conceito.elementos}`;
-      if(conceito.nunca)     ctx+=`\n• NUNCA: ${conceito.nunca}`;
-    }
-
+    // ── Briefing visual Chloe → Gabi ───────────────────────────────
     if(briefV.titulo&&agente_id==='gabi'){
-      ctx+=`\n\nBriefing visual mais recente (Chloe):`;
+      ctx+=`\n\nBriefing visual mais recente:`;
       if(briefV.titulo)      ctx+=`\n• Post: ${briefV.titulo} · ${briefV.formato||''}`;
       if(briefV.tom)         ctx+=`\n• Tom: ${briefV.tom}`;
       if(briefV.elementos)   ctx+=`\n• Elementos: ${briefV.elementos}`;
       if(briefV.referencias) ctx+=`\n• Refs: ${briefV.referencias}`;
     }
 
+    // ── Demandas abertas ───────────────────────────────────────────
     if(demandas.length){
       ctx+=`\n\nDemandas abertas:`;
       demandas.forEach(d=>ctx+=`\n• ${d.titulo} [${d.status}]${d.prazo?' · prazo '+d.prazo:''}${d.membro?' · '+d.membro:''}`);
     }
 
+    // ── Revisões pendentes ─────────────────────────────────────────
     if(revis.length){
       ctx+=`\n\nRevisões pendentes (Barbeto):`;
       revis.forEach(r=>ctx+=`\n• ${r.agente}: ${(r.entrega||'').substring(0,80)}`);
     }
 
+    // ── Lançamentos Elvira ─────────────────────────────────────────
     if(lancs.length&&agente_id==='elvira'){
       ctx+=`\n\nÚltimos lançamentos:`;
       lancs.forEach(l=>ctx+=`\n• ${l.data||''} · ${l.tipo} · ${l.descricao||''} · R$${l.valor||0}`);
     }
+
+    if(dossie.obs_gerais) ctx+=`\n\nObs: ${dossie.obs_gerais}`;
 
     ctx+=`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
     return base+ctx;
