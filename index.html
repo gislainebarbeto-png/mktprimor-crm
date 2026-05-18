@@ -1307,7 +1307,7 @@ const Admin = {
   async tab(name) {
     this.currentTab = name;
     sessionStorage.setItem('adminTab', name);
-    ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','relatorio','comercial','agentes','tarefas'].forEach(t => {
+    ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','relatorio','comercial','agentes','tarefas','brand'].forEach(t => {
       document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
     });
     document.getElementById('admin-view')?.classList.remove('sidebar-open');
@@ -1334,6 +1334,7 @@ const Admin = {
       if (name === 'comercial')    await this.renderComercial();
       if (name === 'agentes')      await this.renderAgentes();
       if (name === 'tarefas')      await this.renderTarefas();
+      if (name === 'brand')        await this.renderBrandCoreTab();
       // Restore saved scroll for this tab
       const savedScroll = parseInt(sessionStorage.getItem('scroll_' + name)) || 0;
       if (savedScroll) requestAnimationFrame(() => {
