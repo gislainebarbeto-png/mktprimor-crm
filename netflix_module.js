@@ -372,8 +372,7 @@
     const bgStyle=cover
       ?`background-image:url('${cover}');background-size:cover;background-position:center;`
       :`${mod.gradient};`;
-    const editBtn=isAdmin
-      ?`<div class="nf-card-edit" data-edit="${mod.id}">✎ Capa</div>`:'';
+    const editBtn=`<div class="nf-card-edit" data-edit="${mod.id}">✎ Capa</div>`;
     const badgeHtml=badge?`<div class="nf-card-badge">${badge}</div>`:'';
     return `<div class="nf-card" data-id="${mod.id}" data-admin="${isAdmin}">
       <div class="nf-card-bg" style="${bgStyle}"></div>
