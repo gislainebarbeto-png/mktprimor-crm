@@ -242,11 +242,25 @@
   };
 
   // INJEÇÃO NA FICHA DO CLIENTE (Admin panel)
+  // Não patcha Admin._cliTab — evita interferir no Brand Core e demais abas.
+  // O botão Dossiê tem seu próprio onclick completo.
+  function _openDossie(){
+    ['feed','posts','arquivos','chat','info','brand','dossie'].forEach(t=>{
+      const el=document.getElementById('clitab-'+t);if(!el)return;
+      el.style.borderBottomColor=t==='dossie'?'var(--copper)':'transparent';
+      el.style.color=t==='dossie'?'var(--copper)':(t==='brand'?'var(--brown)':'var(--muted)');
+    });
+    const content=document.getElementById('cli-tab-content');
+    if(content){
+      content.innerHTML='<div id="fsc-container"></div>';
+      _FSC.render(Admin._cliClienteData?.email||'');
+    }
+  }
+
   function inject(){
     if(typeof Admin==='undefined'||typeof db==='undefined'){setTimeout(inject,200);return;}
     _css();
 
-    // Patcha Admin.openCliente para adicionar aba Dossiê após renderizar
     const _origOpen=Admin.openCliente.bind(Admin);
     Admin.openCliente=async function(id){
       await _origOpen(id);
@@ -257,31 +271,10 @@
           btn.id='clitab-dossie';
           btn.textContent='📋 Dossiê';
           btn.style.cssText='padding:9px 16px;font-size:12px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);transition:all .15s;font-family:Poppins,sans-serif;white-space:nowrap;';
-          btn.onclick=()=>Admin._cliTab('dossie');
+          btn.onclick=_openDossie;
           tabBar.appendChild(btn);
         }
       },100);
-    };
-
-    // Patcha Admin._cliTab para tratar a aba dossie
-    const _origTab=Admin._cliTab.bind(Admin);
-    Admin._cliTab=function(tab,id){
-      if(tab==='dossie'){
-        const c=this._cliClienteData;
-        // Marca aba ativa
-        ['feed','posts','arquivos','chat','info','brand','dossie'].forEach(t=>{
-          const el=document.getElementById('clitab-'+t);if(!el)return;
-          el.style.borderBottomColor=t==='dossie'?'var(--copper)':'transparent';
-          el.style.color=t==='dossie'?'var(--copper)':(t==='brand'?'var(--brown)':'var(--muted)');
-        });
-        const content=document.getElementById(this._bcContentId||'cli-tab-content');
-        if(content){
-          content.innerHTML=`<div id="fsc-container"></div>`;
-          _FSC.render(c?.email||'');
-        }
-        return;
-      }
-      _origTab(tab,id);
     };
   }
   inject();
