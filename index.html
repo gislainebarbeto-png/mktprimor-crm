@@ -6123,6 +6123,11 @@ const Admin = {
         ${[['tfa-ctr','CTR (%)'],['tfa-cpc','CPC (R$)'],['tfa-conv','CONVERSÕES'],['tfa-cpa','CPA (R$)'],['tfa-roas','ROAS (x)']].map(([id,lbl])=>`
         <div style="display:inline-block;width:calc(50% - 5px);box-sizing:border-box;${['tfa-cpc','tfa-cpa'].includes(id)?'margin-left:10px':''}"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">${lbl}</label>
           <input id="${id}" type="number" step="0.01" placeholder="0" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;"></div>`).join('')}
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">DISTRIBUIÇÃO SEMANAL (cliques por dia)</label>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;">
+            ${['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map((d,i)=>`<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px;text-align:center;">${d}</label><input id="tfa-d${i}" type="number" placeholder="0" min="0" style="width:100%;box-sizing:border-box;padding:7px 4px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font-size:12px;text-align:center;"></div>`).join('')}
+          </div>
+        </div>
         <div style="display:flex;gap:8px;margin-top:6px;">
           <button onclick="Admin._trafegoSaveAnalise()" style="flex:1;padding:10px;background:var(--wine);color:#fff;border:none;border-radius:9px;font-size:13px;cursor:pointer;font-family:Poppins,sans-serif;">Salvar</button>
           <button onclick="this.closest('[style*=fixed]').remove()" style="padding:10px 18px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:9px;font-size:13px;cursor:pointer;">Cancelar</button>
@@ -6141,6 +6146,7 @@ const Admin = {
       investimento:g('tfa-inv'), alcance:g('tfa-alc'), impressoes:g('tfa-imp'),
       cliques:g('tfa-cli'), ctr:g('tfa-ctr'), cpc:g('tfa-cpc'),
       conversoes:g('tfa-conv'), cpa:g('tfa-cpa'), roas:g('tfa-roas'),
+      dias:[0,1,2,3,4,5,6].map(i=>parseFloat(document.getElementById('tfa-d'+i)?.value)||0),
     };
     if (!a.mes) { alert('Informe o mês.'); return; }
     if (!window._tf.data.analises) window._tf.data.analises=[];
@@ -6257,6 +6263,45 @@ const Admin = {
       </svg>`;
     })() : '';
 
+    // ── Pizza: conversões por plataforma ──────────────────────────────
+    const convMap={};
+    analises.forEach(a=>{const p=a.plataforma||'Outros';convMap[p]=(convMap[p]||0)+(+a.conversoes||0);});
+    const convEntries=Object.entries(convMap).sort((a,b)=>b[1]-a[1]);
+    const pizzaSvg=convEntries.length?(()=>{
+      const cx=100,cy=100,r=82;let angle=-90;
+      const total=convEntries.reduce((s,[,v])=>s+v,0)||1;
+      const slices=convEntries.map(([,val],i)=>{
+        const sweep=(val/total)*360;
+        const a1=angle,a2=angle+sweep;angle+=sweep;
+        const r1=a1*Math.PI/180,r2=a2*Math.PI/180;
+        const x1=cx+r*Math.cos(r1),y1=cy+r*Math.sin(r1);
+        const x2=cx+r*Math.cos(r2),y2=cy+r*Math.sin(r2);
+        const mid=(a1+sweep/2)*Math.PI/180;
+        const lx=cx+(r*0.58)*Math.cos(mid),ly=cy+(r*0.58)*Math.sin(mid);
+        return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${sweep>180?1:0},1 ${x2},${y2} Z" fill="${platColors[i%platColors.length]}" opacity="0.88" stroke="${G0}" stroke-width="1.5"/>${sweep>18?`<text x="${lx}" y="${ly+3}" text-anchor="middle" font-size="9" fill="${G0}" font-weight="700">${Math.round(val/total*100)}%</text>`:''}`;
+      });
+      return `<svg viewBox="0 0 200 200" width="200" height="200">${slices.join('')}</svg>`;
+    })():'';
+
+    // ── Gráfico semanal: cliques por dia ─────────────────────────────
+    const DIAS_LABELS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+    const diasTotals=[0,1,2,3,4,5,6].map(i=>analises.reduce((s,a)=>s+(a.dias?+(a.dias[i]||0):0),0));
+    const maxDias=Math.max(...diasTotals,1);
+    const CYAN='#00C6FF';
+    const dW=560,dH=160,dPad=44,dSlot=(dW-dPad*2)/7,dBw=Math.min(36,dSlot-12);
+    const weekBars=diasTotals.map((v,i)=>{
+      const cx=dPad+i*dSlot+dSlot/2;
+      const h=Math.max(4,(v/maxDias)*(dH-dPad));
+      return {cx,y:dH-h,h,v};
+    });
+    const trendPts=weekBars.map(b=>`${b.cx},${b.y}`).join(' ');
+    const weeklySvg=`<svg viewBox="0 0 ${dW} ${dH+28}" width="100%" style="overflow:visible;">
+      ${[0,.25,.5,.75,1].map(v=>{const y=dPad+(1-v)*(dH-dPad);return `<line x1="${dPad}" y1="${y}" x2="${dW-10}" y2="${y}" stroke="rgba(0,198,255,0.1)" stroke-width="1"/><text x="${dPad-6}" y="${y+4}" text-anchor="end" font-size="9" fill="${CYAN}" opacity=".5">${Math.round(maxDias*v)}</text>`;}).join('')}
+      ${weekBars.map((b,i)=>`<rect x="${b.cx-dBw/2}" y="${b.y}" width="${dBw}" height="${b.h}" rx="5" fill="${CYAN}" opacity="0.65"/><text x="${b.cx}" y="${dH+14}" text-anchor="middle" font-size="10" fill="${CYAN}">${DIAS_LABELS[i]}</text>${b.v>0?`<text x="${b.cx}" y="${b.y-6}" text-anchor="middle" font-size="9" fill="${CYAN}">${b.v}</text>`:''}`).join('')}
+      <polyline points="${trendPts}" fill="none" stroke="${CYAN}" stroke-width="2.5" stroke-linejoin="round" opacity=".9"/>
+      ${weekBars.map(b=>`<circle cx="${b.cx}" cy="${b.y}" r="5" fill="${CYAN}" stroke="${G0}" stroke-width="1.5"/>`).join('')}
+    </svg>`;
+
     // ── Status das campanhas ───────────────────────────────────────────
     const campStatus = {ativa:0,pausada:0,encerrada:0,rascunho:0};
     camps.forEach(c=>{ campStatus[c.status||'rascunho']=(campStatus[c.status||'rascunho']||0)+1; });
@@ -6270,7 +6315,10 @@ const Admin = {
         <div style="position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,${G3},transparent);"></div>
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;position:relative;">
           <div>
-            <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:${G2};margin-bottom:6px;">RELATÓRIO DE TRÁFEGO</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+              <span style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;background:${G3};color:${G0};padding:3px 12px;border-radius:20px;font-weight:700;">Agência Primor</span>
+              <span style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:${G2};">GESTÃO DE TRÁFEGO</span>
+            </div>
             <div style="font-size:22px;font-family:'Cormorant Garamond',serif;color:${G1};font-weight:400;">${tf.nome}</div>
             ${brief.plataformas?.length?`<div style="font-size:11px;color:${G2};margin-top:4px;">${brief.plataformas.join(' · ')}</div>`:''}
           </div>
@@ -6325,6 +6373,28 @@ const Admin = {
             </div>
           </div>
         </div>`:''}
+      </div>
+
+      <!-- ── PIZZA + SEMANAL ── -->
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;margin-bottom:16px;align-items:start;">
+        ${convEntries.length?`<div style="background:${G0};border:1px solid ${G3};border-radius:14px;padding:20px 22px;">
+          <div style="font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:${G2};margin-bottom:14px;">CONVERSÕES POR PLATAFORMA</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+            ${pizzaSvg}
+            <div style="display:grid;gap:5px;width:100%;">
+              ${convEntries.map(([p,v],i)=>`<div style="display:flex;align-items:center;gap:6px;">
+                <div style="width:9px;height:9px;border-radius:2px;background:${platColors[i%platColors.length]};flex-shrink:0;"></div>
+                <div style="font-size:10px;color:${G1};flex:1;">${p}</div>
+                <div style="font-size:10px;color:${G2};">${v.toLocaleString('pt-BR')}</div>
+              </div>`).join('')}
+            </div>
+          </div>
+        </div>`:'<div></div>'}
+        <div style="background:${G0};border:1px solid ${G3};border-radius:14px;padding:20px 22px;">
+          <div style="font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:${CYAN};margin-bottom:3px;opacity:.9;">CLIQUES POR DIA DA SEMANA</div>
+          <div style="font-size:10px;color:${G2};margin-bottom:14px;">Preencha a distribuição semanal ao adicionar análises</div>
+          ${weeklySvg}
+        </div>
       </div>
 
       <!-- ── STATUS CAMPANHAS ── -->
@@ -9712,7 +9782,7 @@ document.addEventListener('keydown', e => {
 
   document.addEventListener('DOMContentLoaded', () => RichEditor.init());
 </script>
-<script src="netflix_module.js?v=20260518f"></script>
+<script src="netflix_module.js?v=20260518g"></script>
 <script src="theme_module.js?v=20260517d"></script>
 <script src="dashboard_module.js?v=20260517c"></script>
 <script src="relatorio_equipe_module.js?v=20260517"></script>
