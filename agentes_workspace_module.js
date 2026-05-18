@@ -760,15 +760,13 @@
         const systemPrompt=await _buildSystemPrompt(_ag.id,_cliente);
         const res=await fetch('https://api.anthropic.com/v1/messages',{
           method:'POST',
-          mode:'cors',
-          credentials:'omit',
           headers:{
             'Content-Type':'application/json',
             'x-api-key':key,
             'anthropic-version':'2023-06-01',
-            'anthropic-dangerous-direct-browser-access':'true'
+            'anthropic-dangerous-direct-browser-calls':'true'
           },
-          body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,system:systemPrompt,messages:_chatHist[_ag.id]})
+          body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:systemPrompt,messages:_chatHist[_ag.id]})
         });
         const data=await res.json();
         document.getElementById('aw2td')?.remove();
