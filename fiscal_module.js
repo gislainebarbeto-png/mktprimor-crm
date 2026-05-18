@@ -241,43 +241,48 @@
     }
   };
 
-  // INJEÇÃO NA FICHA DO CLIENTE
+  // INJEÇÃO NA FICHA DO CLIENTE (Admin panel)
   function inject(){
-    if(typeof Client==='undefined'||typeof db==='undefined'){setTimeout(inject,200);return;}
+    if(typeof Admin==='undefined'||typeof db==='undefined'){setTimeout(inject,200);return;}
     _css();
 
-    const _origTab=Client.clientTab?.bind(Client);
-    Client.clientTab=function(tab,id,c){
-      if(tab==='dossie'){
-        document.querySelectorAll('.client-tab').forEach(el=>el.classList.remove('active'));
-        document.getElementById('ctab-dossie')?.classList.add('active');
-        const main=document.getElementById('client-detail-content')||document.getElementById('admin-main');
-        const email=c?.email||Client._current?.email||'';
-        if(main){main.innerHTML=`<div style="padding:16px 0"><div id="fsc-container"></div></div>`;_FSC.render(email);}
-        return;
-      }
-      if(_origTab)_origTab(tab,id,c);
+    // Patcha Admin.openCliente para adicionar aba Dossiê após renderizar
+    const _origOpen=Admin.openCliente.bind(Admin);
+    Admin.openCliente=async function(id){
+      await _origOpen(id);
+      setTimeout(()=>{
+        const tabBar=document.getElementById('cli-tabs');
+        if(tabBar&&!document.getElementById('clitab-dossie')){
+          const btn=document.createElement('button');
+          btn.id='clitab-dossie';
+          btn.textContent='📋 Dossiê';
+          btn.style.cssText='padding:9px 16px;font-size:12px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);transition:all .15s;font-family:Poppins,sans-serif;white-space:nowrap;';
+          btn.onclick=()=>Admin._cliTab('dossie');
+          tabBar.appendChild(btn);
+        }
+      },100);
     };
 
-    const _origOpen=Client.open?.bind(Client)||Client.renderClientDetail?.bind(Client);
-    const _patchOpen=function(...args){
-      if(_origOpen)_origOpen(...args);
-      setTimeout(()=>{
-        const tabBar=document.querySelector('.client-tabs-row,.ctab-row,[id^="ctab-"]')?.parentElement;
-        if(tabBar&&!document.getElementById('ctab-dossie')){
-          const tab=document.createElement('div');
-          tab.className='client-tab';tab.id='ctab-dossie';
-          const email=args[0]?.email||args[0]||'';
-          tab.textContent='📋 Dossiê';
-          tab.onclick=()=>Client.clientTab('dossie',null,{email});
-          tabBar.appendChild(tab);
+    // Patcha Admin._cliTab para tratar a aba dossie
+    const _origTab=Admin._cliTab.bind(Admin);
+    Admin._cliTab=function(tab,id){
+      if(tab==='dossie'){
+        const c=this._cliClienteData;
+        // Marca aba ativa
+        ['feed','posts','arquivos','chat','info','brand','dossie'].forEach(t=>{
+          const el=document.getElementById('clitab-'+t);if(!el)return;
+          el.style.borderBottomColor=t==='dossie'?'var(--copper)':'transparent';
+          el.style.color=t==='dossie'?'var(--copper)':(t==='brand'?'var(--brown)':'var(--muted)');
+        });
+        const content=document.getElementById(this._bcContentId||'cli-tab-content');
+        if(content){
+          content.innerHTML=`<div id="fsc-container"></div>`;
+          _FSC.render(c?.email||'');
         }
-        // Remove aba fiscal antiga se existir
-        document.getElementById('ctab-fiscal')?.remove();
-      },300);
+        return;
+      }
+      _origTab(tab,id);
     };
-    if(Client.open)Client.open=_patchOpen;
-    if(Client.renderClientDetail)Client.renderClientDetail=_patchOpen;
   }
   inject();
 })();
