@@ -651,15 +651,15 @@
   // CHAT
   function _chat(){
     const cliNome=_cliente?(_clientes.find(c=>c.email===_cliente)?.nome||_cliente):'';
-    const savedKey=window.PRIMOR_CONFIG?.googleKey||window.GOOGLE_KEY||localStorage.getItem('primor_google_key')||'';
+    const savedKey=window.PRIMOR_CONFIG?.anthropicKey||window.ANTHROPIC_KEY||localStorage.getItem('primor_anthropic_key')||'';
     const hasKey=!!savedKey;
     const keyPreview=hasKey?savedKey.substring(0,18)+'…':'';
     const keyBox=`<div class="aw2-key-box">
-      <div class="aw2-key-title">🔑 Chave API Google Gemini${hasKey?` <span style="font-size:10px;color:#4aab2a;font-weight:400">✓ configurada</span>`:''}</div>
+      <div class="aw2-key-title">🔑 Chave API Anthropic${hasKey?` <span style="font-size:10px;color:#4aab2a;font-weight:400">✓ configurada</span>`:''}</div>
       ${hasKey?`<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">${keyPreview}</div>`:''}
-      <input class="aw2-key-in" id="aw2ki" type="password" placeholder="AIzaSy..." ${hasKey?'':'required'}>
+      <input class="aw2-key-in" id="aw2ki" type="password" placeholder="sk-ant-api03-..." ${hasKey?'':'required'}>
       <button class="aw2-key-btn" onclick="_AW2.saveKey()">${hasKey?'Atualizar chave':'Salvar chave'}</button>
-      <div class="aw2-key-hint">Obtenha em aistudio.google.com → Get API Key. Salva só neste navegador.</div>
+      <div class="aw2-key-hint">Obtenha em console.anthropic.com → API Keys. Salva só neste navegador.</div>
     </div>`;
     const cliBox=!_cliente?`<div style="background:rgba(212,137,106,0.08);border:1px solid rgba(212,137,106,0.3);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
       <div style="font-size:11px;color:#d4896a;font-weight:500;margin-bottom:8px;">👤 Selecione o cliente para eu ter contexto</div>
@@ -734,8 +734,8 @@
     saveKey(){
       const k=(document.getElementById('aw2ki')?.value||'').trim();
       if(!k)return;
-      localStorage.setItem('primor_google_key',k);
-      window.GOOGLE_KEY=k;
+      localStorage.setItem('primor_anthropic_key',k);
+      window.ANTHROPIC_KEY=k;
       _renderAba('chat');
     },
     chatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();this.chatSend();}},
@@ -751,21 +751,22 @@
       td.innerHTML='<div class="aw2-typ"><div class="aw2-dot"></div><div class="aw2-dot"></div><div class="aw2-dot"></div></div>';
       msgs?.appendChild(td);if(msgs)msgs.scrollTop=msgs.scrollHeight;
       try{
-        const key=window.PRIMOR_CONFIG?.googleKey||window.GOOGLE_KEY||localStorage.getItem('primor_google_key')||'';
+        const key=window.PRIMOR_CONFIG?.anthropicKey||window.ANTHROPIC_KEY||localStorage.getItem('primor_anthropic_key')||'';
         if(!key){
           document.getElementById('aw2td')?.remove();
-          _addMsg('agent','⚠️ Chave Google Gemini não configurada. Obtenha em aistudio.google.com e configure no config.js.');
+          _addMsg('agent','⚠️ Chave Anthropic não configurada. Configure no config.js ou no campo acima.');
           _chatLoad=false;document.getElementById('aw2cs').disabled=false;return;
         }
         const systemPrompt=await _buildSystemPrompt(_ag.id,_cliente);
-        const model='gemini-2.0-flash';
-        const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
+        const res=await fetch('https://api.anthropic.com/v1/messages',{
           method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            system_instruction:{parts:[{text:systemPrompt}]},
-            contents:_chatHist[_ag.id].map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}))
-          })
+          headers:{
+            'Content-Type':'application/json',
+            'x-api-key':key,
+            'anthropic-version':'2023-06-01',
+            'anthropic-dangerous-direct-browser-calls':'true'
+          },
+          body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,system:systemPrompt,messages:_chatHist[_ag.id]})
         });
         const data=await res.json();
         document.getElementById('aw2td')?.remove();
@@ -774,7 +775,7 @@
           _addMsg('agent',`⚠️ Erro da API: ${errDetail}`);
           _chatLoad=false;document.getElementById('aw2cs').disabled=false;return;
         }
-        const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||'Erro ao processar.';
+        const reply=data.content?.[0]?.text||'Erro ao processar.';
         _chatHist[_ag.id].push({role:'assistant',content:reply});_addMsg('agent',reply);
       }catch(e){
         document.getElementById('aw2td')?.remove();
@@ -787,8 +788,8 @@
   function inject(){
     if(typeof Admin==='undefined'||typeof db==='undefined'){setTimeout(inject,150);return;}
     _css();
-    const savedKey=localStorage.getItem('primor_google_key');
-    if(savedKey&&!window.GOOGLE_KEY)window.GOOGLE_KEY=savedKey;
+    const savedKey=localStorage.getItem('primor_anthropic_key');
+    if(savedKey&&!window.ANTHROPIC_KEY)window.ANTHROPIC_KEY=savedKey;
     Admin.renderAgentes=async function(){await _loadClientes();_hub();};
   }
   inject();
