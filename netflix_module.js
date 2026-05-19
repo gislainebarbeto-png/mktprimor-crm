@@ -853,13 +853,20 @@
   }
 
   function showClientGrid(){
-    renderClientGrid();
     const main=document.querySelector('.client-main');
     const hdr=document.querySelector('.client-header-row');
     const back=document.getElementById('nf-back-btn-client');
-    if(main)main.style.display='none';
-    if(hdr)hdr.style.display='none';
-    if(back)back.style.display='none';
+    renderClientGrid().then(()=>{
+      const wrap=document.getElementById('nf-client-home');
+      // Only hide client-main if the grid actually rendered
+      if(wrap&&!wrap.classList.contains('hidden')){
+        if(main)main.style.display='none';
+        if(hdr)hdr.style.display='none';
+        if(back)back.style.display='none';
+      }
+    }).catch(()=>{
+      // Grid failed — keep client-main visible
+    });
     document.querySelectorAll('.client-tab').forEach(t=>t.classList.remove('active'));
   }
 

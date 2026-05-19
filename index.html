@@ -2945,20 +2945,10 @@ const Admin = {
     this._showToast('Bio salva ✓');
   },
 
-  async _cliTabInfo(id, c) {
+  _cliTabInfo(id, c) {
     const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const inp = (elId,val,ph,type='text') => `<input type="${type}" id="${elId}" value="${(val||'').replace(/"/g,'&quot;')}" placeholder="${ph}" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);color:var(--text);margin-top:4px;box-sizing:border-box;"/>`;
     const fld = (lbl,content2) => `<div style="margin-bottom:12px;"><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;">${lbl}</div>${content2}</div>`;
-    const { data: igToken } = await db.from('instagram_tokens').select('ig_username,expires_at').eq('client_email', c.email).maybeSingle();
-    const igHtml = igToken
-      ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-           <div style="flex:1;font-size:13px;color:var(--text);">✓ Conectado como <strong>@${igToken.ig_username}</strong>${igToken.expires_at ? `<span style="font-size:10px;color:var(--muted);margin-left:6px;">até ${new Date(igToken.expires_at).toLocaleDateString('pt-BR')}</span>` : ''}</div>
-           <button onclick="Admin._igDisconnect('${c.email}')" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);background:transparent;font-size:11px;cursor:pointer;color:#ef4444;">Desconectar</button>
-         </div>`
-      : `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-           <div style="flex:1;font-size:12px;color:var(--muted);">Não conectado — publicação usa Make webhook</div>
-           <a href="${Admin._igAuthUrl(c.email)}" style="display:inline-block;padding:7px 16px;border-radius:8px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap;">🔗 Conectar Instagram</a>
-         </div>`;
     content.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:700px;">
         ${fld('Nome completo', inp('dp-nome',c.nome,'Nome do cliente'))}
@@ -2980,10 +2970,28 @@ const Admin = {
         <strong style="color:var(--brown);">Acesso da cliente:</strong><br>
         crm.gislainebarbeto.com.br · <strong>${c.email}</strong> · <strong>${c.access_code||'Primor2026!'}</strong>
       </div>
-      <div style="margin-top:16px;padding:14px 16px;background:rgba(131,58,180,0.05);border:1px solid rgba(131,58,180,0.18);border-radius:12px;max-width:700px;">
+      <div style="margin-top:16px;padding:14px 16px;background:rgba(131,58,180,0.05);border:1px solid rgba(131,58,180,0.18);border-radius:12px;max-width:700px;" id="ig-status-box-${c.id}">
         <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;">📷 Publicação direta no Instagram</div>
-        ${igHtml}
+        <div style="font-size:12px;color:var(--muted);">Verificando...</div>
       </div>`;
+    // Async: carrega status IG sem bloquear a aba
+    db.from('instagram_tokens').select('ig_username,expires_at').eq('client_email', c.email).maybeSingle()
+      .then(({ data: igToken }) => {
+        const box = document.getElementById('ig-status-box-' + c.id);
+        if (!box) return;
+        const igHtml = igToken
+          ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+               <div style="flex:1;font-size:13px;color:var(--text);">✓ Conectado como <strong>@${igToken.ig_username}</strong>${igToken.expires_at ? `<span style="font-size:10px;color:var(--muted);margin-left:6px;">até ${new Date(igToken.expires_at).toLocaleDateString('pt-BR')}</span>` : ''}</div>
+               <button onclick="Admin._igDisconnect('${c.email}')" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);background:transparent;font-size:11px;cursor:pointer;color:#ef4444;">Desconectar</button>
+             </div>`
+          : `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+               <div style="flex:1;font-size:12px;color:var(--muted);">Não conectado — publicação usa Make webhook</div>
+               <a href="${Admin._igAuthUrl(c.email)}" style="display:inline-block;padding:7px 16px;border-radius:8px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap;">🔗 Conectar Instagram</a>
+             </div>`;
+        box.innerHTML = `
+          <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;">📷 Publicação direta no Instagram</div>
+          ${igHtml}`;
+      });
   },
 
   /* ===== BRAND CORE ===== */
@@ -9872,7 +9880,7 @@ document.addEventListener('keydown', e => {
 
   document.addEventListener('DOMContentLoaded', () => RichEditor.init());
 </script>
-<script src="netflix_module.js?v=20260519b"></script>
+<script src="netflix_module.js?v=20260519c"></script>
 <script src="theme_module.js?v=20260517d"></script>
 <script src="dashboard_module.js?v=20260517c"></script>
 <script src="relatorio_equipe_module.js?v=20260517"></script>
