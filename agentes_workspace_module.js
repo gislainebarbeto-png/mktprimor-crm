@@ -701,7 +701,11 @@
     _histLoad();
     if(!_chatHist[_ag.id])_chatHist[_ag.id]=[];
     const msgs=document.getElementById('aw2msgs');
-    if(msgs&&_chatHist[_ag.id].length)_chatHist[_ag.id].forEach(m=>_addMsg(m.role,m.content));
+    if(msgs&&_chatHist[_ag.id].length){
+      const intro=msgs.querySelector('.aw2-intro');
+      if(intro)intro.style.display='none';
+      _chatHist[_ag.id].forEach(m=>_addMsg(m.role,m.content));
+    }
     document.getElementById('aw2ci')?.focus();
   }
 
@@ -882,7 +886,7 @@
       if(!text||_chatLoad||!_ag)return;
       inp.value='';this.chatRes(inp);_chatLoad=true;document.getElementById('aw2cs').disabled=true;
       if(!_chatHist[_ag.id])_chatHist[_ag.id]=[];
-      _addMsg('user',text);_chatHist[_ag.id].push({role:'user',content:text});
+      _addMsg('user',text);_chatHist[_ag.id].push({role:'user',content:text});_histSave();
       const msgs=document.getElementById('aw2msgs');
       const td=document.createElement('div');td.id='aw2td';td.className='aw2-msg agent';
       td.innerHTML='<div class="aw2-typ"><div class="aw2-dot"></div><div class="aw2-dot"></div><div class="aw2-dot"></div></div>';
