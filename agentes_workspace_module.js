@@ -40,6 +40,16 @@
   let _clientes=[],_fiscal={};
   let _chatHist={},_chatLoad=false;
 
+  function _histKey(){return 'primor_chat_'+(_ag?_ag.id:'x')+'__'+(_cliente||'geral');}
+  function _histSave(){
+    if(!_ag)return;
+    try{localStorage.setItem(_histKey(),JSON.stringify((_chatHist[_ag.id]||[]).slice(-120)));}catch(e){}
+  }
+  function _histLoad(){
+    if(!_ag)return;
+    try{const raw=localStorage.getItem(_histKey());_chatHist[_ag.id]=raw?JSON.parse(raw):[];}catch(e){_chatHist[_ag.id]=[];}
+  }
+
   function _hoje(){return new Date().toISOString().slice(0,10);}
   function _fmtD(d){return d?new Date(d+'T12:00:00').toLocaleDateString('pt-BR'):'—';}
   function _R$(v){return 'R$\u00a0'+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2});}
@@ -679,11 +689,13 @@
         <button class="aw2-cs" id="aw2cs" onclick="_AW2.chatSend()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="#FAF8F2"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
         </button>
+        <button title="Limpar conversa" onclick="_AW2.clearChat()" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:var(--muted);font-size:13px;border-radius:8px;transition:color .15s;" onmouseover="this.style.color='var(--brown)'" onmouseout="this.style.color='var(--muted)'">🗑</button>
       </div>
     </div>`;
   }
 
   function _initChat(){
+    _histLoad();
     if(!_chatHist[_ag.id])_chatHist[_ag.id]=[];
     const msgs=document.getElementById('aw2msgs');
     if(msgs&&_chatHist[_ag.id].length)_chatHist[_ag.id].forEach(m=>_addMsg(m.role,m.content));
@@ -830,6 +842,13 @@
       el.remove();
     },
     // Chat
+    clearChat(){
+      if(!_ag)return;
+      if(!confirm('Limpar toda a conversa com '+_ag.nome+'?'))return;
+      _chatHist[_ag.id]=[];
+      try{localStorage.removeItem(_histKey());}catch(e){}
+      _renderAba('chat');
+    },
     saveKey(){
       const k=(document.getElementById('aw2ki')?.value||'').trim();
       if(!k)return;
@@ -864,7 +883,7 @@
           _chatLoad=false;document.getElementById('aw2cs').disabled=false;return;
         }
         const reply=data.content?.[0]?.text||'Erro ao processar.';
-        _chatHist[_ag.id].push({role:'assistant',content:reply});_addMsg('agent',reply);
+        _chatHist[_ag.id].push({role:'assistant',content:reply});_addMsg('agent',reply);_histSave();
       }catch(e){
         document.getElementById('aw2td')?.remove();
         _addMsg('agent','⚠️ Erro de rede: '+e.message);
