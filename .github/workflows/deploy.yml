@@ -29,3 +29,5 @@ jobs:
             **/.git*/**
             .github/**
             README.md
+            supabase/**
+            config.js
