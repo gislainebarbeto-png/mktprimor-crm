@@ -250,6 +250,7 @@
     .aw2-ftag{font-size:10px;border-radius:6px;padding:3px 8px;border:1px solid;}
     .aw2-ftag.ok{background:rgba(74,94,58,.15);color:#4aab2a;border-color:rgba(74,94,58,.4);}
     .aw2-ftag.warn{background:rgba(255,180,0,.08);color:#d4896a;border-color:rgba(212,137,106,.4);}
+    .aw2-pdf-btn{display:flex;align-items:center;gap:6px;font-size:11px;padding:7px 14px;border-radius:8px;background:var(--wine);color:#FAF8F2;border:none;cursor:pointer;transition:opacity .18s;white-space:nowrap;}.aw2-pdf-btn:hover{opacity:.85;}
     .aw2-tabs{display:flex;gap:4px;overflow-x:auto;margin-bottom:14px;padding-bottom:2px;}
     .aw2-tab{flex-shrink:0;background:transparent;border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .18s;white-space:nowrap;}
     .aw2-tab.active{background:var(--wine);color:#FAF8F2;border-color:var(--wine);}
@@ -370,7 +371,10 @@
         </div>
       </div>
       ${_ctx()}
-      <div class="aw2-tabs">${_ag.abas.map(t=>`<div class="aw2-tab ${t===ab?'active':''}" onclick="_AW2.tab('${t}')">${_ag.labels[t]}</div>`).join('')}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+        <div class="aw2-tabs" style="margin-bottom:0;flex:1;">${_ag.abas.map(t=>`<div class="aw2-tab ${t===ab?'active':''}" onclick="_AW2.tab('${t}')">${_ag.labels[t]}</div>`).join('')}</div>
+        ${_cliente?`<button class="aw2-pdf-btn" onclick="_AW2.openPdfModal()">📄 PDF de Aprovação</button>`:''}
+      </div>
       <div id="aw2c"><div class="aw2-empty">Carregando...</div></div>
     </div>`;
     _aba=ab; _renderAba(ab);
@@ -721,6 +725,110 @@
     // Calendário
     async addCal(){try{await db.from('agentes_calendario').insert({agente_id:_ag.id,client_email:_cliente||'',data:_data,formato:_v('cal-f'),titulo:_v('cal-ti'),descricao:_v('cal-d'),status:_v('cal-st')});_flash('cal-s','✓ Adicionado');_renderAba('calendario');}catch{_flash('cal-s','⚠ Erro');}},
     async delCal(id){try{await db.from('agentes_calendario').delete().eq('id',id);_renderAba('calendario');}catch{}},
+    // PDF de Aprovação
+    openPdfModal(){
+      if(!_cliente)return;
+      document.getElementById('aw2-pdf-modal')?.remove();
+      const now=new Date();
+      const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      const mOpts=meses.map((m,i)=>`<option value="${i+1}"${i===now.getMonth()?' selected':''}>${m}</option>`).join('');
+      const aOpts=[2024,2025,2026,2027].map(y=>`<option value="${y}"${y===now.getFullYear()?' selected':''}>${y}</option>`).join('');
+      const modal=document.createElement('div');
+      modal.id='aw2-pdf-modal';
+      modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      modal.innerHTML=`<div style="background:var(--surface);border-radius:16px;padding:28px;width:320px;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+        <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px;">📄 PDF de Aprovação</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">${_clientes.find(c=>c.email===_cliente)?.nome||_cliente}</div>
+        <div style="display:flex;gap:10px;margin-bottom:20px;">
+          <div style="flex:2;">
+            <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:4px;">Mês</label>
+            <select id="aw2-pdf-mes" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;">${mOpts}</select>
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:4px;">Ano</label>
+            <select id="aw2-pdf-ano" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;">${aOpts}</select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="_AW2.gerarPdf()" style="flex:1;padding:10px;border-radius:9px;background:var(--wine);color:#FAF8F2;border:none;cursor:pointer;font-size:12px;font-weight:500;">Gerar PDF</button>
+          <button onclick="document.getElementById('aw2-pdf-modal')?.remove()" style="padding:10px 14px;border-radius:9px;background:transparent;color:var(--muted);border:1px solid var(--border);cursor:pointer;font-size:12px;">Cancelar</button>
+        </div>
+      </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+    },
+    async gerarPdf(){
+      const mes=parseInt(document.getElementById('aw2-pdf-mes')?.value||new Date().getMonth()+1);
+      const ano=parseInt(document.getElementById('aw2-pdf-ano')?.value||new Date().getFullYear());
+      document.getElementById('aw2-pdf-modal')?.remove();
+      const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
+      const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      const mesNome=meses[mes-1];
+      const ini=`${ano}-${String(mes).padStart(2,'0')}-01`;
+      const fim=`${ano}-${String(mes).padStart(2,'0')}-31`;
+      let posts=[];
+      try{
+        const{data}=await db.from('posts').select('*').eq('client_email',_cliente).gte('data_post',ini).lte('data_post',fim).order('data_post',{ascending:true});
+        posts=data||[];
+      }catch(e){alert('Erro ao buscar posts: '+e.message);return;}
+      if(!posts.length){alert(`Nenhum post encontrado para ${mesNome}/${ano}.`);return;}
+
+      const fmtData=d=>{if(!d)return'—';const[y,m,day]=d.split('-');return`${day}/${m}/${y}`;};
+      const fmtTipo=t=>({feed:'Feed',carrossel:'Carrossel',reels:'Reels',stories:'Stories',tiktok:'TikTok'}[t]||t||'—');
+      const fmtStatus=s=>{const map={criacao:{label:'Em criação',bg:'#FFF3E0',color:'#E65100'},revisao:{label:'Em revisão',bg:'#E3F2FD',color:'#1565C0'},aprovado:{label:'Aprovado',bg:'#E8F5E9',color:'#2E7D32'},publicado:{label:'Publicado',bg:'#F3E5F5',color:'#6A1B9A'}};return map[s]||{label:s||'—',bg:'#F5F5F5',color:'#666'};};
+
+      const postsHtml=posts.map(p=>{
+        const st=fmtStatus(p.status);
+        return`<div style="background:#fff;border-radius:12px;border:1px solid #E8DECE;padding:20px;margin-bottom:16px;page-break-inside:avoid;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+            <span style="font-size:11px;color:#9B6B3A;font-weight:500;">${fmtData(p.data_post)}</span>
+            <span style="font-size:10px;background:#F5EFE7;color:#5C3D1E;padding:3px 10px;border-radius:20px;">${fmtTipo(p.tipo)}</span>
+            <span style="font-size:10px;background:${st.bg};color:${st.color};padding:3px 10px;border-radius:20px;">${st.label}</span>
+          </div>
+          ${p.tema_titulo?`<div style="font-size:13px;font-weight:500;color:#5C3D1E;margin-bottom:8px;">${p.tema_titulo}</div>`:''}
+          ${p.legenda?`<div style="font-size:12px;color:#333;line-height:1.65;white-space:pre-wrap;margin-bottom:10px;">${p.legenda.replace(/</g,'&lt;')}</div>`:'<div style="font-size:12px;color:#aaa;margin-bottom:10px;">Sem legenda.</div>'}
+          ${p.obs?`<div style="font-size:11px;color:#9B6B3A;padding:8px 10px;background:#FAF8F2;border-radius:6px;margin-bottom:10px;">📝 ${p.obs.replace(/</g,'&lt;')}</div>`:''}
+          <div style="display:flex;gap:12px;margin-top:10px;padding-top:12px;border-top:1px solid #F0E8DB;">
+            <div style="flex:1;border:1px dashed #C8B89A;border-radius:8px;padding:10px 14px;text-align:center;">
+              <div style="font-size:9px;color:#9B6B3A;text-transform:uppercase;letter-spacing:.12em;margin-bottom:20px;">✓ Aprovado</div>
+              <div style="height:1px;border-top:1px dashed #C8B89A;"></div>
+              <div style="font-size:8px;color:#C8B89A;margin-top:4px;">Assinatura</div>
+            </div>
+            <div style="flex:1;border:1px dashed #C8B89A;border-radius:8px;padding:10px 14px;text-align:center;">
+              <div style="font-size:9px;color:#9B6B3A;text-transform:uppercase;letter-spacing:.12em;margin-bottom:20px;">✎ Ajuste</div>
+              <div style="height:1px;border-top:1px dashed #C8B89A;"></div>
+              <div style="font-size:8px;color:#C8B89A;margin-top:4px;">Observação</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+      const html=`<div style="font-family:Poppins,Arial,sans-serif;background:#FAF8F2;padding:48px;max-width:760px;margin:0 auto;">
+        <div style="text-align:center;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid #E8DECE;">
+          <img src="https://crm.gislainebarbeto.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:64px;object-fit:contain;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;">
+          <div style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#9B6B3A;margin-bottom:10px;">Aprovação de Conteúdo</div>
+          <div style="font-size:24px;font-weight:300;color:#5C3D1E;margin-bottom:4px;">${cliNome}</div>
+          <div style="font-size:13px;color:#7A5230;">${mesNome} · ${ano}</div>
+          <div style="font-size:11px;color:#9B6B3A;margin-top:8px;">${posts.length} post${posts.length!==1?'s':''} para aprovação</div>
+        </div>
+        ${postsHtml}
+        <div style="margin-top:36px;padding-top:16px;border-top:1px solid #E8DECE;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:9px;color:#C8B89A;letter-spacing:.1em;text-transform:uppercase;">Agência Primor · Estratégia · Criatividade · Resultados</div>
+          <div style="font-size:9px;color:#C8B89A;">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
+        </div>
+      </div>`;
+
+      if(typeof html2pdf==='undefined'){alert('Biblioteca html2pdf não carregada. Verifique a conexão.');return;}
+      const el=document.createElement('div');el.innerHTML=html;document.body.appendChild(el);
+      await html2pdf().set({
+        margin:[8,8],
+        filename:`aprovacao-${cliNome.replace(/\s+/g,'-').toLowerCase()}-${mesNome.toLowerCase()}-${ano}.pdf`,
+        image:{type:'jpeg',quality:0.95},
+        html2canvas:{scale:2,useCORS:true,logging:false},
+        jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+      }).from(el).save();
+      el.remove();
+    },
     // Chat
     saveKey(){
       const k=(document.getElementById('aw2ki')?.value||'').trim();
