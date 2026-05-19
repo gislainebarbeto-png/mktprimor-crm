@@ -40,14 +40,27 @@
   let _clientes=[],_fiscal={};
   let _chatHist={},_chatLoad=false;
 
+  const _CHAT_DATE='2099-12-31';
   function _histKey(){return 'primor_chat_'+(_ag?_ag.id:'x')+'__'+(_cliente||'geral');}
   function _histSave(){
     if(!_ag)return;
-    try{localStorage.setItem(_histKey(),JSON.stringify((_chatHist[_ag.id]||[]).slice(-120)));}catch(e){}
+    const msgs=(_chatHist[_ag.id]||[]).slice(-120);
+    try{localStorage.setItem(_histKey(),JSON.stringify(msgs));}catch(e){}
+    db.from('agentes_trabalhos').upsert({agente_id:_ag.id,aba_id:'_chat',client_email:_cliente||'',data:_CHAT_DATE,conteudo:msgs},{onConflict:'agente_id,aba_id,client_email,data'}).catch(()=>{});
   }
   function _histLoad(){
     if(!_ag)return;
     try{const raw=localStorage.getItem(_histKey());_chatHist[_ag.id]=raw?JSON.parse(raw):[];}catch(e){_chatHist[_ag.id]=[];}
+  }
+  async function _histLoadRemote(){
+    if(!_ag)return;
+    try{
+      const{data}=await db.from('agentes_trabalhos').select('conteudo').eq('agente_id',_ag.id).eq('aba_id','_chat').eq('client_email',_cliente||'').eq('data',_CHAT_DATE).maybeSingle();
+      if(data?.conteudo?.length){
+        _chatHist[_ag.id]=data.conteudo;
+        try{localStorage.setItem(_histKey(),JSON.stringify(data.conteudo));}catch(e){}
+      }
+    }catch(e){}
   }
 
   function _hoje(){return new Date().toISOString().slice(0,10);}
@@ -758,8 +771,9 @@
     </div>`;
   }
 
-  function _initChat(){
+  async function _initChat(){
     _histLoad();
+    if(!(_chatHist[_ag.id]||[]).length) await _histLoadRemote();
     if(!_chatHist[_ag.id])_chatHist[_ag.id]=[];
     const msgs=document.getElementById('aw2msgs');
     if(msgs&&_chatHist[_ag.id].length){
