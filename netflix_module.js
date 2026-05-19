@@ -143,6 +143,7 @@
     .nf-hero-sub   { font-size:10px;color:rgba(255,214,186,0.45);letter-spacing:.2em;text-transform:uppercase;position:relative; }
     .nf-hero-has-cover{padding:0!important;aspect-ratio:2000/533;background-size:cover!important;background-repeat:no-repeat;border:none!important;box-shadow:none!important;}
     .nf-hero-has-cover::before,.nf-hero-has-cover::after{display:none!important;}
+    @media(max-width:640px){.nf-hero-has-cover{aspect-ratio:unset!important;height:180px;}}
     .nf-hero-edit-overlay{position:absolute;bottom:10px;right:14px;display:flex;gap:6px;opacity:0;transition:opacity .2s;z-index:5;}
     .nf-hero:hover .nf-hero-edit-overlay{opacity:1;}
     .nf-hero-edit-btn{font-size:10px;padding:5px 11px;background:rgba(0,0,0,0.6);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:7px;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap;}
