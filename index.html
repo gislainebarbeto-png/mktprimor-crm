@@ -2665,7 +2665,7 @@ const Admin = {
         ${['feed','posts','chat','info','brand'].map((t,i) => {
           const labels = {feed:'▦ Feed',posts:'◫ Posts',chat:'◷ Chat',info:'⚙ Info',brand:'✦ Brand Core'};
           const isBrand = t==='brand';
-          return `<button onclick="Admin._cliTab('${t}',${id})" id="clitab-${t}" style="padding:9px 16px;font-size:12px;border:none;${isBrand?'background:linear-gradient(135deg,rgba(184,130,10,0.08),rgba(232,184,75,0.12));':'background:none;'}cursor:pointer;border-bottom:2px solid ${i===0?'var(--copper)':'transparent'};color:${isBrand?'var(--brown)':(i===0?'var(--copper)':'var(--muted)')};transition:all .15s;font-family:Poppins,sans-serif;white-space:nowrap;${isBrand?'font-weight:500;border-radius:8px 8px 0 0;':''}">${labels[t]}</button>`;
+          return `<button onclick="Admin._cliTab('${t}','${id}')" id="clitab-${t}" style="padding:9px 16px;font-size:12px;border:none;${isBrand?'background:linear-gradient(135deg,rgba(184,130,10,0.08),rgba(232,184,75,0.12));':'background:none;'}cursor:pointer;border-bottom:2px solid ${i===0?'var(--copper)':'transparent'};color:${isBrand?'var(--brown)':(i===0?'var(--copper)':'var(--muted)')};transition:all .15s;font-family:Poppins,sans-serif;white-space:nowrap;${isBrand?'font-weight:500;border-radius:8px 8px 0 0;':''}">${labels[t]}</button>`;
         }).join('')}
       </div>
 
@@ -2892,7 +2892,7 @@ const Admin = {
         </div>
         <div class="feed-bio-wrap">
           <textarea class="feed-bio-area" rows="2" placeholder="Bio do Instagram — clique para editar e salvar..."
-            onblur="Admin._saveFeedBio(${id},this.value)">${(c.empresa||'').replace(/</g,'&lt;')}</textarea>
+            onblur="Admin._saveFeedBio('${id}',this.value)">${(c.empresa||'').replace(/</g,'&lt;')}</textarea>
         </div>
         <div class="feed-stats-row">
           <div class="feed-stat"><div class="feed-stat-n">${allPosts.length}${allPosts.length===30?'+':''}</div><div class="feed-stat-l">posts</div></div>
@@ -3050,7 +3050,7 @@ const Admin = {
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;">
           ${sections.map((s,i) => `
-            <div onclick="Admin._bcSection='${s.key}';Admin._bcSubSection=null;Admin._bcRenderSection('${s.key}',${id},Admin._cliClienteData)"
+            <div onclick="Admin._bcSection='${s.key}';Admin._bcSubSection=null;Admin._bcRenderSection('${s.key}','${id}',Admin._cliClienteData)"
               style="border-radius:16px;border:1px solid rgba(255,255,255,0.07);background:#111111;padding:18px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;"
               onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 30px rgba(0,0,0,0.4)';this.style.borderColor='rgba(241,197,175,0.35)'"
               onmouseleave="this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,255,255,0.07)'">
@@ -3130,7 +3130,7 @@ const Admin = {
 
   _bcHeader(title, icon, id, c) {
     return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-      <button onclick="Admin._bcBack(${id},Admin._cliClienteData)" style="width:34px;height:34px;border-radius:10px;background:var(--beige);border:1px solid var(--border);font-size:18px;cursor:pointer;color:var(--muted);flex-shrink:0;">←</button>
+      <button onclick="Admin._bcBack('${id}',Admin._cliClienteData)" style="width:34px;height:34px;border-radius:10px;background:var(--beige);border:1px solid var(--border);font-size:18px;cursor:pointer;color:var(--muted);flex-shrink:0;">←</button>
       <div style="font-size:20px;">${icon}</div>
       <div style="font-family:'Great Vibes',cursive;font-size:30px;color:var(--text);line-height:1;">${title}</div>
     </div>`;
@@ -4510,7 +4510,7 @@ const Admin = {
         <div style="margin-bottom:14px;">
           <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Direção do degradê</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            ${dirs.map(([d,l]) => `<button onclick="Admin._setGradDir('${d}',${id})" data-gdir="${d}" style="padding:6px 11px;border-radius:8px;border:1px solid var(--border);background:${d===dir?'var(--brown)':'var(--bg)'};color:${d===dir?'#F5F5F5':'var(--muted)'};font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;">${l}</button>`).join('')}
+            ${dirs.map(([d,l]) => `<button onclick="Admin._setGradDir('${d}','${id}')" data-gdir="${d}" style="padding:6px 11px;border-radius:8px;border:1px solid var(--border);background:${d===dir?'var(--brown)':'var(--bg)'};color:${d===dir?'#F5F5F5':'var(--muted)'};font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;">${l}</button>`).join('')}
           </div>
         </div>
         <div style="margin-bottom:20px;">
@@ -4519,7 +4519,7 @@ const Admin = {
             ${presets.map(([a,b]) => `<div onclick="Admin._setGradPreset('${a}','${b}')" style="height:32px;border-radius:8px;background:linear-gradient(135deg,${a},${b});cursor:pointer;border:2px solid transparent;" onmouseover="this.style.borderColor='var(--copper)'" onmouseout="this.style.borderColor='transparent'"></div>`).join('')}
           </div>
         </div>
-        <button onclick="Admin._applyCapaCor(${id})" style="width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;font-family:Poppins,sans-serif;letter-spacing:.08em;text-transform:uppercase;border:none;cursor:pointer;">Aplicar Degradê →</button>
+        <button onclick="Admin._applyCapaCor('${id}')" style="width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;font-family:Poppins,sans-serif;letter-spacing:.08em;text-transform:uppercase;border:none;cursor:pointer;">Aplicar Degradê →</button>
       </div>`;
     document.body.appendChild(overlay);
     this._gradDir = dir;
@@ -4585,16 +4585,16 @@ const Admin = {
             <span style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;">← Horizontal →</span>
             <span id="repos-xv" style="font-size:11px;color:var(--copper);font-weight:500;">${x}%</span>
           </div>
-          <input type="range" id="repos-xi" min="0" max="100" value="${x}" oninput="Admin._updateReposPrev(${id})" style="width:100%;accent-color:var(--copper);cursor:pointer;"/>
+          <input type="range" id="repos-xi" min="0" max="100" value="${x}" oninput="Admin._updateReposPrev('${id}')" style="width:100%;accent-color:var(--copper);cursor:pointer;"/>
         </div>
         <div style="margin-bottom:22px;">
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
             <span style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;">↑ Vertical ↓</span>
             <span id="repos-yv" style="font-size:11px;color:var(--copper);font-weight:500;">${y}%</span>
           </div>
-          <input type="range" id="repos-yi" min="0" max="100" value="${y}" oninput="Admin._updateReposPrev(${id})" style="width:100%;accent-color:var(--copper);cursor:pointer;"/>
+          <input type="range" id="repos-yi" min="0" max="100" value="${y}" oninput="Admin._updateReposPrev('${id}')" style="width:100%;accent-color:var(--copper);cursor:pointer;"/>
         </div>
-        <button onclick="Admin._applyRepos(${id})" style="width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;font-family:Poppins,sans-serif;letter-spacing:.08em;text-transform:uppercase;border:none;cursor:pointer;">Salvar Posição →</button>
+        <button onclick="Admin._applyRepos('${id}')" style="width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;font-family:Poppins,sans-serif;letter-spacing:.08em;text-transform:uppercase;border:none;cursor:pointer;">Salvar Posição →</button>
       </div>`;
     document.body.appendChild(overlay);
   },
