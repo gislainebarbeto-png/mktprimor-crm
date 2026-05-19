@@ -1268,7 +1268,8 @@ const App = {
         document.getElementById('admin-email').textContent = this.user.email;
         this.show('admin-view');
         Admin.isEquipe = true;
-        document.getElementById('nav-financeiro').style.display = 'none';
+        const _nf = document.getElementById('nav-financeiro');
+        if (_nf) _nf.style.display = 'none';
         // Sempre abre o grid de cards (netflix_module)
         setTimeout(()=>{ if(window.NFModule) NFModule.refresh(); else Admin.tab(startTab); }, 80);
       } else {
