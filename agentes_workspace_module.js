@@ -786,8 +786,8 @@
             <span style="font-size:10px;background:${st.bg};color:${st.color};padding:3px 10px;border-radius:20px;">${st.label}</span>
           </div>
           ${p.tema_titulo?`<div style="font-size:13px;font-weight:500;color:#5C3D1E;margin-bottom:8px;">${p.tema_titulo}</div>`:''}
-          ${p.legenda?`<div style="font-size:12px;color:#333;line-height:1.65;white-space:pre-wrap;margin-bottom:10px;">${p.legenda.replace(/</g,'&lt;')}</div>`:'<div style="font-size:12px;color:#aaa;margin-bottom:10px;">Sem legenda.</div>'}
-          ${p.obs?`<div style="font-size:11px;color:#9B6B3A;padding:8px 10px;background:#FAF8F2;border-radius:6px;margin-bottom:10px;">📝 ${p.obs.replace(/</g,'&lt;')}</div>`:''}
+          ${p.legenda?`<div style="font-size:12px;color:#333;line-height:1.65;margin-bottom:10px;">${p.legenda}</div>`:'<div style="font-size:12px;color:#aaa;margin-bottom:10px;">Sem legenda.</div>'}
+          ${p.obs?`<div style="font-size:11px;color:#9B6B3A;padding:8px 10px;background:#FAF8F2;border-radius:6px;margin-bottom:10px;">📝 ${p.obs}</div>`:''}
           <div style="display:flex;gap:12px;margin-top:10px;padding-top:12px;border-top:1px solid #F0E8DB;">
             <div style="flex:1;border:1px dashed #C8B89A;border-radius:8px;padding:10px 14px;text-align:center;">
               <div style="font-size:9px;color:#9B6B3A;text-transform:uppercase;letter-spacing:.12em;margin-bottom:20px;">✓ Aprovado</div>
