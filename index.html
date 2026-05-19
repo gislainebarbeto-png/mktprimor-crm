@@ -9135,6 +9135,10 @@ ${text}`,
   }
 };
 
+// Brand Core admin functions live inside Client — expose them on Admin
+Admin.renderBrandCoreAdmin = Client.renderBrandCoreAdmin;
+Admin._openBrandClient    = function(clientId){ return Client._openBrandClient.call(Admin, clientId); };
+
 const Theme = {
   _mq: window.matchMedia('(prefers-color-scheme: dark)'),
   apply(mode) {
