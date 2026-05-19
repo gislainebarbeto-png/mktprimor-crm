@@ -666,7 +666,7 @@
         <div class="aw2-intro">
           <strong style="font-size:14px;color:var(--text);display:block;margin-bottom:3px">✦ ${_ag.nome}</strong>
           <span style="font-size:12px;color:var(--muted)">${_ag.cargo}${cliNome?` · 👤 ${cliNome}`:''}</span><br>
-          <span style="font-size:11px;color:var(--muted)">${hasKey?(cliNome?'Pronta para receber sua tarefa.':'Selecione um cliente acima para contexto completo.'):'Configure a chave acima para começar.'}</span>
+          <span style="font-size:11px;color:var(--muted)">${cliNome?'Pronta para receber sua tarefa.':'Selecione um cliente acima para contexto completo.'}</span>
         </div>
       </div>
       <div class="aw2-cf">
