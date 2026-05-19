@@ -745,10 +745,7 @@
         const systemPrompt=await _buildSystemPrompt(_ag.id,_cliente);
         const res=await fetch('https://dloxddrdqsltuwdabwaq.supabase.co/functions/v1/anthropic-proxy',{
           method:'POST',
-          headers:{
-            'Content-Type':'application/json',
-            'Authorization':'Bearer sb_publishable_ZAEE1Rt9yMMWVTNqcdEo6w_WNhPt29M'
-          },
+          headers:{'Content-Type':'application/json'},
           body:JSON.stringify({system:systemPrompt,messages:_chatHist[_ag.id]})
         });
         const data=await res.json();
