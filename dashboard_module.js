@@ -335,6 +335,8 @@
   // ── INJEÇÃO ──────────────────────────────────────────────────────────
   function inject(){
     if(typeof Admin==='undefined'||typeof db==='undefined'){setTimeout(inject,150);return;}
+    if(Admin._dashPatched)return;
+    Admin._dashPatched=true;
 
     if(!document.getElementById('dh-css')){
       const s=document.createElement('style');s.id='dh-css';s.textContent=CSS;document.head.appendChild(s);
