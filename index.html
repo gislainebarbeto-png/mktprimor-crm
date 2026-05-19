@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="color-scheme" content="light dark">
-  <title>Marketing Primor · Portal v5.10</title>
+  <title>Marketing Primor · Portal v5.11</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="logo-icone-escuro.png">
   <link rel="apple-touch-icon" href="logo-icone-escuro.png">
@@ -1206,7 +1206,17 @@ const App = {
     document.getElementById('login-form').addEventListener('submit', e => this.login(e));
     try {
       const { data: { session } } = await db.auth.getSession();
-      if (session) { this.user = session.user; this.route(); }
+      if (session) {
+        this.user = session.user;
+        const usp = new URLSearchParams(window.location.search);
+        const igCode = usp.get('code');
+        const igState = usp.get('state');
+        if (igCode && igState) {
+          history.replaceState({}, '', window.location.pathname);
+          await Admin._igHandleCallback(igCode, igState);
+        }
+        this.route();
+      }
       else this.show('login-view');
     } catch(e) { this.show('login-view'); }
     finally { this.loader(false); }
@@ -2163,6 +2173,38 @@ const Admin = {
       };
       const legendaCompleta = [stripHtml(p.legenda), stripHtml(p.hashtags)].filter(Boolean).join('\n\n');
 
+      // Tenta publicar direto via Meta API se Instagram conectado
+      const { data: igToken } = await db.from('instagram_tokens')
+        .select('ig_user_id,ig_username').eq('client_email', p.client_email).maybeSingle();
+
+      if (igToken && midiasFinal.length <= 1) {
+        const igRes = await fetch('https://dloxddrdqsltuwdabwaq.supabase.co/functions/v1/instagram-publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_email: p.client_email,
+            image_url: isReel ? undefined : (capaFinal || midiasFinal[0]),
+            video_url: isReel ? urlVideo : undefined,
+            caption: legendaCompleta
+          })
+        });
+        const igData = await igRes.json();
+        if (!igData.error) {
+          await db.from('posts').update({ status: 'publicado' }).eq('id', id);
+          this.posts = this.posts.map(x => x.id === id ? {...x, status:'publicado'} : x);
+          this.loader(false);
+          this.closeDetail();
+          this._renderPostsView();
+          const t = document.createElement('div');
+          t.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#833ab4;color:#fff;padding:14px 28px;border-radius:30px;font-size:13px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);';
+          t.textContent = '✦ Publicado no Instagram @' + igData.ig_username + '!';
+          document.body.appendChild(t);
+          setTimeout(() => t.remove(), 4000);
+          return;
+        }
+        console.warn('[MKT Primor] Meta API falhou, usando Make:', igData.error);
+      }
+
       // Payload pro Make
       const payload = {
         post_id:      String(id),
@@ -2903,10 +2945,20 @@ const Admin = {
     this._showToast('Bio salva ✓');
   },
 
-  _cliTabInfo(id, c) {
+  async _cliTabInfo(id, c) {
     const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const inp = (elId,val,ph,type='text') => `<input type="${type}" id="${elId}" value="${(val||'').replace(/"/g,'&quot;')}" placeholder="${ph}" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);color:var(--text);margin-top:4px;box-sizing:border-box;"/>`;
     const fld = (lbl,content2) => `<div style="margin-bottom:12px;"><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;">${lbl}</div>${content2}</div>`;
+    const { data: igToken } = await db.from('instagram_tokens').select('ig_username,expires_at').eq('client_email', c.email).maybeSingle();
+    const igHtml = igToken
+      ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+           <div style="flex:1;font-size:13px;color:var(--text);">✓ Conectado como <strong>@${igToken.ig_username}</strong>${igToken.expires_at ? `<span style="font-size:10px;color:var(--muted);margin-left:6px;">até ${new Date(igToken.expires_at).toLocaleDateString('pt-BR')}</span>` : ''}</div>
+           <button onclick="Admin._igDisconnect('${c.email}')" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);background:transparent;font-size:11px;cursor:pointer;color:#ef4444;">Desconectar</button>
+         </div>`
+      : `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+           <div style="flex:1;font-size:12px;color:var(--muted);">Não conectado — publicação usa Make webhook</div>
+           <a href="${Admin._igAuthUrl(c.email)}" style="display:inline-block;padding:7px 16px;border-radius:8px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap;">🔗 Conectar Instagram</a>
+         </div>`;
     content.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:700px;">
         ${fld('Nome completo', inp('dp-nome',c.nome,'Nome do cliente'))}
@@ -2927,6 +2979,10 @@ const Admin = {
       <div style="margin-top:16px;padding:12px 16px;background:rgba(196,150,122,.06);border:1px solid rgba(201,162,39,.15);border-radius:12px;font-size:11px;color:var(--muted);line-height:2;max-width:700px;">
         <strong style="color:var(--brown);">Acesso da cliente:</strong><br>
         crm.gislainebarbeto.com.br · <strong>${c.email}</strong> · <strong>${c.access_code||'Primor2026!'}</strong>
+      </div>
+      <div style="margin-top:16px;padding:14px 16px;background:rgba(131,58,180,0.05);border:1px solid rgba(131,58,180,0.18);border-radius:12px;max-width:700px;">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;">📷 Publicação direta no Instagram</div>
+        ${igHtml}
       </div>`;
   },
 
@@ -7283,6 +7339,40 @@ const Admin = {
     const { count } = await db.from('mensagens').select('*',{count:'exact',head:true}).eq('de','client').eq('lida',false);
     const badge = document.getElementById('nb-chat');
     if (badge) { badge.textContent = count||''; badge.classList.toggle('hidden', !count); }
+  },
+
+  // ── INSTAGRAM DIRETO ──
+  _igAuthUrl(clientEmail) {
+    const params = new URLSearchParams({
+      client_id: '1518275049929451',
+      redirect_uri: 'https://crm.gislainebarbeto.com.br/',
+      response_type: 'code',
+      scope: 'instagram_business_basic,instagram_business_content_publish',
+      state: clientEmail
+    });
+    return 'https://www.instagram.com/oauth/authorize?' + params.toString();
+  },
+
+  async _igHandleCallback(code, clientEmail) {
+    try {
+      const res = await fetch('https://dloxddrdqsltuwdabwaq.supabase.co/functions/v1/instagram-oauth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, client_email: clientEmail })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      this._showToast('✓ Instagram @' + data.ig_username + ' conectado com sucesso!');
+    } catch(e) {
+      alert('Erro ao conectar Instagram: ' + e.message);
+    }
+  },
+
+  async _igDisconnect(clientEmail) {
+    if (!confirm('Desconectar Instagram deste cliente?')) return;
+    await db.from('instagram_tokens').delete().eq('client_email', clientEmail);
+    this._showToast('Instagram desconectado.');
+    if (this._cliCurrentId && this._cliClienteData) this._cliTabInfo(this._cliCurrentId, this._cliClienteData);
   }
 };
 
