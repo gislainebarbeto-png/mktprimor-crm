@@ -772,9 +772,27 @@
     </div>`;
   }
 
+  async function _migrateLegacyChat(localMsgs){
+    // Se o Supabase ainda não tem mensagens deste agente+cliente, migra tudo do localStorage
+    try{
+      const{count}=await db.from('agentes_chat_historico').select('id',{count:'exact',head:true}).eq('agente_id',_ag.id).eq('client_email',_cliente||'');
+      if((count||0)===0&&localMsgs.length){
+        const rows=localMsgs.map(m=>({agente_id:_ag.id,client_email:_cliente||'',role:m.role,content:m.content}));
+        await db.from('agentes_chat_historico').insert(rows);
+      }
+    }catch(e){}
+  }
+
   async function _initChat(){
     _histLoad();
-    if(!(_chatHist[_ag.id]||[]).length) await _histLoadRemote();
+    const localMsgs=_chatHist[_ag.id]||[];
+    if(localMsgs.length){
+      // Tem histórico local — migra para Supabase em background se necessário
+      _migrateLegacyChat(localMsgs);
+    }else{
+      // Sem localStorage — busca direto do Supabase
+      await _histLoadRemote();
+    }
     if(!_chatHist[_ag.id])_chatHist[_ag.id]=[];
     const msgs=document.getElementById('aw2msgs');
     if(msgs&&_chatHist[_ag.id].length){
