@@ -14,6 +14,7 @@
   const ORDER_PATH   = 'module-covers/card_order.json';
   let _customCards   = [];
   let _savedOrder    = {};
+  let _adminHeroCover= {url:'', pos:'50% 50%'};
 
   // ── TODOS OS MÓDULOS (lateral + dashboard) ───────────────────────────
   const ADMIN_MODULES = [
@@ -140,6 +141,11 @@
     }
     .nf-hero-title { font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;color:#ffd6ba;position:relative;margin-bottom:6px;letter-spacing:.02em; }
     .nf-hero-sub   { font-size:10px;color:rgba(255,214,186,0.45);letter-spacing:.2em;text-transform:uppercase;position:relative; }
+    .nf-hero-has-cover{padding:0!important;aspect-ratio:2000/533;background-size:cover!important;background-repeat:no-repeat;border:none!important;box-shadow:none!important;}
+    .nf-hero-has-cover::before,.nf-hero-has-cover::after{display:none!important;}
+    .nf-hero-edit-overlay{position:absolute;bottom:10px;right:14px;display:flex;gap:6px;opacity:0;transition:opacity .2s;z-index:5;}
+    .nf-hero:hover .nf-hero-edit-overlay{opacity:1;}
+    .nf-hero-edit-btn{font-size:10px;padding:5px 11px;background:rgba(0,0,0,0.6);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:7px;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap;}
 
     .nf-section { margin-bottom:28px;padding:0 20px; }
     .nf-section-title {
@@ -559,6 +565,126 @@
     }
   }
 
+  // ── ADMIN HERO COVER ─────────────────────────────────────────────────
+  async function loadAdminHeroCover(){
+    try{
+      const{data}=await db.from('arquivos_cliente').select('nome,url').eq('client_email','__admin_config__').in('nome',['hero_capa_url','hero_capa_pos']);
+      if(data){
+        const u=data.find(r=>r.nome==='hero_capa_url');
+        const p=data.find(r=>r.nome==='hero_capa_pos');
+        _adminHeroCover.url=u?.url||'';
+        _adminHeroCover.pos=p?.url||'50% 50%';
+      }
+    }catch{}
+  }
+
+  function openAdminHeroModal(){
+    document.getElementById('nf-admin-hero-modal')?.remove();
+    const m=document.createElement('div');m.className='nf-cover-modal';m.id='nf-admin-hero-modal';
+    m.innerHTML=`<div class="nf-cover-box">
+      <h3>Capa do Painel (2000×533)</h3>
+      <div class="nf-drop-zone" id="nf-ah-drop">
+        <input type="file" id="nf-ah-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+        <div class="nf-drop-icon">🖼️</div>
+        <div class="nf-drop-text"><strong>Clique ou arraste</strong> uma imagem aqui</div>
+        <div class="nf-drop-text" style="font-size:10px;margin-top:4px;opacity:.6">Tamanho ideal: 2000×533px</div>
+      </div>
+      <div class="nf-or">ou cole uma URL</div>
+      <input type="text" id="nf-ah-url" class="nf-cover-url-input" placeholder="https://..." value="${_adminHeroCover.url}">
+      <div class="nf-cover-preview" id="nf-ah-prev" style="aspect-ratio:2000/533;overflow:hidden;">${_adminHeroCover.url?`<img src="${_adminHeroCover.url}" style="width:100%;height:100%;object-fit:cover;">`:' Prévia aqui'}</div>
+      <div class="nf-cover-btns">
+        <button class="nf-cover-save" onclick="NFModule._saveAdminHeroCover()">Salvar</button>
+        <button class="nf-cover-remove" onclick="NFModule._removeAdminHeroCover()">Remover capa</button>
+        <button class="nf-cover-cancel" onclick="document.getElementById('nf-admin-hero-modal')?.remove()">Cancelar</button>
+      </div>
+    </div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click',e=>{if(e.target===m)m.remove();});
+    const dz=document.getElementById('nf-ah-drop');
+    dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+    dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+    dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)_handleAdminHeroFile(f);});
+    document.getElementById('nf-ah-file').addEventListener('change',e=>{const f=e.target.files[0];if(f)_handleAdminHeroFile(f);});
+    document.getElementById('nf-ah-url').addEventListener('input',e=>{
+      const url=e.target.value.trim();
+      document.getElementById('nf-ah-prev').innerHTML=url?`<img src="${url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='URL inválida'">`:' Prévia aqui';
+    });
+  }
+
+  async function _handleAdminHeroFile(file){
+    if(file.size>10*1024*1024){alert('Máximo 10MB.');return;}
+    const prev=document.getElementById('nf-ah-prev');
+    const reader=new FileReader();
+    reader.onload=e=>{prev.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`};
+    reader.readAsDataURL(file);
+    try{
+      const ext=file.name.split('.').pop().toLowerCase();
+      const path=`admin-hero/cover.${ext}`;
+      const{error}=await db.storage.from(BUCKET).upload(path,file,{upsert:true,contentType:file.type});
+      if(error)throw error;
+      const{data:urlData}=db.storage.from(BUCKET).getPublicUrl(path);
+      document.getElementById('nf-ah-url').value=urlData.publicUrl;
+      prev.innerHTML=`<img src="${urlData.publicUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+    }catch(err){alert('Erro upload: '+(err.message||err));}
+  }
+
+  async function _saveAdminHeroCoverFn(){
+    const url=(document.getElementById('nf-ah-url')?.value||'').trim();
+    if(!url){alert('Cole ou faça upload de uma imagem.');return;}
+    try{
+      const{data:ex}=await db.from('arquivos_cliente').select('id').eq('client_email','__admin_config__').eq('nome','hero_capa_url').maybeSingle();
+      if(ex)await db.from('arquivos_cliente').update({url}).eq('id',ex.id);
+      else await db.from('arquivos_cliente').insert({client_email:'__admin_config__',nome:'hero_capa_url',url,uploader:'admin'});
+      _adminHeroCover.url=url;
+      document.getElementById('nf-admin-hero-modal')?.remove();
+      renderAdminGrid();
+    }catch(err){alert('Erro ao salvar: '+(err.message||err));}
+  }
+
+  async function _removeAdminHeroCoverFn(){
+    try{
+      await db.from('arquivos_cliente').delete().eq('client_email','__admin_config__').in('nome',['hero_capa_url','hero_capa_pos']);
+      _adminHeroCover={url:'',pos:'50% 50%'};
+      document.getElementById('nf-admin-hero-modal')?.remove();
+      renderAdminGrid();
+    }catch(err){alert('Erro: '+(err.message||err));}
+  }
+
+  function openAdminHeroPosModal(){
+    if(!_adminHeroCover.url)return;
+    const m2=_adminHeroCover.pos.match(/(\d+)%\s+(\d+)%/);
+    let x=m2?parseInt(m2[1]):50, y=m2?parseInt(m2[2]):50;
+    window._ahX=x; window._ahY=y;
+    const m=document.createElement('div');m.className='nf-cover-modal';m.id='nf-admin-pos-modal';
+    m.innerHTML=`<div class="nf-cover-box">
+      <h3>Ajustar posição da capa</h3>
+      <div id="nf-ah-pos-prev" style="aspect-ratio:2000/533;border-radius:12px;background-image:url('${_adminHeroCover.url}');background-size:cover;background-position:${x}% ${y}%;border:1px solid var(--border);margin-bottom:16px;"></div>
+      <div style="display:flex;gap:12px;margin-bottom:14px;">
+        <div style="flex:1;"><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;">Horizontal</label><input type="range" min="0" max="100" value="${x}" oninput="window._ahX=+this.value;document.getElementById('nf-ah-pos-prev').style.backgroundPosition=window._ahX+'% '+window._ahY+'%'" style="width:100%;"></div>
+        <div style="flex:1;"><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;">Vertical</label><input type="range" min="0" max="100" value="${y}" oninput="window._ahY=+this.value;document.getElementById('nf-ah-pos-prev').style.backgroundPosition=window._ahX+'% '+window._ahY+'%'" style="width:100%;"></div>
+      </div>
+      <div class="nf-cover-btns">
+        <button class="nf-cover-save" onclick="NFModule._saveAdminHeroPos()">Salvar posição</button>
+        <button class="nf-cover-cancel" onclick="document.getElementById('nf-admin-pos-modal')?.remove()">Cancelar</button>
+      </div>
+    </div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click',e=>{if(e.target===m)m.remove();});
+  }
+
+  async function _saveAdminHeroPosFn(){
+    const pos=`${window._ahX??50}% ${window._ahY??50}%`;
+    try{
+      const{data:ex}=await db.from('arquivos_cliente').select('id').eq('client_email','__admin_config__').eq('nome','hero_capa_pos').maybeSingle();
+      if(ex)await db.from('arquivos_cliente').update({url:pos}).eq('id',ex.id);
+      else await db.from('arquivos_cliente').insert({client_email:'__admin_config__',nome:'hero_capa_pos',url:pos,uploader:'admin'});
+      _adminHeroCover.pos=pos;
+      document.getElementById('nf-admin-pos-modal')?.remove();
+      const hero=document.getElementById('nf-admin-hero');
+      if(hero)hero.style.backgroundPosition=pos;
+    }catch(err){alert('Erro: '+(err.message||err));}
+  }
+
   // ── RENDER CARD ──────────────────────────────────────────────────────
   function renderCard(mod, isAdmin, badge){
     const cover=getCovers()[mod.id];
@@ -610,7 +736,7 @@
     if(!el)return;
     hideAdminBack();
     try{history.replaceState({crm:'grid'},'');}catch(e){}
-    await Promise.all([loadRemoteCovers(),loadCustomCards(),loadOrder()]);
+    await Promise.all([loadRemoteCovers(),loadCustomCards(),loadOrder(),loadAdminHeroCover()]);
 
     let badges={};
     try{
@@ -627,9 +753,14 @@
     const newCardHtml=`<div class="nf-card nf-new-card" data-new="1" data-admin="true"><div class="nf-card-bg"></div><div class="nf-card-overlay"></div><div class="nf-card-body" style="text-align:center;padding-bottom:20px"><span class="nf-card-icon">+</span><span class="nf-card-label">Novo Card</span><span class="nf-card-desc">Criar módulo personalizado</span></div></div>`;
 
     el.innerHTML=`<div class="nf-home">
-      <div class="nf-hero">
-        <div class="nf-hero-title">Painel Agência Primor</div>
-        <div class="nf-hero-sub">Selecione um módulo para começar · Arraste para reordenar</div>
+      <div class="nf-hero${_adminHeroCover.url?' nf-hero-has-cover':''}" id="nf-admin-hero"${_adminHeroCover.url?` style="background-image:url('${_adminHeroCover.url}');background-position:${_adminHeroCover.pos};"`:''}>
+        ${_adminHeroCover.url?'':
+          `<div class="nf-hero-title">Painel Agência Primor</div>
+           <div class="nf-hero-sub">Selecione um módulo para começar · Arraste para reordenar</div>`}
+        <div class="nf-hero-edit-overlay">
+          <button class="nf-hero-edit-btn" onclick="NFModule._openAdminHeroModal()">✎ Capa</button>
+          ${_adminHeroCover.url?`<button class="nf-hero-edit-btn" onclick="NFModule._openAdminHeroPosModal()">⊹ Posição</button>`:''}
+        </div>
       </div>
       ${orderedSections.map(sec=>{
         const mods=ADMIN_MODULES.filter(m=>sec.ids.includes(m.id));
@@ -813,6 +944,11 @@
   // ── API PÚBLICA ──────────────────────────────────────────────────────
   window.NFModule={
     _openEdit,_hideGrid,
+    _openAdminHeroModal:openAdminHeroModal,
+    _openAdminHeroPosModal:openAdminHeroPosModal,
+    _saveAdminHeroCover:_saveAdminHeroCoverFn,
+    _removeAdminHeroCover:_removeAdminHeroCoverFn,
+    _saveAdminHeroPos:_saveAdminHeroPosFn,
     _saveCover(id){
       const url=document.getElementById('nf-cover-url')?.value.trim();
       if(url)saveCover(id,url);

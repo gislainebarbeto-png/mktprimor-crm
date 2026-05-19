@@ -311,9 +311,12 @@
     /* Unread dot */
     html.dark .unread-dot { background: #d6cab4; }
     /* Theme switcher */
-    .theme-switcher{display:flex;background:var(--beige);border-radius:20px;padding:2px;gap:1px;}
-    .theme-btn{background:transparent;border:none;border-radius:16px;padding:5px 8px;font-size:13px;cursor:pointer;color:var(--muted);transition:all .2s;line-height:1;}
-    .theme-btn.active{background:var(--surface);color:var(--brown);box-shadow:0 1px 4px rgba(0,0,0,.15);}
+    .theme-switcher{display:flex;background:#111;border-radius:20px;padding:3px;gap:1px;}
+    .theme-btn{background:transparent;border:none;border-radius:16px;padding:6px 8px;cursor:pointer;color:#fff;transition:all .2s;line-height:1;display:flex;align-items:center;justify-content:center;}
+    .theme-btn.active{background:#fff;color:#111;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+    html.dark .theme-switcher{background:#fff;}
+    html.dark .theme-btn{color:#111;}
+    html.dark .theme-btn.active{background:#111;color:#fff;}
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:"Poppins",sans-serif;font-weight:300;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
     h1,h2,h3{font-family:'Montserrat',sans-serif;font-weight:200;text-transform:uppercase;letter-spacing:.08em;}
@@ -1056,15 +1059,11 @@
 <!-- ADMIN CRM -->
 <div id="admin-view" class="hidden">
   <div class="app-header">
-    <div class="header-logo" id="admin-header-logo">
-      <img src="logo-texto.png.jpeg" alt="Agência Primor" style="height:54px;object-fit:contain;">
-      <span>Portal Interno</span>
-    </div>
     <div class="header-right">
       <div class="theme-switcher">
-        <button class="theme-btn" data-mode="light" title="Claro" onclick="Theme.set('light')">☀️</button>
-        <button class="theme-btn" data-mode="auto" title="Seguir PC" onclick="Theme.set('auto')">⚙️</button>
-        <button class="theme-btn" data-mode="dark" title="Escuro" onclick="Theme.set('dark')">🌙</button>
+        <button class="theme-btn" data-mode="light" title="Claro" onclick="Theme.set('light')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.41 1.41M18.36 18.36l1.41 1.41M1 12h2M21 12h2M4.22 19.78l1.41-1.41M18.36 5.64l1.41-1.41"/></svg></button>
+        <button class="theme-btn" data-mode="auto" title="Seguir PC" onclick="Theme.set('auto')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+        <button class="theme-btn" data-mode="dark" title="Escuro" onclick="Theme.set('dark')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
       </div>
       <span class="header-user" id="admin-email"></span>
       <button class="btn-out" onclick="App.logout()">Sair</button>
@@ -9783,12 +9782,12 @@ document.addEventListener('keydown', e => {
 
   document.addEventListener('DOMContentLoaded', () => RichEditor.init());
 </script>
-<script src="netflix_module.js?v=20260518g"></script>
+<script src="netflix_module.js?v=20260519a"></script>
 <script src="theme_module.js?v=20260517d"></script>
 <script src="dashboard_module.js?v=20260517c"></script>
 <script src="relatorio_equipe_module.js?v=20260517"></script>
 <script src="comercial_hub_module.js?v=20260518"></script>
 <script src="fiscal_module.js?v=20260518b"></script>
-<script src="agentes_workspace_module.js?v=20260518k"></script>
+<script src="agentes_workspace_module.js?v=20260519a"></script>
 </body>
 </html>
