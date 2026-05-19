@@ -6878,6 +6878,12 @@ const Admin = {
           </div>
         </div>
 
+        <!-- Calendário de posts (tarefas) -->
+        <div class="task-section">
+          <div class="task-section-lbl" style="cursor:pointer;user-select:none;" onclick="var b=document.getElementById('posts-cal-tf');b.style.display=b.style.display==='none'?'block':'none'">📅 Calendário de posts ▾</div>
+          <div id="posts-cal-tf"></div>
+        </div>
+
         <!-- Cliente -->
         <div class="task-section">
           <div class="task-section-lbl">👤 Cliente vinculado</div>
@@ -6915,6 +6921,8 @@ const Admin = {
     </div>`;
     document.body.appendChild(overlay);
     overlay.addEventListener('click', e => { if(e.target===overlay){ overlay.remove(); this.abrirProjeto(projetoId); }});
+    const _tfNow = new Date();
+    this._loadPostsCal('posts-cal-tf', 'tf-prazo', _tfNow.getFullYear(), _tfNow.getMonth());
   },
 
   _chkItems: [],
@@ -7145,6 +7153,12 @@ const Admin = {
           <input id="dm-horario" type="time" value="${d.horario||''}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);"/>
         </div>
 
+        <!-- Calendário de posts (demandas) -->
+        <div class="task-section">
+          <div class="task-section-lbl" style="cursor:pointer;user-select:none;" onclick="var b=document.getElementById('posts-cal-dm');b.style.display=b.style.display==='none'?'block':'none'">📅 Calendário de posts ▾</div>
+          <div id="posts-cal-dm"></div>
+        </div>
+
         <!-- Membro + Cliente -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <div class="task-section">
@@ -7185,6 +7199,8 @@ const Admin = {
     </div>`;
     document.body.appendChild(overlay);
     overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+    const _dmNow = new Date();
+    this._loadPostsCal('posts-cal-dm', 'dm-prazo', _dmNow.getFullYear(), _dmNow.getMonth());
   },
 
   _parseAnexos(raw) {
@@ -7381,6 +7397,57 @@ const Admin = {
     await db.from('instagram_tokens').delete().eq('client_email', clientEmail);
     this._showToast('Instagram desconectado.');
     if (this._cliCurrentId && this._cliClienteData) this._cliTabInfo(this._cliCurrentId, this._cliClienteData);
+  },
+
+  // ── CALENDÁRIO DE POSTS NOS MODAIS ──
+  _postsCalHtml(year, month, postDates, prazoDomId, containerId) {
+    const mNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const today = new Date();
+    const todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const prevM = month === 0 ? 11 : month - 1;
+    const prevY = month === 0 ? year - 1 : year;
+    const nextM = month === 11 ? 0 : month + 1;
+    const nextY = month === 11 ? year + 1 : year;
+    const dayLabels = ['D','S','T','Q','Q','S','S'];
+    let cells = dayLabels.map(d => '<div class="cal-dlbl">'+d+'</div>').join('');
+    for (let i = 0; i < firstDay; i++) cells += '<div class="cal-day empty"></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      const isToday = ds === todayStr;
+      const hasPost = postDates.has(ds);
+      const cls = 'cal-day'+(hasPost?' has-post':'')+(isToday?' today':'');
+      cells += '<div class="'+cls+'" style="cursor:pointer;" onclick="Admin._setCalDate(\''+prazoDomId+'\',\''+ds+'\',this,\''+containerId+'\')">'+d+(hasPost?'<span class="cal-dot"></span>':'')+'</div>';
+    }
+    return '<div style="border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-top:4px;">'
+      +'<div class="cal-hd" style="padding:6px 10px;border-bottom:1px solid var(--border);background:var(--beige);">'
+      +'<button onclick="Admin._loadPostsCal(\''+containerId+'\',\''+prazoDomId+'\','+prevY+','+prevM+')" style="background:none;border:none;cursor:pointer;color:var(--brown);font-size:18px;padding:0 4px;line-height:1;">‹</button>'
+      +'<span class="cal-title" style="font-size:13px;">'+mNames[month]+' '+year+'</span>'
+      +'<button onclick="Admin._loadPostsCal(\''+containerId+'\',\''+prazoDomId+'\','+nextY+','+nextM+')" style="background:none;border:none;cursor:pointer;color:var(--brown);font-size:18px;padding:0 4px;line-height:1;">›</button>'
+      +'</div>'
+      +'<div style="padding:6px 8px;"><div class="cal-grid">'+cells+'</div></div>'
+      +'</div>';
+  },
+
+  async _loadPostsCal(containerId, prazoDomId, year, month) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:8px;text-align:center;">Carregando...</div>';
+    const start = year+'-'+String(month+1).padStart(2,'0')+'-01';
+    const end = year+'-'+String(month+1).padStart(2,'0')+'-'+new Date(year, month+1, 0).getDate();
+    const { data } = await db.from('posts').select('data_post').gte('data_post', start).lte('data_post', end);
+    const postDates = new Set((data||[]).map(p => p.data_post?.slice(0,10)).filter(Boolean));
+    container.innerHTML = this._postsCalHtml(year, month, postDates, prazoDomId, containerId);
+  },
+
+  _setCalDate(prazoDomId, dateStr, el, containerId) {
+    const input = document.getElementById(prazoDomId);
+    if (input) input.value = dateStr;
+    const cal = document.getElementById(containerId);
+    if (cal) cal.querySelectorAll('.cal-day').forEach(d => { d.style.outline=''; d.style.borderRadius=''; });
+    el.style.outline = '2px solid var(--brown)';
+    el.style.borderRadius = '4px';
   }
 };
 
