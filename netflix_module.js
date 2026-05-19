@@ -82,6 +82,7 @@
     html:not(.dark) #client-view { background:#ebe8e3 !important; }
     html:not(.dark) .admin-main,
     html:not(.dark) .client-main { background:#ebe8e3 !important; }
+    html:not(.dark) .app-header { background:#111111 !important; border-bottom:1px solid rgba(255,255,255,0.06) !important; }
 
     /* ── BOTÃO VOLTAR NO HEADER ── */
     #nf-admin-back {
