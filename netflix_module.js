@@ -69,12 +69,19 @@
     .admin-body { overflow:hidden; }
     .admin-main { width:100% !important; padding:0 !important; }
 
-    /* ── FUNDO CINZA ESCURO NO DARK MODE ── */
+    /* ── FUNDO DARK MODE ── */
     html.dark body,
     html.dark #admin-view,
     html.dark #client-view { background:#0D0D0D !important; }
     html.dark .admin-main,
     html.dark .client-main { background:#0D0D0D !important; }
+
+    /* ── FUNDO TEMA CLARO ── */
+    html:not(.dark) body,
+    html:not(.dark) #admin-view,
+    html:not(.dark) #client-view { background:#ebe8e3 !important; }
+    html:not(.dark) .admin-main,
+    html:not(.dark) .client-main { background:#ebe8e3 !important; }
 
     /* ── BOTÃO VOLTAR NO HEADER ── */
     #nf-admin-back {
@@ -170,6 +177,8 @@
     .nf-card-bg { position:absolute;inset:0;background-size:cover;background-position:center;transition:transform .4s;pointer-events:none; }
     .nf-card:hover .nf-card-bg { transform:scale(1.07); }
     .nf-card-overlay { position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.18) 55%,transparent 100%);pointer-events:none; }
+    .nf-has-cover .nf-card-overlay { display:none; }
+    .nf-has-cover .nf-card-body { display:none; }
 
     .nf-card-body   { position:absolute;bottom:0;left:0;right:0;padding:12px 12px 14px;pointer-events:none; }
     .nf-card-icon   { font-size:22px;margin-bottom:5px;display:block;opacity:0.9; }
@@ -689,12 +698,13 @@
   // ── RENDER CARD ──────────────────────────────────────────────────────
   function renderCard(mod, isAdmin, badge){
     const cover=getCovers()[mod.id];
+    const hasCover=!!cover;
     const bgStyle=cover
       ?`background-image:url('${cover}');background-size:cover;background-position:center;`
       :`${mod.gradient};`;
     const editBtn=`<div class="nf-card-edit" data-edit="${mod.id}">✎ Capa</div>`;
     const badgeHtml=badge?`<div class="nf-card-badge">${badge}</div>`:'';
-    return `<div class="nf-card" data-id="${mod.id}" data-admin="${isAdmin}">
+    return `<div class="nf-card${hasCover?' nf-has-cover':''}" data-id="${mod.id}" data-admin="${isAdmin}">
       <div class="nf-card-bg" style="${bgStyle}"></div>
       <div class="nf-card-overlay"></div>
       ${editBtn}${badgeHtml}
