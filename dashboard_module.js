@@ -1,5 +1,5 @@
 // ───────────────────────────────────────────────────────────────────────
-// DASHBOARD HOME MODULE — Marketing Primor CRM
+// DASHBOARD HOME MODULE — Marketing Primor CRM v20260519f
 // KPIs · Gráficos SVG · Demandas · Posts · Calendário mini
 // ───────────────────────────────────────────────────────────────────────
 (function(){
