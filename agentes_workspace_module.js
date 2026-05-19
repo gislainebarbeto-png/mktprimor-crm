@@ -40,13 +40,14 @@
   let _clientes=[],_fiscal={};
   let _chatHist={},_chatLoad=false;
 
-  const _CHAT_DATE='2099-12-31';
   function _histKey(){return 'primor_chat_'+(_ag?_ag.id:'x')+'__'+(_cliente||'geral');}
-  function _histSave(){
+  function _histSaveLocal(){
     if(!_ag)return;
-    const msgs=(_chatHist[_ag.id]||[]).slice(-120);
-    try{localStorage.setItem(_histKey(),JSON.stringify(msgs));}catch(e){}
-    db.from('agentes_trabalhos').upsert({agente_id:_ag.id,aba_id:'_chat',client_email:_cliente||'',data:_CHAT_DATE,conteudo:msgs},{onConflict:'agente_id,aba_id,client_email,data'}).catch(()=>{});
+    try{localStorage.setItem(_histKey(),JSON.stringify((_chatHist[_ag.id]||[]).slice(-120)));}catch(e){}
+  }
+  function _histInsertMsg(role,content){
+    if(!_ag)return;
+    db.from('agentes_chat_historico').insert({agente_id:_ag.id,client_email:_cliente||'',role,content}).catch(()=>{});
   }
   function _histLoad(){
     if(!_ag)return;
@@ -55,10 +56,10 @@
   async function _histLoadRemote(){
     if(!_ag)return;
     try{
-      const{data}=await db.from('agentes_trabalhos').select('conteudo').eq('agente_id',_ag.id).eq('aba_id','_chat').eq('client_email',_cliente||'').eq('data',_CHAT_DATE).maybeSingle();
-      if(data?.conteudo?.length){
-        _chatHist[_ag.id]=data.conteudo;
-        try{localStorage.setItem(_histKey(),JSON.stringify(data.conteudo));}catch(e){}
+      const{data}=await db.from('agentes_chat_historico').select('role,content').eq('agente_id',_ag.id).eq('client_email',_cliente||'').order('created_at',{ascending:true}).limit(120);
+      if(data?.length){
+        _chatHist[_ag.id]=data.map(r=>({role:r.role,content:r.content}));
+        try{localStorage.setItem(_histKey(),JSON.stringify(_chatHist[_ag.id]));}catch(e){}
       }
     }catch(e){}
   }
@@ -1001,6 +1002,7 @@
       if(!confirm('Limpar toda a conversa com '+_ag.nome+'?'))return;
       _chatHist[_ag.id]=[];
       try{localStorage.removeItem(_histKey());}catch(e){}
+      db.from('agentes_chat_historico').delete().eq('agente_id',_ag.id).eq('client_email',_cliente||'').catch(()=>{});
       _renderAba('chat');
     },
     saveKey(){
@@ -1017,7 +1019,7 @@
       if(!text||_chatLoad||!_ag)return;
       inp.value='';this.chatRes(inp);_chatLoad=true;document.getElementById('aw2cs').disabled=true;
       if(!_chatHist[_ag.id])_chatHist[_ag.id]=[];
-      _addMsg('user',text);_chatHist[_ag.id].push({role:'user',content:text});_histSave();
+      _addMsg('user',text);_chatHist[_ag.id].push({role:'user',content:text});_histInsertMsg('user',text);_histSaveLocal();
       const msgs=document.getElementById('aw2msgs');
       const td=document.createElement('div');td.id='aw2td';td.className='aw2-msg agent';
       td.innerHTML='<div class="aw2-typ"><div class="aw2-dot"></div><div class="aw2-dot"></div><div class="aw2-dot"></div></div>';
@@ -1037,7 +1039,7 @@
           _chatLoad=false;document.getElementById('aw2cs').disabled=false;return;
         }
         const reply=data.content?.[0]?.text||'Erro ao processar.';
-        _chatHist[_ag.id].push({role:'assistant',content:reply});_addMsg('agent',reply);_histSave();
+        _chatHist[_ag.id].push({role:'assistant',content:reply});_addMsg('agent',reply);_histInsertMsg('assistant',reply);_histSaveLocal();
       }catch(e){
         document.getElementById('aw2td')?.remove();
         _addMsg('agent','⚠️ Erro de rede: '+e.message);
