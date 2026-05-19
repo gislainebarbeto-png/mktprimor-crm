@@ -20,8 +20,8 @@
       labels:{onboarding:'📋 Onboarding',briefing:'📄 Briefing',resultados:'📊 Resultados',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
     { id:'chloe',   nome:'Chloe',   iniciais:'CH', tipo:'content',   cargo:'Arquitetura da Informação & Conteúdo',
       chips:['Planejamento 30 dias','Copy & legendas','Roteiros Reels','Briefing Gabi'],
-      abas:['planejamento','calendario','briefing_visual','chat'],
-      labels:{planejamento:'📋 Planejamento',calendario:'🗓 Calendário',briefing_visual:'✏️ Briefing Visual',chat:'💬 Chat IA'} },
+      abas:['planejamento','posts_chloe','calendario','briefing_visual','chat'],
+      labels:{planejamento:'📋 Planejamento',posts_chloe:'✦ Posts',calendario:'🗓 Calendário',briefing_visual:'✏️ Briefing Visual',chat:'💬 Chat IA'} },
     { id:'gabi',    nome:'Gabi',    iniciais:'GA', tipo:'design',    cargo:'Design Visual & Identidade de Marca',
       chips:['Moodboard','Posts & carrossel','Identidade visual','Posicionamento'],
       abas:['moodboard','conceito','calendario','chat'],
@@ -401,6 +401,7 @@
       case'briefing':      h=await _briefing();break;
       case'resultados':    h=await _resultados();break;
       case'planejamento':  h=await _planejamento();break;
+      case'posts_chloe':   h=await _postsChloe();break;
       case'briefing_visual':h=await _briefVisual();break;
       case'moodboard':     h=await _moodboard();break;
       case'conceito':      h=await _conceito();break;
@@ -492,6 +493,66 @@
       <div class="aw2-fg"><label class="aw2-fl">Texto no post</label><textarea class="aw2-ta" id="bv-tx">${d.texto||''}</textarea></div>
       <div class="aw2-fg"><label class="aw2-fl">Obs para Gabi</label><textarea class="aw2-ta" id="bv-o">${d.obs||''}</textarea></div>
       <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveBriefV()">Salvar</button><span class="aw2-svd" id="bv-s"></span></div>
+    </div>`;
+  }
+
+  // CHLOE — Posts
+  async function _postsChloe(){
+    let posts=[];
+    if(_cliente){
+      try{const{data}=await db.from('posts').select('id,tema_titulo,tipo,data_post,status,legenda,hashtags,obs,obs_int').eq('client_email',_cliente).order('data_post',{ascending:false}).limit(40);posts=data||[];}catch(e){}
+    }
+    const TIPOS=['feed','carrossel','reels','stories','tiktok'];
+    const STATUS=['criacao','revisao','aprovado','publicado'];
+    const stLabel={criacao:'Em criação',revisao:'Em revisão',aprovado:'Aprovado',publicado:'Publicado'};
+    const stColor={criacao:'#e67e22',revisao:'#2980b9',aprovado:'#27ae60',publicado:'#8e44ad'};
+    const step=(n,lbl)=>`<div style="display:flex;align-items:center;gap:8px;margin:14px 0 6px"><span style="background:var(--brown);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${n}</span><label class="aw2-fl" style="margin:0;font-weight:600">${lbl}</label></div>`;
+    return `<div id="ch-pw">
+      <div class="aw2-form" style="margin-bottom:16px">
+        <div class="aw2-ft">✦ Criar / Editar Post</div>
+        <input type="hidden" id="ch-id">
+        ${step(1,'Título')}
+        <input class="aw2-in" id="ch-titulo" placeholder="Tema ou título do post">
+        ${step(2,'Formato')}
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px">
+          ${TIPOS.map(t=>`<button id="ch-fmt-${t}" onclick="_AW2.chFmt('${t}')" style="border:1px solid var(--border);background:none;border-radius:8px;padding:5px 14px;font-size:12px;cursor:pointer;color:var(--text);transition:all .15s">${t}</button>`).join('')}
+        </div>
+        <input type="hidden" id="ch-tipo" value="feed">
+        ${step(3,'Conteúdo')}
+        <textarea class="aw2-ta" id="ch-conteudo" placeholder="Roteiro, copy, texto do carrossel..." style="min-height:80px"></textarea>
+        ${step(4,'Legenda')}
+        <textarea class="aw2-ta" id="ch-legenda" placeholder="Legenda para o Instagram..." style="min-height:60px"></textarea>
+        ${step(5,'Hashtags')}
+        <textarea class="aw2-ta" id="ch-hashtags" placeholder="#hashtag1 #hashtag2..." style="min-height:44px"></textarea>
+        <div style="display:flex;align-items:center;gap:8px;margin:14px 0 6px"><span style="font-size:15px">📅</span><label class="aw2-fl" style="margin:0;font-weight:600">Data & Horário</label></div>
+        <div class="aw2-r2">
+          <div class="aw2-fg"><label class="aw2-fl" style="font-size:10px">Data</label><input type="date" class="aw2-in" id="ch-data"></div>
+          <div class="aw2-fg"><label class="aw2-fl" style="font-size:10px">Horário</label><input type="time" class="aw2-in" id="ch-horario"></div>
+          <div class="aw2-fg"><label class="aw2-fl" style="font-size:10px">Status</label><select class="aw2-s2" id="ch-status">${STATUS.map(s=>`<option value="${s}">${stLabel[s]}</option>`).join('')}</select></div>
+        </div>
+        <div class="aw2-sr" style="margin-top:14px">
+          <button class="aw2-btn" onclick="_AW2.saveChloePost()">💾 Salvar no Calendário</button>
+          <button onclick="_AW2.clearChloeForm()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--muted)">Limpar</button>
+          <span class="aw2-svd" id="ch-sv"></span>
+        </div>
+      </div>
+      <div class="aw2-form">
+        <div class="aw2-ft">📋 Posts — ${_cliente?(_clientes.find(c=>c.email===_cliente)?.nome||_cliente):'selecione um cliente'}</div>
+        ${!_cliente?'<div class="aw2-empty">Selecione um cliente para ver os posts.</div>':
+          posts.length?`<div class="aw2-ci-items">${posts.map(p=>`
+            <div class="aw2-ci-item" style="cursor:pointer" onclick="_AW2.editChloePost('${p.id}')">
+              <div class="aw2-ci-top">
+                <span style="font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 7px">${p.tipo||'—'}</span>
+                <span style="font-size:10px;color:${stColor[p.status]||'#666'};background:${stColor[p.status]||'#666'}18;border-radius:4px;padding:2px 7px">${stLabel[p.status]||p.status}</span>
+                ${p.obs_int&&/^\d{2}:\d{2}$/.test(p.obs_int.trim())?`<span style="font-size:10px;color:var(--muted)">⏰ ${p.obs_int.trim()}</span>`:''}
+                <span style="font-size:11px;color:var(--muted);flex:1;text-align:right">${p.data_post?new Date(p.data_post+'T12:00:00').toLocaleDateString('pt-BR'):''}</span>
+              </div>
+              <div style="font-size:13px;font-weight:500;color:var(--brown);margin-top:4px">${_esc(p.tema_titulo||'Sem título')}</div>
+              ${p.legenda?`<div style="font-size:11px;color:var(--muted);margin-top:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${_esc(p.legenda)}</div>`:''}
+            </div>`).join('')}</div>`
+          :'<div class="aw2-empty">Nenhum post encontrado.</div>'
+        }
+      </div>
     </div>`;
   }
 
@@ -730,6 +791,62 @@
     // Chloe
     async savePlan(){const ok=await _save({linha:_v('pl-l'),gancho:_v('pl-g'),datas:_v('pl-d'),qtd_feed:_v('pl-f'),qtd_car:_v('pl-c'),qtd_reels:_v('pl-r'),obs:_v('pl-o')});_flash('pl-s',ok?'✓ Salvo':'⚠ Erro');},
     async saveBriefV(){const ok=await _save({formato:_v('bv-f'),tom:_v('bv-t'),titulo:_v('bv-ti'),elementos:_v('bv-e'),referencias:_v('bv-r'),texto:_v('bv-tx'),obs:_v('bv-o')});_flash('bv-s',ok?'✓ Salvo':'⚠ Erro');},
+    // Chloe — Posts
+    chFmt(tipo){
+      ['feed','carrossel','reels','stories','tiktok'].forEach(t=>{const b=document.getElementById('ch-fmt-'+t);if(b){b.style.background='none';b.style.borderColor='var(--border)';b.style.color='var(--text)';}});
+      const a=document.getElementById('ch-fmt-'+tipo);if(a){a.style.background='var(--brown)';a.style.borderColor='var(--brown)';a.style.color='#fff';}
+      const inp=document.getElementById('ch-tipo');if(inp)inp.value=tipo;
+    },
+    async saveChloePost(){
+      const id=document.getElementById('ch-id')?.value||'';
+      const titulo=_v('ch-titulo');
+      const tipo=document.getElementById('ch-tipo')?.value||'feed';
+      const conteudo=_v('ch-conteudo');
+      const legenda=_v('ch-legenda');
+      const hashtags=_v('ch-hashtags');
+      const data_post=_v('ch-data')||null;
+      const horario=_v('ch-horario')||null;
+      const status=document.getElementById('ch-status')?.value||'criacao';
+      if(!titulo&&!legenda){_flash('ch-sv','⚠ Preencha o título ou a legenda');return;}
+      if(!_cliente){_flash('ch-sv','⚠ Selecione um cliente primeiro');return;}
+      const payload={client_email:_cliente,tema_titulo:titulo,tipo,obs:conteudo,legenda,hashtags,data_post,obs_int:horario,status};
+      try{
+        if(id){
+          const{error}=await db.from('posts').update(payload).eq('id',id);
+          if(error)throw error;
+          _flash('ch-sv','✓ Post atualizado!');
+        }else{
+          const{error}=await db.from('posts').insert(payload);
+          if(error)throw error;
+          _flash('ch-sv','✓ Post criado!');
+          this.clearChloeForm();
+        }
+        _renderAba('posts_chloe');
+      }catch(e){_flash('ch-sv','⚠ Erro: '+e.message);}
+    },
+    async editChloePost(id){
+      try{
+        const{data:p}=await db.from('posts').select('*').eq('id',id).single();
+        if(!p)return;
+        document.getElementById('ch-id').value=p.id;
+        document.getElementById('ch-titulo').value=p.tema_titulo||'';
+        document.getElementById('ch-conteudo').value=p.obs||'';
+        document.getElementById('ch-legenda').value=p.legenda||'';
+        document.getElementById('ch-hashtags').value=p.hashtags||'';
+        document.getElementById('ch-data').value=p.data_post||'';
+        document.getElementById('ch-horario').value=(p.obs_int&&/^\d{2}:\d{2}$/.test(p.obs_int.trim()))?p.obs_int.trim():'';
+        document.getElementById('ch-status').value=p.status||'criacao';
+        this.chFmt(p.tipo||'feed');
+        document.getElementById('ch-pw')?.scrollIntoView({behavior:'smooth'});
+        _flash('ch-sv','✎ Editando — clique em Salvar para confirmar');
+      }catch(e){}
+    },
+    clearChloeForm(){
+      ['ch-id','ch-titulo','ch-conteudo','ch-legenda','ch-hashtags','ch-data','ch-horario'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      const s=document.getElementById('ch-status');if(s)s.value='criacao';
+      this.chFmt('feed');
+      _flash('ch-sv','');
+    },
     // Gabi
     async addRef(){try{await db.from('gabi_moodboard').insert({client_email:_cliente||'',tag:_v('mb-t'),link:_v('mb-l'),descricao:_v('mb-d')});_flash('mb-s','✓ Adicionado');_renderAba('moodboard');}catch{_flash('mb-s','⚠ Erro');}},
     async delRef(id){try{await db.from('gabi_moodboard').delete().eq('id',id);_renderAba('moodboard');}catch{}},
