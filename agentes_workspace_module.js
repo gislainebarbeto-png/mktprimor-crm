@@ -652,13 +652,16 @@
       <div class="aw2-fg"><label class="aw2-fl">Descrição</label><textarea class="aw2-ta" style="min-height:60px" id="cal-d"></textarea></div>
       <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.addCal()">+ Adicionar</button><span class="aw2-svd" id="cal-s"></span></div>
     </div>
-    <div class="aw2-ci-items">${itens.map(i=>`
-      <div class="aw2-ci-item">
+    <div class="aw2-ci-items">${itens.map(i=>{
+      const tiposPost=['feed','carrossel','reels','stories','tiktok'];
+      const isPost=tiposPost.includes(i.formato);
+      return`<div class="aw2-ci-item">
         <div class="aw2-ci-top"><span class="aw2-b ${i.formato}">${i.formato}</span><span class="aw2-b ${i.status}">${i.status}</span><span style="flex:1"></span>
+          ${isPost&&_cliente?`<button onclick="_AW2.toPost('${i.id}')" style="background:var(--brown);color:#fff;border:none;border-radius:6px;padding:3px 9px;font-size:10px;cursor:pointer;margin-right:6px;">→ Posts</button>`:''}
           <button class="aw2-del" onclick="_AW2.delCal('${i.id}')">✕</button></div>
         <div style="font-size:13px;font-weight:500;color:var(--brown)">${_esc(i.titulo)}</div>
         ${i.descricao?`<div style="font-size:12px;color:var(--muted);margin-top:3px">${_esc(i.descricao)}</div>`:''}
-      </div>`).join('')||'<div class="aw2-empty">Nenhum item para este dia.</div>'}
+      </div>`;}).join('')||'<div class="aw2-empty">Nenhum item para este dia.</div>'}
     </div>`;
   }
 
@@ -737,6 +740,22 @@
     // Calendário
     async addCal(){try{await db.from('agentes_calendario').insert({agente_id:_ag.id,client_email:_cliente||'',data:_data,formato:_v('cal-f'),titulo:_v('cal-ti'),descricao:_v('cal-d'),status:_v('cal-st')});_flash('cal-s','✓ Adicionado');_renderAba('calendario');}catch{_flash('cal-s','⚠ Erro');}},
     async delCal(id){try{await db.from('agentes_calendario').delete().eq('id',id);_renderAba('calendario');}catch{}},
+    async toPost(id){
+      try{
+        const{data:item}=await db.from('agentes_calendario').select('*').eq('id',id).single();
+        if(!item)return;
+        const{error}=await db.from('posts').insert({
+          client_email:item.client_email,
+          tema_titulo:item.titulo||'',
+          legenda:item.descricao||'',
+          tipo:item.formato,
+          data_post:item.data,
+          status:'criacao'
+        });
+        if(error)throw error;
+        _flash('cal-s','✓ Post criado!');
+      }catch(e){_flash('cal-s','⚠ Erro: '+e.message);}
+    },
     // PDF de Aprovação
     openPdfModal(){
       if(!_cliente)return;
