@@ -1317,7 +1317,7 @@ const Admin = {
   },
 
   async tab(name) {
-    this.currentTab = name;
+    Admin.currentTab = name;
     sessionStorage.setItem('adminTab', name);
     ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','relatorio','comercial','agentes','tarefas','brand','trafego'].forEach(t => {
       document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
@@ -1325,29 +1325,29 @@ const Admin = {
     document.getElementById('admin-view')?.classList.remove('sidebar-open');
     const nm = document.getElementById('nav-'+name)?.querySelector('.nl')?.textContent?.trim();
     if (nm) { const el = document.getElementById('admin-active-tab-name'); if(el) el.textContent = nm; }
-    this.closeDetail();
-    this.loader(true);
+    Admin.closeDetail();
+    Admin.loader(true);
     try {
-      if (name === 'followup')   await this.renderFollowup();
-      if (name === 'posts')      await this.renderPosts();
-      if (name === 'clientes')   await this.renderClientes();
-      if (name === 'financeiro') await this.renderFinanceiro();
-      if (name === 'arquivos')   await this.renderArquivos();
-      if (name === 'automacoes') await this.renderAutomacoes();
-      if (name === 'metricas')   await this.renderMetricas();
-      if (name === 'financeiro' && this.isEquipe) { document.getElementById('admin-main').innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-style:italic;">Acesso restrito.</p>'; return; }
-      if (name === 'comece')       await this.renderComece();
-      if (name === 'lab')          await this.renderLab();
-      if (name === 'info')         await this.renderInfoAdmin();
-      if (name === 'solicitacoes') await this.renderSolicitacoesAdmin();
-      if (name === 'demandas')     await this.renderDemandas();
-      if (name === 'chat')         await this.renderChat();
-      if (name === 'relatorio')    await this.renderRelatorioEquipe();
-      if (name === 'comercial')    await this.renderComercial();
-      if (name === 'agentes')      await this.renderAgentes();
-      if (name === 'tarefas')      await this.renderTarefas();
-      if (name === 'brand')        await this.renderBrandCoreAdmin();
-      if (name === 'trafego')      await this.renderTrafego();
+      if (name === 'followup')   await Admin.renderFollowup();
+      if (name === 'posts')      await Admin.renderPosts();
+      if (name === 'clientes')   await Admin.renderClientes();
+      if (name === 'financeiro' && Admin.isEquipe) { document.getElementById('admin-main').innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-style:italic;">Acesso restrito.</p>'; return; }
+      if (name === 'financeiro') await Admin.renderFinanceiro();
+      if (name === 'arquivos')   await Admin.renderArquivos();
+      if (name === 'automacoes') await Admin.renderAutomacoes();
+      if (name === 'metricas')   await Admin.renderMetricas();
+      if (name === 'comece')       await Admin.renderComece();
+      if (name === 'lab')          await Admin.renderLab();
+      if (name === 'info')         await Admin.renderInfoAdmin();
+      if (name === 'solicitacoes') await Admin.renderSolicitacoesAdmin();
+      if (name === 'demandas')     await Admin.renderDemandas();
+      if (name === 'chat')         await Admin.renderChat();
+      if (name === 'relatorio')    await Admin.renderRelatorioEquipe();
+      if (name === 'comercial')    await Admin.renderComercial();
+      if (name === 'agentes')      await Admin.renderAgentes();
+      if (name === 'tarefas')      await Admin.renderTarefas();
+      if (name === 'brand')        await Admin.renderBrandCoreAdmin();
+      if (name === 'trafego')      await Admin.renderTrafego();
       // Restore saved scroll for this tab
       const savedScroll = parseInt(sessionStorage.getItem('scroll_' + name)) || 0;
       if (savedScroll) requestAnimationFrame(() => {
@@ -1357,7 +1357,7 @@ const Admin = {
     } catch(e) {
       console.error('Tab error:', name, e);
       sessionStorage.removeItem('adminTab');
-    } finally { this.loader(false); }
+    } finally { Admin.loader(false); }
   },
 
   loader(show) { App.loader(show); },
