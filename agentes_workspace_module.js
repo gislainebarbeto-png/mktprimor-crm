@@ -15,25 +15,25 @@
 
   const AGENTES = [
     { id:'pedro',   nome:'Pedro',   iniciais:'PE', tipo:'comercial', cargo:'Estrategista de Conta & Head de Onboarding',
-      chips:['Onboarding','Briefing mensal','Resultados','Upsell'],
-      abas:['onboarding','briefing','resultados','calendario','chat'],
-      labels:{onboarding:'📋 Onboarding',briefing:'📄 Briefing',resultados:'📊 Resultados',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
+      chips:['Onboarding','Diagnóstico','SWOT','Briefing mensal'],
+      abas:['onboarding','diagnostico','concorrentes','swot','pilares','briefing','resultados','calendario','chat'],
+      labels:{onboarding:'📋 Onboarding',diagnostico:'📊 Diagnóstico',concorrentes:'🔍 Concorrentes',swot:'⚡ SWOT',pilares:'🎯 Pilares',briefing:'📄 Briefing Mensal',resultados:'📈 Resultados',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
     { id:'chloe',   nome:'Chloe',   iniciais:'CH', tipo:'content',   cargo:'Arquitetura da Informação & Conteúdo',
       chips:['Planejamento 30 dias','Copy & legendas','Roteiros Reels','Briefing Gabi'],
-      abas:['planejamento','posts_chloe','calendario','briefing_visual','chat'],
-      labels:{planejamento:'📋 Planejamento',posts_chloe:'✦ Posts',calendario:'🗓 Calendário',briefing_visual:'✏️ Briefing Visual',chat:'💬 Chat IA'} },
+      abas:['planejamento','copy','roteiros','calendario_posts','briefing_visual','calendario','chat'],
+      labels:{planejamento:'📋 Planejamento',copy:'✍️ Copy & Legendas',roteiros:'🎬 Roteiros Reels',calendario_posts:'📅 Calendário Posts',briefing_visual:'✏️ Briefing Visual',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
     { id:'gabi',    nome:'Gabi',    iniciais:'GA', tipo:'design',    cargo:'Design Visual & Identidade de Marca',
-      chips:['Moodboard','Posts & carrossel','Identidade visual','Aprovações'],
-      abas:['moodboard','conceito','calendario','entregas','chat'],
-      labels:{moodboard:'🎨 Moodboard',conceito:'✦ Conceito Visual',calendario:'🗓 Calendário',entregas:'📬 Entregas',chat:'💬 Chat IA'} },
+      chips:['Moodboard','Conceito visual','Briefing designer','Revisão de posts'],
+      abas:['moodboard','conceito','briefing_designer','posts_revisao','calendario','chat'],
+      labels:{moodboard:'🎨 Moodboard',conceito:'✦ Conceito Visual',briefing_designer:'📝 Briefing Designer',posts_revisao:'🖼 Posts p/ Revisão',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
     { id:'elvira',  nome:'Elvira',  iniciais:'EL', tipo:'financial', cargo:'Analista Financeira',
-      chips:['Dashboard','Lançamentos','DRE','Margem de lucro'],
-      abas:['dashboard','lancamentos','dre','calendario','chat'],
-      labels:{dashboard:'📊 Dashboard',lancamentos:'📝 Lançamentos',dre:'📈 DRE',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
+      chips:['Dashboard','Lançamentos','DRE','Por cliente'],
+      abas:['dashboard','lancamentos','dre','financeiro_cliente','calendario','chat'],
+      labels:{dashboard:'📊 Dashboard',lancamentos:'💰 Lançamentos',dre:'📈 DRE',financeiro_cliente:'👥 Por Cliente',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
     { id:'barbeto', nome:'Barbeto', iniciais:'GB', tipo:'director',  cargo:'Diretora & Gestora',
-      chips:['Revisão diária','Aprovações','Atendimentos','Métricas'],
-      abas:['revisao','aprovacoes','calendario','chat'],
-      labels:{revisao:'✅ Revisão',aprovacoes:'◎ Aprovações',calendario:'🗓 Calendário',chat:'💬 Chat IA'} }
+      chips:['Aprovações','Checklist','Painel geral','Calendário'],
+      abas:['aprovacoes','checklist','painel','calendario','chat'],
+      labels:{aprovacoes:'✅ Aprovações',checklist:'📋 Checklist',painel:'◎ Painel Geral',calendario:'🗓 Calendário',chat:'💬 Chat IA'} }
   ];
 
   let _ag=null,_aba=null,_cliente='',_data=_hoje();
@@ -443,22 +443,34 @@
     el.innerHTML='<div class="aw2-empty">Carregando...</div>';
     let h='';
     switch(id){
-      case'onboarding':    h=await _onboarding();break;
-      case'briefing':      h=await _briefing();break;
-      case'resultados':    h=await _resultados();break;
-      case'planejamento':  h=await _planejamento();break;
-      case'posts_chloe':   h=await _postsChloe();break;
-      case'briefing_visual':h=await _briefVisual();break;
-      case'moodboard':     h=await _moodboard();break;
-      case'conceito':      h=await _conceito();break;
-      case'entregas':      h=await _entregas();break;
-      case'dashboard':     h=await _dashboard();break;
-      case'lancamentos':   h=await _lancamentos();break;
-      case'dre':           h=await _dre();break;
-      case'revisao':       h=await _revisao();break;
-      case'aprovacoes':    h=await _aprovacoes();break;
-      case'calendario':    h=await _calendario();break;
-      case'chat':          h=_chat();el.innerHTML=h;_initChat();return;
+      case'onboarding':        h=await _onboarding();break;
+      case'diagnostico':       h=await _diagnostico();break;
+      case'concorrentes':      h=await _concorrentes();break;
+      case'swot':              h=await _swot();break;
+      case'pilares':           h=await _pilares();break;
+      case'briefing':          h=await _briefing();break;
+      case'resultados':        h=await _resultados();break;
+      case'planejamento':      h=await _planejamento();break;
+      case'copy':              h=await _copy();break;
+      case'roteiros':          h=await _roteiros();break;
+      case'calendario_posts':  h=await _calendarioPosts();break;
+      case'briefing_visual':   h=await _briefVisual();break;
+      case'posts_chloe':       h=await _postsChloe();break;
+      case'moodboard':         h=await _moodboard();break;
+      case'conceito':          h=await _conceito();break;
+      case'briefing_designer': h=await _briefingDesigner();break;
+      case'posts_revisao':     h=await _entregas();break;
+      case'entregas':          h=await _entregas();break;
+      case'dashboard':         h=await _dashboard();break;
+      case'lancamentos':       h=await _lancamentos();break;
+      case'dre':               h=await _dre();break;
+      case'financeiro_cliente':h=await _financeiroCliente();break;
+      case'revisao':           h=await _revisao();break;
+      case'aprovacoes':        h=await _aprovacoes();break;
+      case'checklist':         h=await _checklist();break;
+      case'painel':            h=await _painel();break;
+      case'calendario':        h=await _calendario();break;
+      case'chat':              h=_chat();el.innerHTML=h;_initChat();return;
     }
     el.innerHTML=h;
   }
@@ -792,6 +804,230 @@
     </div>`).join('')}`:''}`;
   }
 
+  // PEDRO — Diagnóstico
+  async function _diagnostico(){
+    const d=await _load({});
+    return `<div class="aw2-form"><div class="aw2-ft">📊 Diagnóstico de Performance</div>
+      <div class="aw2-r2">
+        <div class="aw2-fg"><label class="aw2-fl">Seguidores atuais</label><input class="aw2-in" type="number" id="dg-seg" value="${d.seguidores||''}"></div>
+        <div class="aw2-fg"><label class="aw2-fl">Engajamento (%)</label><input class="aw2-in" type="number" step="0.1" id="dg-eng" value="${d.engajamento||''}"></div>
+      </div>
+      <div class="aw2-r2">
+        <div class="aw2-fg"><label class="aw2-fl">Alcance médio</label><input class="aw2-in" type="number" id="dg-alc" value="${d.alcance||''}"></div>
+        <div class="aw2-fg"><label class="aw2-fl">Impressões</label><input class="aw2-in" type="number" id="dg-imp" value="${d.impressoes||''}"></div>
+      </div>
+      <div class="aw2-r2">
+        <div class="aw2-fg"><label class="aw2-fl">Pontos fortes</label><textarea class="aw2-ta" id="dg-pf">${d.pontos_fortes||''}</textarea></div>
+        <div class="aw2-fg"><label class="aw2-fl">Pontos fracos</label><textarea class="aw2-ta" id="dg-pw">${d.pontos_fracos||''}</textarea></div>
+      </div>
+      <div class="aw2-fg"><label class="aw2-fl">Posicionamento atual</label><textarea class="aw2-ta" id="dg-pos">${d.posicionamento||''}</textarea></div>
+      <div class="aw2-fg"><label class="aw2-fl">Observações</label><textarea class="aw2-ta" id="dg-obs">${d.obs||''}</textarea></div>
+      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveDiagnostico()">Salvar</button><span class="aw2-svd" id="dg-s"></span></div>
+    </div>`;
+  }
+
+  // PEDRO — Concorrentes
+  async function _concorrentes(){
+    const d=await _load({lista:[]});
+    const lista=d.lista||[];
+    while(lista.length<5)lista.push({ig:'',nicho:'',fortes:'',fracos:''});
+    return `<div class="aw2-form"><div class="aw2-ft">🔍 Análise de Concorrentes</div>
+      ${lista.slice(0,5).map((c,i)=>`
+      <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:8px">Concorrente ${i+1}</div>
+        <div class="aw2-r2">
+          <div class="aw2-fg"><label class="aw2-fl">Instagram</label><input class="aw2-in" id="cc-${i}-ig" value="${_esc(c.ig||'')}"></div>
+          <div class="aw2-fg"><label class="aw2-fl">Nicho/Segmento</label><input class="aw2-in" id="cc-${i}-nicho" value="${_esc(c.nicho||'')}"></div>
+        </div>
+        <div class="aw2-r2">
+          <div class="aw2-fg"><label class="aw2-fl">Pontos fortes</label><textarea class="aw2-ta" id="cc-${i}-fortes">${_esc(c.fortes||'')}</textarea></div>
+          <div class="aw2-fg"><label class="aw2-fl">Pontos fracos</label><textarea class="aw2-ta" id="cc-${i}-fracos">${_esc(c.fracos||'')}</textarea></div>
+        </div>
+      </div>`).join('')}
+      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveConcorrentes()">Salvar</button><span class="aw2-svd" id="cc-s"></span></div>
+    </div>`;
+  }
+
+  // PEDRO — SWOT
+  async function _swot(){
+    const d=await _load({});
+    return `<div class="aw2-form"><div class="aw2-ft">⚡ Análise SWOT</div>
+      <div class="aw2-r2">
+        <div class="aw2-fg"><label class="aw2-fl">💪 Forças (internas)</label><textarea class="aw2-ta" style="min-height:120px" id="sw-forcas">${d.forcas||''}</textarea></div>
+        <div class="aw2-fg"><label class="aw2-fl">⚠ Fraquezas (internas)</label><textarea class="aw2-ta" style="min-height:120px" id="sw-fraquezas">${d.fraquezas||''}</textarea></div>
+      </div>
+      <div class="aw2-r2">
+        <div class="aw2-fg"><label class="aw2-fl">🌟 Oportunidades (externas)</label><textarea class="aw2-ta" style="min-height:120px" id="sw-oportunidades">${d.oportunidades||''}</textarea></div>
+        <div class="aw2-fg"><label class="aw2-fl">🚨 Ameaças (externas)</label><textarea class="aw2-ta" style="min-height:120px" id="sw-ameacas">${d.ameacas||''}</textarea></div>
+      </div>
+      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveSwot()">Salvar</button><span class="aw2-svd" id="sw-s"></span></div>
+    </div>`;
+  }
+
+  // PEDRO — Pilares de Conteúdo
+  async function _pilares(){
+    const d=await _load({pilares:[]});
+    const pl=d.pilares||[];
+    while(pl.length<5)pl.push({nome:'',percentual:'',descricao:'',formatos:''});
+    return `<div class="aw2-form"><div class="aw2-ft">🎯 Pilares de Conteúdo</div>
+      ${pl.slice(0,5).map((p,i)=>`
+      <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:8px">Pilar ${i+1}</div>
+        <div class="aw2-r2">
+          <div class="aw2-fg"><label class="aw2-fl">Nome do pilar</label><input class="aw2-in" id="pl${i}-nm" value="${_esc(p.nome||'')}"></div>
+          <div class="aw2-fg"><label class="aw2-fl">% do conteúdo</label><input class="aw2-in" type="number" id="pl${i}-pc" value="${p.percentual||''}"></div>
+        </div>
+        <div class="aw2-fg"><label class="aw2-fl">Descrição</label><textarea class="aw2-ta" id="pl${i}-ds">${_esc(p.descricao||'')}</textarea></div>
+        <div class="aw2-fg"><label class="aw2-fl">Formatos ideais</label><input class="aw2-in" id="pl${i}-ft" placeholder="reels, carrossel..." value="${_esc(p.formatos||'')}"></div>
+      </div>`).join('')}
+      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.savePilares()">Salvar</button><span class="aw2-svd" id="pil-s"></span></div>
+    </div>`;
+  }
+
+  // CHLOE — Copy & Legendas
+  async function _copy(){
+    const d=await _load({});
+    return `<div class="aw2-form"><div class="aw2-ft">✍️ Copy & Legendas</div>
+      <div class="aw2-fg"><label class="aw2-fl">Tema / pauta</label><input class="aw2-in" id="cp-tema" value="${d.tema||''}"></div>
+      <div class="aw2-fg"><label class="aw2-fl">Gancho de abertura</label><textarea class="aw2-ta" id="cp-gancho">${d.gancho||''}</textarea></div>
+      <div class="aw2-fg"><label class="aw2-fl">Corpo do texto</label><textarea class="aw2-ta" style="min-height:120px" id="cp-corpo">${d.corpo||''}</textarea></div>
+      <div class="aw2-fg"><label class="aw2-fl">CTA (chamada para ação)</label><textarea class="aw2-ta" id="cp-cta">${d.cta||''}</textarea></div>
+      <div class="aw2-fg"><label class="aw2-fl">Hashtags</label><textarea class="aw2-ta" id="cp-tags">${d.tags||''}</textarea></div>
+      <div class="aw2-fg"><label class="aw2-fl">Legenda final</label><textarea class="aw2-ta" style="min-height:80px" id="cp-final">${d.legenda_final||''}</textarea></div>
+      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveCopy()">Salvar</button><span class="aw2-svd" id="cp-s"></span></div>
+    </div>`;
+  }
+
+  // CHLOE — Roteiros de Reels
+  async function _roteiros(){
+    const d=await _load({});
+    return `<div class="aw2-form"><div class="aw2-ft">🎬 Roteiro de Reels</div>
+      <div class="aw2-r2">
+        <div class="aw2-fg"><label class="aw2-fl">Título do Reel</label><input class="aw2-in" id="rt-titulo" value="${d.titulo||''}"></div>
+        <div class="aw2-fg"><label class="aw2-fl">Duração (seg)</label><input class="aw2-in" type="number" id="rt-dur" value="${d.duracao||''}"></div>
+      </div>
+      <div class="aw2-fg"><label class="aw2-fl">🪝 Gancho (primeiros 3s)</label><textarea class="aw2-ta" id="rt-gancho">${d.gancho||''}</textarea></div>
+      <div class="aw2-fg"><label class="aw2-fl">📝 Desenvolvimento</label><textarea class="aw2-ta" style="min-height:100px" id="rt-dev">${d.dev||''}</textarea></div>
+      <div class="aw2-fg"><label class="aw2-fl">🎯 CTA / encerramento</label><textarea class="aw2-ta" id="rt-cta">${d.cta||''}</textarea></div>
+      <div class="aw2-r2">
+        <div class="aw2-fg"><label class="aw2-fl">🎵 Áudio / trilha</label><input class="aw2-in" id="rt-audio" value="${d.audio||''}"></div>
+        <div class="aw2-fg"><label class="aw2-fl">🔗 Referências</label><input class="aw2-in" id="rt-refs" value="${d.refs||''}"></div>
+      </div>
+      <div class="aw2-fg"><label class="aw2-fl">Legenda do post</label><textarea class="aw2-ta" id="rt-legenda">${d.legenda||''}</textarea></div>
+      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveRoteiro()">Salvar</button><span class="aw2-svd" id="rt-s"></span></div>
+    </div>`;
+  }
+
+  // CHLOE — Calendário de Posts (leitura da tabela posts)
+  async function _calendarioPosts(){
+    if(!_cliente)return`<div class="aw2-empty">Selecione um cliente para ver o calendário.</div>`;
+    const parts=_data.split('-');const y=parts[0];const m=parts[1];
+    const ini=`${y}-${m}-01`;const fim=`${y}-${m}-31`;
+    let posts=[];
+    try{const{data}=await db.from('posts').select('id,tema_titulo,tipo,data_post,status,obs_int').eq('client_email',_cliente).gte('data_post',ini).lte('data_post',fim).order('data_post',{ascending:true});posts=data||[];}catch{}
+    const stColor={criacao:'#e67e22',revisao:'#2980b9',aprovado:'#27ae60',publicado:'#8e44ad'};
+    const stLabel={criacao:'Criação',revisao:'Revisão',aprovado:'Aprovado',publicado:'Publicado'};
+    const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
+    return `<div class="aw2-form">
+      <div class="aw2-ft">📅 Calendário de Posts — ${m}/${y}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${posts.length} post${posts.length!==1?'s':''} para ${cliNome}</div>
+      ${posts.length?posts.map(p=>`<div class="aw2-ci-item">
+        <div class="aw2-ci-top">
+          <span style="font-size:11px;font-weight:600;color:var(--brown)">${p.data_post?new Date(p.data_post+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}):''}</span>
+          <span style="font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 7px">${p.tipo||'—'}</span>
+          <span style="font-size:10px;color:${stColor[p.status]||'#666'};background:${stColor[p.status]||'#666'}18;border-radius:4px;padding:2px 7px">${stLabel[p.status]||p.status}</span>
+          ${p.obs_int&&/^\d{2}:\d{2}$/.test(p.obs_int.trim())?`<span style="font-size:10px;color:var(--muted)">⏰ ${p.obs_int.trim()}</span>`:''}
+        </div>
+        <div style="font-size:13px;font-weight:500;color:var(--brown);margin-top:4px">${_esc(p.tema_titulo||'(sem título)')}</div>
+      </div>`).join(''):'<div class="aw2-empty">Nenhum post para este mês.</div>'}
+    </div>`;
+  }
+
+  // GABI — Briefing Designer
+  async function _briefingDesigner(){
+    const d=await _load({});
+    return `<div class="aw2-form"><div class="aw2-ft">📝 Briefing Designer</div>
+      <div class="aw2-r2">
+        <div class="aw2-fg"><label class="aw2-fl">Projeto</label><input class="aw2-in" id="bd-proj" value="${d.projeto||''}"></div>
+        <div class="aw2-fg"><label class="aw2-fl">Formato</label><select class="aw2-s2" id="bd-fmt"><option ${d.formato==='feed'?'selected':''} value="feed">Feed</option><option ${d.formato==='carrossel'?'selected':''} value="carrossel">Carrossel</option><option ${d.formato==='reels'?'selected':''} value="reels">Reels</option><option ${d.formato==='stories'?'selected':''} value="stories">Stories</option></select></div>
+      </div>
+      <div class="aw2-r2">
+        <div class="aw2-fg"><label class="aw2-fl">Dimensões</label><input class="aw2-in" id="bd-dim" placeholder="1080x1080" value="${d.dimensoes||''}"></div>
+        <div class="aw2-fg"><label class="aw2-fl">Prazo de entrega</label><input class="aw2-in" type="date" id="bd-prazo" value="${d.prazo||''}"></div>
+      </div>
+      <div class="aw2-fg"><label class="aw2-fl">Referências visuais</label><textarea class="aw2-ta" id="bd-refs">${d.referencias||''}</textarea></div>
+      <div class="aw2-fg"><label class="aw2-fl">Elementos obrigatórios</label><textarea class="aw2-ta" id="bd-elem">${d.elementos||''}</textarea></div>
+      <div class="aw2-r2">
+        <div class="aw2-fg"><label class="aw2-fl">Paleta de cores</label><input class="aw2-in" id="bd-cores" placeholder="#FFF, #5C2E14" value="${d.cores||''}"></div>
+        <div class="aw2-fg"><label class="aw2-fl">Feeling</label><input class="aw2-in" id="bd-feel" placeholder="elegante, minimalista..." value="${d.feeling||''}"></div>
+      </div>
+      <div class="aw2-fg"><label class="aw2-fl">Texto no post</label><textarea class="aw2-ta" id="bd-texto">${d.texto||''}</textarea></div>
+      <div class="aw2-fg"><label class="aw2-fl">Observações</label><textarea class="aw2-ta" id="bd-obs">${d.obs||''}</textarea></div>
+      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveBriefingDesigner()">Salvar</button><span class="aw2-svd" id="bd-s"></span></div>
+    </div>`;
+  }
+
+  // ELVIRA — Financeiro por Cliente
+  async function _financeiroCliente(){
+    let itens=[];
+    try{let q=db.from('financeiro').select('*').order('vencimento',{ascending:false}).limit(100);if(_cliente)q=q.eq('client_email',_cliente);const{data}=await q;itens=data||[];}catch{}
+    const stColor={pendente:'#e67e22',pago:'#27ae60',atrasado:'#e74c3c'};
+    const total=itens.reduce((s,i)=>s+parseFloat(i.valor||0),0);
+    const pago=itens.filter(i=>i.status==='pago').reduce((s,i)=>s+parseFloat(i.valor||0),0);
+    const pend=itens.filter(i=>i.status!=='pago').reduce((s,i)=>s+parseFloat(i.valor||0),0);
+    return `<div class="aw2-kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="aw2-kpi"><div class="aw2-kl">Total</div><div class="aw2-kv">${_R$(total)}</div></div>
+      <div class="aw2-kpi"><div class="aw2-kl">Pago</div><div class="aw2-kv" style="color:#3A5030">${_R$(pago)}</div></div>
+      <div class="aw2-kpi"><div class="aw2-kl">Pendente</div><div class="aw2-kv" style="color:#92400E">${_R$(pend)}</div></div>
+    </div>
+    <div class="aw2-tbox"><table class="aw2-tb"><thead><tr><th>Vencimento</th><th>Descrição</th><th>Valor</th><th>Status</th></tr></thead>
+    <tbody>${itens.map(i=>`<tr><td>${_fmtD(i.vencimento)}</td><td>${_esc(i.descricao)}</td><td style="font-weight:500">${_R$(i.valor)}</td><td><span style="font-size:10px;color:${stColor[i.status]||'#666'};background:${stColor[i.status]||'#666'}18;border-radius:4px;padding:2px 7px">${i.status}</span></td></tr>`).join('')||'<tr><td colspan="4" class="aw2-empty">Nenhum lançamento</td></tr>'}</tbody></table></div>`;
+  }
+
+  // BARBETO — Checklist
+  async function _checklist(){
+    const d=await _load({itens:[]});
+    const itens=d.itens||[];
+    return `<div class="aw2-form"><div class="aw2-ft">📋 Checklist Diário</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input class="aw2-in" id="ck-nova" placeholder="Nova tarefa..." style="flex:1">
+        <button class="aw2-btn" onclick="_AW2.addChecklist()">+ Adicionar</button>
+      </div>
+      <div id="ck-list">
+        ${itens.length?itens.map((it,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:${it.feito?'var(--surface)':'var(--bg)'}">
+          <input type="checkbox" ${it.feito?'checked':''} onchange="_AW2.toggleChecklist(${i})" style="width:16px;height:16px;accent-color:var(--brown);cursor:pointer">
+          <span style="flex:1;font-size:13px;color:var(--text);${it.feito?'text-decoration:line-through;opacity:.55':''}">${_esc(it.tarefa)}</span>
+          <button class="aw2-del" onclick="_AW2.delChecklist(${i})">✕</button>
+        </div>`).join(''):'<div class="aw2-empty">Nenhuma tarefa ainda.</div>'}
+      </div>
+      <span class="aw2-svd" id="ck-s"></span>
+    </div>`;
+  }
+
+  // BARBETO — Painel Geral
+  async function _painel(){
+    let emRevisao=0,notifs=[],cliCount=0;
+    try{
+      const{count:r}=await db.from('posts').select('id',{count:'exact',head:true}).eq('status','revisao');
+      emRevisao=r||0;
+      const{data:n}=await db.from('agentes_notificacoes').select('mensagem,created_at,remetente').eq('destinatario','barbeto').order('created_at',{ascending:false}).limit(10);
+      notifs=n||[];
+      const{count:c}=await db.from('clients').select('id',{count:'exact',head:true});
+      cliCount=c||0;
+    }catch{}
+    return `<div class="aw2-kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="aw2-kpi"><div class="aw2-kl">Posts p/ aprovar</div><div class="aw2-kv" style="color:${emRevisao>0?'#92400E':'#3A5030'}">${emRevisao}</div></div>
+      <div class="aw2-kpi"><div class="aw2-kl">Clientes ativos</div><div class="aw2-kv">${cliCount}</div></div>
+      <div class="aw2-kpi"><div class="aw2-kl">Notificações</div><div class="aw2-kv">${notifs.length}</div></div>
+    </div>
+    ${emRevisao>0?`<div style="margin-bottom:12px"><button class="aw2-btn" onclick="_AW2.tab('aprovacoes')" style="width:100%">Ver posts aguardando aprovação →</button></div>`:''}
+    <div class="aw2-ft" style="margin-bottom:10px">Últimas atividades</div>
+    ${notifs.length?notifs.map(n=>`<div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+      <div style="font-size:12px;color:var(--text)">${_esc(n.mensagem)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:3px">${n.remetente||'sistema'} · ${n.created_at?new Date(n.created_at).toLocaleDateString('pt-BR'):''}</div>
+    </div>`).join(''):'<div class="aw2-empty">Sem atividades recentes.</div>'}`;
+  }
+
   // CALENDÁRIO (todos os agentes)
   async function _calendario(){
     let itens=[];
@@ -909,6 +1145,46 @@
     tab(id){_renderAba(id);},
     async setCli(email){_cliente=email;await _loadFiscal(email);_ws();},
     setData(d){_data=d||_hoje();_renderAba(_aba);},
+    // Pedro — Diagnóstico
+    async saveDiagnostico(){const ok=await _save({seguidores:_v('dg-seg'),engajamento:_v('dg-eng'),alcance:_v('dg-alc'),impressoes:_v('dg-imp'),pontos_fortes:_v('dg-pf'),pontos_fracos:_v('dg-pw'),posicionamento:_v('dg-pos'),obs:_v('dg-obs')});_flash('dg-s',ok?'✓ Salvo':'⚠ Erro');},
+    // Pedro — Concorrentes
+    async saveConcorrentes(){
+      const lista=Array.from({length:5},(_,i)=>({ig:_v('cc-'+i+'-ig'),nicho:_v('cc-'+i+'-nicho'),fortes:_v('cc-'+i+'-fortes'),fracos:_v('cc-'+i+'-fracos')}));
+      const ok=await _save({lista});_flash('cc-s',ok?'✓ Salvo':'⚠ Erro');
+    },
+    // Pedro — SWOT
+    async saveSwot(){const ok=await _save({forcas:_v('sw-forcas'),fraquezas:_v('sw-fraquezas'),oportunidades:_v('sw-oportunidades'),ameacas:_v('sw-ameacas')});_flash('sw-s',ok?'✓ Salvo':'⚠ Erro');},
+    // Pedro — Pilares
+    async savePilares(){
+      const pilares=Array.from({length:5},(_,i)=>({nome:_v('pl'+i+'-nm'),percentual:_v('pl'+i+'-pc'),descricao:_v('pl'+i+'-ds'),formatos:_v('pl'+i+'-ft')}));
+      const ok=await _save({pilares});_flash('pil-s',ok?'✓ Salvo':'⚠ Erro');
+    },
+    // Chloe — Copy
+    async saveCopy(){const ok=await _save({tema:_v('cp-tema'),gancho:_v('cp-gancho'),corpo:_v('cp-corpo'),cta:_v('cp-cta'),tags:_v('cp-tags'),legenda_final:_v('cp-final')});_flash('cp-s',ok?'✓ Salvo':'⚠ Erro');},
+    // Chloe — Roteiro
+    async saveRoteiro(){const ok=await _save({titulo:_v('rt-titulo'),duracao:_v('rt-dur'),gancho:_v('rt-gancho'),dev:_v('rt-dev'),cta:_v('rt-cta'),audio:_v('rt-audio'),refs:_v('rt-refs'),legenda:_v('rt-legenda')});_flash('rt-s',ok?'✓ Salvo':'⚠ Erro');},
+    // Gabi — Briefing Designer
+    async saveBriefingDesigner(){
+      const ok=await _save({projeto:_v('bd-proj'),formato:_v('bd-fmt'),dimensoes:_v('bd-dim'),prazo:_v('bd-prazo'),referencias:_v('bd-refs'),elementos:_v('bd-elem'),cores:_v('bd-cores'),feeling:_v('bd-feel'),texto:_v('bd-texto'),obs:_v('bd-obs')});
+      _flash('bd-s',ok?'✓ Salvo':'⚠ Erro');
+    },
+    // Barbeto — Checklist
+    async addChecklist(){
+      const txt=_v('ck-nova');if(!txt.trim())return;
+      const d=await _load({itens:[]});const itens=d.itens||[];
+      itens.push({tarefa:txt.trim(),feito:false});
+      const ok=await _save({itens});_flash('ck-s',ok?'✓ Adicionado':'⚠ Erro');
+      if(ok)_renderAba('checklist');
+    },
+    async toggleChecklist(idx){
+      const d=await _load({itens:[]});const itens=d.itens||[];
+      if(itens[idx])itens[idx].feito=!itens[idx].feito;
+      await _save({itens});_renderAba('checklist');
+    },
+    async delChecklist(idx){
+      const d=await _load({itens:[]});const itens=(d.itens||[]).filter((_,i)=>i!==idx);
+      await _save({itens});_renderAba('checklist');
+    },
     // Pedro
     async saveOnboarding(){const ok=await _save({contrato:_v('on-c'),nicho:_v('on-n'),subnicho:_v('on-sn'),persona:_v('on-p'),posicionamento:_v('on-pos'),arcos:_v('on-a'),obs:_v('on-o')});_flash('on-s',ok?'✓ Salvo':'⚠ Erro');},
     async saveBriefing(){
@@ -1001,7 +1277,7 @@
         const cliNome=_clientes.find(c=>c.email===post?.client_email)?.nome||post?.client_email||'cliente';
         _notificar('barbeto',`Design de "${post?.tema_titulo||'post'}" para ${cliNome} aguardando sua aprovação.`,'aprovacao',postId);
         _flash('et-s','✓ Enviado para a Barbeto!');
-        _renderAba('entregas');
+        _renderAba(_aba);
       }catch(e){_flash('et-s','⚠ Erro: '+e.message);}
     },
     // Barbeto — aprovar ou devolver post
