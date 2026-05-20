@@ -23,9 +23,9 @@
       abas:['planejamento','posts_chloe','calendario','briefing_visual','chat'],
       labels:{planejamento:'📋 Planejamento',posts_chloe:'✦ Posts',calendario:'🗓 Calendário',briefing_visual:'✏️ Briefing Visual',chat:'💬 Chat IA'} },
     { id:'gabi',    nome:'Gabi',    iniciais:'GA', tipo:'design',    cargo:'Design Visual & Identidade de Marca',
-      chips:['Moodboard','Posts & carrossel','Identidade visual','Posicionamento'],
-      abas:['moodboard','conceito','calendario','chat'],
-      labels:{moodboard:'🎨 Moodboard',conceito:'✦ Conceito Visual',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
+      chips:['Moodboard','Posts & carrossel','Identidade visual','Aprovações'],
+      abas:['moodboard','conceito','calendario','entregas','chat'],
+      labels:{moodboard:'🎨 Moodboard',conceito:'✦ Conceito Visual',calendario:'🗓 Calendário',entregas:'📬 Entregas',chat:'💬 Chat IA'} },
     { id:'elvira',  nome:'Elvira',  iniciais:'EL', tipo:'financial', cargo:'Analista Financeira',
       chips:['Dashboard','Lançamentos','DRE','Margem de lucro'],
       abas:['dashboard','lancamentos','dre','calendario','chat'],
@@ -62,6 +62,23 @@
         try{localStorage.setItem(_histKey(),JSON.stringify(_chatHist[_ag.id]));}catch(e){}
       }
     }catch(e){}
+  }
+
+  // NOTIFICAÇÕES
+  function _notificar(destinatario,mensagem,tipo='info',ref_id=''){
+    if(!destinatario||!mensagem)return;
+    db.from('agentes_notificacoes').insert({destinatario,remetente:_ag?.id||'',client_email:_cliente||'',mensagem,tipo,ref_id,lido:false}).catch(()=>{});
+  }
+  async function _loadNotifCounts(){
+    try{const{data}=await db.from('agentes_notificacoes').select('destinatario').eq('lido',false);const c={};(data||[]).forEach(r=>{c[r.destinatario]=(c[r.destinatario]||0)+1;});return c;}catch{return{};}
+  }
+  async function _loadNotifs(){
+    if(!_ag)return[];
+    try{const{data}=await db.from('agentes_notificacoes').select('*').eq('destinatario',_ag.id).eq('lido',false).order('created_at',{ascending:false}).limit(20);return data||[];}catch{return[];}
+  }
+  function _marcarLidas(){
+    if(!_ag)return;
+    db.from('agentes_notificacoes').update({lido:true}).eq('destinatario',_ag.id).eq('lido',false).catch(()=>{});
   }
 
   function _hoje(){return new Date().toISOString().slice(0,10);}
@@ -255,6 +272,16 @@
     .aw2-card.director::before{background:#C9A84C;}.aw2-card.content::before{background:#9B6B3A;}
     .aw2-card.design::before{background:#7A5230;}.aw2-card.financial::before{background:#4A5E3A;}.aw2-card.comercial::before{background:#6B8FA3;}
     .aw2-card:hover{border-color:var(--accent);box-shadow:var(--sh);transform:translateY(-1px);}
+    .aw2-nbadge{position:absolute;top:-5px;right:-5px;background:#e53;color:#fff;border-radius:50%;min-width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--bg);}
+    .aw2-notif-panel{background:rgba(229,83,51,.07);border:1px solid rgba(229,83,51,.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;}
+    .aw2-notif-title{font-size:11px;font-weight:600;color:#e55333;margin-bottom:6px;}
+    .aw2-notif-item{font-size:12px;color:var(--text);padding:5px 0;border-bottom:1px solid rgba(229,83,51,.1);display:flex;gap:8px;align-items:flex-start;}
+    .aw2-notif-item:last-child{border-bottom:none;padding-bottom:0;}
+    .aw2-aprov-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid #e53;border-radius:10px;padding:14px 16px;margin-bottom:10px;}
+    .aw2-aprov-card.ok{border-left-color:#3A5030;}
+    .aw2-aprov-btns{display:flex;gap:8px;margin-top:10px;}
+    .aw2-btn-ok{background:#3A5030;color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:12px;cursor:pointer;font-family:inherit;}
+    .aw2-btn-nok{background:#991B1B;color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:12px;cursor:pointer;font-family:inherit;}
     .aw2-row{display:flex;align-items:center;gap:12px;}
     .aw2-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0;}
     .aw2-av.director{background:rgba(201,168,76,.15);color:#C9A84C;border:1px solid rgba(201,168,76,.3);}
@@ -367,13 +394,17 @@
       </div></div>`;
   }
 
-  function _hub(){
+  async function _hub(){
+    let counts={};try{counts=await _loadNotifCounts();}catch{}
     document.getElementById('admin-main').innerHTML=`<div style="padding:20px 0">
       <div class="aw2-lbl2">Agentes IA · Marketing Primor</div>
       <div class="aw2-grid">${AGENTES.map(a=>`
         <div class="aw2-card ${a.tipo}" onclick="_AW2.open('${a.id}')">
           <div class="aw2-row">
-            <div class="aw2-av ${a.tipo}">${a.iniciais}</div>
+            <div style="position:relative;flex-shrink:0">
+              <div class="aw2-av ${a.tipo}">${a.iniciais}</div>
+              ${counts[a.id]?`<span class="aw2-nbadge">${counts[a.id]}</span>`:''}
+            </div>
             <div style="flex:1"><div class="aw2-nm">${a.nome}</div><div class="aw2-cg">${a.cargo}</div></div>
             <div style="color:var(--copper);font-size:20px">›</div>
           </div>
@@ -399,6 +430,7 @@
         <div class="aw2-tabs" style="margin-bottom:0;flex:1;">${_ag.abas.map(t=>`<div class="aw2-tab ${t===ab?'active':''}" onclick="_AW2.tab('${t}')">${_ag.labels[t]}</div>`).join('')}</div>
         ${_cliente?`<button class="aw2-pdf-btn" onclick="_AW2.openPdfModal()">📄 PDF de Aprovação</button>`:''}
       </div>
+      <div id="aw2-notif-panel"></div>
       <div id="aw2c"><div class="aw2-empty">Carregando...</div></div>
     </div>`;
     _aba=ab; _renderAba(ab);
@@ -419,6 +451,7 @@
       case'briefing_visual':h=await _briefVisual();break;
       case'moodboard':     h=await _moodboard();break;
       case'conceito':      h=await _conceito();break;
+      case'entregas':      h=await _entregas();break;
       case'dashboard':     h=await _dashboard();break;
       case'lancamentos':   h=await _lancamentos();break;
       case'dre':           h=await _dre();break;
@@ -603,6 +636,32 @@
     </div>`;
   }
 
+  // GABI — Entregas para aprovação da Barbeto
+  async function _entregas(){
+    if(!_cliente)return`<div class="aw2-empty">Selecione um cliente para ver os posts.</div>`;
+    let posts=[];
+    try{const{data}=await db.from('posts').select('id,tema_titulo,tipo,status,ref_1').eq('client_email',_cliente).in('status',['criacao','revisao']).order('created_at',{ascending:false}).limit(40);posts=data||[];}catch{}
+    const emCriacao=posts.filter(p=>p.status==='criacao');
+    const emRevisao=posts.filter(p=>p.status==='revisao');
+    return `<div class="aw2-form" style="margin-bottom:14px">
+      <div class="aw2-ft">📬 Submeter design para aprovação</div>
+      <div class="aw2-fg"><label class="aw2-fl">Post</label>
+        <select class="aw2-s2" id="et-post">
+          <option value="">— Selecionar post —</option>
+          ${emCriacao.map(p=>`<option value="${p.id}">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo}</option>`).join('')}
+        </select>
+      </div>
+      <div class="aw2-fg"><label class="aw2-fl">Link do Canva</label><input class="aw2-in" id="et-url" placeholder="https://www.canva.com/design/..."></div>
+      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.submitEntrega()">📤 Enviar para Barbeto aprovar</button><span class="aw2-svd" id="et-s"></span></div>
+    </div>
+    <div class="aw2-ft">Aguardando revisão da Barbeto (${emRevisao.length})</div>
+    ${emRevisao.length?emRevisao.map(p=>`<div class="aw2-ci-item" style="border-left:3px solid #d4896a">
+      <div class="aw2-ci-top"><span class="aw2-b revisao">Aguardando Barbeto</span></div>
+      <div style="font-size:13px;font-weight:500;color:var(--brown)">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo}</div>
+      ${p.ref_1?`<a href="${p.ref_1}" target="_blank" style="font-size:11px;color:var(--accent);margin-top:4px;display:inline-block">🔗 Ver no Canva</a>`:'<span style="font-size:11px;color:var(--muted)">Sem link do Canva</span>'}
+    </div>`).join(''):'<div class="aw2-empty">Nenhum post aguardando revisão.</div>'}`;
+  }
+
   // ELVIRA
   async function _dashboard(){
     let itens=[],cfg={aliquota:6,clientes_ativos:0};
@@ -700,16 +759,37 @@
   }
 
   async function _aprovacoes(){
-    let itens=[];
-    try{const{data}=await db.from('barbeto_revisoes').select('*').order('data',{ascending:false}).limit(100);itens=data||[];}catch{}
-    const p=itens.filter(i=>i.status==='pendente').length,a=itens.filter(i=>i.status==='aprovado').length,aj=itens.filter(i=>i.status==='ajuste').length;
-    return `<div class="aw2-kpis" style="grid-template-columns:1fr 1fr 1fr">
-      <div class="aw2-kpi"><div class="aw2-kl">Pendentes</div><div class="aw2-kv" style="color:#92400E">${p}</div></div>
-      <div class="aw2-kpi"><div class="aw2-kl">Aprovados</div><div class="aw2-kv" style="color:#3A5030">${a}</div></div>
-      <div class="aw2-kpi"><div class="aw2-kl">Ajuste</div><div class="aw2-kv" style="color:#991B1B">${aj}</div></div>
+    let pendentes=[],aprovados=[];
+    try{
+      const{data:pd}=await db.from('posts').select('id,client_email,tema_titulo,tipo,ref_1,created_at').eq('status','revisao').order('created_at',{ascending:false});
+      pendentes=pd||[];
+      const{data:ap}=await db.from('posts').select('id,client_email,tema_titulo,tipo,ref_1,created_at').eq('status','aprovado').order('created_at',{ascending:false}).limit(10);
+      aprovados=ap||[];
+    }catch{}
+    const cliMap={};_clientes.forEach(c=>{cliMap[c.email]=c.nome||c.email;});
+    return `<div class="aw2-kpis" style="grid-template-columns:1fr 1fr">
+      <div class="aw2-kpi"><div class="aw2-kl">Aguardando aprovação</div><div class="aw2-kv" style="color:#92400E">${pendentes.length}</div></div>
+      <div class="aw2-kpi"><div class="aw2-kl">Aprovados (recentes)</div><div class="aw2-kv" style="color:#3A5030">${aprovados.length}</div></div>
     </div>
-    <div class="aw2-tbox"><table class="aw2-tb"><thead><tr><th>Data</th><th>Agente</th><th>Entrega</th><th>Status</th></tr></thead>
-    <tbody>${itens.map(r=>`<tr><td>${_fmtD(r.data)}</td><td>${r.agente}</td><td>${_esc((r.entrega||'').substring(0,50))}...</td><td><span class="aw2-b ${r.status}">${r.status}</span></td></tr>`).join('')||'<tr><td colspan="4" class="aw2-empty">Sem registros</td></tr>'}</tbody></table></div>`;
+    <div class="aw2-ft" style="margin-bottom:10px">Aguardando sua aprovação</div>
+    ${pendentes.length?pendentes.map(p=>`<div class="aw2-aprov-card">
+      <div class="aw2-ci-top" style="margin-bottom:6px">
+        <span class="aw2-b revisao">Revisão</span>
+        <span style="flex:1"></span>
+        <span style="font-size:11px;color:var(--muted)">${cliMap[p.client_email]||p.client_email}</span>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--brown);margin-bottom:4px">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo}</div>
+      ${p.ref_1?`<a href="${p.ref_1}" target="_blank" style="font-size:12px;color:var(--accent);display:inline-block;margin-bottom:8px">🔗 Abrir no Canva</a>`:`<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Sem link do Canva ainda</div>`}
+      <div class="aw2-aprov-btns">
+        <button class="aw2-btn-ok" onclick="_AW2.aprovarPost('${p.id}','${p.client_email}')">✓ Aprovar</button>
+        <button class="aw2-btn-nok" onclick="_AW2.devolverPost('${p.id}','${p.client_email}')">↩ Devolver</button>
+      </div>
+    </div>`).join(''):`<div class="aw2-empty">Nenhum post aguardando aprovação.</div>`}
+    ${aprovados.length?`<div class="aw2-ft" style="margin-top:16px;margin-bottom:10px">Aprovados recentemente</div>
+    ${aprovados.map(p=>`<div class="aw2-aprov-card ok" style="opacity:.75">
+      <div style="font-size:13px;font-weight:500;color:var(--brown)">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo}</div>
+      <div style="font-size:11px;color:var(--muted)">${cliMap[p.client_email]||p.client_email}</div>
+    </div>`).join('')}`:''}`;
   }
 
   // CALENDÁRIO (todos os agentes)
@@ -813,17 +893,41 @@
   // API PÚBLICA
   window._AW2={
     goHub(){_ag=null;_aba=null;_hub();},
-    async open(id){_ag=AGENTES.find(a=>a.id===id);_aba=null;await _loadClientes();if(_cliente)await _loadFiscal(_cliente);_ws();},
+    async open(id){
+      _ag=AGENTES.find(a=>a.id===id);_aba=null;
+      await _loadClientes();if(_cliente)await _loadFiscal(_cliente);
+      _ws();
+      const notifs=await _loadNotifs();
+      if(notifs.length){
+        const panel=document.getElementById('aw2-notif-panel');
+        if(panel){
+          panel.innerHTML=`<div class="aw2-notif-panel"><div class="aw2-notif-title">🔔 ${notifs.length} notificaç${notifs.length===1?'ão':'ões'}</div>${notifs.map(n=>`<div class="aw2-notif-item"><span>•</span><div><div>${_esc(n.mensagem)}</div>${n.client_email?`<div style="font-size:10px;color:var(--muted)">${n.client_email}</div>`:''}</div></div>`).join('')}</div>`;
+          _marcarLidas();
+        }
+      }
+    },
     tab(id){_renderAba(id);},
     async setCli(email){_cliente=email;await _loadFiscal(email);_ws();},
     setData(d){_data=d||_hoje();_renderAba(_aba);},
     // Pedro
     async saveOnboarding(){const ok=await _save({contrato:_v('on-c'),nicho:_v('on-n'),subnicho:_v('on-sn'),persona:_v('on-p'),posicionamento:_v('on-pos'),arcos:_v('on-a'),obs:_v('on-o')});_flash('on-s',ok?'✓ Salvo':'⚠ Erro');},
-    async saveBriefing(){const ok=await _save({bom:_v('br-b'),ruim:_v('br-r'),foco:_v('br-f'),campanha:_v('br-c'),obs:_v('br-o')});_flash('br-s',ok?'✓ Salvo':'⚠ Erro');},
+    async saveBriefing(){
+      const ok=await _save({bom:_v('br-b'),ruim:_v('br-r'),foco:_v('br-f'),campanha:_v('br-c'),obs:_v('br-o')});
+      _flash('br-s',ok?'✓ Salvo':'⚠ Erro');
+      if(ok){const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente||'cliente';_notificar('chloe',`Novo briefing do Pedro para ${cliNome}. Planejamento pode começar!`,'entrega');}
+    },
     async saveResultado(){const ok=await _save({seguidores:_v('rs-s'),alcance:_v('rs-a'),engajamento:_v('rs-e'),crescimento:_v('rs-c')});_flash('rs-sv',ok?'✓ Salvo':'⚠ Erro');if(ok)_renderAba('resultados');},
     // Chloe
-    async savePlan(){const ok=await _save({linha:_v('pl-l'),gancho:_v('pl-g'),datas:_v('pl-d'),qtd_feed:_v('pl-f'),qtd_car:_v('pl-c'),qtd_reels:_v('pl-r'),obs:_v('pl-o')});_flash('pl-s',ok?'✓ Salvo':'⚠ Erro');},
-    async saveBriefV(){const ok=await _save({formato:_v('bv-f'),tom:_v('bv-t'),titulo:_v('bv-ti'),elementos:_v('bv-e'),referencias:_v('bv-r'),texto:_v('bv-tx'),obs:_v('bv-o')});_flash('bv-s',ok?'✓ Salvo':'⚠ Erro');},
+    async savePlan(){
+      const ok=await _save({linha:_v('pl-l'),gancho:_v('pl-g'),datas:_v('pl-d'),qtd_feed:_v('pl-f'),qtd_car:_v('pl-c'),qtd_reels:_v('pl-r'),obs:_v('pl-o')});
+      _flash('pl-s',ok?'✓ Salvo':'⚠ Erro');
+      if(ok){const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente||'cliente';_notificar('gabi',`Planejamento editorial da Chloe disponível para ${cliNome}. Briefing visual aguardando!`,'entrega');}
+    },
+    async saveBriefV(){
+      const ok=await _save({formato:_v('bv-f'),tom:_v('bv-t'),titulo:_v('bv-ti'),elementos:_v('bv-e'),referencias:_v('bv-r'),texto:_v('bv-tx'),obs:_v('bv-o')});
+      _flash('bv-s',ok?'✓ Salvo':'⚠ Erro');
+      if(ok){const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente||'cliente';_notificar('gabi',`Briefing visual da Chloe pronto para ${cliNome}. Pode começar os designs!`,'entrega');}
+    },
     // Chloe — Posts
     chFmt(tipo){
       ['feed','carrossel','reels','stories','tiktok'].forEach(t=>{const b=document.getElementById('ch-fmt-'+t);if(b){b.style.background='none';b.style.borderColor='var(--border)';b.style.color='var(--text)';}});
@@ -884,6 +988,43 @@
     async addRef(){try{await db.from('gabi_moodboard').insert({client_email:_cliente||'',tag:_v('mb-t'),link:_v('mb-l'),descricao:_v('mb-d')});_flash('mb-s','✓ Adicionado');_renderAba('moodboard');}catch{_flash('mb-s','⚠ Erro');}},
     async delRef(id){try{await db.from('gabi_moodboard').delete().eq('id',id);_renderAba('moodboard');}catch{}},
     async saveConceito(){const ok=await _save({paleta:_v('cv-p'),fontes:_v('cv-f'),estetica:_v('cv-e'),elementos:_v('cv-el'),nunca:_v('cv-n')});_flash('cv-s',ok?'✓ Salvo':'⚠ Erro');},
+    // Gabi — submeter design para aprovação da Barbeto
+    async submitEntrega(){
+      const postId=document.getElementById('et-post')?.value;
+      const url=_v('et-url');
+      if(!postId){_flash('et-s','⚠ Selecione um post');return;}
+      if(!url){_flash('et-s','⚠ Adicione o link do Canva');return;}
+      try{
+        const{error}=await db.from('posts').update({ref_1:url,status:'revisao'}).eq('id',postId);
+        if(error)throw error;
+        const{data:post}=await db.from('posts').select('tema_titulo,client_email').eq('id',postId).single();
+        const cliNome=_clientes.find(c=>c.email===post?.client_email)?.nome||post?.client_email||'cliente';
+        _notificar('barbeto',`Design de "${post?.tema_titulo||'post'}" para ${cliNome} aguardando sua aprovação.`,'aprovacao',postId);
+        _flash('et-s','✓ Enviado para a Barbeto!');
+        _renderAba('entregas');
+      }catch(e){_flash('et-s','⚠ Erro: '+e.message);}
+    },
+    // Barbeto — aprovar ou devolver post
+    async aprovarPost(postId,clientEmail){
+      try{
+        const{data:post}=await db.from('posts').select('tema_titulo').eq('id',postId).single();
+        await db.from('posts').update({status:'aprovado'}).eq('id',postId);
+        const cliNome=_clientes.find(c=>c.email===clientEmail)?.nome||clientEmail;
+        _notificar('gabi',`✓ "${post?.tema_titulo||'Post'}" aprovado pela Barbeto para ${cliNome}. Pode agendar!`,'aprovacao',postId);
+        _renderAba('aprovacoes');
+      }catch(e){alert('Erro ao aprovar: '+e.message);}
+    },
+    async devolverPost(postId,clientEmail){
+      const feedback=prompt('Motivo da devolução (será salvo no post):');
+      if(feedback===null)return;
+      try{
+        const{data:post}=await db.from('posts').select('tema_titulo').eq('id',postId).single();
+        await db.from('posts').update({status:'criacao',obs_int:feedback||'Devolvido pela Barbeto para ajustes.'}).eq('id',postId);
+        const cliNome=_clientes.find(c=>c.email===clientEmail)?.nome||clientEmail;
+        _notificar('gabi',`↩ "${post?.tema_titulo||'Post'}" devolvido para ajuste — ${feedback||'sem motivo informado'}`,  'aprovacao',postId);
+        _renderAba('aprovacoes');
+      }catch(e){alert('Erro ao devolver: '+e.message);}
+    },
     // Elvira
     async addLanc(){try{await db.from('elvira_lancamentos').insert({client_email:_cliente||'',data:_v('lc-d'),tipo:_v('lc-t'),categoria:_v('lc-c'),descricao:_v('lc-desc'),valor:parseFloat(_v('lc-v'))||0});_flash('lc-s','✓ Registrado');_renderAba('lancamentos');}catch{_flash('lc-s','⚠ Erro');}},
     async delLanc(id){try{await db.from('elvira_lancamentos').delete().eq('id',id);_renderAba('lancamentos');}catch{}},
