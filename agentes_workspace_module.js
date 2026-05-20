@@ -1036,13 +1036,14 @@
       const inp=document.getElementById('aw2ci');const text=inp?.value?.trim();
       if(!text||_chatLoad||!_ag)return;
       inp.value='';this.chatRes(inp);_chatLoad=true;document.getElementById('aw2cs').disabled=true;
-      if(!_chatHist[_ag.id])_chatHist[_ag.id]=[];
-      _addMsg('user',text);_chatHist[_ag.id].push({role:'user',content:text});_histInsertMsg('user',text);_histSaveLocal();
-      const msgs=document.getElementById('aw2msgs');
-      const td=document.createElement('div');td.id='aw2td';td.className='aw2-msg agent';
-      td.innerHTML='<div class="aw2-typ"><div class="aw2-dot"></div><div class="aw2-dot"></div><div class="aw2-dot"></div></div>';
-      msgs?.appendChild(td);if(msgs)msgs.scrollTop=msgs.scrollHeight;
       try{
+        if(!_chatHist[_ag.id])_chatHist[_ag.id]=[];
+        _addMsg('user',text);_chatHist[_ag.id].push({role:'user',content:text});
+        _histInsertMsg('user',text);_histSaveLocal();
+        const msgs=document.getElementById('aw2msgs');
+        const td=document.createElement('div');td.id='aw2td';td.className='aw2-msg agent';
+        td.innerHTML='<div class="aw2-typ"><div class="aw2-dot"></div><div class="aw2-dot"></div><div class="aw2-dot"></div></div>';
+        msgs?.appendChild(td);if(msgs)msgs.scrollTop=msgs.scrollHeight;
         const systemPrompt=await _buildSystemPrompt(_ag.id,_cliente);
         const res=await fetch('https://dloxddrdqsltuwdabwaq.supabase.co/functions/v1/anthropic-proxy',{
           method:'POST',
@@ -1054,15 +1055,17 @@
         if(!res.ok){
           const errDetail=data.error?.message||`HTTP ${res.status}`;
           _addMsg('agent',`⚠️ Erro da API: ${errDetail}`);
-          _chatLoad=false;document.getElementById('aw2cs').disabled=false;return;
+          return;
         }
         const reply=data.content?.[0]?.text||'Erro ao processar.';
-        _chatHist[_ag.id].push({role:'assistant',content:reply});_addMsg('agent',reply);_histInsertMsg('assistant',reply);_histSaveLocal();
+        _chatHist[_ag.id].push({role:'assistant',content:reply});_addMsg('agent',reply);
+        _histInsertMsg('assistant',reply);_histSaveLocal();
       }catch(e){
         document.getElementById('aw2td')?.remove();
-        _addMsg('agent','⚠️ Erro de rede: '+e.message);
+        _addMsg('agent','⚠️ Erro: '+e.message);
+      }finally{
+        _chatLoad=false;document.getElementById('aw2cs').disabled=false;document.getElementById('aw2ci')?.focus();
       }
-      _chatLoad=false;document.getElementById('aw2cs').disabled=false;document.getElementById('aw2ci')?.focus();
     }
   };
 
