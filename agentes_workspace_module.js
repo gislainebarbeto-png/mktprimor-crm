@@ -48,7 +48,7 @@
   }
   function _histInsertMsg(role,content){
     if(!_ag)return;
-    db.from('agentes_chat_historico').insert({agente_id:_ag.id,client_email:_cliente||'',role,content}).catch(()=>{});
+    db.from('agentes_chat_historico').insert({agente_id:_ag.id,client_email:_cliente||'',role,content}).then(()=>{},()=>{});
   }
   function _histLoad(){
     if(!_ag)return;
@@ -68,7 +68,7 @@
   // NOTIFICAÇÕES
   function _notificar(destinatario,mensagem,tipo='info',ref_id=''){
     if(!destinatario||!mensagem)return;
-    db.from('agentes_notificacoes').insert({destinatario,remetente:_ag?.id||'',client_email:_cliente||'',mensagem,tipo,ref_id,lido:false}).catch(()=>{});
+    db.from('agentes_notificacoes').insert({destinatario,remetente:_ag?.id||'',client_email:_cliente||'',mensagem,tipo,ref_id,lido:false}).then(()=>{},()=>{});
   }
   async function _loadNotifCounts(){
     try{const{data}=await db.from('agentes_notificacoes').select('destinatario').eq('lido',false);const c={};(data||[]).forEach(r=>{c[r.destinatario]=(c[r.destinatario]||0)+1;});return c;}catch{return{};}
@@ -79,7 +79,7 @@
   }
   function _marcarLidas(){
     if(!_ag)return;
-    db.from('agentes_notificacoes').update({lido:true}).eq('destinatario',_ag.id).eq('lido',false).catch(()=>{});
+    db.from('agentes_notificacoes').update({lido:true}).eq('destinatario',_ag.id).eq('lido',false).then(()=>{},()=>{});
   }
 
   function _hoje(){return new Date().toISOString().slice(0,10);}
@@ -1704,7 +1704,7 @@
         const pRes=await fetch(`${BASE}/${aid}/media_publish`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({creation_id:cRes.id,access_token:tok})}).then(r=>r.json());
         if(pRes.error)throw new Error(pRes.error.message);
         await db.from('posts').update({status:'publicado',obs_int:`Agendado IG: ${date} ${time}`}).eq('id',postId);
-        await db.from('automacoes').insert({post_id:postId,client_email:_cliente,tipo:'agendado',resultado:`IG media_id:${pRes.id} para ${date} ${time}`}).catch(()=>{});
+        await db.from('automacoes').insert({post_id:postId,client_email:_cliente,tipo:'agendado',resultado:`IG media_id:${pRes.id} para ${date} ${time}`}).then(()=>{},()=>{});
         document.getElementById('aw2-ig-modal')?.remove();
         alert(`✓ Publicação agendada para ${date} às ${time}!`);
         _renderAba(_aba);
@@ -1728,7 +1728,7 @@
         const pRes=await fetch(`${BASE}/${aid}/media_publish`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({creation_id:cRes.id,access_token:tok})}).then(r=>r.json());
         if(pRes.error)throw new Error(pRes.error.message);
         await db.from('posts').update({status:'publicado',obs_int:`Publicado IG: ${new Date().toLocaleDateString('pt-BR')}`}).eq('id',postId);
-        await db.from('automacoes').insert({post_id:postId,client_email:_cliente,tipo:'publicado',resultado:`IG media_id:${pRes.id}`}).catch(()=>{});
+        await db.from('automacoes').insert({post_id:postId,client_email:_cliente,tipo:'publicado',resultado:`IG media_id:${pRes.id}`}).then(()=>{},()=>{});
         alert('✓ Post publicado no Instagram!');
         _renderAba(_aba);
       }catch(e){alert('Erro ao publicar: '+e.message);}
@@ -1739,7 +1739,7 @@
       if(!confirm('Limpar toda a conversa com '+_ag.nome+'?'))return;
       _chatHist[_ag.id]=[];
       try{localStorage.removeItem(_histKey());}catch(e){}
-      db.from('agentes_chat_historico').delete().eq('agente_id',_ag.id).eq('client_email',_cliente||'').catch(()=>{});
+      db.from('agentes_chat_historico').delete().eq('agente_id',_ag.id).eq('client_email',_cliente||'').then(()=>{},()=>{});
       _renderAba('chat');
     },
     saveKey(){
