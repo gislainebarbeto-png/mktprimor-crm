@@ -16,29 +16,30 @@
   const AGENTES = [
     { id:'pedro',   nome:'Pedro',   iniciais:'PE', tipo:'comercial', cargo:'Estrategista de Conta & Head de Onboarding',
       chips:['Onboarding','Diagnóstico','SWOT','Briefing mensal'],
-      abas:['onboarding','diagnostico','concorrentes','swot','pilares','briefing','resultados','calendario','chat'],
-      labels:{onboarding:'📋 Onboarding',diagnostico:'📊 Diagnóstico',concorrentes:'🔍 Concorrentes',swot:'⚡ SWOT',pilares:'🎯 Pilares',briefing:'📄 Briefing Mensal',resultados:'📈 Resultados',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
+      abas:['onboarding','diagnostico','concorrentes','swot','pilares','briefing','resultados','arquivos','calendario','chat'],
+      labels:{onboarding:'📋 Onboarding',diagnostico:'📊 Diagnóstico',concorrentes:'🔍 Concorrentes',swot:'⚡ SWOT',pilares:'🎯 Pilares',briefing:'📄 Briefing Mensal',resultados:'📈 Resultados',arquivos:'📁 Arquivos',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
     { id:'chloe',   nome:'Chloe',   iniciais:'CH', tipo:'content',   cargo:'Arquitetura da Informação & Conteúdo',
       chips:['Planejamento 30 dias','Copy & legendas','Roteiros Reels','Briefing Gabi'],
-      abas:['planejamento','copy','roteiros','calendario_posts','briefing_visual','calendario','chat'],
-      labels:{planejamento:'📋 Planejamento',copy:'✍️ Copy & Legendas',roteiros:'🎬 Roteiros Reels',calendario_posts:'📅 Calendário Posts',briefing_visual:'✏️ Briefing Visual',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
+      abas:['planejamento','copy','roteiros','calendario_posts','briefing_visual','arquivos','calendario','chat'],
+      labels:{planejamento:'📋 Planejamento',copy:'✍️ Copy & Legendas',roteiros:'🎬 Roteiros Reels',calendario_posts:'📅 Calendário Posts',briefing_visual:'✏️ Briefing Visual',arquivos:'📁 Arquivos',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
     { id:'gabi',    nome:'Gabi',    iniciais:'GA', tipo:'design',    cargo:'Design Visual & Identidade de Marca',
       chips:['Moodboard','Conceito visual','Briefing designer','Revisão de posts'],
-      abas:['moodboard','conceito','briefing_designer','posts_revisao','calendario','chat'],
-      labels:{moodboard:'🎨 Moodboard',conceito:'✦ Conceito Visual',briefing_designer:'📝 Briefing Designer',posts_revisao:'🖼 Posts p/ Revisão',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
+      abas:['moodboard','conceito','briefing_designer','posts_revisao','arquivos','calendario','chat'],
+      labels:{moodboard:'🎨 Moodboard',conceito:'✦ Conceito Visual',briefing_designer:'📝 Briefing Designer',posts_revisao:'🖼 Posts p/ Revisão',arquivos:'📁 Arquivos',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
     { id:'elvira',  nome:'Elvira',  iniciais:'EL', tipo:'financial', cargo:'Analista Financeira',
       chips:['Dashboard','Lançamentos','DRE','Por cliente'],
-      abas:['dashboard','lancamentos','dre','financeiro_cliente','calendario','chat'],
-      labels:{dashboard:'📊 Dashboard',lancamentos:'💰 Lançamentos',dre:'📈 DRE',financeiro_cliente:'👥 Por Cliente',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
+      abas:['dashboard','lancamentos','dre','financeiro_cliente','arquivos','calendario','chat'],
+      labels:{dashboard:'📊 Dashboard',lancamentos:'💰 Lançamentos',dre:'📈 DRE',financeiro_cliente:'👥 Por Cliente',arquivos:'📁 Arquivos',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
     { id:'barbeto', nome:'Barbeto', iniciais:'GB', tipo:'director',  cargo:'Diretora & Gestora',
       chips:['Aprovações','Checklist','Painel geral','Calendário'],
-      abas:['aprovacoes','checklist','painel','calendario','chat'],
-      labels:{aprovacoes:'✅ Aprovações',checklist:'📋 Checklist',painel:'◎ Painel Geral',calendario:'🗓 Calendário',chat:'💬 Chat IA'} }
+      abas:['aprovacoes','checklist','painel','arquivos','calendario','chat'],
+      labels:{aprovacoes:'✅ Aprovações',checklist:'📋 Checklist',painel:'◎ Painel Geral',arquivos:'📁 Arquivos',calendario:'🗓 Calendário',chat:'💬 Chat IA'} }
   ];
 
   let _ag=null,_aba=null,_cliente='',_data=_hoje();
   let _clientes=[],_fiscal={};
   let _chatHist={},_chatLoad=false;
+  let _arquivosDocs=[];
 
   function _histKey(){return 'primor_chat_'+(_ag?_ag.id:'x')+'__'+(_cliente||'geral');}
   function _histSaveLocal(){
@@ -363,6 +364,11 @@
     .aw2-key-hint{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5;}
     .aw2-intro{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
     .aw2-empty{text-align:center;color:var(--muted);padding:24px;font-size:12px;}
+    .aw2-arq-sec{margin-bottom:20px;}.aw2-arq-sec-title{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:8px 0;border-bottom:2px solid var(--border);margin-bottom:4px;}
+    .aw2-arq-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);transition:background .15s;}.aw2-arq-item:last-child{border-bottom:none;}.aw2-arq-item:hover{background:var(--beige);}
+    .aw2-arq-nm{flex:1;font-size:12px;color:var(--text);}.aw2-arq-sub{font-size:10px;color:var(--muted);margin-left:6px;}
+    .aw2-arq-btn{font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;color:var(--text);white-space:nowrap;transition:all .15s;}.aw2-arq-btn:hover{border-color:var(--accent);color:var(--accent);}
+    .aw2-arq-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:4px;}
   `;
   function _css(){if(document.getElementById('aw2css'))return;const s=document.createElement('style');s.id='aw2css';s.textContent=CSS;document.head.appendChild(s);}
 
@@ -469,6 +475,7 @@
       case'aprovacoes':        h=await _aprovacoes();break;
       case'checklist':         h=await _checklist();break;
       case'painel':            h=await _painel();break;
+      case'arquivos':          h=await _arquivosUnificados();break;
       case'calendario':        h=await _calendario();break;
       case'chat':              h=_chat();el.innerHTML=h;_initChat();return;
     }
@@ -649,13 +656,15 @@
     </div>`;
   }
 
-  // GABI — Entregas para aprovação da Barbeto
+  // GABI — Entregas para aprovação da Barbeto + Agendamento no Instagram
   async function _entregas(){
     if(!_cliente)return`<div class="aw2-empty">Selecione um cliente para ver os posts.</div>`;
     let posts=[];
-    try{const{data}=await db.from('posts').select('id,tema_titulo,tipo,status,ref_1').eq('client_email',_cliente).in('status',['criacao','revisao']).order('created_at',{ascending:false}).limit(40);posts=data||[];}catch{}
+    try{const{data}=await db.from('posts').select('id,tema_titulo,tipo,status,ref_1,midia_urls,legenda,hashtags').eq('client_email',_cliente).in('status',['criacao','revisao','aprovado']).order('created_at',{ascending:false}).limit(60);posts=data||[];}catch{}
     const emCriacao=posts.filter(p=>p.status==='criacao');
     const emRevisao=posts.filter(p=>p.status==='revisao');
+    const aprovados=posts.filter(p=>p.status==='aprovado');
+    const temToken=_clientes.find(c=>c.email===_cliente);
     return `<div class="aw2-form" style="margin-bottom:14px">
       <div class="aw2-ft">📬 Submeter design para aprovação</div>
       <div class="aw2-fg"><label class="aw2-fl">Post</label>
@@ -667,12 +676,27 @@
       <div class="aw2-fg"><label class="aw2-fl">Link do Canva</label><input class="aw2-in" id="et-url" placeholder="https://www.canva.com/design/..."></div>
       <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.submitEntrega()">📤 Enviar para Barbeto aprovar</button><span class="aw2-svd" id="et-s"></span></div>
     </div>
-    <div class="aw2-ft">Aguardando revisão da Barbeto (${emRevisao.length})</div>
+    <div class="aw2-ft" style="margin-bottom:8px">Aguardando revisão da Barbeto (${emRevisao.length})</div>
     ${emRevisao.length?emRevisao.map(p=>`<div class="aw2-ci-item" style="border-left:3px solid #d4896a">
       <div class="aw2-ci-top"><span class="aw2-b revisao">Aguardando Barbeto</span></div>
       <div style="font-size:13px;font-weight:500;color:var(--brown)">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo}</div>
       ${p.ref_1?`<a href="${p.ref_1}" target="_blank" style="font-size:11px;color:var(--accent);margin-top:4px;display:inline-block">🔗 Ver no Canva</a>`:'<span style="font-size:11px;color:var(--muted)">Sem link do Canva</span>'}
-    </div>`).join(''):'<div class="aw2-empty">Nenhum post aguardando revisão.</div>'}`;
+    </div>`).join(''):'<div class="aw2-empty">Nenhum post aguardando revisão.</div>'}
+    ${aprovados.length?`<div class="aw2-ft" style="margin:14px 0 8px;display:flex;align-items:center;gap:8px">
+      ✅ Aprovados — prontos para publicar (${aprovados.length})
+      <span style="font-size:10px;color:var(--muted)">via Meta API</span>
+    </div>
+    ${aprovados.map(p=>{
+      let imgUrl='';try{const arr=JSON.parse(p.midia_urls||'[]');imgUrl=Array.isArray(arr)?arr[0]:arr;}catch{imgUrl=p.midia_urls||'';}
+      return`<div class="aw2-ci-item" style="border-left:3px solid #27ae60">
+        <div class="aw2-ci-top"><span class="aw2-b aprovado">Aprovado</span><span style="flex:1"></span>${imgUrl?'<span style="font-size:10px;color:#3A5030">✓ Tem mídia</span>':'<span style="font-size:10px;color:var(--muted)">Sem mídia</span>'}</div>
+        <div style="font-size:13px;font-weight:500;color:var(--brown);margin-bottom:8px">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo}</div>
+        ${imgUrl?`<div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="_AW2.agendarModalIG('${p.id}')" class="aw2-btn" style="font-size:11px;padding:6px 14px">📅 Agendar no Instagram</button>
+          <button onclick="_AW2.publicarIGAgora('${p.id}')" style="background:#27ae60;color:#fff;border:none;border-radius:7px;font-size:11px;padding:6px 14px;cursor:pointer;font-family:inherit">▶ Publicar agora</button>
+        </div>`:`<div style="font-size:11px;color:var(--muted)">Adicione a mídia ao post para publicar via Instagram API</div>`}
+      </div>`;
+    }).join('')}`:''}`;
   }
 
   // ELVIRA
@@ -1047,6 +1071,83 @@
       <div style="font-size:12px;color:var(--text)">${_esc(n.mensagem)}</div>
       <div style="font-size:10px;color:var(--muted);margin-top:3px">${n.remetente||'sistema'} · ${n.created_at?new Date(n.created_at).toLocaleDateString('pt-BR'):''}</div>
     </div>`).join(''):'<div class="aw2-empty">Sem atividades recentes.</div>'}`;
+  }
+
+  // ARQUIVOS UNIFICADOS (todos os agentes)
+  function _docContent(doc){
+    const c=doc.conteudo||{};
+    const dt=(l,v)=>v?`<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px">${l}</div><div style="font-size:13px;color:var(--text);line-height:1.6">${v}</div></div>`:'';
+    switch(doc.tipo){
+      case'onboarding':return[dt('Contrato',c.contrato),dt('Nicho',c.nicho+(c.subnicho?' · '+c.subnicho:'')),dt('Persona',c.persona),dt('Posicionamento',c.posicionamento),dt('Arcos editoriais',c.arcos),dt('Obs',c.obs)].filter(Boolean).join('');
+      case'briefing':return[dt('✓ Performou bem',c.bom),dt('✗ Não performou',c.ruim),dt('Foco do mês',c.foco),dt('Campanha',c.campanha),dt('Obs',c.obs)].filter(Boolean).join('');
+      case'concorrentes':{const lista=(c.lista||[]).filter(x=>x.ig);return lista.length?lista.map((x,i)=>`<div style="margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:8px"><strong>Concorrente ${i+1}: @${_esc(x.ig)}</strong>${x.nicho?` <em>· ${_esc(x.nicho)}</em>`:''}${x.fortes?`<br><span style="font-size:12px">💪 ${_esc(x.fortes)}</span>`:''}${x.fracos?`<br><span style="font-size:12px">⚠ ${_esc(x.fracos)}</span>`:''}</div>`).join(''):'Sem concorrentes.';}
+      case'swot':return`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${[['💪 Forças',c.forcas],['⚠ Fraquezas',c.fraquezas],['🌟 Oportunidades',c.oportunidades],['🚨 Ameaças',c.ameacas]].map(([l,v])=>v?`<div style="padding:10px;border:1px solid var(--border);border-radius:8px"><strong style="font-size:11px">${l}</strong><br><span style="font-size:12px;color:var(--text)">${_esc(v)}</span></div>`:'').join('')}</div>`;
+      case'pilares':{const pls=(c.pilares||[]).filter(p=>p.nome);return pls.length?pls.map(p=>`<div style="margin-bottom:10px;padding:10px;border:1px solid var(--border);border-radius:8px"><strong>${_esc(p.nome)}</strong>${p.percentual?` <em style="color:var(--muted)">${p.percentual}%</em>`:''}${p.descricao?`<br><span style="font-size:12px">${_esc(p.descricao)}</span>`:''}${p.formatos?`<br><span style="font-size:11px;color:var(--muted)">${_esc(p.formatos)}</span>`:''}</div>`).join(''):'Sem pilares.';}
+      case'planejamento':return[dt('Linha editorial',c.linha),dt('Gancho central',c.gancho),dt('Datas e campanhas',c.datas),(c.qtd_feed||c.qtd_car||c.qtd_reels)?dt('Qtd',`${c.qtd_feed||0} feed · ${c.qtd_car||0} carrossel · ${c.qtd_reels||0} reels`):null,dt('Obs',c.obs)].filter(Boolean).join('');
+      case'copy':return[dt('Tema',c.tema),dt('Gancho de abertura',c.gancho),dt('Corpo',c.corpo),dt('CTA',c.cta),dt('Hashtags',c.tags),dt('Legenda final',c.legenda_final)].filter(Boolean).join('');
+      case'roteiro':return[dt('Título',c.titulo),dt('Duração',c.duracao?c.duracao+'s':null),dt('🪝 Gancho',c.gancho),dt('Desenvolvimento',c.dev),dt('CTA',c.cta),dt('Áudio',c.audio),dt('Legenda',c.legenda)].filter(Boolean).join('');
+      case'conceito':return[dt('Paleta',c.paleta),dt('Fontes',c.fontes),dt('Estética',c.estetica),dt('Elementos',c.elementos),dt('⚠ NUNCA usar',c.nunca)].filter(Boolean).join('');
+      case'moodboard':{const refs=Array.isArray(c)?c:[];return refs.length?refs.map(r=>`<div style="margin-bottom:8px;padding:8px;border:1px solid var(--border);border-radius:6px"><span style="background:var(--wine);color:#FAF8F2;font-size:10px;padding:2px 7px;border-radius:20px;margin-right:6px">${r.tag||'Ref'}</span>${_esc(r.descricao||'')}${r.link?` <a href="${r.link}" target="_blank" style="color:var(--accent);font-size:11px">↗ abrir</a>`:''}</div>`).join(''):'Moodboard vazio.';}
+      case'metricas':return[dt('👥 Seguidores',(c.seguidores||0).toLocaleString('pt-BR')),dt('👁 Alcance',(c.alcance||0).toLocaleString('pt-BR')),dt('💫 Impressões',(c.impressoes||0).toLocaleString('pt-BR')),dt('❤️ Engajamento',c.engajamento+'%'),dt('🔍 Visitas perfil',(c.visitas_perfil||0).toLocaleString('pt-BR')),dt('👥 Público principal',c.publico_principal)].filter(Boolean).join('');
+      default:return`<pre style="font-size:11px;white-space:pre-wrap;color:var(--text)">${JSON.stringify(c,null,2)}</pre>`;
+    }
+  }
+
+  async function _arquivosUnificados(){
+    if(!_cliente)return`<div class="aw2-empty">Selecione um cliente para ver os arquivos.</div>`;
+    _arquivosDocs=[];
+    const[onb,brief,conc,swot,pilares,plan,copy,rot,conceito,moodItems,arquivos,metaRows]=await Promise.all([
+      db.from('agentes_trabalhos').select('conteudo,data').eq('agente_id','pedro').eq('aba_id','onboarding').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data).catch(()=>null),
+      db.from('agentes_trabalhos').select('conteudo,data').eq('agente_id','pedro').eq('aba_id','briefing').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data).catch(()=>null),
+      db.from('agentes_trabalhos').select('conteudo,data').eq('agente_id','pedro').eq('aba_id','concorrentes').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data).catch(()=>null),
+      db.from('agentes_trabalhos').select('conteudo,data').eq('agente_id','pedro').eq('aba_id','swot').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data).catch(()=>null),
+      db.from('agentes_trabalhos').select('conteudo,data').eq('agente_id','pedro').eq('aba_id','pilares').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data).catch(()=>null),
+      db.from('agentes_trabalhos').select('conteudo,data').eq('agente_id','chloe').eq('aba_id','planejamento').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data).catch(()=>null),
+      db.from('agentes_trabalhos').select('conteudo,data').eq('agente_id','chloe').eq('aba_id','copy').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data).catch(()=>null),
+      db.from('agentes_trabalhos').select('conteudo,data').eq('agente_id','chloe').eq('aba_id','roteiros').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data).catch(()=>null),
+      db.from('agentes_trabalhos').select('conteudo,data').eq('agente_id','gabi').eq('aba_id','conceito').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data).catch(()=>null),
+      db.from('gabi_moodboard').select('*').eq('client_email',_cliente).order('created_at',{ascending:false}).limit(30).then(r=>r.data||[]).catch(()=>[]),
+      db.from('arquivos_cliente').select('*').eq('client_email',_cliente).order('created_at',{ascending:false}).limit(50).then(r=>r.data||[]).catch(()=>[]),
+      db.from('metricas_instagram').select('*').eq('client_email',_cliente).order('data',{ascending:false}).limit(6).then(r=>r.data||[]).catch(()=>[]),
+    ]);
+    const estrategia=[];
+    if(onb?.conteudo){_arquivosDocs.push({tipo:'onboarding',titulo:'📋 Onboarding',data:onb.data,conteudo:onb.conteudo,agente:'Pedro'});estrategia.push(_arquivosDocs.length-1);}
+    if(conc?.conteudo){_arquivosDocs.push({tipo:'concorrentes',titulo:'🔍 Concorrentes',data:conc.data,conteudo:conc.conteudo,agente:'Pedro'});estrategia.push(_arquivosDocs.length-1);}
+    if(swot?.conteudo){_arquivosDocs.push({tipo:'swot',titulo:'⚡ SWOT',data:swot.data,conteudo:swot.conteudo,agente:'Pedro'});estrategia.push(_arquivosDocs.length-1);}
+    if(pilares?.conteudo){_arquivosDocs.push({tipo:'pilares',titulo:'🎯 Pilares',data:pilares.data,conteudo:pilares.conteudo,agente:'Pedro'});estrategia.push(_arquivosDocs.length-1);}
+    if(brief?.conteudo){_arquivosDocs.push({tipo:'briefing',titulo:'📄 Briefing Mensal',data:brief.data,conteudo:brief.conteudo,agente:'Pedro'});estrategia.push(_arquivosDocs.length-1);}
+    const conteudoDocs=[];
+    if(plan?.conteudo){_arquivosDocs.push({tipo:'planejamento',titulo:'📋 Planejamento Editorial',data:plan.data,conteudo:plan.conteudo,agente:'Chloe'});conteudoDocs.push(_arquivosDocs.length-1);}
+    if(copy?.conteudo){_arquivosDocs.push({tipo:'copy',titulo:'✍️ Copy & Legendas',data:copy.data,conteudo:copy.conteudo,agente:'Chloe'});conteudoDocs.push(_arquivosDocs.length-1);}
+    if(rot?.conteudo){_arquivosDocs.push({tipo:'roteiro',titulo:'🎬 Roteiro Reels',data:rot.data,conteudo:rot.conteudo,agente:'Chloe'});conteudoDocs.push(_arquivosDocs.length-1);}
+    const design=[];
+    if(conceito?.conteudo){_arquivosDocs.push({tipo:'conceito',titulo:'✦ Conceito Visual',data:conceito.data,conteudo:conceito.conteudo,agente:'Gabi'});design.push(_arquivosDocs.length-1);}
+    if(moodItems.length){_arquivosDocs.push({tipo:'moodboard',titulo:`🎨 Moodboard (${moodItems.length})`,data:moodItems[0]?.created_at?.slice(0,10),conteudo:moodItems,agente:'Gabi'});design.push(_arquivosDocs.length-1);}
+    const resultados=[];
+    metaRows.forEach(m=>{_arquivosDocs.push({tipo:'metricas',titulo:`📊 Métricas — ${_fmtD(m.data)}`,data:m.data,conteudo:m,agente:'Meta API'});resultados.push(_arquivosDocs.length-1);});
+    const manuais=[];
+    arquivos.forEach(a=>{_arquivosDocs.push({tipo:'arquivo',titulo:a.nome||'Arquivo',data:a.created_at?.slice(0,10),conteudo:a,agente:a.uploader||'admin',url:a.url});manuais.push(_arquivosDocs.length-1);});
+    const sec=(titulo,indices)=>`<div class="aw2-arq-sec"><div class="aw2-arq-sec-title">${titulo}</div>${indices.length
+      ?`<div class="aw2-arq-wrap">${indices.map(idx=>{const doc=_arquivosDocs[idx];
+          return`<div class="aw2-arq-item">
+            <div class="aw2-arq-nm">${doc.titulo}<span class="aw2-arq-sub">${doc.agente} · ${_fmtD(doc.data)}</span></div>
+            ${doc.tipo==='arquivo'
+              ?`<button class="aw2-arq-btn" onclick="window.open('${(doc.url||'').replace(/'/g,"\\'")}','_blank')">↗ Ver</button>`
+              :`<button class="aw2-arq-btn" onclick="_AW2.verDoc(${idx})">👁 Ver</button>
+                <button class="aw2-arq-btn" onclick="_AW2.baixarDoc(${idx})">↓ PDF</button>`}
+          </div>`;}).join('')}</div>`
+      :`<div style="padding:10px 12px;font-size:12px;color:var(--muted)">Nenhum documento ainda.</div>`}</div>`;
+    const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
+    const total=_arquivosDocs.length;
+    return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="aw2-ft" style="margin:0">📁 Arquivos — ${cliNome}</div>
+      <span style="font-size:11px;color:var(--muted)">${total} documento${total!==1?'s':''}</span>
+    </div>
+    ${sec('📐 ESTRATÉGIA',estrategia)}
+    ${sec('✍️ CONTEÚDO',conteudoDocs)}
+    ${sec('🎨 DESIGN',design)}
+    ${sec('📊 RESULTADOS',resultados)}
+    ${sec('📎 ARQUIVOS MANUAIS',manuais)}`;
   }
 
   // CALENDÁRIO (todos os agentes)
@@ -1496,6 +1597,141 @@
         jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
       }).from(el).save();
       el.remove();
+    },
+    // Arquivos — Ver documento em modal
+    verDoc(idx){
+      const doc=_arquivosDocs[idx];if(!doc)return;
+      const body=_docContent(doc);
+      document.getElementById('aw2-doc-modal')?.remove();
+      const modal=document.createElement('div');
+      modal.id='aw2-doc-modal';
+      modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+      modal.innerHTML=`<div style="background:var(--surface);border-radius:14px;padding:24px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div><div style="font-size:15px;font-weight:500;color:var(--text)">${doc.titulo}</div>
+            <div style="font-size:11px;color:var(--muted)">${doc.agente} · ${_fmtD(doc.data)}</div></div>
+          <button onclick="document.getElementById('aw2-doc-modal')?.remove()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted);padding:4px 8px">✕</button>
+        </div>
+        <div style="font-size:13px;line-height:1.6;color:var(--text)">${body}</div>
+        ${doc.tipo!=='arquivo'&&doc.tipo!=='moodboard'?`<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+          <button class="aw2-btn" onclick="_AW2.baixarDoc(${idx});document.getElementById('aw2-doc-modal')?.remove()">↓ Gerar PDF</button>
+        </div>`:''}
+      </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+    },
+    // Arquivos — Gerar PDF do documento
+    async baixarDoc(idx){
+      const doc=_arquivosDocs[idx];if(!doc)return;
+      if(doc.tipo==='arquivo'){window.open(doc.url||'','_blank');return;}
+      if(typeof html2pdf==='undefined'){alert('Biblioteca html2pdf não carregada.');return;}
+      const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente||'cliente';
+      const bodyHtml=_docContent(doc);
+      const wrap=document.createElement('div');
+      wrap.innerHTML=`<div style="font-family:Poppins,Arial,sans-serif;background:#FAF8F2;padding:40px;max-width:680px;margin:0 auto;">
+        <div style="text-align:center;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #E8DECE;">
+          <img src="https://crm.gislainebarbeto.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:52px;object-fit:contain;display:block;margin:0 auto 10px">
+          <div style="font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:#9B6B3A;margin-bottom:6px">Marketing Primor</div>
+          <div style="font-size:18px;font-weight:300;color:#5C3D1E">${doc.titulo}</div>
+          <div style="font-size:12px;color:#7A5230;margin-top:4px">${cliNome} · ${_fmtD(doc.data)}</div>
+        </div>
+        <div style="font-size:13px;line-height:1.7;color:#333">${bodyHtml}</div>
+        <div style="margin-top:28px;padding-top:12px;border-top:1px solid #E8DECE;display:flex;justify-content:space-between;">
+          <div style="font-size:9px;color:#C8B89A;letter-spacing:.1em;text-transform:uppercase">Agência Primor · Estratégia · Criatividade · Resultados</div>
+          <div style="font-size:9px;color:#C8B89A">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
+        </div>
+      </div>`;
+      document.body.appendChild(wrap);
+      await html2pdf().set({
+        margin:[8,8],
+        filename:`${doc.tipo}-${cliNome.replace(/\s+/g,'-').toLowerCase()}-${doc.data||_hoje()}.pdf`,
+        image:{type:'jpeg',quality:0.95},
+        html2canvas:{scale:2,useCORS:true,logging:false},
+        jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+      }).from(wrap).save();
+      wrap.remove();
+    },
+    // Gabi — Modal de agendamento Instagram
+    agendarModalIG(postId){
+      document.getElementById('aw2-ig-modal')?.remove();
+      const min=new Date(Date.now()+25*60000);
+      const defDate=min.toISOString().slice(0,10);
+      const defTime=min.toISOString().slice(11,16);
+      const modal=document.createElement('div');
+      modal.id='aw2-ig-modal';
+      modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+      modal.innerHTML=`<div style="background:var(--surface);border-radius:14px;padding:24px;width:320px;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+        <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px">📅 Agendar no Instagram</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:20px">Mínimo 20 minutos a partir de agora</div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:4px">Data</label>
+          <input type="date" id="ig-sched-date" value="${defDate}" min="${defDate}" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:20px">
+          <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:4px">Horário</label>
+          <input type="time" id="ig-sched-time" value="${defTime}" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;box-sizing:border-box">
+        </div>
+        <div id="ig-sched-err" style="font-size:11px;color:#f87171;margin-bottom:10px;display:none"></div>
+        <div style="display:flex;gap:8px">
+          <button onclick="_AW2.agendarIG('${postId}')" style="flex:1;padding:10px;border-radius:9px;background:var(--wine);color:#FAF8F2;border:none;cursor:pointer;font-size:12px;font-weight:500">Agendar</button>
+          <button onclick="document.getElementById('aw2-ig-modal')?.remove()" style="padding:10px 14px;border-radius:9px;background:transparent;color:var(--muted);border:1px solid var(--border);cursor:pointer;font-size:12px">Cancelar</button>
+        </div>
+      </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+    },
+    async agendarIG(postId){
+      const date=document.getElementById('ig-sched-date')?.value;
+      const time=document.getElementById('ig-sched-time')?.value;
+      const errEl=document.getElementById('ig-sched-err');
+      if(!date||!time){if(errEl){errEl.textContent='Preencha data e hora.';errEl.style.display='block';}return;}
+      const schedDt=new Date(`${date}T${time}:00`);
+      if(schedDt.getTime()<Date.now()+20*60000){if(errEl){errEl.textContent='O agendamento deve ser pelo menos 20 minutos no futuro.';errEl.style.display='block';}return;}
+      if(errEl)errEl.style.display='none';
+      try{
+        const{data:cli}=await db.from('clients').select('instagram_token,instagram_account_id').eq('email',_cliente).maybeSingle();
+        if(!cli?.instagram_token||!cli?.instagram_account_id){alert('Token ou Account ID do Instagram não configurado para este cliente.');return;}
+        const{data:post}=await db.from('posts').select('midia_urls,legenda,hashtags,tipo').eq('id',postId).single();
+        if(!post?.midia_urls){alert('Este post não tem mídia cadastrada.');return;}
+        let mediaUrl='';try{const arr=JSON.parse(post.midia_urls||'[]');mediaUrl=Array.isArray(arr)?arr[0]:arr;}catch{mediaUrl=post.midia_urls;}
+        const caption=[(post.legenda||''),(post.hashtags||'')].filter(Boolean).join('\n\n');
+        const tok=cli.instagram_token;const aid=cli.instagram_account_id;const BASE='https://graph.facebook.com/v19.0';
+        const isVideo=['reels','video'].includes((post.tipo||'').toLowerCase());
+        const containerBody={caption,scheduled_publish_time:Math.floor(schedDt.getTime()/1000),access_token:tok};
+        if(isVideo){containerBody.media_type='REELS';containerBody.video_url=mediaUrl;}else{containerBody.image_url=mediaUrl;}
+        const cRes=await fetch(`${BASE}/${aid}/media`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(containerBody)}).then(r=>r.json());
+        if(cRes.error)throw new Error(cRes.error.message);
+        const pRes=await fetch(`${BASE}/${aid}/media_publish`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({creation_id:cRes.id,access_token:tok})}).then(r=>r.json());
+        if(pRes.error)throw new Error(pRes.error.message);
+        await db.from('posts').update({status:'publicado',obs_int:`Agendado IG: ${date} ${time}`}).eq('id',postId);
+        await db.from('automacoes').insert({post_id:postId,client_email:_cliente,tipo:'agendado',resultado:`IG media_id:${pRes.id} para ${date} ${time}`}).catch(()=>{});
+        document.getElementById('aw2-ig-modal')?.remove();
+        alert(`✓ Publicação agendada para ${date} às ${time}!`);
+        _renderAba(_aba);
+      }catch(e){if(errEl){errEl.textContent='Erro: '+e.message;errEl.style.display='block';}else alert('Erro: '+e.message);}
+    },
+    async publicarIGAgora(postId){
+      if(!confirm('Publicar este post no Instagram agora?'))return;
+      try{
+        const{data:cli}=await db.from('clients').select('instagram_token,instagram_account_id').eq('email',_cliente).maybeSingle();
+        if(!cli?.instagram_token||!cli?.instagram_account_id){alert('Token ou Account ID do Instagram não configurado para este cliente.');return;}
+        const{data:post}=await db.from('posts').select('midia_urls,legenda,hashtags,tipo').eq('id',postId).single();
+        if(!post?.midia_urls){alert('Este post não tem mídia cadastrada.');return;}
+        let mediaUrl='';try{const arr=JSON.parse(post.midia_urls||'[]');mediaUrl=Array.isArray(arr)?arr[0]:arr;}catch{mediaUrl=post.midia_urls;}
+        const caption=[(post.legenda||''),(post.hashtags||'')].filter(Boolean).join('\n\n');
+        const tok=cli.instagram_token;const aid=cli.instagram_account_id;const BASE='https://graph.facebook.com/v19.0';
+        const isVideo=['reels','video'].includes((post.tipo||'').toLowerCase());
+        const containerBody={caption,access_token:tok};
+        if(isVideo){containerBody.media_type='REELS';containerBody.video_url=mediaUrl;}else{containerBody.image_url=mediaUrl;}
+        const cRes=await fetch(`${BASE}/${aid}/media`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(containerBody)}).then(r=>r.json());
+        if(cRes.error)throw new Error(cRes.error.message);
+        const pRes=await fetch(`${BASE}/${aid}/media_publish`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({creation_id:cRes.id,access_token:tok})}).then(r=>r.json());
+        if(pRes.error)throw new Error(pRes.error.message);
+        await db.from('posts').update({status:'publicado',obs_int:`Publicado IG: ${new Date().toLocaleDateString('pt-BR')}`}).eq('id',postId);
+        await db.from('automacoes').insert({post_id:postId,client_email:_cliente,tipo:'publicado',resultado:`IG media_id:${pRes.id}`}).catch(()=>{});
+        alert('✓ Post publicado no Instagram!');
+        _renderAba(_aba);
+      }catch(e){alert('Erro ao publicar: '+e.message);}
     },
     // Chat
     clearChat(){
