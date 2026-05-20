@@ -3687,6 +3687,9 @@ const Admin = {
   _bcMapaDrag: null,
   _bcMapaDragOff: {x:0,y:0},
   _bcMapaCurrentId: null,
+  _bcMmAutoSaveTimer: null,
+  _postDraftTimer: null,
+  _postDraftListening: false,
 
   async _bcEstrategias(id, c) {
     const content = document.getElementById(this._bcContentId||'cli-tab-content');
@@ -3750,6 +3753,28 @@ const Admin = {
     if (!Array.isArray(data.nodes)) data.nodes = [];
     if (!data.panX) data.panX = 0;
     if (!data.panY) data.panY = 0;
+
+    // Verificar se há rascunho local mais recente
+    let draftBanner = '';
+    try {
+      const draftStr = localStorage.getItem('mapa_draft_' + mapaId);
+      if (draftStr) {
+        const draft = JSON.parse(draftStr);
+        const dbTs = row.updated_at ? new Date(row.updated_at).getTime() : 0;
+        if (draft.ts > dbTs && draft.data && Array.isArray(draft.data.nodes)) {
+          const ago = Math.round((Date.now() - draft.ts) / 60000);
+          const agoTxt = ago < 60 ? ago + ' min atrás' : Math.round(ago/60) + 'h atrás';
+          draftBanner = `<div id="mm-draft-banner" style="background:#FFF8E1;border:1px solid #FFD54F;border-radius:9px;padding:8px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#5D4037;">
+            <span>⚠️ Rascunho local encontrado (${agoTxt}) — pode conter alterações não salvas no banco.</span>
+            <div style="display:flex;gap:6px;">
+              <button onclick="Admin._bcMmRestoreDraft('${mapaId}')" style="padding:4px 12px;border-radius:7px;background:#FFD54F;border:none;cursor:pointer;font-size:11px;font-weight:600;color:#3E2723;">Recuperar</button>
+              <button onclick="Admin._bcMmDiscardDraft('${mapaId}')" style="padding:4px 10px;border-radius:7px;background:transparent;border:1px solid #BCAAA4;cursor:pointer;font-size:11px;color:#5D4037;">Descartar</button>
+            </div>
+          </div>`;
+        }
+      }
+    } catch(e) {}
+
     this._bcMapaData = data;
     this._bcMapaSel = null;
     this._bcMapaCurrentId = mapaId;
@@ -3775,10 +3800,12 @@ const Admin = {
           ${this._bcReadOnly ? '' : `
           <button onclick="Admin._bcMmAddChild()" style="padding:7px 14px;border-radius:9px;background:var(--brown);color:#fff;border:none;cursor:pointer;font-size:11px;" title="Selecione um nó primeiro">+ Filho</button>
           <button onclick="Admin._bcMmAddRoot()" style="padding:7px 14px;border-radius:9px;background:var(--beige);border:1px solid var(--border);font-size:11px;cursor:pointer;color:var(--text);">+ Nó livre</button>
+          <span id="mm-autosave-badge" style="font-size:10px;color:var(--muted);white-space:nowrap;opacity:0.7;" title="Rascunho local salvo automaticamente"></span>
           <button onclick="Admin._bcSalvarMapa()" style="padding:7px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:500;">Salvar ✓</button>
           <button onclick="Admin._bcExcluirMapa('${mapaId}','${email}')" style="padding:7px 12px;border-radius:9px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;font-size:11px;cursor:pointer;">Excluir</button>
           `}
         </div>
+        ${draftBanner}
         <div class="mm-outer">
           <!-- Canvas -->
           <div id="bc-mm-wrap" class="mm-canvas-area"
@@ -3883,6 +3910,26 @@ const Admin = {
     const vis = this._bcMmGetVisibleIds();
     nodesDiv.innerHTML = this._bcMapaData.nodes.filter(n => vis.has(n.id)).map(n => this._bcMmNodeHtml(n)).join('');
     this._bcMmUpdateSvg();
+    this._bcMmAutoSave();
+  },
+
+  _bcMmAutoSave() {
+    if (!this._bcMapaCurrentId || !this._bcMapaData) return;
+    clearTimeout(this._bcMmAutoSaveTimer);
+    this._bcMmAutoSaveTimer = setTimeout(() => {
+      try {
+        localStorage.setItem('mapa_draft_' + this._bcMapaCurrentId, JSON.stringify({
+          data: this._bcMapaData,
+          ts: Date.now()
+        }));
+        const badge = document.getElementById('mm-autosave-badge');
+        if (badge) {
+          const t = new Date();
+          badge.textContent = `💾 ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+          badge.title = 'Rascunho local salvo automaticamente';
+        }
+      } catch(e) {}
+    }, 2000);
   },
 
   _bcMmUpdateSvg() {
@@ -4220,6 +4267,26 @@ const Admin = {
     this._bcMmRenderAll(); this._bcMmUpdatePanel();
   },
 
+  _bcMmRestoreDraft(mapaId) {
+    try {
+      const draftStr = localStorage.getItem('mapa_draft_' + mapaId);
+      if (!draftStr) return;
+      const draft = JSON.parse(draftStr);
+      if (draft.data && Array.isArray(draft.data.nodes)) {
+        this._bcMapaData = draft.data;
+        document.getElementById('mm-draft-banner')?.remove();
+        this._bcMmRenderAll();
+        this._showToast('Rascunho recuperado ✓ — clique em Salvar para confirmar');
+      }
+    } catch(e) { this._showToast('Erro ao recuperar rascunho'); }
+  },
+
+  _bcMmDiscardDraft(mapaId) {
+    localStorage.removeItem('mapa_draft_' + mapaId);
+    document.getElementById('mm-draft-banner')?.remove();
+    this._showToast('Rascunho descartado');
+  },
+
   async _bcSalvarMapa() {
     if (!this._bcMapaCurrentId || !this._bcMapaData) { this._showToast('Erro: mapa não identificado'); return; }
     try {
@@ -4228,6 +4295,10 @@ const Admin = {
         .update({ conteudo: payload, titulo: this._bcMapaData.title })
         .eq('id', this._bcMapaCurrentId);
       if (error) throw error;
+      localStorage.removeItem('mapa_draft_' + this._bcMapaCurrentId);
+      document.getElementById('mm-draft-banner')?.remove();
+      const badge = document.getElementById('mm-autosave-badge');
+      if (badge) badge.textContent = '';
       this._showToast('Mapa salvo ✓');
     } catch(e) {
       console.error('Erro ao salvar mapa:', e);
@@ -4237,6 +4308,7 @@ const Admin = {
 
   async _bcExcluirMapa(id, email) {
     if (!confirm('Excluir este mapa?')) return;
+    localStorage.removeItem('mapa_draft_' + id);
     await db.from('informacoes_cliente').delete().eq('id',id);
     this._bcMapaData = null; this._bcMapaSel = null; this._bcMapaCurrentId = null;
     this._bcSection = 'estrategias';
@@ -4555,13 +4627,54 @@ const Admin = {
     return urlData.publicUrl;
   },
 
+  _postDraftSave() {
+    if (this._editPostId) return;
+    clearTimeout(this._postDraftTimer);
+    this._postDraftTimer = setTimeout(() => {
+      try {
+        const get = id => document.getElementById(id)?.value || '';
+        localStorage.setItem('post_draft_new', JSON.stringify({
+          cliente: get('mp-cliente'),
+          temaTitulo: get('mp-tema-titulo'),
+          ref1: get('mp-ref-1'), ref2: get('mp-ref-2'), ref3: get('mp-ref-3'),
+          conteudo: get('mp-conteudo'),
+          legenda: get('mp-legenda'),
+          hashtags: get('mp-hashtags'),
+          ajuste: get('mp-ajuste'),
+          data: get('mp-data'),
+          rede: get('mp-rede'),
+          tipo: get('mp-tipo'),
+          status: get('mp-status'),
+          ts: Date.now()
+        }));
+      } catch(e) {}
+    }, 2000);
+  },
+
+  _postDraftRestore(draft) {
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+    set('mp-cliente', draft.cliente);
+    set('mp-tema-titulo', draft.temaTitulo);
+    set('mp-ref-1', draft.ref1); set('mp-ref-2', draft.ref2); set('mp-ref-3', draft.ref3);
+    set('mp-conteudo', draft.conteudo);
+    set('mp-legenda', draft.legenda);
+    set('mp-hashtags', draft.hashtags);
+    set('mp-ajuste', draft.ajuste);
+    set('mp-data', draft.data);
+    set('mp-rede', draft.rede);
+    set('mp-tipo', draft.tipo);
+    set('mp-status', draft.status);
+    localStorage.removeItem('post_draft_new');
+    this._showToast('Rascunho do post recuperado ✓');
+  },
+
   async abrirModalPost() {
     // Load clients for dropdown
     const { data: clients } = await db.from('clients').select('nome,email').order('nome');
     const sel = document.getElementById('mp-cliente');
     sel.innerHTML = '<option value="">Selecione o cliente...</option>' +
       (clients||[]).map(c => `<option value="${c.email}">${c.nome}</option>`).join('');
-    
+
     // Reset fields
     ['mp-tema-titulo','mp-ref-1','mp-ref-2','mp-ref-3','mp-conteudo','mp-legenda','mp-hashtags','mp-ajuste'].forEach(id => {
       const el = document.getElementById(id); if(el) el.value = '';
@@ -4585,6 +4698,35 @@ const Admin = {
     document.getElementById('mp-status-abas').value = 'todos_aprovados';
     this._setPostPreview('');
     this.postTab('tema');
+
+    // Checar rascunho local para post novo
+    if (!this._editPostId) {
+      try {
+        const draftStr = localStorage.getItem('post_draft_new');
+        if (draftStr) {
+          const draft = JSON.parse(draftStr);
+          const ago = Math.round((Date.now() - (draft.ts||0)) / 60000);
+          if (ago < 1440 && (draft.temaTitulo || draft.conteudo || draft.legenda)) {
+            const agoTxt = ago < 60 ? ago + ' min atrás' : Math.round(ago/60) + 'h atrás';
+            if (confirm(`Há um rascunho de post não salvo (${agoTxt}). Recuperar?`)) {
+              this._postDraftRestore(draft);
+            } else {
+              localStorage.removeItem('post_draft_new');
+            }
+          }
+        }
+      } catch(e) {}
+
+      // Listener delegado (adicionado apenas uma vez)
+      if (!this._postDraftListening) {
+        const modalEl = document.getElementById('modal-post');
+        if (modalEl) {
+          modalEl.addEventListener('input', () => { if (!this._editPostId) this._postDraftSave(); });
+          this._postDraftListening = true;
+        }
+      }
+    }
+
     document.getElementById('modal-post').classList.remove('hidden');
   },
 
@@ -4667,6 +4809,7 @@ const Admin = {
       }
       if (error) throw error;
 
+      if (!this._editPostId) localStorage.removeItem('post_draft_new');
       this._editPostId = null;
       this.fecharModalPost();
       this.tab('posts');
