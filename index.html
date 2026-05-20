@@ -1193,9 +1193,54 @@
 const SUPABASE_URL  = 'https://dloxddrdqsltuwdabwaq.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_ZAEE1Rt9yMMWVTNqcdEo6w_WNhPt29M';
 const ADMIN_EMAIL   = 'gislainebarbeto@gmail.com';
+const META_APP_ID   = ''; // ← Cole aqui o App ID do MKT Primor Portal (developers.facebook.com)
 const { createClient } = window.supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 window.ANTHROPIC_KEY = ''; // ← Cole aqui sua chave da API Anthropic
+
+// ═══════════════════════════════════════
+// META OAUTH — Conectar Instagram via Facebook Login
+// ═══════════════════════════════════════
+const Meta = {
+  // Inicia o fluxo OAuth redirecionando para o Facebook
+  connectInstagram(clientEmail, fbPageId) {
+    if (!META_APP_ID) { alert('META_APP_ID não configurado em index.html.'); return; }
+    const state = btoa(JSON.stringify({ client_email: clientEmail, fb_page_id: fbPageId || '' }));
+    const redirect = encodeURIComponent(window.location.origin + '/');
+    const scope = 'instagram_basic,instagram_manage_insights,instagram_content_publish,pages_read_engagement,pages_show_list';
+    window.location.href =
+      `https://www.facebook.com/v19.0/dialog/oauth?client_id=${META_APP_ID}` +
+      `&redirect_uri=${redirect}&scope=${scope}&state=${state}&response_type=code`;
+  },
+
+  // Chamado pelo App.init() quando detecta ?code= na URL (retorno do Facebook)
+  async handleOAuthCallback(code, state) {
+    const { client_email, fb_page_id } = state;
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/instagram-oauth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ code, client_email, fb_page_id }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    sessionStorage.setItem('_oauth_ok', JSON.stringify({ ig_username: data.ig_username, client_email }));
+  },
+
+  // Mostra toast de sucesso se houver resultado de OAuth pendente
+  checkOAuthSuccess() {
+    const raw = sessionStorage.getItem('_oauth_ok');
+    if (!raw) return;
+    sessionStorage.removeItem('_oauth_ok');
+    try {
+      const { ig_username } = JSON.parse(raw);
+      const t = document.createElement('div');
+      t.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:14px 28px;border-radius:30px;font-size:13px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);';
+      t.textContent = `✓ Instagram @${ig_username} conectado com sucesso!`;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 5000);
+    } catch {}
+  },
+};
 
 // ═══════════════════════════════════════
 // APP — Auth & routing
@@ -1206,6 +1251,23 @@ const App = {
   async init() {
     this.loader(true);
     document.getElementById('login-form').addEventListener('submit', e => this.login(e));
+
+    // Detecta retorno do OAuth do Facebook (?code=...&state=...)
+    const _p = new URLSearchParams(window.location.search);
+    const _code = _p.get('code'), _state = _p.get('state');
+    if (_code && _state) {
+      try {
+        await Meta.handleOAuthCallback(_code, JSON.parse(atob(_state)));
+      } catch(e) {
+        const t = document.createElement('div');
+        t.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#e74c3c;color:#fff;padding:14px 28px;border-radius:30px;font-size:13px;z-index:9999;';
+        t.textContent = '✗ Erro ao conectar Instagram: ' + e.message;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 8000);
+      }
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
     try {
       const { data: { session } } = await db.auth.getSession();
       if (session) {
@@ -1247,6 +1309,7 @@ const App = {
   },
 
   async route() {
+    Meta.checkOAuthSuccess();
     const VALID_TABS = ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','agentes'];
     const savedTab = sessionStorage.getItem('adminTab');
     const startTab = (savedTab && VALID_TABS.includes(savedTab) && savedTab !== 'followup' && savedTab !== 'metricas') ? savedTab : 'posts';
@@ -2778,12 +2841,15 @@ const Admin = {
             <div id="dp-ig-fetch-status" style="font-size:11px;margin-top:4px;"></div>
           `)}
           ${fld('Instagram Account ID', inp('dp-ig-account-id',c.instagram_account_id||'','Ex: 17841400000000000'))}
-          ${fld('Token de Acesso (Long-lived, 60 dias)', `<textarea id="dp-ig-token" placeholder="EAABkz..." style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:11px;font-family:monospace;background:var(--bg);color:var(--text);resize:none;margin-top:4px;min-height:60px;box-sizing:border-box;">${c.instagram_token||''}</textarea>`)}
-          <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6">
+          ${fld('Token de Acesso (Long-lived, 60 dias)', `<textarea id="dp-ig-token" placeholder="EAABkz... (ou use o botão OAuth abaixo)" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:11px;font-family:monospace;background:var(--bg);color:var(--text);resize:none;margin-top:4px;min-height:60px;box-sizing:border-box;">${c.instagram_token||''}</textarea>`)}
+          <button onclick="Admin.salvarDadosCliente(${c.id}).then(()=>Meta.connectInstagram('${c.email}','${c.fb_page_id||''}'))" style="width:100%;margin-top:10px;padding:10px;border-radius:9px;background:linear-gradient(135deg,#1877F2,#0D5FBF);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;">
+            ${c.instagram_token&&c.instagram_account_id ? '🔄 Reconectar Instagram via OAuth (Facebook Login)' : '🔗 Conectar Instagram via OAuth (Facebook Login)'}
+          </button>
+          <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6">
             Permissões necessárias: <code>instagram_basic</code>, <code>instagram_manage_insights</code>, <code>instagram_content_publish</code>, <code>pages_read_engagement</code><br>
             ${c.instagram_token&&c.instagram_account_id
               ? `<span style="color:#3A8A3A">✓ Configurado — métricas e publicação via Meta API</span>`
-              : `<span style="color:#d4896a">⚠ Preencha Account ID e Token para ativar métricas e publicação direta</span>`}
+              : `<span style="color:#d4896a">⚠ Sem token — preencha manualmente ou use o botão acima</span>`}
           </div>
         </div>
         ${fld('Mensagem para a cliente', `<textarea data-rich id="dp-mensagem-gi" rows="3" placeholder="Ex: Essa semana trabalhamos muito no seu posicionamento 🌿" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);color:var(--text);resize:none;margin-top:4px;">${c.mensagem_gi||''}</textarea>`)}
