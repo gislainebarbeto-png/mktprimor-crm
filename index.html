@@ -4839,6 +4839,7 @@ const Admin = {
     const mensagem_gi = document.getElementById('dp-mensagem-gi')?.value.trim() || null;
     const instagram_account_id = document.getElementById('dp-ig-account-id')?.value.trim() || null;
     const instagram_token = document.getElementById('dp-ig-token')?.value.trim() || null;
+    const fb_page_id = document.getElementById('dp-fb-page-id')?.value.trim() || null;
     const metricoolUrl = document.getElementById('dp-metricool')?.value.trim() || '';
     const arquivosRaw = document.getElementById('dp-arquivos')?.value.trim() || null;
     if (arquivosRaw) {
@@ -4848,7 +4849,7 @@ const Admin = {
     try {
       const { data: clientData } = await db.from('clients').select('email').eq('id',id).single();
       const clientEmail = clientData?.email;
-      const { error } = await db.from('clients').update({ nome, empresa, instagram, nome_projeto, data_inicio, access_code, mensagem_gi, arquivos: arquivosRaw, instagram_account_id, instagram_token }).eq('id', id);
+      const { error } = await db.from('clients').update({ nome, empresa, instagram, nome_projeto, data_inicio, access_code, mensagem_gi, arquivos: arquivosRaw, instagram_account_id, instagram_token, fb_page_id }).eq('id', id);
       if (error) throw error;
       if (clientEmail) {
         await db.from('arquivos_cliente').delete().eq('client_email',clientEmail).eq('nome','__metricool__');
