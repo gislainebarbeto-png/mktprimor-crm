@@ -2770,6 +2770,13 @@ const Admin = {
         ${fld('✉ E-mail / Login', `<div style="padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;background:var(--bg);color:var(--muted);margin-top:4px;">${c.email}</div>`)}
         <div style="margin:16px 0;padding:14px 16px;background:rgba(100,149,237,0.06);border:1px solid rgba(100,149,237,0.2);border-radius:12px;">
           <div style="font-size:10px;font-weight:600;color:#1565C0;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;">📊 Meta API — Publicação e Métricas</div>
+          ${fld('Facebook Page ID (para buscar IG Account ID)', `
+            <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
+              <input id="dp-fb-page-id" type="text" placeholder="Ex: 1446511107014229" value="${c.fb_page_id||''}" style="flex:1;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;background:var(--bg);color:var(--text);">
+              <button onclick="Admin.buscarIgAccountId(${c.id})" style="padding:8px 14px;border-radius:9px;background:#1565C0;color:#fff;border:none;cursor:pointer;font-size:11px;white-space:nowrap;">🔍 Buscar ID</button>
+            </div>
+            <div id="dp-ig-fetch-status" style="font-size:11px;margin-top:4px;"></div>
+          `)}
           ${fld('Instagram Account ID', inp('dp-ig-account-id',c.instagram_account_id||'','Ex: 17841400000000000'))}
           ${fld('Token de Acesso (Long-lived, 60 dias)', `<textarea id="dp-ig-token" placeholder="EAABkz..." style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:11px;font-family:monospace;background:var(--bg);color:var(--text);resize:none;margin-top:4px;min-height:60px;box-sizing:border-box;">${c.instagram_token||''}</textarea>`)}
           <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6">
@@ -4851,6 +4858,26 @@ const Admin = {
       this.openCliente(id);
     } catch(e) { alert('Erro: ' + e.message); }
     finally { this.loader(false); }
+  },
+
+  async buscarIgAccountId(clientId) {
+    const pageId = document.getElementById('dp-fb-page-id')?.value.trim();
+    const token  = document.getElementById('dp-ig-token')?.value.trim();
+    const statusEl = document.getElementById('dp-ig-fetch-status');
+    if (!pageId) { if(statusEl) { statusEl.textContent = '⚠ Preencha o Facebook Page ID primeiro.'; statusEl.style.color='#d4896a'; } return; }
+    if (!token)  { if(statusEl) { statusEl.textContent = '⚠ Preencha o Token de Acesso primeiro.'; statusEl.style.color='#d4896a'; } return; }
+    if(statusEl) { statusEl.textContent = '⏳ Buscando…'; statusEl.style.color='var(--muted)'; }
+    try {
+      const res = await fetch(`https://graph.facebook.com/v19.0/${pageId}?fields=instagram_business_account&access_token=${token}`).then(r=>r.json());
+      if (res.error) throw new Error(res.error.message);
+      const igId = res.instagram_business_account?.id;
+      if (!igId) throw new Error('Nenhuma conta Instagram Business conectada a essa página. Verifique se a página está vinculada a um perfil Business/Creator no Instagram.');
+      const el = document.getElementById('dp-ig-account-id');
+      if (el) el.value = igId;
+      if(statusEl) { statusEl.textContent = `✓ IG Account ID encontrado: ${igId}`; statusEl.style.color='#3A8A3A'; }
+    } catch(e) {
+      if(statusEl) { statusEl.textContent = '✗ Erro: ' + e.message; statusEl.style.color='#f87171'; }
+    }
   },
 
   async updatePost(id, status) {
