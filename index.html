@@ -2963,12 +2963,16 @@ const Admin = {
       </div>
       <div style="max-width:700px;">
         ${fld('✉ E-mail / Login', `<div style="padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;background:var(--bg);color:var(--muted);margin-top:4px;">${c.email}</div>`)}
-        ${fld('🔗 Webhook Make (Instagram)', inp('dp-webhook',c.make_webhook||'','https://hook.us2.make.com/...'))}
         <div style="margin:16px 0;padding:14px 16px;background:rgba(100,149,237,0.06);border:1px solid rgba(100,149,237,0.2);border-radius:12px;">
-          <div style="font-size:10px;font-weight:600;color:#1565C0;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;">📊 Meta API — Métricas do Instagram</div>
+          <div style="font-size:10px;font-weight:600;color:#1565C0;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;">📊 Meta API — Publicação e Métricas</div>
           ${fld('Instagram Account ID', inp('dp-ig-account-id',c.instagram_account_id||'','Ex: 17841400000000000'))}
           ${fld('Token de Acesso (Long-lived, 60 dias)', `<textarea id="dp-ig-token" placeholder="EAABkz..." style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:11px;font-family:monospace;background:var(--bg);color:var(--text);resize:none;margin-top:4px;min-height:60px;box-sizing:border-box;">${c.instagram_token||''}</textarea>`)}
-          <div style="font-size:10px;color:var(--muted);margin-top:6px;">Use um Long-lived User Token com permissões: instagram_basic, instagram_manage_insights, pages_read_engagement</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6">
+            Permissões necessárias: <code>instagram_basic</code>, <code>instagram_manage_insights</code>, <code>instagram_content_publish</code>, <code>pages_read_engagement</code><br>
+            ${c.instagram_token&&c.instagram_account_id
+              ? `<span style="color:#3A8A3A">✓ Configurado — métricas e publicação via Meta API</span>`
+              : `<span style="color:#d4896a">⚠ Preencha Account ID e Token para ativar métricas e publicação direta</span>`}
+          </div>
         </div>
         ${fld('Mensagem para a cliente', `<textarea data-rich id="dp-mensagem-gi" rows="3" placeholder="Ex: Essa semana trabalhamos muito no seu posicionamento 🌿" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);color:var(--text);resize:none;margin-top:4px;">${c.mensagem_gi||''}</textarea>`)}
       </div>
@@ -2978,29 +2982,7 @@ const Admin = {
       <div style="margin-top:16px;padding:12px 16px;background:rgba(196,150,122,.06);border:1px solid rgba(201,162,39,.15);border-radius:12px;font-size:11px;color:var(--muted);line-height:2;max-width:700px;">
         <strong style="color:var(--brown);">Acesso da cliente:</strong><br>
         crm.gislainebarbeto.com.br · <strong>${c.email}</strong> · <strong>${c.access_code||'Primor2026!'}</strong>
-      </div>
-      <div style="margin-top:16px;padding:14px 16px;background:rgba(131,58,180,0.05);border:1px solid rgba(131,58,180,0.18);border-radius:12px;max-width:700px;" id="ig-status-box-${c.id}">
-        <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;">📷 Publicação direta no Instagram</div>
-        <div style="font-size:12px;color:var(--muted);">Verificando...</div>
       </div>`;
-    // Async: carrega status IG sem bloquear a aba
-    db.from('instagram_tokens').select('ig_username,expires_at').eq('client_email', c.email).maybeSingle()
-      .then(({ data: igToken }) => {
-        const box = document.getElementById('ig-status-box-' + c.id);
-        if (!box) return;
-        const igHtml = igToken
-          ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-               <div style="flex:1;font-size:13px;color:var(--text);">✓ Conectado como <strong>@${igToken.ig_username}</strong>${igToken.expires_at ? `<span style="font-size:10px;color:var(--muted);margin-left:6px;">até ${new Date(igToken.expires_at).toLocaleDateString('pt-BR')}</span>` : ''}</div>
-               <button onclick="Admin._igDisconnect('${c.email}')" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);background:transparent;font-size:11px;cursor:pointer;color:#ef4444;">Desconectar</button>
-             </div>`
-          : `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-               <div style="flex:1;font-size:12px;color:var(--muted);">Não conectado — publicação usa Make webhook</div>
-               <a href="${Admin._igAuthUrl(c.email)}" style="display:inline-block;padding:7px 16px;border-radius:8px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap;">🔗 Conectar Instagram</a>
-             </div>`;
-        box.innerHTML = `
-          <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;">📷 Publicação direta no Instagram</div>
-          ${igHtml}`;
-      });
   },
 
   /* ===== BRAND CORE ===== */
@@ -4890,7 +4872,6 @@ const Admin = {
     const data_inicio = document.getElementById('dp-inicio')?.value || null;
     const access_code = document.getElementById('dp-senha')?.value.trim() || null;
     const mensagem_gi = document.getElementById('dp-mensagem-gi')?.value.trim() || null;
-    const make_webhook = document.getElementById('dp-webhook')?.value.trim() || null;
     const instagram_account_id = document.getElementById('dp-ig-account-id')?.value.trim() || null;
     const instagram_token = document.getElementById('dp-ig-token')?.value.trim() || null;
     const metricoolUrl = document.getElementById('dp-metricool')?.value.trim() || '';
@@ -4902,7 +4883,7 @@ const Admin = {
     try {
       const { data: clientData } = await db.from('clients').select('email').eq('id',id).single();
       const clientEmail = clientData?.email;
-      const { error } = await db.from('clients').update({ nome, empresa, instagram, nome_projeto, data_inicio, access_code, mensagem_gi, arquivos: arquivosRaw, make_webhook, instagram_account_id, instagram_token }).eq('id', id);
+      const { error } = await db.from('clients').update({ nome, empresa, instagram, nome_projeto, data_inicio, access_code, mensagem_gi, arquivos: arquivosRaw, instagram_account_id, instagram_token }).eq('id', id);
       if (error) throw error;
       if (clientEmail) {
         await db.from('arquivos_cliente').delete().eq('client_email',clientEmail).eq('nome','__metricool__');
