@@ -506,20 +506,21 @@
 
   async function _resultados(){
     let rows=[];
-    try{let q=db.from('agentes_trabalhos').select('data,conteudo,client_email').eq('agente_id','pedro').eq('aba_id','resultados').order('data',{ascending:false}).limit(60);if(_cliente)q=q.eq('client_email',_cliente);const{data}=await q;rows=(data||[]).map(r=>{const c=r.conteudo||{};const cli=_clientes.find(x=>x.email===r.client_email);return`<tr><td>${_fmtD(r.data)}</td><td>${cli?.nome||r.client_email||'—'}</td><td>${c.seguidores||'—'}</td><td>${c.alcance||'—'}</td><td>${c.engajamento||'—'}%</td><td>${c.crescimento||'—'}</td></tr>`;});}catch{}
-    return `<div class="aw2-form" style="margin-bottom:12px"><div class="aw2-ft">📊 Novo Resultado</div>
-      <div class="aw2-r2">
-        <div class="aw2-fg"><label class="aw2-fl">Seguidores</label><input class="aw2-in" type="number" id="rs-s"></div>
-        <div class="aw2-fg"><label class="aw2-fl">Alcance</label><input class="aw2-in" type="number" id="rs-a"></div>
-      </div>
-      <div class="aw2-r2">
-        <div class="aw2-fg"><label class="aw2-fl">Engajamento (%)</label><input class="aw2-in" type="number" step="0.1" id="rs-e"></div>
-        <div class="aw2-fg"><label class="aw2-fl">Crescimento</label><input class="aw2-in" id="rs-c" placeholder="+120 seguidores"></div>
-      </div>
-      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveResultado()">Salvar</button><span class="aw2-svd" id="rs-sv"></span></div>
+    try{
+      let q=db.from('metricas_instagram').select('data,client_email,seguidores,alcance,impressoes,engajamento,publico_principal').order('data',{ascending:false}).limit(60);
+      if(_cliente)q=q.eq('client_email',_cliente);
+      const{data}=await q;
+      rows=(data||[]).map(r=>{
+        const cli=_clientes.find(x=>x.email===r.client_email);
+        return`<tr><td>${_fmtD(r.data)}</td><td>${cli?.nome||r.client_email||'—'}</td><td>${(r.seguidores||0).toLocaleString('pt-BR')}</td><td>${(r.alcance||0).toLocaleString('pt-BR')}</td><td>${r.engajamento||'—'}%</td><td style="font-size:10px">${r.publico_principal||'—'}</td></tr>`;
+      });
+    }catch{}
+    return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="aw2-ft" style="margin:0">📈 Histórico — Meta API</div>
+      ${_cliente?`<button class="aw2-btn" onclick="_AW2.fetchMetaInsights()" style="font-size:11px;padding:6px 12px">🔄 Sincronizar</button>`:''}
     </div>
-    <div class="aw2-tbox"><table class="aw2-tb"><thead><tr><th>Data</th><th>Cliente</th><th>Seguidores</th><th>Alcance</th><th>Eng.</th><th>Crescimento</th></tr></thead>
-    <tbody>${rows.join('')||'<tr><td colspan="6" class="aw2-empty">Sem resultados</td></tr>'}</tbody></table></div>`;
+    <div class="aw2-tbox"><table class="aw2-tb"><thead><tr><th>Data</th><th>Cliente</th><th>Seguidores</th><th>Alcance</th><th>Eng.</th><th>Público</th></tr></thead>
+    <tbody>${rows.join('')||'<tr><td colspan="6" class="aw2-empty">Sem dados ainda. Sincronize via aba Diagnóstico.</td></tr>'}</tbody></table></div>`;
   }
 
   // CHLOE
@@ -807,14 +808,34 @@
   // PEDRO — Diagnóstico
   async function _diagnostico(){
     const d=await _load({});
-    return `<div class="aw2-form"><div class="aw2-ft">📊 Diagnóstico de Performance</div>
-      <div class="aw2-r2">
-        <div class="aw2-fg"><label class="aw2-fl">Seguidores atuais</label><input class="aw2-in" type="number" id="dg-seg" value="${d.seguidores||''}"></div>
-        <div class="aw2-fg"><label class="aw2-fl">Engajamento (%)</label><input class="aw2-in" type="number" step="0.1" id="dg-eng" value="${d.engajamento||''}"></div>
-      </div>
-      <div class="aw2-r2">
-        <div class="aw2-fg"><label class="aw2-fl">Alcance médio</label><input class="aw2-in" type="number" id="dg-alc" value="${d.alcance||''}"></div>
-        <div class="aw2-fg"><label class="aw2-fl">Impressões</label><input class="aw2-in" type="number" id="dg-imp" value="${d.impressoes||''}"></div>
+    let meta=null;
+    if(_cliente){try{const{data}=await db.from('metricas_instagram').select('*').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle();meta=data;}catch{}}
+    const metaCard=meta
+      ?`<div class="aw2-form" style="margin-bottom:12px;border-left:3px solid #4CAF50">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="aw2-ft" style="margin:0">📊 Dados reais — Meta API</div>
+          <span style="font-size:10px;color:var(--muted)">Sync: ${new Date(meta.data+'T12:00:00').toLocaleDateString('pt-BR')}</span>
+        </div>
+        <div class="aw2-kpis" style="grid-template-columns:repeat(3,1fr)">
+          <div class="aw2-kpi"><div class="aw2-kl">👥 Seguidores</div><div class="aw2-kv" style="font-size:18px">${(meta.seguidores||0).toLocaleString('pt-BR')}</div></div>
+          <div class="aw2-kpi"><div class="aw2-kl">👁 Alcance</div><div class="aw2-kv" style="font-size:18px">${(meta.alcance||0).toLocaleString('pt-BR')}</div></div>
+          <div class="aw2-kpi"><div class="aw2-kl">❤️ Engajamento</div><div class="aw2-kv" style="font-size:18px">${meta.engajamento||0}%</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;font-size:11px;color:var(--muted)">
+          ${meta.impressoes?`<div>💫 Impressões: <strong style="color:var(--text)">${(meta.impressoes||0).toLocaleString('pt-BR')}</strong></div>`:''}
+          ${meta.visitas_perfil?`<div>🔍 Visitas perfil: <strong style="color:var(--text)">${(meta.visitas_perfil||0).toLocaleString('pt-BR')}</strong></div>`:''}
+          ${meta.publico_principal?`<div>👥 Público: <strong style="color:var(--text)">${meta.publico_principal}</strong></div>`:''}
+          ${meta.melhor_horario?`<div>⏰ Melhor horário: <strong style="color:var(--text)">${meta.melhor_horario}</strong></div>`:''}
+        </div>
+      </div>`
+      :`<div style="border:1px dashed var(--border);border-radius:10px;padding:12px;margin-bottom:12px;text-align:center">
+        <div style="font-size:12px;color:var(--muted)">${_cliente?'Nenhuma sincronização ainda — clique em "Atualizar Métricas" abaixo':'Selecione um cliente para sincronizar'}</div>
+      </div>`;
+    return `${metaCard}
+    <div class="aw2-form">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="aw2-ft" style="margin:0">📝 Análise & Notas</div>
+        ${_cliente?`<button id="dg-meta-btn" class="aw2-btn" onclick="_AW2.fetchMetaInsights()" style="font-size:11px;padding:6px 12px">🔄 Atualizar Métricas</button>`:''}
       </div>
       <div class="aw2-r2">
         <div class="aw2-fg"><label class="aw2-fl">Pontos fortes</label><textarea class="aw2-ta" id="dg-pf">${d.pontos_fortes||''}</textarea></div>
@@ -822,7 +843,7 @@
       </div>
       <div class="aw2-fg"><label class="aw2-fl">Posicionamento atual</label><textarea class="aw2-ta" id="dg-pos">${d.posicionamento||''}</textarea></div>
       <div class="aw2-fg"><label class="aw2-fl">Observações</label><textarea class="aw2-ta" id="dg-obs">${d.obs||''}</textarea></div>
-      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveDiagnostico()">Salvar</button><span class="aw2-svd" id="dg-s"></span></div>
+      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveDiagnostico()">Salvar notas</button><span class="aw2-svd" id="dg-s"></span></div>
     </div>`;
   }
 
@@ -1146,7 +1167,52 @@
     async setCli(email){_cliente=email;await _loadFiscal(email);_ws();},
     setData(d){_data=d||_hoje();_renderAba(_aba);},
     // Pedro — Diagnóstico
-    async saveDiagnostico(){const ok=await _save({seguidores:_v('dg-seg'),engajamento:_v('dg-eng'),alcance:_v('dg-alc'),impressoes:_v('dg-imp'),pontos_fortes:_v('dg-pf'),pontos_fracos:_v('dg-pw'),posicionamento:_v('dg-pos'),obs:_v('dg-obs')});_flash('dg-s',ok?'✓ Salvo':'⚠ Erro');},
+    async saveDiagnostico(){const ok=await _save({pontos_fortes:_v('dg-pf'),pontos_fracos:_v('dg-pw'),posicionamento:_v('dg-pos'),obs:_v('dg-obs')});_flash('dg-s',ok?'✓ Salvo':'⚠ Erro');},
+    // Pedro — Sincronização Meta API
+    async fetchMetaInsights(){
+      if(!_cliente){alert('Selecione um cliente primeiro.');return;}
+      const btn=document.getElementById('dg-meta-btn');
+      if(btn){btn.disabled=true;btn.textContent='⏳ Buscando...';}
+      try{
+        const{data:cli}=await db.from('clients').select('instagram_token,instagram_account_id,nome').eq('email',_cliente).maybeSingle();
+        if(!cli?.instagram_token||!cli?.instagram_account_id){
+          alert('Token ou Account ID do Instagram não configurado.\n\nVá em Clientes → ficha do cliente → aba Info e preencha os campos da Meta API.');
+          return;
+        }
+        const tok=cli.instagram_token;const aid=cli.instagram_account_id;const BASE='https://graph.facebook.com/v19.0';
+        // Busca paralela: perfil + insights + audience
+        const [profR,insR,audR,mediaR]=await Promise.all([
+          fetch(`${BASE}/${aid}?fields=followers_count,media_count&access_token=${tok}`).then(r=>r.json()),
+          fetch(`${BASE}/${aid}/insights?metric=reach,impressions,profile_views&period=month&access_token=${tok}`).then(r=>r.json()),
+          fetch(`${BASE}/${aid}/insights?metric=audience_gender_age,audience_city&period=lifetime&access_token=${tok}`).then(r=>r.json()),
+          fetch(`${BASE}/${aid}/media?fields=id,like_count,comments_count,media_type,timestamp&limit=20&access_token=${tok}`).then(r=>r.json()),
+        ]);
+        if(profR.error)throw new Error(profR.error.message);
+        const seguidores=profR.followers_count||0;
+        const insightMap={};(insR.data||[]).forEach(d=>{const v=d.values;insightMap[d.name]=v?.length?v[v.length-1].value:0;});
+        const alcance=insightMap.reach||0;const impressoes=insightMap.impressions||0;const visitas_perfil=insightMap.profile_views||0;
+        // Calcula engajamento médio a partir dos posts
+        const posts=mediaR.data||[];
+        let totalEng=0;posts.forEach(p=>{totalEng+=(p.like_count||0)+(p.comments_count||0);});
+        const engajamento=seguidores>0&&posts.length>0?parseFloat(((totalEng/posts.length/seguidores)*100).toFixed(2)):0;
+        // Público principal
+        let publico_principal='';
+        const audData={};(audR.data||[]).forEach(d=>{if(d.values?.length)audData[d.name]=d.values[0].value;});
+        if(audData.audience_gender_age){
+          const entries=Object.entries(audData.audience_gender_age).sort((a,b)=>b[1]-a[1]);
+          if(entries.length){const[k]=entries[0];const[g,fx]=k.split('.');const gl=g==='F'?'Mulheres':g==='M'?'Homens':'Outros';publico_principal=`${gl}, ${fx} anos`;}
+        }
+        if(audData.audience_city){
+          const entries=Object.entries(audData.audience_city).sort((a,b)=>b[1]-a[1]);
+          if(entries.length)publico_principal+=(publico_principal?' · ':'')+entries[0][0].split(',')[0];
+        }
+        const hoje=new Date().toISOString().split('T')[0];
+        await db.from('metricas_instagram').insert({client_email:_cliente,data:hoje,seguidores,alcance,impressoes,engajamento,visitas_perfil,publico_principal,dados_completos:{profile:profR,media:posts.slice(0,10),audience:audR.data}});
+        const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
+        _flash('dg-s',`✓ Métricas de ${cliNome} sincronizadas!`);
+        _renderAba(_aba);
+      }catch(e){alert('Erro Meta API: '+e.message);}finally{if(btn){btn.disabled=false;btn.textContent='🔄 Atualizar Métricas';}}
+    },
     // Pedro — Concorrentes
     async saveConcorrentes(){
       const lista=Array.from({length:5},(_,i)=>({ig:_v('cc-'+i+'-ig'),nicho:_v('cc-'+i+'-nicho'),fortes:_v('cc-'+i+'-fortes'),fracos:_v('cc-'+i+'-fracos')}));

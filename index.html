@@ -1106,6 +1106,7 @@
     </div>
     <div class="client-tabs">
       <div class="client-tab active" id="ctab-posts" onclick="Client.clientTab('posts')">Posts</div>
+      <div class="client-tab" id="ctab-metricas_ig" onclick="Client.clientTab('metricas_ig')">📊 Métricas</div>
       <div class="client-tab" id="ctab-comece" onclick="Client.clientTab('comece')">🌱 Início</div>
       <div class="client-tab" id="ctab-onboarding" onclick="Client.clientTab('onboarding')">🌿 Onboarding</div>
       <div class="client-tab" id="ctab-financeiro" onclick="Client.clientTab('financeiro')">💰 Financeiro</div>
@@ -1155,6 +1156,7 @@
         </div>
       </div>
     </div>
+    <div id="ctab-content-metricas_ig" class="hidden"></div>
     <div id="ctab-content-comece" class="hidden"></div>
     <div id="ctab-content-onboarding" class="hidden"></div>
     <div id="ctab-content-financeiro" class="hidden"></div>
@@ -2962,6 +2964,12 @@ const Admin = {
       <div style="max-width:700px;">
         ${fld('✉ E-mail / Login', `<div style="padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;background:var(--bg);color:var(--muted);margin-top:4px;">${c.email}</div>`)}
         ${fld('🔗 Webhook Make (Instagram)', inp('dp-webhook',c.make_webhook||'','https://hook.us2.make.com/...'))}
+        <div style="margin:16px 0;padding:14px 16px;background:rgba(100,149,237,0.06);border:1px solid rgba(100,149,237,0.2);border-radius:12px;">
+          <div style="font-size:10px;font-weight:600;color:#1565C0;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;">📊 Meta API — Métricas do Instagram</div>
+          ${fld('Instagram Account ID', inp('dp-ig-account-id',c.instagram_account_id||'','Ex: 17841400000000000'))}
+          ${fld('Token de Acesso (Long-lived, 60 dias)', `<textarea id="dp-ig-token" placeholder="EAABkz..." style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:11px;font-family:monospace;background:var(--bg);color:var(--text);resize:none;margin-top:4px;min-height:60px;box-sizing:border-box;">${c.instagram_token||''}</textarea>`)}
+          <div style="font-size:10px;color:var(--muted);margin-top:6px;">Use um Long-lived User Token com permissões: instagram_basic, instagram_manage_insights, pages_read_engagement</div>
+        </div>
         ${fld('Mensagem para a cliente', `<textarea data-rich id="dp-mensagem-gi" rows="3" placeholder="Ex: Essa semana trabalhamos muito no seu posicionamento 🌿" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);color:var(--text);resize:none;margin-top:4px;">${c.mensagem_gi||''}</textarea>`)}
       </div>
       <div style="display:flex;gap:10px;margin-top:16px;max-width:700px;">
@@ -4883,6 +4891,8 @@ const Admin = {
     const access_code = document.getElementById('dp-senha')?.value.trim() || null;
     const mensagem_gi = document.getElementById('dp-mensagem-gi')?.value.trim() || null;
     const make_webhook = document.getElementById('dp-webhook')?.value.trim() || null;
+    const instagram_account_id = document.getElementById('dp-ig-account-id')?.value.trim() || null;
+    const instagram_token = document.getElementById('dp-ig-token')?.value.trim() || null;
     const metricoolUrl = document.getElementById('dp-metricool')?.value.trim() || '';
     const arquivosRaw = document.getElementById('dp-arquivos')?.value.trim() || null;
     if (arquivosRaw) {
@@ -4892,7 +4902,7 @@ const Admin = {
     try {
       const { data: clientData } = await db.from('clients').select('email').eq('id',id).single();
       const clientEmail = clientData?.email;
-      const { error } = await db.from('clients').update({ nome, empresa, instagram, nome_projeto, data_inicio, access_code, mensagem_gi, arquivos: arquivosRaw, make_webhook }).eq('id', id);
+      const { error } = await db.from('clients').update({ nome, empresa, instagram, nome_projeto, data_inicio, access_code, mensagem_gi, arquivos: arquivosRaw, make_webhook, instagram_account_id, instagram_token }).eq('id', id);
       if (error) throw error;
       if (clientEmail) {
         await db.from('arquivos_cliente').delete().eq('client_email',clientEmail).eq('nome','__metricool__');
@@ -7509,7 +7519,7 @@ const Client = {
       this.render(posts);
       this.checkChatBadge();
       Admin.refreshChatBadge();
-      const validClientTabs = ['posts','comece','onboarding','financeiro','arquivos','ideias','info','solicitacoes','brand','chat'];
+      const validClientTabs = ['posts','metricas_ig','comece','onboarding','financeiro','arquivos','ideias','info','solicitacoes','brand','chat'];
       const savedTab = validClientTabs.includes(localStorage.getItem('clientTab')) ? localStorage.getItem('clientTab') : 'posts';
       if (savedTab !== 'posts') this.clientTab(savedTab);
     } finally { App.loader(false); }
@@ -8405,11 +8415,12 @@ ${text}`,
     document.getElementById('portal-nav')?.classList.remove('open');
     const activeEl = document.getElementById('ctab-'+name);
     if (activeEl) document.getElementById('portal-active-name').textContent = activeEl.textContent.trim();
-    ['posts','comece','onboarding','financeiro','arquivos','ideias','info','solicitacoes','brand','chat'].forEach(t => {
+    ['posts','metricas_ig','comece','onboarding','financeiro','arquivos','ideias','info','solicitacoes','brand','chat'].forEach(t => {
       document.getElementById('ctab-'+t)?.classList.toggle('active', t===name);
       const c = document.getElementById('ctab-content-'+t);
       if (c) c.classList.toggle('hidden', t!==name);
     });
+    if (name==='metricas_ig')   this.renderMetricasInstagramTab();
     if (name==='comece')        this.renderComecePorAqui();
     if (name==='onboarding')    this.renderOnboardingTab();
     if (name==='financeiro')    this.renderFinanceiroTab();
@@ -8591,6 +8602,120 @@ ${text}`,
       <div class="chart-wrap"><div class="chart-title">Alcance por Mês</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.alcance})),'#7A5C00')}</div>
       <div class="chart-wrap"><div class="chart-title">Impressões</div>${svgLine(list.map(d=>({l:d.mes.substring(5),v:d.impressoes})),'#9B7500')}</div>
       ${topHtml ? `<div class="chart-wrap"><div class="chart-title">Top Posts do Mês</div><div class="top-post-grid">${topHtml}</div></div>` : ''}`;
+  },
+
+  async renderMetricasInstagramTab() {
+    const el = document.getElementById('ctab-content-metricas_ig'); if (!el) return;
+    el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:40px;">Carregando métricas...</p>';
+    try {
+      const email = App.user.email;
+      const { data: records } = await db.from('metricas_instagram')
+        .select('*').eq('client_email', email)
+        .order('data', { ascending: false }).limit(90);
+
+      if (!records?.length) {
+        el.innerHTML = `<div style="text-align:center;padding:60px 20px;font-family:'Cormorant Garamond',serif;">
+          <div style="font-size:48px;margin-bottom:16px;">📊</div>
+          <div style="font-size:20px;color:var(--text);margin-bottom:8px;">Métricas ainda não disponíveis</div>
+          <div style="font-size:13px;color:var(--muted);max-width:300px;margin:0 auto;line-height:1.6;">As métricas do seu Instagram serão exibidas aqui quando sua equipe fizer a sincronização.</div>
+        </div>`;
+        return;
+      }
+
+      const latest = records[0];
+      const byMonth = {};
+      records.forEach(r => {
+        const month = r.data.substring(0,7);
+        if (!byMonth[month] || r.data > byMonth[month].data) byMonth[month] = r;
+      });
+      const monthlyData = Object.values(byMonth).sort((a,b) => a.data.localeCompare(b.data)).slice(-3);
+      const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const fmtMes = d => { const [y,m] = d.split('-'); return meses[parseInt(m)-1]+' '+y; };
+      const prev = monthlyData.length > 1 ? monthlyData[monthlyData.length-2] : null;
+      const delta = (cur,ant) => {
+        if (!ant) return '';
+        const diff = cur - ant;
+        const sign = diff >= 0 ? '+' : '';
+        return `<span style="font-size:11px;color:${diff>=0?'#2E7D32':'#C62828'};display:block;margin-top:3px;">${sign}${Math.abs(diff).toLocaleString('pt-BR')} ${diff>=0?'↑':'↓'} esse mês</span>`;
+      };
+
+      const svgChart = (data, color, key) => {
+        if (data.length < 2) return '';
+        const vals = data.map(d => parseFloat(d[key]||0));
+        const min = Math.min(...vals); const max = Math.max(...vals); const range = max-min||1;
+        const w=260,h=70,pad=10;
+        const pts = vals.map((v,i) => { const x=pad+(i/(vals.length-1))*(w-2*pad); const y=h-pad-((v-min)/range)*(h-2*pad); return x+','+y; }).join(' ');
+        return `<svg width="${w}" height="${h+22}" style="overflow:visible;display:block;">
+          <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+          ${vals.map((v,i)=>{ const x=pad+(i/(vals.length-1))*(w-2*pad); const y=h-pad-((v-min)/range)*(h-2*pad); return `<circle cx="${x}" cy="${y}" r="4" fill="${color}"/><text x="${x}" y="${y-8}" text-anchor="middle" font-size="9" fill="var(--muted)">${v.toLocaleString('pt-BR')}</text><text x="${x}" y="${h+18}" text-anchor="middle" font-size="9" fill="var(--muted)">${meses[parseInt(data[i].data.split('-')[1])-1]}</text>`; }).join('')}
+        </svg>`;
+      };
+
+      el.innerHTML = `<div style="max-width:480px;margin:0 auto;padding:8px 4px 40px;">
+        <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+          <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Marketing Primor</div>
+          <div style="font-size:22px;font-weight:300;color:var(--text);">📊 Seu mês em números</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">${fmtMes(latest.data)}</div>
+        </div>
+
+        <div style="display:grid;gap:12px;margin-bottom:20px;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:.1em;text-transform:uppercase;">Seguidores</div>
+              <div style="font-size:36px;font-weight:600;color:var(--text);line-height:1;">${(latest.seguidores||0).toLocaleString('pt-BR')}</div>
+              ${prev ? delta(latest.seguidores, prev.seguidores) : ''}
+            </div>
+            <div style="font-size:46px;opacity:.12;">👥</div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase;">Alcance</div>
+              <div style="font-size:24px;font-weight:600;color:var(--text);">${(latest.alcance||0).toLocaleString('pt-BR')}</div>
+              ${prev ? delta(latest.alcance, prev.alcance) : ''}
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase;">Engajamento</div>
+              <div style="font-size:24px;font-weight:600;color:var(--text);">${latest.engajamento||0}%</div>
+            </div>
+          </div>
+
+          ${(latest.impressoes||latest.visitas_perfil) ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            ${latest.impressoes ? `<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;"><div style="font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase;">Impressões</div><div style="font-size:22px;font-weight:600;color:var(--text);">${(latest.impressoes||0).toLocaleString('pt-BR')}</div></div>` : ''}
+            ${latest.visitas_perfil ? `<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;"><div style="font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase;">Visitas ao perfil</div><div style="font-size:22px;font-weight:600;color:var(--text);">${(latest.visitas_perfil||0).toLocaleString('pt-BR')}</div></div>` : ''}
+          </div>` : ''}
+
+          ${latest.publico_principal ? `<div style="background:linear-gradient(135deg,rgba(201,168,0,.06),rgba(92,46,20,.04));border:1px solid rgba(201,168,0,.2);border-radius:16px;padding:16px 20px;">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.1em;text-transform:uppercase;">👥 Seu público principal</div>
+            <div style="font-size:15px;color:var(--text);font-weight:500;">${latest.publico_principal}</div>
+          </div>` : ''}
+
+          ${latest.melhor_horario ? `<div style="background:linear-gradient(135deg,rgba(201,168,0,.06),rgba(92,46,20,.04));border:1px solid rgba(201,168,0,.2);border-radius:16px;padding:16px 20px;">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.1em;text-transform:uppercase;">⏰ Seu público é mais ativo</div>
+            <div style="font-size:15px;color:var(--text);font-weight:500;">${latest.melhor_horario}</div>
+          </div>` : ''}
+        </div>
+
+        ${monthlyData.length >= 2 ? `<div style="margin-top:8px;">
+          <div style="font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;">📈 Evolução — últimos ${monthlyData.length} meses</div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px;overflow-x:auto;">
+            <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:14px;">Crescimento de Seguidores</div>
+            ${svgChart(monthlyData,'#C9A800','seguidores')}
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;overflow-x:auto;">
+            <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:14px;">Alcance Mensal</div>
+            ${svgChart(monthlyData,'#7A5C00','alcance')}
+          </div>
+        </div>` : ''}
+
+        <div style="text-align:center;margin-top:28px;padding-top:16px;border-top:1px solid var(--border);">
+          <div style="font-size:10px;color:var(--muted);">Dados sincronizados em ${new Date(latest.created_at||latest.data+'T12:00:00').toLocaleDateString('pt-BR')}</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:3px;opacity:.6;">Marketing Primor · Estratégia · Criatividade · Resultados</div>
+        </div>
+      </div>`;
+    } catch(e) {
+      el.innerHTML = `<p style="color:var(--muted);text-align:center;padding:40px;">Erro ao carregar métricas: ${e.message}</p>`;
+    }
   },
 
   async renderArquivosTab() {
@@ -9959,6 +10084,6 @@ document.addEventListener('keydown', e => {
 <script src="comercial_hub_module.js?v=20260518"></script>
 <script src="fiscal_module.js?v=20260518b"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="agentes_workspace_module.js?v=20260519i"></script>
+<script src="agentes_workspace_module.js?v=20260519j"></script>
 </body>
 </html>
