@@ -3731,7 +3731,8 @@ const Admin = {
       client_email: email, tipo: 'bc_mapa', titulo,
       conteudo: JSON.stringify(data)
     }]).select().single();
-    if (!error && row) {
+    if (error) { this._showToast('Erro ao criar mapa: ' + (error.message || '')); return; }
+    if (row) {
       this._bcAbrirMapa(row.id, email);
     }
   },
@@ -4220,9 +4221,18 @@ const Admin = {
   },
 
   async _bcSalvarMapa() {
-    if (!this._bcMapaCurrentId || !this._bcMapaData) return;
-    await db.from('informacoes_cliente').update({conteudo:JSON.stringify(this._bcMapaData),titulo:this._bcMapaData.title}).eq('id',this._bcMapaCurrentId);
-    this._showToast('Mapa salvo ✓');
+    if (!this._bcMapaCurrentId || !this._bcMapaData) { this._showToast('Erro: mapa não identificado'); return; }
+    try {
+      const payload = JSON.stringify(this._bcMapaData);
+      const { error } = await db.from('informacoes_cliente')
+        .update({ conteudo: payload, titulo: this._bcMapaData.title })
+        .eq('id', this._bcMapaCurrentId);
+      if (error) throw error;
+      this._showToast('Mapa salvo ✓');
+    } catch(e) {
+      console.error('Erro ao salvar mapa:', e);
+      this._showToast('Erro ao salvar: ' + (e?.message || 'tente novamente'));
+    }
   },
 
   async _bcExcluirMapa(id, email) {
