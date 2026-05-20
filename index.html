@@ -1210,13 +1210,6 @@ const App = {
       const { data: { session } } = await db.auth.getSession();
       if (session) {
         this.user = session.user;
-        const usp = new URLSearchParams(window.location.search);
-        const igCode = usp.get('code');
-        const igState = usp.get('state');
-        if (igCode && igState) {
-          history.replaceState({}, '', window.location.pathname);
-          await Admin._igHandleCallback(igCode, igState);
-        }
         this.route();
       }
       else this.show('login-view');
@@ -2108,11 +2101,14 @@ const Admin = {
 
     this.loader(true);
     try {
-      // Busca dados da cliente
-      const { data: clientes } = await db.from('clients')
-        .select('instagram,nome,empresa,make_webhook')
-        .eq('email', p.client_email);
-      const cliente = clientes?.[0] || {};
+      // Busca token e account ID da cliente
+      const { data: cli } = await db.from('clients')
+        .select('instagram_token,instagram_account_id,instagram,nome')
+        .eq('email', p.client_email).maybeSingle();
+
+      if (!cli?.instagram_token || !cli?.instagram_account_id) {
+        throw new Error('Token ou Account ID do Instagram não configurado para esta cliente.\n\nVá em Clientes → ficha da cliente → bloco Meta API e preencha os campos.');
+      }
 
       // Monta lista de mídias
       const parseMedia = (raw) => {
@@ -2122,131 +2118,45 @@ const Admin = {
         catch { return [raw]; }
       };
 
-      // Converte URL PNG → JPEG via canvas + re-upload Supabase
-      const _convertUrlToJpeg = async (url) => {
-        if (!url || !url.match(/\.png(\?|$)/i)) return url;
-        try {
-          const resp = await fetch(url);
-          const blob = await resp.blob();
-          const img = await new Promise((res, rej) => {
-            const i = new Image(); const u = URL.createObjectURL(blob);
-            i.onload = () => { URL.revokeObjectURL(u); res(i); };
-            i.onerror = () => { URL.revokeObjectURL(u); rej(); };
-            i.src = u;
-          });
-          const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
-          const ctx = canvas.getContext('2d');
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0);
-          const jpegBlob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 1.0));
-          const path = `posts/converted/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-          const { error } = await db.storage.from('posts-media').upload(path, jpegBlob, { cacheControl: '3600', upsert: false, contentType: 'image/jpeg' });
-          if (error) return url;
-          const { data: urlData } = db.storage.from('posts-media').getPublicUrl(path);
-          return urlData.publicUrl;
-        } catch { return url; }
-      };
-
       const midias = parseMedia(p.midia_urls);
       const todasMidias = midias.length ? midias : parseMedia(p.img_url);
-      const capaUrl = p.capa_url || todasMidias[0] || '';
-      const tipoPost = String(p.tipo || 'Feed · Foto');
-      const isReel = tipoPost.toLowerCase().includes('reels');
-      const urlVideo = isReel ? (todasMidias[0] || capaUrl) : '';
-
-      // Converte PNGs → JPEG antes de mandar pro Make
-      const capaFinal   = await _convertUrlToJpeg(capaUrl);
-      const midiasFinal = await Promise.all(todasMidias.map(_convertUrlToJpeg));
+      const mediaUrl = todasMidias[0] || p.capa_url || '';
+      if (!mediaUrl) throw new Error('Nenhuma mídia encontrada no post. Adicione uma imagem ou vídeo antes de publicar.');
 
       // Limpa HTML da legenda
       const stripHtml = (html) => {
         if (!html) return '';
         return html
-          .replace(/<br\s*\/?>/gi, '\n')
-          .replace(/<\/div>/gi, '\n')
-          .replace(/<\/p>/gi, '\n')
-          .replace(/<[^>]+>/g, '')
-          .replace(/&amp;/g, '&')
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&nbsp;/g, ' ')
-          .replace(/\n{3,}/g, '\n\n')
-          .trim();
+          .replace(/<br\s*\/?>/gi, '\n').replace(/<\/div>/gi, '\n').replace(/<\/p>/gi, '\n')
+          .replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
       };
-      const legendaCompleta = [stripHtml(p.legenda), stripHtml(p.hashtags)].filter(Boolean).join('\n\n');
+      const caption = [stripHtml(p.legenda), stripHtml(p.hashtags)].filter(Boolean).join('\n\n');
 
-      // Tenta publicar direto via Meta API se Instagram conectado
-      const { data: igToken } = await db.from('instagram_tokens')
-        .select('ig_user_id,ig_username').eq('client_email', p.client_email).maybeSingle();
+      const tok = cli.instagram_token;
+      const aid = cli.instagram_account_id;
+      const BASE = 'https://graph.facebook.com/v19.0';
+      const isReel = String(p.tipo || '').toLowerCase().includes('reels');
 
-      if (igToken && midiasFinal.length <= 1) {
-        const igRes = await fetch('https://dloxddrdqsltuwdabwaq.supabase.co/functions/v1/instagram-publish', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            client_email: p.client_email,
-            image_url: isReel ? undefined : (capaFinal || midiasFinal[0]),
-            video_url: isReel ? urlVideo : undefined,
-            caption: legendaCompleta
-          })
-        });
-        const igData = await igRes.json();
-        if (!igData.error) {
-          await db.from('posts').update({ status: 'publicado' }).eq('id', id);
-          this.posts = this.posts.map(x => x.id === id ? {...x, status:'publicado'} : x);
-          this.loader(false);
-          this.closeDetail();
-          this._renderPostsView();
-          const t = document.createElement('div');
-          t.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#833ab4;color:#fff;padding:14px 28px;border-radius:30px;font-size:13px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);';
-          t.textContent = '✦ Publicado no Instagram @' + igData.ig_username + '!';
-          document.body.appendChild(t);
-          setTimeout(() => t.remove(), 4000);
-          return;
-        }
-        console.warn('[MKT Primor] Meta API falhou, usando Make:', igData.error);
-      }
+      // Cria container de mídia
+      const containerBody = { caption, access_token: tok };
+      if (isReel) { containerBody.media_type = 'REELS'; containerBody.video_url = mediaUrl; }
+      else { containerBody.image_url = mediaUrl; }
 
-      // Payload pro Make
-      const payload = {
-        post_id:      String(id),
-        instagram:    String(cliente.instagram || '').replace('@',''),
-        cliente_nome: String(cliente.nome || ''),
-        tipo:         tipoPost,
-        tema:         String(p.tema_titulo || ''),
-        legenda:      legendaCompleta,
-        capa_url:     capaFinal,
-        url_video:    urlVideo,
-        midias:       midiasFinal,
-        total_midias: midiasFinal.length,
-        eh_carrossel: midiasFinal.length > 1,
-        data_post:    String(p.data_post || '')
-      };
+      const cRes = await fetch(`${BASE}/${aid}/media`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(containerBody)
+      }).then(r => r.json());
+      if (cRes.error) throw new Error('Meta API (container): ' + cRes.error.message);
 
-      console.log('%c[MKT Primor] Enviando pro Make:', 'color:#C9A800;font-weight:bold;', payload);
-
-      // Envia pro Make webhook
-      // Usa webhook específico da cliente ou o padrão
-      const webhookUrl = cliente.make_webhook || 'https://hook.us2.make.com/c5af6m8byb7spirq3ri61q28yvrhfyas';
-      if (!cliente.make_webhook) {
-        console.warn('[MKT Primor] Cliente sem webhook — usando padrão (vai pro seu Instagram!)');
-      }
-      let resp;
-      try {
-        resp = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      } catch(fetchErr) {
-        throw new Error('Erro de conexão com o Make: ' + fetchErr.message);
-      }
-
-      if (!resp.ok) {
-        const txt = await resp.text().catch(() => '');
-        throw new Error(`Make retornou erro ${resp.status}: ${txt}`);
-      }
+      // Publica
+      const pRes = await fetch(`${BASE}/${aid}/media_publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ creation_id: cRes.id, access_token: tok })
+      }).then(r => r.json());
+      if (pRes.error) throw new Error('Meta API (publish): ' + pRes.error.message);
 
       // Atualiza status no banco
       await db.from('posts').update({ status: 'publicado' }).eq('id', id);
@@ -2256,17 +2166,14 @@ const Admin = {
       this.closeDetail();
       this._renderPostsView();
 
-      // Toast de sucesso
       const toast = document.createElement('div');
-      toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1E3A8A;color:#fff;padding:14px 28px;border-radius:30px;font-size:13px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);';
-      toast.textContent = '✦ Enviado pro Instagram com sucesso!';
+      toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:14px 28px;border-radius:30px;font-size:13px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);';
+      toast.textContent = '✦ Publicado no Instagram de @' + (cli.instagram || cli.nome || 'cliente') + '!';
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 4000);
 
     } catch(e) {
       this.loader(false);
-      console.error('%c[MKT Primor] Erro ao publicar:', 'color:red;font-weight:bold;', e);
-      // Remove toast anterior se existir
       document.getElementById('pub-error-toast')?.remove();
       const errToast = document.createElement('div');
       errToast.id = 'pub-error-toast';
@@ -2275,113 +2182,11 @@ const Admin = {
         <span style="font-size:18px;flex-shrink:0;">⚠️</span>
         <div style="flex:1;min-width:0;">
           <div style="font-weight:600;margin-bottom:3px;">Falha ao publicar</div>
-          <div style="font-size:11px;color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px;" title="${e.message.replace(/"/g,"'")}">${e.message.substring(0,80)}${e.message.length>80?'…':''}</div>
+          <div style="font-size:11px;color:#aaa;white-space:pre-wrap;max-width:280px;">${e.message.substring(0,120)}${e.message.length>120?'…':''}</div>
         </div>
-        <button onclick="Admin.publicarNoInstagram(${id});document.getElementById('pub-error-toast')?.remove();" style="flex-shrink:0;padding:8px 16px;border-radius:10px;border:none;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">↺ Tentar novamente</button>
+        <button onclick="Admin.publicarNoInstagram(${id});document.getElementById('pub-error-toast')?.remove();" style="flex-shrink:0;padding:8px 16px;border-radius:10px;border:none;background:var(--wine);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">↺ Tentar</button>
         <button onclick="document.getElementById('pub-error-toast')?.remove();" style="flex-shrink:0;padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:#aaa;font-size:13px;cursor:pointer;">×</button>`;
       document.body.appendChild(errToast);
-    }
-  },
-
-  async _diagPublicacao(id) {
-    const overlay = document.createElement('div');
-    overlay.id = 'diag-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
-    overlay.innerHTML = `<div style="background:#0f0f0f;border:1px solid #333;border-radius:16px;padding:24px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;color:#e5e5e5;font-family:monospace;font-size:12px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <span style="font-size:14px;font-weight:700;color:#f0c27f;font-family:sans-serif;">🔍 Diagnóstico Make</span>
-        <button onclick="document.getElementById('diag-overlay').remove()" style="background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;">×</button>
-      </div>
-      <div id="diag-body" style="white-space:pre-wrap;line-height:1.7;">Carregando...</div>
-    </div>`;
-    document.body.appendChild(overlay);
-
-    const log = (msg, color='#e5e5e5') => {
-      const el = document.getElementById('diag-body');
-      if (el) el.innerHTML += `<span style="color:${color};">${msg}</span>\n`;
-    };
-
-    try {
-      document.getElementById('diag-body').innerHTML = '';
-      log('▶ Buscando post #' + id + '...', '#aaa');
-
-      let p = this.posts?.find(x => x.id === id);
-      if (!p) {
-        const { data } = await db.from('posts').select('*').eq('id', id).single();
-        p = data;
-      }
-      if (!p) { log('✗ Post não encontrado no banco.', '#f87171'); return; }
-
-      log(`✓ Post encontrado: "${(p.tema_titulo||p.legenda||'').substring(0,50)}"`, '#86efac');
-      log(`  Status: ${p.status} | Tipo: ${p.tipo} | Data: ${p.data_post}`, '#aaa');
-
-      log('\n▶ Buscando dados da cliente...', '#aaa');
-      const { data: clientes } = await db.from('clients')
-        .select('instagram,nome,empresa,make_webhook,email')
-        .eq('email', p.client_email);
-      const cliente = clientes?.[0] || {};
-
-      const webhookUrl = cliente.make_webhook || 'https://hook.us2.make.com/c5af6m8byb7spirq3ri61q28yvrhfyas';
-      log(`  Cliente: ${cliente.nome||'—'} (${p.client_email})`, '#aaa');
-      log(`  Instagram: @${cliente.instagram||'não configurado'}`, cliente.instagram?'#86efac':'#f87171');
-      log(`\n▶ Webhook URL:`, '#aaa');
-      log(`  ${webhookUrl}`, cliente.make_webhook?'#86efac':'#fbbf24');
-      if (!cliente.make_webhook) log('  ⚠ Usando webhook padrão — pode ir pro Instagram errado!', '#fbbf24');
-
-      const parseMedia = (raw) => {
-        if (!raw) return [];
-        if (Array.isArray(raw)) return raw.filter(Boolean);
-        try { const a = JSON.parse(raw); return Array.isArray(a) ? a.filter(Boolean) : [raw]; } catch { return [raw]; }
-      };
-      const midias = parseMedia(p.midia_urls);
-      const todasMidias = midias.length ? midias : parseMedia(p.img_url);
-      const capaUrl = p.capa_url || todasMidias[0] || '';
-
-      log(`\n▶ Mídias encontradas: ${todasMidias.length}`, todasMidias.length?'#86efac':'#f87171');
-      if (!todasMidias.length) log('  ✗ Nenhuma mídia — Make pode rejeitar sem imagem!', '#f87171');
-      todasMidias.forEach((u,i) => log(`  [${i+1}] ${u.substring(0,80)}`, '#93c5fd'));
-
-      const stripHtml = h => h ? h.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').trim() : '';
-      const payload = {
-        post_id: String(id),
-        instagram: String(cliente.instagram||'').replace('@',''),
-        cliente_nome: String(cliente.nome||''),
-        tipo: String(p.tipo||'Feed · Foto'),
-        tema: String(p.tema_titulo||''),
-        legenda: [stripHtml(p.legenda), stripHtml(p.hashtags)].filter(Boolean).join('\n\n'),
-        capa_url: capaUrl,
-        midias: todasMidias,
-        total_midias: todasMidias.length,
-        eh_carrossel: todasMidias.length > 1,
-        data_post: String(p.data_post||'')
-      };
-
-      log('\n▶ Payload que será enviado:', '#aaa');
-      log(JSON.stringify(payload, null, 2), '#d4d4d4');
-
-      log('\n▶ Testando conexão com o Make...', '#aaa');
-      let resp, txt;
-      try {
-        resp = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        txt = await resp.text().catch(() => '(sem corpo)');
-        log(`  HTTP Status: ${resp.status} ${resp.statusText}`, resp.ok?'#86efac':'#f87171');
-        log(`  Resposta: ${txt.substring(0,300)}`, resp.ok?'#86efac':'#fbbf24');
-        if (resp.ok) {
-          log('\n✓ Make aceitou o envio! Se não publicou, o problema está dentro do cenário Make.', '#86efac');
-          log('  → Abra o Make e veja o histórico de execuções do cenário.', '#86efac');
-        } else {
-          log('\n✗ Make rejeitou a requisição. Verifique se o webhook está ativo.', '#f87171');
-        }
-      } catch(fetchErr) {
-        log(`\n✗ Erro de conexão: ${fetchErr.message}`, '#f87171');
-        log('  → Pode ser CORS, URL errada, ou Make offline.', '#fbbf24');
-      }
-    } catch(err) {
-      log('\n✗ Erro inesperado: ' + err.message, '#f87171');
     }
   },
 
@@ -7355,40 +7160,6 @@ const Admin = {
     const { count } = await db.from('mensagens').select('*',{count:'exact',head:true}).eq('de','client').eq('lida',false);
     const badge = document.getElementById('nb-chat');
     if (badge) { badge.textContent = count||''; badge.classList.toggle('hidden', !count); }
-  },
-
-  // ── INSTAGRAM DIRETO ──
-  _igAuthUrl(clientEmail) {
-    const params = new URLSearchParams({
-      client_id: '1518275049929451',
-      redirect_uri: 'https://crm.gislainebarbeto.com.br/',
-      response_type: 'code',
-      scope: 'instagram_business_basic,instagram_business_content_publish',
-      state: clientEmail
-    });
-    return 'https://www.instagram.com/oauth/authorize?' + params.toString();
-  },
-
-  async _igHandleCallback(code, clientEmail) {
-    try {
-      const res = await fetch('https://dloxddrdqsltuwdabwaq.supabase.co/functions/v1/instagram-oauth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, client_email: clientEmail })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      this._showToast('✓ Instagram @' + data.ig_username + ' conectado com sucesso!');
-    } catch(e) {
-      alert('Erro ao conectar Instagram: ' + e.message);
-    }
-  },
-
-  async _igDisconnect(clientEmail) {
-    if (!confirm('Desconectar Instagram deste cliente?')) return;
-    await db.from('instagram_tokens').delete().eq('client_email', clientEmail);
-    this._showToast('Instagram desconectado.');
-    if (this._cliCurrentId && this._cliClienteData) this._cliTabInfo(this._cliCurrentId, this._cliClienteData);
   },
 
   // ── CALENDÁRIO DE POSTS NOS MODAIS ──
