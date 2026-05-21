@@ -1292,36 +1292,57 @@
           return;
         }
         const{tok,aid}=igCreds;const BASE='https://graph.facebook.com/v19.0';
-        // Busca paralela: perfil + insights + audience
-        const [profR,insR,audR,mediaR]=await Promise.all([
-          fetch(`${BASE}/${aid}?fields=followers_count,media_count&access_token=${tok}`).then(r=>r.json()),
-          fetch(`${BASE}/${aid}/insights?metric=reach,impressions,profile_views&period=month&access_token=${tok}`).then(r=>r.json()),
-          fetch(`${BASE}/${aid}/insights?metric=audience_gender_age,audience_city&period=lifetime&access_token=${tok}`).then(r=>r.json()),
-          fetch(`${BASE}/${aid}/media?fields=id,like_count,comments_count,media_type,timestamp&limit=20&access_token=${tok}`).then(r=>r.json()),
-        ]);
-        if(profR.error)throw new Error(profR.error.message);
+
+        // 1. Perfil (obrigatório)
+        const profR=await fetch(`${BASE}/${aid}?fields=followers_count,media_count&access_token=${tok}`).then(r=>r.json());
+        if(profR.error)throw new Error('Perfil: '+profR.error.message);
         const seguidores=profR.followers_count||0;
-        const insightMap={};(insR.data||[]).forEach(d=>{const v=d.values;insightMap[d.name]=v?.length?v[v.length-1].value:0;});
-        const alcance=insightMap.reach||0;const impressoes=insightMap.impressions||0;const visitas_perfil=insightMap.profile_views||0;
-        // Calcula engajamento médio a partir dos posts
-        const posts=mediaR.data||[];
+
+        // 2. Insights mensais — reach, impressions, profile_views
+        let alcance=0,impressoes=0,visitas_perfil=0;
+        const insR=await fetch(`${BASE}/${aid}/insights?metric=reach,impressions,profile_views&period=day&since=${Math.floor(Date.now()/1000)-30*86400}&until=${Math.floor(Date.now()/1000)}&access_token=${tok}`).then(r=>r.json());
+        if(!insR.error&&insR.data){
+          insR.data.forEach(d=>{
+            const total=(d.values||[]).reduce((s,v)=>s+(v.value||0),0);
+            if(d.name==='reach')alcance=total;
+            else if(d.name==='impressions')impressoes=total;
+            else if(d.name==='profile_views')visitas_perfil=total;
+          });
+        }
+
+        // 3. Últimos 20 posts para calcular engajamento
+        const mediaR=await fetch(`${BASE}/${aid}/media?fields=id,like_count,comments_count&limit=20&access_token=${tok}`).then(r=>r.json());
+        const posts=(!mediaR.error&&mediaR.data)||[];
         let totalEng=0;posts.forEach(p=>{totalEng+=(p.like_count||0)+(p.comments_count||0);});
         const engajamento=seguidores>0&&posts.length>0?parseFloat(((totalEng/posts.length/seguidores)*100).toFixed(2)):0;
-        // Público principal
+
+        // 4. Público principal (opcional — falha em silêncio se não disponível)
         let publico_principal='';
-        const audData={};(audR.data||[]).forEach(d=>{if(d.values?.length)audData[d.name]=d.values[0].value;});
-        if(audData.audience_gender_age){
-          const entries=Object.entries(audData.audience_gender_age).sort((a,b)=>b[1]-a[1]);
-          if(entries.length){const[k]=entries[0];const[g,fx]=k.split('.');const gl=g==='F'?'Mulheres':g==='M'?'Homens':'Outros';publico_principal=`${gl}, ${fx} anos`;}
-        }
-        if(audData.audience_city){
-          const entries=Object.entries(audData.audience_city).sort((a,b)=>b[1]-a[1]);
-          if(entries.length)publico_principal+=(publico_principal?' · ':'')+entries[0][0].split(',')[0];
-        }
+        try{
+          const audR=await fetch(`${BASE}/${aid}/insights?metric=audience_gender_age,audience_city&period=lifetime&access_token=${tok}`).then(r=>r.json());
+          if(!audR.error&&audR.data){
+            const audData={};audR.data.forEach(d=>{if(d.values?.length)audData[d.name]=d.values[0].value;});
+            if(audData.audience_gender_age){
+              const entries=Object.entries(audData.audience_gender_age).sort((a,b)=>b[1]-a[1]);
+              if(entries.length){const[k]=entries[0];const[g,fx]=k.split('.');publico_principal=`${g==='F'?'Mulheres':g==='M'?'Homens':'Outros'}, ${fx} anos`;}
+            }
+            if(audData.audience_city){
+              const entries=Object.entries(audData.audience_city).sort((a,b)=>b[1]-a[1]);
+              if(entries.length)publico_principal+=(publico_principal?' · ':'')+entries[0][0].split(',')[0];
+            }
+          }
+        }catch{}
+
+        // 5. Salva — upsert evita duplicata no mesmo dia
         const hoje=new Date().toISOString().split('T')[0];
-        await db.from('metricas_instagram').insert({client_email:_cliente,data:hoje,seguidores,alcance,impressoes,engajamento,visitas_perfil,publico_principal,dados_completos:{profile:profR,media:posts.slice(0,10),audience:audR.data}});
+        const{error:dbErr}=await db.from('metricas_instagram').upsert(
+          {client_email:_cliente,data:hoje,seguidores,alcance,impressoes,engajamento,visitas_perfil,publico_principal},
+          {onConflict:'client_email,data'}
+        );
+        if(dbErr)throw new Error('Erro ao salvar: '+dbErr.message);
+
         const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
-        _flash('dg-s',`✓ Métricas de ${cliNome} sincronizadas!`);
+        _flash('dg-s',`✓ ${(seguidores||0).toLocaleString('pt-BR')} seguidores · alcance ${(alcance||0).toLocaleString('pt-BR')}`);
         _renderAba(_aba);
       }catch(e){alert('Erro Meta API: '+e.message);}finally{if(btn){btn.disabled=false;btn.textContent='🔄 Atualizar Métricas';}}
     },
