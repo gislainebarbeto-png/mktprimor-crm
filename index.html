@@ -1310,7 +1310,7 @@ const App = {
 
   async route() {
     Meta.checkOAuthSuccess();
-    const VALID_TABS = ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','agentes'];
+    const VALID_TABS = ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','agentes','usuarios'];
     const savedTab = sessionStorage.getItem('adminTab');
     const startTab = (savedTab && VALID_TABS.includes(savedTab) && savedTab !== 'followup' && savedTab !== 'metricas') ? savedTab : 'posts';
     if (this.user.email === ADMIN_EMAIL) {
@@ -1321,13 +1321,21 @@ const App = {
       setTimeout(()=>{ if(window.NFModule) NFModule.refresh(); else Admin.tab(startTab); }, 80);
     } else {
       // Check if team member
-      const { data: equipe } = await db.from('equipe').select('email').ilike('email', this.user.email).maybeSingle();
+      const { data: equipe } = await db.from('equipe').select('email,permissoes,cargo,ativo').ilike('email', this.user.email).maybeSingle();
       if (equipe) {
+        if (equipe.ativo === false) {
+          await db.auth.signOut();
+          this.show('login-view');
+          document.getElementById('login-error').style.display = 'block';
+          document.getElementById('login-error').textContent = 'Sua conta está desativada. Fale com a administração.';
+          this.loader(false);
+          return;
+        }
         document.getElementById('admin-email').textContent = this.user.email;
         this.show('admin-view');
         Admin.isEquipe = true;
-        const _nf = document.getElementById('nav-financeiro');
-        if (_nf) _nf.style.display = 'none';
+        Admin._perms = equipe.permissoes || {};
+        Admin._cargo = equipe.cargo || 'operacional';
         // Sempre abre o grid de cards (netflix_module)
         setTimeout(()=>{ if(window.NFModule) NFModule.refresh(); else Admin.tab(startTab); }, 80);
       } else {
@@ -1363,10 +1371,28 @@ const App = {
 // ═══════════════════════════════════════
 // ADMIN
 // ═══════════════════════════════════════
+// ─── PRESETS DE PERMISSÃO ───────────────────────────────────────────────────
+const PERM_PRESETS = {
+  presidente: { posts:{ver:true,criar:true,editar:true,deletar:true},leads:{ver:true,criar:true,editar:true,deletar:true},clientes:{ver:true,criar:true,editar:true,deletar:true},financeiro:{ver:true,criar:true,editar:true,deletar:true},followup:{ver:true,criar:true,editar:true,deletar:true},tarefas:{ver:true,criar:true,editar:true,deletar:true},demandas:{ver:true,criar:true,editar:true,deletar:true},metricas:{ver:true,criar:true,editar:true,deletar:true},arquivos:{ver:true,criar:true,editar:true,deletar:true},chat:{ver:true,criar:true,editar:true,deletar:true},lab:{ver:true,criar:true,editar:true,deletar:true},info:{ver:true,criar:true,editar:true,deletar:true},solicitacoes:{ver:true,criar:true,editar:true,deletar:true},relatorio:{ver:true,criar:true,editar:true,deletar:true},usuarios:{ver:true,criar:true,editar:true,deletar:true} },
+  gerente: { posts:{ver:true,criar:true,editar:true,deletar:true},leads:{ver:true,criar:true,editar:true,deletar:false},clientes:{ver:true,criar:true,editar:true,deletar:false},financeiro:{ver:true,criar:true,editar:true,deletar:false},followup:{ver:true,criar:true,editar:true,deletar:false},tarefas:{ver:true,criar:true,editar:true,deletar:true},demandas:{ver:true,criar:true,editar:true,deletar:true},metricas:{ver:true,criar:true,editar:true,deletar:false},arquivos:{ver:true,criar:true,editar:true,deletar:false},chat:{ver:true,criar:true,editar:true,deletar:false},lab:{ver:true,criar:true,editar:true,deletar:false},info:{ver:true,criar:true,editar:true,deletar:false},solicitacoes:{ver:true,criar:true,editar:true,deletar:false},relatorio:{ver:true,criar:false,editar:false,deletar:false},usuarios:{ver:true,criar:true,editar:true,deletar:false} },
+  adm: { posts:{ver:true,criar:true,editar:true,deletar:false},leads:{ver:true,criar:true,editar:true,deletar:false},clientes:{ver:true,criar:false,editar:true,deletar:false},financeiro:{ver:false,criar:false,editar:false,deletar:false},followup:{ver:true,criar:true,editar:true,deletar:false},tarefas:{ver:true,criar:true,editar:true,deletar:false},demandas:{ver:true,criar:true,editar:true,deletar:false},metricas:{ver:true,criar:false,editar:false,deletar:false},arquivos:{ver:true,criar:true,editar:false,deletar:false},chat:{ver:true,criar:true,editar:false,deletar:false},lab:{ver:true,criar:true,editar:true,deletar:false},info:{ver:true,criar:true,editar:true,deletar:false},solicitacoes:{ver:true,criar:false,editar:true,deletar:false},relatorio:{ver:true,criar:false,editar:false,deletar:false},usuarios:{ver:false,criar:false,editar:false,deletar:false} },
+  operacional: { posts:{ver:true,criar:true,editar:true,deletar:false},leads:{ver:false,criar:false,editar:false,deletar:false},clientes:{ver:false,criar:false,editar:false,deletar:false},financeiro:{ver:false,criar:false,editar:false,deletar:false},followup:{ver:false,criar:false,editar:false,deletar:false},tarefas:{ver:true,criar:false,editar:true,deletar:false},demandas:{ver:true,criar:true,editar:true,deletar:false},metricas:{ver:false,criar:false,editar:false,deletar:false},arquivos:{ver:true,criar:true,editar:false,deletar:false},chat:{ver:true,criar:true,editar:false,deletar:false},lab:{ver:true,criar:false,editar:false,deletar:false},info:{ver:false,criar:false,editar:false,deletar:false},solicitacoes:{ver:false,criar:false,editar:false,deletar:false},relatorio:{ver:false,criar:false,editar:false,deletar:false},usuarios:{ver:false,criar:false,editar:false,deletar:false} },
+};
+
 const Admin = {
   currentTab: 'leads',
   isEquipe: false,
+  _perms: null,
+  _cargo: null,
   leads: [], followups: [], posts: [],
+
+  // Verifica se o usuário atual pode executar uma ação num módulo
+  perm(mod, action) {
+    if (!this.isEquipe) return true; // super admin (Gislaine) pode tudo
+    const p = this._perms;
+    if (!p || Object.keys(p).length === 0) return false; // sem permissões definidas = acesso negado
+    return p[mod]?.[action] === true;
+  },
 
   toggleSidebar() {
     const v = document.getElementById('admin-view'); if (!v) return;
@@ -1377,7 +1403,7 @@ const Admin = {
   async tab(name) {
     Admin.currentTab = name;
     sessionStorage.setItem('adminTab', name);
-    ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','relatorio','comercial','agentes','tarefas','brand','trafego'].forEach(t => {
+    ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','relatorio','comercial','agentes','tarefas','brand','trafego','usuarios'].forEach(t => {
       document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
     });
     document.getElementById('admin-view')?.classList.remove('sidebar-open');
@@ -1406,6 +1432,7 @@ const Admin = {
       if (name === 'tarefas')      await Admin.renderTarefas();
       if (name === 'brand')        await Admin.renderBrandCoreAdmin();
       if (name === 'trafego')      await Admin.renderTrafego();
+      if (name === 'usuarios')     await Admin.renderUsuarios();
       // Restore saved scroll for this tab
       const savedScroll = parseInt(sessionStorage.getItem('scroll_' + name)) || 0;
       if (savedScroll) requestAnimationFrame(() => {
@@ -5927,9 +5954,316 @@ const Admin = {
   // ── CHAT (ADMIN) ──
   // ── TAREFAS ──
   // ── GESTÃO DE TRÁFEGO ───────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════
+  // USUÁRIOS — Gestão de equipe e permissões
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async renderUsuarios() {
+    const main = document.getElementById('admin-main'); if (!main) return;
+    // Apenas quem tem perm usuarios.ver (ou super admin)
+    if (!this.perm('usuarios','ver')) {
+      main.innerHTML = '<p style="padding:60px;text-align:center;color:var(--muted);font-style:italic;">Acesso restrito.</p>';
+      return;
+    }
+    main.innerHTML = '<p style="padding:40px;text-align:center;color:var(--muted);">Carregando...</p>';
+    const { data: equipe } = await db.from('equipe').select('*').order('created_at',{ascending:true});
+    const list = equipe || [];
+    const canCreate = this.perm('usuarios','criar');
+    const canEdit   = this.perm('usuarios','editar');
+    const canDelete = this.perm('usuarios','deletar');
+
+    const cargoLabel = { presidente:'Presidente', gerente:'Gerente', adm:'Adm', operacional:'Operacional', social_media:'Social Media', designer:'Designer', videomaker:'Videomaker', trafego:'Tráfego Pago', financeiro_cargo:'Financeiro' };
+    const cargoColor = { presidente:'#6A0F8A', gerente:'#1565C0', adm:'#E65100', operacional:'#2E7D32', social_media:'#D81B60', designer:'#00838F', videomaker:'#5E35B1', trafego:'#1B5E20', financeiro_cargo:'#4E342E' };
+
+    const cardHtml = list.map(u => {
+      const av = u.foto_url
+        ? `<img src="${u.foto_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`
+        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;font-family:'Cormorant Garamond',serif;color:var(--copper);">${(u.nome||'?')[0].toUpperCase()}</div>`;
+      const cl = cargoLabel[u.cargo] || u.cargo || '—';
+      const cc = cargoColor[u.cargo] || '#888';
+      return `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;position:relative;transition:box-shadow .2s;" onmouseenter="this.style.boxShadow='0 4px 20px rgba(0,0,0,.1)'" onmouseleave="this.style.boxShadow=''">
+        ${!u.ativo ? '<div style="position:absolute;top:10px;right:10px;font-size:9px;padding:2px 8px;border-radius:20px;background:#FFEBEE;color:#C62828;">Inativo</div>' : ''}
+        <div style="width:62px;height:62px;border-radius:50%;overflow:hidden;background:var(--beige);border:2px solid var(--border);flex-shrink:0;">${av}</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">${u.nome||'—'}</div>
+          <div style="font-size:11px;color:var(--muted);">${u.email}</div>
+          ${u.telefone ? `<div style="font-size:10px;color:var(--muted);margin-top:1px;">${u.telefone}</div>` : ''}
+        </div>
+        <span style="font-size:10px;font-weight:600;padding:3px 11px;border-radius:20px;background:${cc}22;color:${cc};letter-spacing:.04em;">${cl}</span>
+        <div style="display:flex;gap:7px;margin-top:4px;width:100%;">
+          ${canEdit ? `<button onclick="Admin.editarUsuario(${u.id})" style="flex:1;padding:7px;border-radius:9px;border:1px solid var(--border);background:var(--bg);font-size:11px;cursor:pointer;color:var(--text);">✎ Editar</button>` : ''}
+          <button onclick="Admin.abrirPermissoes(${u.id})" style="flex:1;padding:7px;border-radius:9px;border:1px solid rgba(106,15,138,.3);background:rgba(106,15,138,.06);font-size:11px;cursor:pointer;color:#6A0F8A;font-weight:600;">⚙ Permissões</button>
+          ${canDelete ? `<button onclick="Admin.deletarUsuario(${u.id},'${u.email}')" style="padding:7px 10px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;font-size:11px;cursor:pointer;color:#C62828;" title="Remover">🗑</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+    main.innerHTML = `
+      <div style="max-width:980px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h2 class="section-title" style="margin:0 0 4px;">Usuários</h2>
+            <p style="font-size:11px;color:var(--muted);margin:0;">${list.length} membro${list.length!==1?'s':''} na equipe</p>
+          </div>
+          ${canCreate ? `<button onclick="Admin.novoUsuario()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,#6A0F8A,#4A0F6A);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;">+ Novo Usuário</button>` : ''}
+        </div>
+        ${!list.length ? '<p style="text-align:center;padding:60px;color:var(--muted);font-style:italic;">Nenhum usuário cadastrado ainda.</p>' : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">${cardHtml}</div>`}
+        <div style="margin-top:24px;padding:14px 16px;border:1px solid rgba(201,162,39,.15);border-radius:10px;background:rgba(201,162,39,.04);">
+          <div style="font-size:11px;color:var(--muted);line-height:1.8;">
+            <strong style="color:var(--brown);">SQL — rodar uma vez no Supabase SQL Editor:</strong><br>
+            <code style="font-size:10px;background:rgba(0,0,0,.06);padding:2px 6px;border-radius:4px;display:block;margin-top:6px;white-space:pre-wrap;">ALTER TABLE equipe ADD COLUMN IF NOT EXISTS cargo text DEFAULT 'operacional';
+ALTER TABLE equipe ADD COLUMN IF NOT EXISTS permissoes jsonb DEFAULT '{}';
+ALTER TABLE equipe ADD COLUMN IF NOT EXISTS ativo boolean DEFAULT true;
+ALTER TABLE equipe ADD COLUMN IF NOT EXISTS foto_url text;
+ALTER TABLE equipe ADD COLUMN IF NOT EXISTS telefone text;
+ALTER TABLE equipe ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();</code>
+          </div>
+        </div>
+      </div>`;
+    this._equipeCache = list;
+  },
+
+  _equipeCache: [],
+
+  async novoUsuario() {
+    this._usuarioEditId = null;
+    this._abrirModalUsuario({});
+  },
+
+  async editarUsuario(id) {
+    const u = this._equipeCache?.find(x=>x.id===id);
+    if (!u) return;
+    this._usuarioEditId = id;
+    this._abrirModalUsuario(u);
+  },
+
+  _usuarioEditId: null,
+
+  _abrirModalUsuario(u) {
+    document.getElementById('modal-overlay')?.remove();
+    const ov = document.createElement('div');
+    ov.id = 'modal-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;';
+    const cargos = [
+      {v:'presidente',l:'Presidente'},{v:'gerente',l:'Gerente'},{v:'adm',l:'Adm'},
+      {v:'social_media',l:'Social Media'},{v:'designer',l:'Designer'},
+      {v:'videomaker',l:'Videomaker'},{v:'trafego',l:'Tráfego Pago'},
+      {v:'financeiro_cargo',l:'Financeiro'},{v:'operacional',l:'Operacional'},
+    ];
+    const isEdit = !!this._usuarioEditId;
+    ov.innerHTML = `
+      <div style="background:var(--surface);border-radius:20px;padding:28px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--brown);margin:0;">${isEdit?'Editar Usuário':'Novo Usuário'}</h3>
+          <button onclick="document.getElementById('modal-overlay').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);">×</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px;">
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">Nome completo *</label>
+            <input id="mu-nome" value="${u.nome||''}" placeholder="Ex: Ana Clara" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);"/></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">E-mail *</label>
+            <input id="mu-email" type="email" value="${u.email||''}" placeholder="ana@agenciaprimor.com.br" ${isEdit?'disabled style="opacity:.6;"':''} style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);"/></div>
+          ${!isEdit?`<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">Senha temporária *</label>
+            <input id="mu-senha" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);"/></div>`:''}
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">Cargo</label>
+            <select id="mu-cargo" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);font-family:Poppins,sans-serif;">
+              ${cargos.map(c=>`<option value="${c.v}"${(u.cargo||'operacional')===c.v?' selected':''}>${c.l}</option>`).join('')}
+            </select></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">Telefone / WhatsApp</label>
+            <input id="mu-tel" value="${u.telefone||''}" placeholder="(11) 99999-9999" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);"/></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            <input type="checkbox" id="mu-ativo" ${(u.ativo===false)?'':'checked'} style="width:16px;height:16px;cursor:pointer;"/>
+            <label for="mu-ativo" style="font-size:12px;color:var(--text);cursor:pointer;">Usuário ativo</label>
+          </div>
+          <div id="mu-err" style="display:none;color:#C62828;font-size:12px;background:#FFEBEE;padding:8px 12px;border-radius:8px;"></div>
+          <button onclick="Admin.salvarUsuario()" style="width:100%;padding:12px;border-radius:10px;background:linear-gradient(135deg,#6A0F8A,#4A0F6A);color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;">${isEdit?'Salvar alterações':'Criar usuário →'}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+  },
+
+  async salvarUsuario() {
+    const nome  = document.getElementById('mu-nome')?.value.trim();
+    const email = document.getElementById('mu-email')?.value.trim().toLowerCase();
+    const senha = document.getElementById('mu-senha')?.value;
+    const cargo = document.getElementById('mu-cargo')?.value;
+    const tel   = document.getElementById('mu-tel')?.value.trim();
+    const ativo = document.getElementById('mu-ativo')?.checked;
+    const errEl = document.getElementById('mu-err');
+    if (!nome || !email) { errEl.textContent='Nome e e-mail são obrigatórios.'; errEl.style.display='block'; return; }
+    this.loader(true);
+    try {
+      if (this._usuarioEditId) {
+        // Editar — só atualiza equipe table
+        await db.from('equipe').update({ nome, cargo, telefone:tel||null, ativo }).eq('id', this._usuarioEditId);
+      } else {
+        if (!senha || senha.length < 6) { errEl.textContent='Senha deve ter pelo menos 6 caracteres.'; errEl.style.display='block'; this.loader(false); return; }
+        // Criar — via Edge Function (usa service_role para criar no Auth sem email de confirmação)
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/create-team-user`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},
+          body:JSON.stringify({email,password:senha,nome,cargo,telefone:tel||null}),
+        }).then(r=>r.json());
+        if (res.error) throw new Error(res.error);
+      }
+      document.getElementById('modal-overlay')?.remove();
+      await this.renderUsuarios();
+    } catch(e) {
+      if (errEl) { errEl.textContent='Erro: '+e.message; errEl.style.display='block'; }
+    } finally { this.loader(false); }
+  },
+
+  async deletarUsuario(id, email) {
+    if (!confirm(`Remover ${email} da equipe? Isso desativa o acesso mas não exclui o histórico.`)) return;
+    this.loader(true);
+    await db.from('equipe').update({ ativo: false }).eq('id', id);
+    await this.renderUsuarios();
+    this.loader(false);
+  },
+
+  _permUserId: null,
+
+  async abrirPermissoes(id) {
+    const u = this._equipeCache?.find(x=>x.id===id);
+    if (!u) return;
+    this._permUserId = id;
+    const perms = u.permissoes || {};
+    const canEditPerms = this.perm('usuarios','editar');
+
+    const MODULOS = [
+      { key:'posts',       label:'Posts & Conteúdo',   icon:'▦' },
+      { key:'leads',       label:'Leads & Formulários', icon:'◉' },
+      { key:'clientes',    label:'Clientes',            icon:'◎' },
+      { key:'financeiro',  label:'Financeiro',          icon:'◈' },
+      { key:'followup',    label:'Follow-up',           icon:'◷' },
+      { key:'tarefas',     label:'Tarefas & Projetos',  icon:'✓' },
+      { key:'demandas',    label:'Demandas',            icon:'⊞' },
+      { key:'metricas',    label:'Métricas',            icon:'◱' },
+      { key:'arquivos',    label:'Arquivos',            icon:'▤' },
+      { key:'chat',        label:'Chat',                icon:'◷' },
+      { key:'lab',         label:'Lab de Ideias',       icon:'⊙' },
+      { key:'info',        label:'Informações',         icon:'≡' },
+      { key:'solicitacoes',label:'Solicitações',        icon:'◫' },
+      { key:'relatorio',   label:'Relatório Equipe',    icon:'📝' },
+      { key:'usuarios',    label:'Usuários',            icon:'👥' },
+    ];
+    const ACOES = ['ver','criar','editar','deletar'];
+    const ACAO_COLORS = { ver:'#1976D2', criar:'#2E7D32', editar:'#E65100', deletar:'#C62828' };
+    const ACAO_LABELS = { ver:'Ver', criar:'Criar', editar:'Editar', deletar:'Deletar' };
+
+    const chk = (mod, acao) => {
+      const v = perms[mod]?.[acao];
+      const checked = v === true;
+      const color = ACAO_COLORS[acao];
+      return `<td style="text-align:center;padding:6px 4px;">
+        <label style="display:inline-flex;align-items:center;justify-content:center;cursor:${canEditPerms?'pointer':'default'};">
+          <input type="checkbox" class="perm-chk" data-mod="${mod}" data-acao="${acao}" ${checked?'checked':''} ${canEditPerms?'':'disabled'}
+            style="display:none;" onchange="Admin._permCheckChange(this)"/>
+          <div class="perm-box" style="width:20px;height:20px;border-radius:5px;border:2px solid ${checked?color:'var(--border)'};background:${checked?color:'transparent'};display:flex;align-items:center;justify-content:center;transition:all .15s;">
+            ${checked?`<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}
+          </div>
+        </label>
+      </td>`;
+    };
+
+    const rows = MODULOS.map(m => `
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 10px;font-size:12px;color:var(--text);white-space:nowrap;">
+          <span style="margin-right:6px;opacity:.6;">${m.icon}</span>${m.label}
+        </td>
+        ${ACOES.map(a=>chk(m.key,a)).join('')}
+      </tr>`).join('');
+
+    const presetBtn = (key, label, color) => canEditPerms
+      ? `<button onclick="Admin._aplicarPreset('${key}')" style="padding:6px 14px;border-radius:20px;border:1px solid ${color};background:transparent;color:${color};font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='${color}';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='${color}'">${label}</button>`
+      : `<span style="padding:6px 14px;border-radius:20px;border:1px solid ${color};color:${color};font-size:11px;font-weight:600;">${label}</span>`;
+
+    document.getElementById('modal-overlay')?.remove();
+    const ov = document.createElement('div');
+    ov.id = 'modal-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
+    ov.innerHTML = `
+      <div style="background:var(--surface);border-radius:20px;width:100%;max-width:620px;box-shadow:0 24px 80px rgba(0,0,0,.5);margin:auto;">
+        <div style="padding:24px 28px 0;display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--brown);margin:0;">Permissões — ${u.nome}</h3>
+          <button onclick="document.getElementById('modal-overlay').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);">×</button>
+        </div>
+        <div style="padding:16px 28px 8px;">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Aplicar preset:</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${presetBtn('presidente','Presidente','#6A0F8A')}
+            ${presetBtn('gerente','Gerente','#1565C0')}
+            ${presetBtn('adm','Adm','#E65100')}
+            ${presetBtn('operacional','Operacional','#2E7D32')}
+          </div>
+        </div>
+        <div style="padding:8px 28px 12px;">
+          <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--muted);">
+            ${Object.entries(ACAO_COLORS).map(([a,c])=>`<span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:${c};border-radius:3px;display:inline-block;"></span>${ACAO_LABELS[a]}</span>`).join('')}
+          </div>
+        </div>
+        <div style="overflow-x:auto;padding:0 28px;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="border-bottom:2px solid var(--border);">
+                <th style="text-align:left;padding:8px 10px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:500;">Módulo</th>
+                ${ACOES.map(a=>`<th style="text-align:center;padding:8px 4px;font-size:10px;color:${ACAO_COLORS[a]};text-transform:uppercase;letter-spacing:.08em;font-weight:600;">${ACAO_LABELS[a]}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div style="padding:20px 28px;display:flex;gap:10px;">
+          ${canEditPerms ? `<button onclick="Admin.salvarPermissoes()" style="flex:1;padding:12px;border-radius:10px;background:linear-gradient(135deg,#6A0F8A,#4A0F6A);color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;">Salvar permissões →</button>` : ''}
+          <button onclick="document.getElementById('modal-overlay').remove()" style="padding:12px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;font-size:13px;cursor:pointer;color:var(--muted);">Fechar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+  },
+
+  _permCheckChange(el) {
+    const checked = el.checked;
+    const color = { ver:'#1976D2', criar:'#2E7D32', editar:'#E65100', deletar:'#C62828' }[el.dataset.acao] || '#888';
+    const box = el.nextElementSibling;
+    if (box) {
+      box.style.background = checked ? color : 'transparent';
+      box.style.borderColor = checked ? color : 'var(--border)';
+      box.innerHTML = checked ? '<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+    }
+  },
+
+  _aplicarPreset(presetKey) {
+    const preset = PERM_PRESETS[presetKey]; if (!preset) return;
+    document.querySelectorAll('.perm-chk').forEach(el => {
+      const mod = el.dataset.mod, acao = el.dataset.acao;
+      const should = preset[mod]?.[acao] === true;
+      el.checked = should;
+      this._permCheckChange(el);
+    });
+  },
+
+  async salvarPermissoes() {
+    const perms = {};
+    document.querySelectorAll('.perm-chk').forEach(el => {
+      const mod = el.dataset.mod, acao = el.dataset.acao;
+      if (!perms[mod]) perms[mod] = {};
+      perms[mod][acao] = el.checked;
+    });
+    this.loader(true);
+    try {
+      await db.from('equipe').update({ permissoes: perms }).eq('id', this._permUserId);
+      document.getElementById('modal-overlay')?.remove();
+      await this.renderUsuarios();
+    } finally { this.loader(false); }
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // FIM — USUÁRIOS
+  // ═══════════════════════════════════════════════════════════════════════
+
   async renderTrafego() {
     const el = document.getElementById('admin-main'); if (!el) return;
-    el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando...</p>';
+    el.innerHTML = '<p style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Carregando...</p>';
     const { data: clients } = await db.from('clients').select('id,nome,empresa,email,foto_url').order('nome');
     el.innerHTML = `<div style="padding:28px 32px;max-width:980px;">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">

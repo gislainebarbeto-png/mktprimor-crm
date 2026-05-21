@@ -35,13 +35,14 @@
     { id:'tarefas',      icon:'✓',  label:'Tarefas',       desc:'Projetos e kanban da equipe',            gradient:'linear-gradient(145deg,#0d1a1f,#1a4a5a,#1A8FA0)' },
     { id:'brand',        icon:'✦',  label:'Brand Core',    desc:'Identidade e posicionamento da marca',   gradient:'linear-gradient(145deg,#0a1628,#1a3a6a,#2E6FD4)' },
     { id:'trafego',      icon:'📡', label:'Tráfego',       desc:'Campanhas, análises e relatórios',        gradient:'linear-gradient(145deg,#0f1a0a,#1e3a10,#2d6a1a)' },
+    { id:'usuarios',     icon:'👥', label:'Usuários',      desc:'Equipe, cargos e permissões de acesso',   gradient:'linear-gradient(145deg,#1a0820,#3a1050,#6A0F8A)' },
   ];
 
   // ── SEÇÕES ADMIN ─────────────────────────────────────────────────────
   const ADMIN_SECTIONS = [
     { title:'Visão Geral',       ids:['inicio','posts','relatorio','agentes','comercial'] },
     { title:'Clientes & Gestão', ids:['clientes','financeiro','info','brand','trafego'] },
-    { title:'Equipe',            ids:['demandas','tarefas','solicitacoes','chat'] },
+    { title:'Equipe',            ids:['demandas','tarefas','solicitacoes','chat','usuarios'] },
     { title:'Conteúdo & Mais',   ids:['automacoes','comece','lab'] },
   ];
 
@@ -775,7 +776,15 @@
         </div>
       </div>
       ${orderedSections.map(sec=>{
-        const mods=ADMIN_MODULES.filter(m=>sec.ids.includes(m.id));
+        const mods=ADMIN_MODULES.filter(m=>{
+          if(!sec.ids.includes(m.id))return false;
+          // Filtra módulos que o usuário não tem permissão de ver
+          if(window.Admin&&Admin.isEquipe){
+            const p=Admin._perms||{};
+            if(p[m.id]&&p[m.id].ver===false)return false;
+          }
+          return true;
+        });
         if(!mods.length)return'';
         const ordered=sec.ids.map(id=>mods.find(m=>m.id===id)).filter(Boolean);
         return`<div class="nf-section"><div class="nf-section-title">${sec.title}</div><div class="nf-grid">${ordered.map(m=>renderCard(m,true,badges[m.id])).join('')}</div></div>`;
