@@ -1208,10 +1208,10 @@ const Meta = {
     if (!META_APP_ID) { alert('META_APP_ID não configurado em index.html.'); return; }
     const state = btoa(JSON.stringify({ client_email: clientEmail, fb_page_id: fbPageId || '' }));
     const redirect = encodeURIComponent(window.location.origin + '/');
-    const scope = 'instagram_basic,instagram_manage_insights,instagram_content_publish,pages_read_engagement,pages_show_list';
+    const scope = 'instagram_basic,instagram_manage_insights,instagram_content_publish,pages_read_engagement,pages_show_list,business_management';
     window.location.href =
       `https://www.facebook.com/v19.0/dialog/oauth?client_id=${META_APP_ID}` +
-      `&redirect_uri=${redirect}&scope=${scope}&state=${state}&response_type=code`;
+      `&redirect_uri=${redirect}&scope=${scope}&state=${state}&response_type=code&auth_type=rerequest`;
   },
 
   // Chamado pelo App.init() quando detecta ?code= na URL (retorno do Facebook)
