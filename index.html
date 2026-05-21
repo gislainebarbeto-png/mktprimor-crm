@@ -6093,13 +6093,22 @@ const Admin = {
         await db.from('equipe').update({ nome, cargo, telefone:tel||null, ativo }).eq('id', this._usuarioEditId);
       } else {
         if (!senha || senha.length < 6) { errEl.textContent='Senha deve ter pelo menos 6 caracteres.'; errEl.style.display='block'; this.loader(false); return; }
-        // Criar — via Edge Function (usa service_role para criar no Auth sem email de confirmação)
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/create-team-user`, {
-          method:'POST',
-          headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},
-          body:JSON.stringify({email,password:senha,nome,cargo,telefone:tel||null}),
-        }).then(r=>r.json());
-        if (res.error) throw new Error(res.error);
+        // Cria usuário no Supabase Auth diretamente pelo browser
+        const { data: authData, error: authErr } = await db.auth.signUp({
+          email, password: senha,
+          options: { data: { nome } }
+        });
+        if (authErr) {
+          if (authErr.message.includes('already registered')) throw new Error('Este e-mail já está cadastrado no sistema.');
+          throw authErr;
+        }
+        // Insere na tabela equipe
+        const { error: eqErr } = await db.from('equipe').insert([{
+          email, nome, cargo: cargo || 'operacional',
+          permissoes: {}, ativo: true,
+          telefone: tel || null,
+        }]);
+        if (eqErr) throw new Error('Usuário criado no Auth, mas erro ao salvar na equipe: ' + eqErr.message);
       }
       document.getElementById('modal-overlay')?.remove();
       await this.renderUsuarios();
