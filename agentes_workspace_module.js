@@ -90,6 +90,17 @@
   function _esc(t){return(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');}
   function _flash(id,m){const e=document.getElementById(id);if(!e)return;e.textContent=m||'✓ Salvo';e.style.display='inline-block';setTimeout(()=>e.style.display='none',2200);}
 
+  // Busca token do Instagram — tenta clients primeiro, depois instagram_tokens
+  async function _getIGCreds(email){
+    const{data:cli}=await db.from('clients').select('instagram_token,instagram_account_id').eq('email',email).maybeSingle();
+    if(cli?.instagram_token&&cli?.instagram_account_id)
+      return{tok:cli.instagram_token,aid:cli.instagram_account_id};
+    const{data:tok}=await db.from('instagram_tokens').select('access_token,ig_user_id').eq('client_email',email).maybeSingle();
+    if(tok?.access_token&&tok?.ig_user_id)
+      return{tok:tok.access_token,aid:tok.ig_user_id};
+    return null;
+  }
+
   // SUPABASE
   async function _save(conteudo){
     try{const{error}=await db.from('agentes_trabalhos').upsert({agente_id:_ag.id,aba_id:_aba,client_email:_cliente,data:_data,conteudo},{onConflict:'agente_id,aba_id,client_email,data'});return!error;}catch{return false;}
@@ -1275,12 +1286,12 @@
       const btn=document.getElementById('dg-meta-btn');
       if(btn){btn.disabled=true;btn.textContent='⏳ Buscando...';}
       try{
-        const{data:cli}=await db.from('clients').select('instagram_token,instagram_account_id,nome').eq('email',_cliente).maybeSingle();
-        if(!cli?.instagram_token||!cli?.instagram_account_id){
-          alert('Token ou Account ID do Instagram não configurado.\n\nVá em Clientes → ficha do cliente → aba Info e preencha os campos da Meta API.');
+        const igCreds=await _getIGCreds(_cliente);
+        if(!igCreds){
+          alert('Instagram não conectado para este cliente.\n\nVá em Clientes → ficha do cliente → aba Info e clique em "Conectar Instagram via OAuth".');
           return;
         }
-        const tok=cli.instagram_token;const aid=cli.instagram_account_id;const BASE='https://graph.facebook.com/v19.0';
+        const{tok,aid}=igCreds;const BASE='https://graph.facebook.com/v19.0';
         // Busca paralela: perfil + insights + audience
         const [profR,insR,audR,mediaR]=await Promise.all([
           fetch(`${BASE}/${aid}?fields=followers_count,media_count&access_token=${tok}`).then(r=>r.json()),
@@ -1689,13 +1700,13 @@
       if(schedDt.getTime()<Date.now()+20*60000){if(errEl){errEl.textContent='O agendamento deve ser pelo menos 20 minutos no futuro.';errEl.style.display='block';}return;}
       if(errEl)errEl.style.display='none';
       try{
-        const{data:cli}=await db.from('clients').select('instagram_token,instagram_account_id').eq('email',_cliente).maybeSingle();
-        if(!cli?.instagram_token||!cli?.instagram_account_id){alert('Token ou Account ID do Instagram não configurado para este cliente.');return;}
+        const igCreds=await _getIGCreds(_cliente);
+        if(!igCreds){alert('Instagram não conectado para este cliente.');return;}
         const{data:post}=await db.from('posts').select('midia_urls,legenda,hashtags,tipo').eq('id',postId).single();
         if(!post?.midia_urls){alert('Este post não tem mídia cadastrada.');return;}
         let mediaUrl='';try{const arr=JSON.parse(post.midia_urls||'[]');mediaUrl=Array.isArray(arr)?arr[0]:arr;}catch{mediaUrl=post.midia_urls;}
         const caption=[(post.legenda||''),(post.hashtags||'')].filter(Boolean).join('\n\n');
-        const tok=cli.instagram_token;const aid=cli.instagram_account_id;const BASE='https://graph.facebook.com/v19.0';
+        const{tok,aid}=igCreds;const BASE='https://graph.facebook.com/v19.0';
         const isVideo=['reels','video'].includes((post.tipo||'').toLowerCase());
         const containerBody={caption,scheduled_publish_time:Math.floor(schedDt.getTime()/1000),access_token:tok};
         if(isVideo){containerBody.media_type='REELS';containerBody.video_url=mediaUrl;}else{containerBody.image_url=mediaUrl;}
@@ -1713,13 +1724,13 @@
     async publicarIGAgora(postId){
       if(!confirm('Publicar este post no Instagram agora?'))return;
       try{
-        const{data:cli}=await db.from('clients').select('instagram_token,instagram_account_id').eq('email',_cliente).maybeSingle();
-        if(!cli?.instagram_token||!cli?.instagram_account_id){alert('Token ou Account ID do Instagram não configurado para este cliente.');return;}
+        const igCreds=await _getIGCreds(_cliente);
+        if(!igCreds){alert('Instagram não conectado para este cliente.');return;}
         const{data:post}=await db.from('posts').select('midia_urls,legenda,hashtags,tipo').eq('id',postId).single();
         if(!post?.midia_urls){alert('Este post não tem mídia cadastrada.');return;}
         let mediaUrl='';try{const arr=JSON.parse(post.midia_urls||'[]');mediaUrl=Array.isArray(arr)?arr[0]:arr;}catch{mediaUrl=post.midia_urls;}
         const caption=[(post.legenda||''),(post.hashtags||'')].filter(Boolean).join('\n\n');
-        const tok=cli.instagram_token;const aid=cli.instagram_account_id;const BASE='https://graph.facebook.com/v19.0';
+        const{tok,aid}=igCreds;const BASE='https://graph.facebook.com/v19.0';
         const isVideo=['reels','video'].includes((post.tipo||'').toLowerCase());
         const containerBody={caption,access_token:tok};
         if(isVideo){containerBody.media_type='REELS';containerBody.video_url=mediaUrl;}else{containerBody.image_url=mediaUrl;}
