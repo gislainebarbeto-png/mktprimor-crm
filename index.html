@@ -1253,7 +1253,7 @@ const App = {
     this.loader(true);
     document.getElementById('login-form').addEventListener('submit', e => this.login(e));
 
-    // Detecta retorno do OAuth implícito (#access_token=... para token manual)
+    // Detecta retorno do OAuth implícito (#access_token=...)
     const _hash = new URLSearchParams(window.location.hash.replace('#',''));
     const _implicitToken = _hash.get('access_token');
     if (_implicitToken) {
@@ -1318,6 +1318,28 @@ const App = {
   },
 
   async route() {
+    // Retoma conexão de Instagram após redirect do Facebook (implicit token flow)
+    const _implicitToken = sessionStorage.getItem('_meta_implicit_token');
+    const _connectState = sessionStorage.getItem('_token_connect');
+    if (_implicitToken && _connectState) {
+      sessionStorage.removeItem('_meta_implicit_token');
+      sessionStorage.removeItem('_token_connect');
+      try {
+        const { clientEmail, clientId } = JSON.parse(_connectState);
+        // Abre a ficha do cliente e inicia a conexão automaticamente
+        sessionStorage.setItem('adminTab', 'clientes');
+        setTimeout(async () => {
+          await Admin.tab('clientes');
+          await Admin.openCliente(clientId);
+          Admin._cliTab('info', clientId);
+          setTimeout(() => {
+            const el = document.getElementById('dp-manual-token');
+            if (el) { el.value = _implicitToken; el.style.borderColor = '#2E7D32'; }
+            Admin.conectarTokenManual(clientEmail, clientId);
+          }, 600);
+        }, 300);
+      } catch(e) { console.error('Token connect resume error:', e); }
+    }
     Meta.checkOAuthSuccess();
     const VALID_TABS = ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','agentes','usuarios'];
     const savedTab = sessionStorage.getItem('adminTab');
@@ -2881,7 +2903,7 @@ const Admin = {
               3. Cole abaixo e clique em Buscar Instagram ID
             </div>
             <div style="margin-bottom:6px;">
-              <button onclick="Admin.gerarTokenFacebook()" style="width:100%;padding:8px;border-radius:8px;background:#1877F2;color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:600;">① Gerar token via Facebook (abre popup)</button>
+              <button onclick="Admin.gerarTokenFacebook('${c.email}',${c.id})" style="width:100%;padding:8px;border-radius:8px;background:#1877F2;color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:600;">① Gerar token via Facebook</button>
             </div>
             <div style="display:flex;gap:6px;">
               <input id="dp-manual-token" placeholder="② Token gerado aparece aqui automaticamente (ou cole manualmente)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:monospace;background:var(--bg);color:var(--text);" />
@@ -2960,27 +2982,12 @@ const Admin = {
     }
   },
 
-  gerarTokenFacebook() {
+  gerarTokenFacebook(clientEmail, clientId) {
     const scope = 'pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish,instagram_manage_insights';
     const redirect = encodeURIComponent(window.location.origin + '/');
-    const url = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${META_APP_ID}&redirect_uri=${redirect}&scope=${scope}&response_type=token`;
-    const popup = window.open(url, 'fb_token', 'width=600,height=700,scrollbars=yes');
-    // Polling para detectar quando o popup fechou após o redirect
-    const poll = setInterval(() => {
-      try {
-        if (!popup || popup.closed) { clearInterval(poll); return; }
-        const hash = new URLSearchParams(popup.location.hash.replace('#',''));
-        const token = hash.get('access_token');
-        if (token) {
-          clearInterval(poll);
-          popup.close();
-          const el = document.getElementById('dp-manual-token');
-          if (el) { el.value = token; el.style.borderColor='#2E7D32'; }
-          const st = document.getElementById('manual-token-status');
-          if (st) { st.textContent = '✓ Token gerado! Clique em "Buscar e Salvar".'; st.style.color='#2E7D32'; }
-        }
-      } catch(e) { /* cross-origin, aguarda redirect */ }
-    }, 500);
+    // Salva estado para retomar após o redirect
+    sessionStorage.setItem('_token_connect', JSON.stringify({ clientEmail, clientId }));
+    window.location.href = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${META_APP_ID}&redirect_uri=${redirect}&scope=${scope}&response_type=token`;
   },
 
   async conectarTokenManual(clientEmail, clientId) {
