@@ -898,15 +898,15 @@
     const kpisHtml=meta?`
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px">
         ${kpi('👥','Seguidores',fN(meta.seguidores),'total atual')}
-        ${kpi('👁','Alcance',fN(meta.alcance),'no período')}
-        ${kpi('💫','Impressões',fN(meta.impressoes),'no período')}
+        ${kpi('👁','Alcance',fN(meta.alcance),'contas únicas')}
+        ${kpi('👀','Visualizações',fN(meta.impressoes),'views totais')}
         ${kpi('🔍','Visitas ao perfil',fN(meta.visitas_perfil),'no período')}
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
-        ${kpi('❤️','Engajamento',`${meta.engajamento||0}%`,'médio por post')}
+        ${kpi('❤️','Engajamento',`${meta.engajamento||0}%`,'interações/alcance')}
+        ${kpi('💬','Interações',fN(extras.interacoes||0),'likes+coments+saves')}
         ${kpi('🔖','Saves',fN(extras.saves_total||0),'no período')}
         ${kpi('🌐','Cliques no site',fN(extras.website_clicks||0),'no período')}
-        ${kpi('👤','Público principal',meta.publico_principal||'—','')}
       </div>` : '';
 
     const postRow=p=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface)">
@@ -1384,15 +1384,17 @@
         if(profR.error)throw new Error('Perfil: '+profR.error.message);
         const seguidores=profR.followers_count||0;
 
-        // 2. Insights do período — paginação automática (Meta API: máx 30 dias/página)
-        // reach+impressions: erro aqui é fatal (mostra mensagem real ao usuário)
-        let alcance=0,impressoes=0,visitas_perfil=0,website_clicks=0;
+        // 2. Insights do período — API Meta v19+ (impressions removido; usar views)
+        // Métricas principais — fatal se falhar
+        let alcance=0,visualizacoes=0,interacoes=0,saves_conta=0,visitas_perfil=0,website_clicks=0;
         const mainTotals=await _insightsPaged(
-          `${BASE}/${aid}/insights?metric=reach,impressions&period=day&since=${since}&until=${until}&access_token=${tok}`
+          `${BASE}/${aid}/insights?metric=reach,views,total_interactions,saves&period=day&since=${since}&until=${until}&access_token=${tok}`
         );
         alcance=mainTotals.reach||0;
-        impressoes=mainTotals.impressions||0;
-        // profile_views e website_clicks — opcionais, falha silenciosa
+        visualizacoes=mainTotals.views||0;
+        interacoes=mainTotals.total_interactions||0;
+        saves_conta=mainTotals.saves||0;
+        // Opcionais — falha silenciosa
         try{const t=await _insightsPaged(`${BASE}/${aid}/insights?metric=profile_views&period=day&since=${since}&until=${until}&access_token=${tok}`);visitas_perfil=t.profile_views||0;}catch{}
         try{const t=await _insightsPaged(`${BASE}/${aid}/insights?metric=website_clicks&period=day&since=${since}&until=${until}&access_token=${tok}`);website_clicks=t.website_clicks||0;}catch{}
 
@@ -1404,41 +1406,44 @@
         const periodPosts=allPosts.filter(p=>{const t=new Date(p.timestamp).getTime();return t>=fromMs&&t<=toMs;});
         const forEng=periodPosts.length?periodPosts:allPosts.slice(0,20);
 
-        // 4. Engajamento médio
-        let totalEng=0;forEng.forEach(p=>{totalEng+=(p.like_count||0)+(p.comments_count||0);});
-        const engajamento=seguidores>0&&forEng.length>0?parseFloat(((totalEng/forEng.length/seguidores)*100).toFixed(2)):0;
+        // 4. Engajamento: usa total_interactions da API se disponível, senão calcula por posts
+        let engajamento=0;
+        if(interacoes>0&&alcance>0){
+          engajamento=parseFloat(((interacoes/alcance)*100).toFixed(2));
+        } else if(seguidores>0&&forEng.length>0){
+          let totalEng=0;forEng.forEach(p=>{totalEng+=(p.like_count||0)+(p.comments_count||0);});
+          engajamento=parseFloat(((totalEng/forEng.length/seguidores)*100).toFixed(2));
+        }
 
-        // 5. Top posts: pega os top 7 por curtidas e busca insights individuais (reach, saves)
+        // 5. Top posts: busca insights individuais (reach, impressions, saved ainda válidos por media)
         const sorted=[...forEng].sort((a,b)=>((b.like_count||0)+(b.comments_count||0))-((a.like_count||0)+(a.comments_count||0)));
         const top7=sorted.slice(0,7);
         const insightsRes=await Promise.allSettled(
           top7.map(p=>fetch(`${BASE}/${p.id}/insights?metric=reach,impressions,saved&access_token=${tok}`).then(r=>r.json()))
         );
-        let saves_total=0;
         const topPostsData=top7.map((p,i)=>{
           const ins=insightsRes[i].status==='fulfilled'?insightsRes[i].value:{};
           const im={};(ins.data||[]).forEach(d=>{im[d.name]=d.values?.[0]?.value||0;});
-          saves_total+=im.saved||0;
           return{id:p.id,caption:p.caption||'',media_type:p.media_type,timestamp:p.timestamp,permalink:p.permalink,thumbnail:p.thumbnail_url||p.media_url||'',like_count:p.like_count||0,comments_count:p.comments_count||0,reach:im.reach||0,impressions:im.impressions||0,saved:im.saved||0};
         });
         topPostsData.sort((a,b)=>b.reach-a.reach);
 
-        // 6. Público principal (opcional)
+        // 6. Público demográfico — novo formato Meta API (engaged_audience_demographics)
         let publico_principal='';
         try{
-          const audR=await fetch(`${BASE}/${aid}/insights?metric=audience_gender_age,audience_city&period=lifetime&access_token=${tok}`).then(r=>r.json());
-          if(!audR.error&&audR.data){
-            const ad={};audR.data.forEach(d=>{if(d.values?.length)ad[d.name]=d.values[0].value;});
-            if(ad.audience_gender_age){const e=Object.entries(ad.audience_gender_age).sort((a,b)=>b[1]-a[1]);if(e.length){const[k]=e[0];const[g,fx]=k.split('.');publico_principal=`${g==='F'?'Mulheres':g==='M'?'Homens':'Outros'}, ${fx} anos`;}}
-            if(ad.audience_city){const e=Object.entries(ad.audience_city).sort((a,b)=>b[1]-a[1]);if(e.length)publico_principal+=(publico_principal?' · ':'')+e[0][0].split(',')[0];}
+          const audR=await fetch(`${BASE}/${aid}/insights?metric=engaged_audience_demographics&period=lifetime&timeframe=last_90_days&breakdown=gender&access_token=${tok}`).then(r=>r.json());
+          if(!audR.error&&audR.data?.[0]?.total_value?.breakdowns?.[0]?.results){
+            const rows=audR.data[0].total_value.breakdowns[0].results;
+            const top=rows.sort((a,b)=>b.value-a.value)[0];
+            if(top){const g=top.dimension_values?.[0];publico_principal=g==='F'?'Mulheres':g==='M'?'Homens':g||'—';}
           }
         }catch{}
 
         // 7. Salva
         const hoje=new Date().toISOString().slice(0,10);
         const{error:dbErr}=await db.from('metricas_instagram').upsert(
-          {client_email:_cliente,data:hoje,seguidores,alcance,impressoes,engajamento,visitas_perfil,publico_principal,
-           dados_completos:{top_posts:topPostsData,website_clicks,saves_total,period_from:from,period_to:to,total_posts_period:periodPosts.length}},
+          {client_email:_cliente,data:hoje,seguidores,alcance,impressoes:visualizacoes,engajamento,visitas_perfil,publico_principal,
+           dados_completos:{top_posts:topPostsData,website_clicks,saves_total:saves_conta,interacoes,period_from:from,period_to:to,total_posts_period:periodPosts.length}},
           {onConflict:'client_email,data'}
         );
         if(dbErr)throw new Error('Erro ao salvar: '+dbErr.message);
@@ -1666,17 +1671,17 @@
           <div style="font-size:22px;font-weight:300;color:#5C3D1E;margin-bottom:4px;">${cliNome}</div>
           <div style="font-size:13px;color:#7A5230;">${periodo}</div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
           ${kpiBox('👥','Seguidores',fN(meta.seguidores))}
           ${kpiBox('👁','Alcance',fN(meta.alcance))}
-          ${kpiBox('💫','Impressões',fN(meta.impressoes))}
+          ${kpiBox('👀','Visualizações',fN(meta.impressoes))}
           ${kpiBox('🔍','Visitas ao perfil',fN(meta.visitas_perfil))}
         </div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px;">
           ${kpiBox('❤️','Engajamento',`${meta.engajamento||0}%`)}
+          ${kpiBox('💬','Interações',fN(extras.interacoes||0))}
           ${kpiBox('🔖','Saves',fN(extras.saves_total||0))}
           ${kpiBox('🌐','Cliques no site',fN(extras.website_clicks||0))}
-          ${kpiBox('👤','Público',meta.publico_principal||'—')}
         </div>
         ${topPosts.length?`
         <div style="margin-bottom:32px;">
