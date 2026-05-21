@@ -1192,6 +1192,7 @@
 <script>
 const SUPABASE_URL  = 'https://dloxddrdqsltuwdabwaq.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_ZAEE1Rt9yMMWVTNqcdEo6w_WNhPt29M';
+const SUPABASE_SVC  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsb3hkZHJkcXNsdHV3ZGFid2FxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzcxNTE1MywiZXhwIjoyMDkzMjkxMTUzfQ.Tjy5_2-MuONTsOM_JP8HEowJHZ7TWxbj8BbwKYfJaqE';
 const ADMIN_EMAIL   = 'gislainebarbeto@gmail.com';
 const META_APP_ID   = '1698396874498822';
 const { createClient } = window.supabase;
@@ -2472,24 +2473,17 @@ const Admin = {
         }
       }
 
-      // Cria usuário no Supabase Auth (sem confirmação de email se service key estiver configurada)
-      const svcKey = window.PRIMOR_CONFIG?.supabaseServiceKey;
-      const hasSvcKey = svcKey && !svcKey.startsWith('SUA-');
-      if (hasSvcKey) {
-        const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}` },
-          body: JSON.stringify({ email, password: senha, email_confirm: true, user_metadata: { nome, empresa, instagram: ig } }),
-        });
-        const authData = await resp.json();
-        if (!resp.ok) {
-          const msg = authData.msg || authData.message || 'Erro ao criar acesso';
-          if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) throw new Error('Este e-mail já está cadastrado.');
-          throw new Error(msg);
-        }
-      } else {
-        const { error: authErr } = await db.auth.signUp({ email, password: senha, options: { data: { nome, empresa, instagram: ig } } });
-        if (authErr) throw authErr;
+      // Cria usuário no Supabase Auth via admin API (sem confirmação de email)
+      const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SVC, 'Authorization': `Bearer ${SUPABASE_SVC}` },
+        body: JSON.stringify({ email, password: senha, email_confirm: true, user_metadata: { nome, empresa, instagram: ig } }),
+      });
+      const authData = await resp.json();
+      if (!resp.ok) {
+        const msg = authData.msg || authData.message || 'Erro ao criar acesso';
+        if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) throw new Error('Este e-mail já está cadastrado.');
+        throw new Error(msg);
       }
 
       // Salva na tabela clients
@@ -2898,22 +2892,15 @@ const Admin = {
   },
 
   async confirmarAcessoCliente(email) {
-    const svcKey = window.PRIMOR_CONFIG?.supabaseServiceKey;
-    if (!svcKey || svcKey.startsWith('SUA-')) {
-      alert('Configure a service_role key no arquivo config.js para usar esta função.');
-      return;
-    }
-    // Busca o user_id pelo email
     const listResp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}&page=1&per_page=1`, {
-      headers: { 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}` }
+      headers: { 'apikey': SUPABASE_SVC, 'Authorization': `Bearer ${SUPABASE_SVC}` }
     });
     const listData = await listResp.json();
     const userId = listData?.users?.[0]?.id;
     if (!userId) { alert('Usuário não encontrado no Auth. Use "Recriar acesso" para criar do zero.'); return; }
-    // Confirma o email
     const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}` },
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SVC, 'Authorization': `Bearer ${SUPABASE_SVC}` },
       body: JSON.stringify({ email_confirm: true }),
     });
     if (resp.ok) {
@@ -2925,32 +2912,24 @@ const Admin = {
   },
 
   async redefinirSenhaCliente(email, clientId) {
-    const svcKey = window.PRIMOR_CONFIG?.supabaseServiceKey;
-    if (!svcKey || svcKey.startsWith('SUA-')) {
-      alert('Configure a service_role key no arquivo config.js para usar esta função.');
-      return;
-    }
     const novaSenha = document.getElementById('dp-senha')?.value?.trim();
     if (!novaSenha || novaSenha.length < 6) { alert('Salve a senha no campo acima antes de recriar (mínimo 6 caracteres).'); return; }
-    // Busca o user existente
     const listResp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}&page=1&per_page=1`, {
-      headers: { 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}` }
+      headers: { 'apikey': SUPABASE_SVC, 'Authorization': `Bearer ${SUPABASE_SVC}` }
     });
     const listData = await listResp.json();
     const userId = listData?.users?.[0]?.id;
     if (userId) {
-      // Atualiza senha + confirma email
       const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}` },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SVC, 'Authorization': `Bearer ${SUPABASE_SVC}` },
         body: JSON.stringify({ password: novaSenha, email_confirm: true }),
       });
       if (resp.ok) { this._showToast('Senha redefinida e acesso confirmado! ✓'); return; }
     }
-    // Se não existe, cria do zero
     const createResp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}` },
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SVC, 'Authorization': `Bearer ${SUPABASE_SVC}` },
       body: JSON.stringify({ email, password: novaSenha, email_confirm: true }),
     });
     if (createResp.ok) {
@@ -6175,46 +6154,22 @@ const Admin = {
         await db.from('equipe').update({ nome, cargo, telefone:tel||null, ativo }).eq('id', this._usuarioEditId);
       } else {
         if (!senha || senha.length < 6) { errEl.textContent='Senha deve ter pelo menos 6 caracteres.'; errEl.style.display='block'; this.loader(false); return; }
-        const svcKey = window.PRIMOR_CONFIG?.supabaseServiceKey;
-        const hasSvcKey = svcKey && !svcKey.startsWith('SUA-');
-        if (hasSvcKey) {
-          // Cria usuário via admin REST API com email_confirm:true (sem email de confirmação)
-          const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': svcKey,
-              'Authorization': `Bearer ${svcKey}`,
-            },
-            body: JSON.stringify({ email, password: senha, email_confirm: true, user_metadata: { nome } }),
-          });
-          const authData = await resp.json();
-          if (!resp.ok) {
-            const msg = authData.msg || authData.message || 'Erro ao criar usuário';
-            if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) throw new Error('Este e-mail já está cadastrado no sistema.');
-            throw new Error(msg);
-          }
-          const { error: eqErr } = await db.from('equipe').insert([{
-            email, nome, cargo: cargo || 'operacional',
-            permissoes: {}, ativo: true, telefone: tel || null,
-          }]);
-          if (eqErr) throw new Error('Usuário criado no Auth, mas erro ao salvar na equipe: ' + eqErr.message);
-        } else {
-          // Fallback: signUp padrão (requer confirmação de email — desative em Auth → Settings → Supabase Dashboard)
-          const { data: authData, error: authErr } = await db.auth.signUp({
-            email, password: senha,
-            options: { data: { nome } }
-          });
-          if (authErr) {
-            if (authErr.message.includes('already registered')) throw new Error('Este e-mail já está cadastrado no sistema.');
-            throw authErr;
-          }
-          const { error: eqErr } = await db.from('equipe').insert([{
-            email, nome, cargo: cargo || 'operacional',
-            permissoes: {}, ativo: true, telefone: tel || null,
-          }]);
-          if (eqErr) throw new Error('Usuário criado no Auth, mas erro ao salvar na equipe: ' + eqErr.message);
+        const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SVC, 'Authorization': `Bearer ${SUPABASE_SVC}` },
+          body: JSON.stringify({ email, password: senha, email_confirm: true, user_metadata: { nome } }),
+        });
+        const authData = await resp.json();
+        if (!resp.ok) {
+          const msg = authData.msg || authData.message || 'Erro ao criar usuário';
+          if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) throw new Error('Este e-mail já está cadastrado no sistema.');
+          throw new Error(msg);
         }
+        const { error: eqErr } = await db.from('equipe').insert([{
+          email, nome, cargo: cargo || 'operacional',
+          permissoes: {}, ativo: true, telefone: tel || null,
+        }]);
+        if (eqErr) throw new Error('Usuário criado no Auth, mas erro ao salvar na equipe: ' + eqErr.message);
       }
       document.getElementById('modal-overlay')?.remove();
       await this.renderUsuarios();
