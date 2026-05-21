@@ -2865,14 +2865,23 @@ const Admin = {
           <button onclick="Admin.salvarDadosCliente(${c.id}).then(()=>Meta.connectInstagram('${c.email}','${c.fb_page_id||''}'))" style="width:100%;margin-top:10px;padding:10px;border-radius:9px;background:linear-gradient(135deg,#1877F2,#0D5FBF);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;">
             ${c.instagram_token&&c.instagram_account_id ? '🔄 Reconectar Instagram via OAuth (Facebook Login)' : '🔗 Conectar Instagram via OAuth (Facebook Login)'}
           </button>
+          <div style="margin-top:10px;background:rgba(255,193,7,.06);border:1px solid rgba(255,193,7,.3);border-radius:9px;padding:12px;">
+            <div style="font-size:10px;font-weight:600;color:#b8860b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">🔑 Conectar com token manual (alternativa ao OAuth)</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.6;">
+              1. Acesse <strong>business.facebook.com</strong> → Configurações → Páginas → selecione a Página → <strong>Informações da Página</strong><br>
+              2. Vá em <strong>Controle de acesso à página</strong> → gere um token de acesso permanente<br>
+              3. Cole abaixo e clique em Buscar Instagram ID
+            </div>
+            <div style="display:flex;gap:6px;">
+              <input id="dp-manual-token" placeholder="Cole o Page Access Token aqui (EAABkz...)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:monospace;background:var(--bg);color:var(--text);" />
+              <button onclick="Admin.conectarTokenManual('${c.email}',${c.id})" style="padding:8px 14px;border-radius:8px;background:#b8860b;color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:600;white-space:nowrap;">Buscar e Salvar</button>
+            </div>
+            <div id="manual-token-status" style="font-size:11px;margin-top:6px;"></div>
+          </div>
           <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.8;background:rgba(24,119,242,.04);border:1px solid rgba(24,119,242,.15);border-radius:8px;padding:10px 12px;">
             ${c.instagram_token&&c.instagram_account_id
               ? `<span style="color:#3A8A3A;font-weight:600;">✓ Conectado — publicação e métricas via Meta API ativas</span><br>`
-              : `<span style="color:#d4896a;font-weight:600;">⚠ Não conectado</span> — clique no botão acima para autorizar<br>`}
-            <strong>Redirect URI para o Meta App Dashboard:</strong><br>
-            <code style="font-size:10px;background:rgba(0,0,0,.06);padding:2px 6px;border-radius:4px;">https://crm.gislainebarbeto.com.br/</code><br>
-            <strong>Secrets no Supabase (Edge Functions → Secrets):</strong><br>
-            <code style="font-size:10px;">META_APP_ID</code> · <code style="font-size:10px;">META_APP_SECRET</code> · <code style="font-size:10px;">META_REDIRECT_URI=https://crm.gislainebarbeto.com.br/</code>
+              : `<span style="color:#d4896a;font-weight:600;">⚠ Não conectado</span><br>`}
           </div>
         </div>
         ${fld('Mensagem para a cliente', `<textarea data-rich id="dp-mensagem-gi" rows="3" placeholder="Ex: Essa semana trabalhamos muito no seu posicionamento 🌿" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);color:var(--text);resize:none;margin-top:4px;">${c.mensagem_gi||''}</textarea>`)}
@@ -2937,6 +2946,42 @@ const Admin = {
     } else {
       const d = await createResp.json();
       alert('Erro: ' + (d.msg || d.message || 'Falha'));
+    }
+  },
+
+  async conectarTokenManual(clientEmail, clientId) {
+    const token = document.getElementById('dp-manual-token')?.value?.trim();
+    const statusEl = document.getElementById('manual-token-status');
+    if (!token) { statusEl.textContent = 'Cole o token primeiro.'; statusEl.style.color='#c62828'; return; }
+    statusEl.textContent = 'Buscando Instagram...'; statusEl.style.color='var(--muted)';
+    try {
+      // Busca as páginas do token
+      const accts = await fetch(`https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${token}`).then(r=>r.json());
+      if (accts.error) throw new Error('Token inválido: ' + accts.error.message);
+      const pages = accts.data || [];
+      if (!pages.length) throw new Error('Nenhuma Página encontrada com este token. Verifique se é um Page Token ou User Token com acesso à Página.');
+      // Usa a primeira página que tiver conta Instagram
+      const page = pages.find(p=>p.instagram_business_account) || pages[0];
+      const pageToken = page.access_token;
+      let igId = page.instagram_business_account?.id;
+      if (!igId) {
+        const ig2 = await fetch(`https://graph.facebook.com/v19.0/${page.id}?fields=instagram_business_account&access_token=${pageToken}`).then(r=>r.json());
+        igId = ig2.instagram_business_account?.id;
+      }
+      if (!igId) throw new Error(`Página "${page.name}" não tem conta Instagram Business vinculada.`);
+      const igUser = await fetch(`https://graph.facebook.com/v19.0/${igId}?fields=id,username&access_token=${pageToken}`).then(r=>r.json());
+      if (igUser.error) throw new Error(igUser.error.message);
+      // Salva no Supabase
+      const db2 = window.supabase.createClient(SUPABASE_URL, SUPABASE_SVC);
+      await db2.from('instagram_tokens').upsert({ client_email: clientEmail, ig_user_id: igId, ig_username: igUser.username, access_token: pageToken, updated_at: new Date().toISOString() }, { onConflict: 'client_email' });
+      await db2.from('clients').update({ instagram_token: pageToken, instagram_account_id: igId }).eq('id', clientId);
+      statusEl.textContent = `✓ Conectado! @${igUser.username} (ID: ${igId})`;
+      statusEl.style.color = '#2E7D32';
+      this._showToast(`Instagram @${igUser.username} conectado com sucesso! ✓`);
+      setTimeout(() => this._cliTabInfo(clientId, {...this._cliClienteData, instagram_token: pageToken, instagram_account_id: igId}), 1500);
+    } catch(e) {
+      statusEl.textContent = '✗ ' + e.message;
+      statusEl.style.color = '#c62828';
     }
   },
 
