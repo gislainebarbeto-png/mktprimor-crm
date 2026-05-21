@@ -132,8 +132,17 @@
     return totals;
   }
 
-  // Botão "Gerar com IA" reutilizável
-  const _gerarBtn=(aba)=>_cliente?`<button id="aw2-gerar-${aba}" class="aw2-btn" onclick="_AW2.gerarAba('${aba}')" style="font-size:11px;padding:5px 12px;background:linear-gradient(135deg,#7B4F2E,#3d2210);gap:4px;display:inline-flex;align-items:center">✨ Gerar com IA</button>`:'';
+  // Botão "Gerar com IA" — sempre visível; gerarAba valida se há cliente selecionado
+  const _gerarBtn=(aba)=>`<button id="aw2-gerar-${aba}" class="aw2-btn" onclick="_AW2.gerarAba('${aba}')" style="font-size:11px;padding:5px 12px;background:linear-gradient(135deg,#7B4F2E,#3d2210);gap:4px;display:inline-flex;align-items:center">✨ Gerar com IA</button>`;
+
+  // Tenta ler conteúdo de arquivos de texto (.txt .md .csv .json) via fetch
+  async function _tryReadFileContent(url,nome){
+    if(!url)return null;
+    const ext=(nome||'').split('.').pop().toLowerCase();
+    if(!['txt','md','csv','json'].includes(ext))return null;
+    try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)return null;const t=await r.text();return t.substring(0,1000);}
+    catch{return null;}
+  }
 
   // Chama anthropic-proxy com contexto completo do cliente e preenche campos
   async function _gerarComIA(instrucao, fillFn, btnId){
@@ -1501,7 +1510,7 @@
       const [concData,infos,arquivos]=await Promise.all([
         db.from('agentes_trabalhos').select('conteudo').eq('agente_id','pedro').eq('aba_id','concorrentes').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||null).catch(()=>null),
         db.from('informacoes_cliente').select('titulo,conteudo,tipo').eq('client_email',_cliente).order('created_at',{ascending:false}).limit(10).then(r=>r.data||[]).catch(()=>[]),
-        db.from('arquivos_cliente').select('nome').eq('client_email',_cliente).order('created_at',{ascending:false}).limit(30).then(r=>r.data||[]).catch(()=>[]),
+        db.from('arquivos_cliente').select('nome,url').eq('client_email',_cliente).order('created_at',{ascending:false}).limit(30).then(r=>r.data||[]).catch(()=>[]),
       ]);
 
       let extra='';
@@ -1519,12 +1528,24 @@
       if(infos.length){
         extra+='\n\nINFORMAÇÕES E BRIEFINGS DO CLIENTE:';
         infos.forEach(inf=>{
-          const corpo=(inf.conteudo||'').substring(0,500);
+          const corpo=(inf.conteudo||'').substring(0,600);
           extra+=`\n\n[${inf.tipo||'doc'}] ${inf.titulo}:\n${corpo}`;
         });
       }
+      // Tenta ler conteúdo de arquivos de texto; lista apenas o nome para demais formatos
       if(arquivos.length){
-        extra+=`\n\nArquivos disponíveis: ${arquivos.map(a=>a.nome).join(', ')}`;
+        const textos=[];
+        const nomesSem=[];
+        for(const arq of arquivos){
+          const conteudo=await _tryReadFileContent(arq.url,arq.nome);
+          if(conteudo) textos.push({nome:arq.nome,conteudo});
+          else nomesSem.push(arq.nome);
+        }
+        if(textos.length){
+          extra+='\n\nCONTEÚDO DE ARQUIVOS TEXTO:';
+          textos.forEach(a=>{extra+=`\n\n[${a.nome}]:\n${a.conteudo}`;});
+        }
+        if(nomesSem.length) extra+=`\n\nOutros arquivos disponíveis: ${nomesSem.join(', ')}`;
       }
 
       const cfgs={
