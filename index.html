@@ -5976,18 +5976,57 @@ const Admin = {
     if (btn) { btn.disabled = true; btn.style.opacity = '.6'; }
     if (status) { status.textContent = '⏳ Buscando dados do Instagram…'; status.style.color = 'var(--muted)'; }
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/instagram-metrics`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-        },
-        body: JSON.stringify({ client_email: email }),
-      }).then(r => r.json());
-      if (res.error) throw new Error(res.error);
+      // Busca token salvo
+      const adminDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_SVC);
+      const { data: tok } = await adminDb.from('instagram_tokens')
+        .select('ig_user_id,access_token,ig_username').eq('client_email', email).maybeSingle();
+      if (!tok) throw new Error('Instagram não conectado para este cliente. Conecte primeiro via ficha do cliente → aba Info.');
+
+      const { ig_user_id, access_token, ig_username } = tok;
+      const BASE = 'https://graph.facebook.com/v19.0';
+
+      // 1. Seguidores
+      const profile = await fetch(`${BASE}/${ig_user_id}?fields=followers_count,media_count&access_token=${access_token}`).then(r=>r.json());
+      if (profile.error) throw new Error('Meta API: ' + profile.error.message);
+      const seguidores = profile.followers_count || 0;
+
+      // 2. Insights mensais
+      const now = new Date();
+      const since = Math.floor(new Date(now.getFullYear(), now.getMonth(), 1).getTime() / 1000);
+      const until = Math.floor(now.getTime() / 1000);
+      const insights = await fetch(`${BASE}/${ig_user_id}/insights?metric=impressions,reach,profile_views&period=day&since=${since}&until=${until}&access_token=${access_token}`).then(r=>r.json());
+      let impressoes = 0, alcance = 0, visitasPerfil = 0;
+      if (!insights.error && insights.data) {
+        for (const m of insights.data) {
+          const total = (m.values||[]).reduce((s,v)=>s+(v.value||0),0);
+          if (m.name==='impressions') impressoes=total;
+          else if (m.name==='reach') alcance=total;
+          else if (m.name==='profile_views') visitasPerfil=total;
+        }
+      }
+
+      // 3. Engajamento médio últimos 20 posts
+      const media = await fetch(`${BASE}/${ig_user_id}/media?fields=id,like_count,comments_count&limit=20&access_token=${access_token}`).then(r=>r.json());
+      let engajamento = 0;
+      if (!media.error && media.data?.length) {
+        const total = media.data.reduce((s,p)=>s+(p.like_count||0)+(p.comments_count||0),0);
+        engajamento = seguidores > 0 ? parseFloat(((total/media.data.length/seguidores)*100).toFixed(2)) : 0;
+      }
+
+      const mes = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      const hoje = now.toISOString().substring(0,10);
+
+      // 4. Salva em metricas (mensal)
+      const { data: existing } = await adminDb.from('metricas').select('id').eq('client_email',email).eq('mes',mes);
+      const payload = { client_email:email, mes, seguidores, alcance, impressoes, engajamento };
+      if (existing?.length) await adminDb.from('metricas').update(payload).eq('id',existing[0].id);
+      else await adminDb.from('metricas').insert([payload]);
+
+      // 5. Salva em metricas_instagram (diário)
+      await adminDb.from('metricas_instagram').upsert({ client_email:email, data:hoje, seguidores, alcance, impressoes, engajamento, visitas_perfil:visitasPerfil }, { onConflict:'client_email,data' });
+
       if (status) {
-        status.textContent = `✓ Sincronizado! ${res.seguidores?.toLocaleString('pt-BR')} seguidores · alcance ${res.alcance?.toLocaleString('pt-BR')} · engajamento ${res.engajamento}%`;
+        status.textContent = `✓ @${ig_username} — ${seguidores.toLocaleString('pt-BR')} seguidores · alcance ${alcance.toLocaleString('pt-BR')} · engajamento ${engajamento}%`;
         status.style.color = '#27ae60';
       }
       await this.loadMetricas();
