@@ -132,6 +132,30 @@
     return totals;
   }
 
+  // Botão "Gerar com IA" reutilizável
+  const _gerarBtn=(aba)=>_cliente?`<button id="aw2-gerar-${aba}" class="aw2-btn" onclick="_AW2.gerarAba('${aba}')" style="font-size:11px;padding:5px 12px;background:linear-gradient(135deg,#7B4F2E,#3d2210);gap:4px;display:inline-flex;align-items:center">✨ Gerar com IA</button>`:'';
+
+  // Chama anthropic-proxy com contexto completo do cliente e preenche campos
+  async function _gerarComIA(instrucao, fillFn, btnId){
+    const btn=document.getElementById(btnId);
+    const orig=btn?.textContent;
+    if(btn){btn.disabled=true;btn.textContent='⏳ Gerando...';}
+    try{
+      const sp=await _buildSystemPrompt(_ag?.id||'pedro',_cliente);
+      const res=await fetch('https://dloxddrdqsltuwdabwaq.supabase.co/functions/v1/anthropic-proxy',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({system:sp,messages:[{role:'user',content:instrucao+'\n\nResponda SOMENTE com JSON válido, sem texto fora do bloco JSON.'}]})
+      });
+      const data=await res.json();
+      if(!res.ok)throw new Error(data.error?.message||`HTTP ${res.status}`);
+      const text=data.content?.[0]?.text||'';
+      const match=text.match(/```json\s*([\s\S]*?)```/)||text.match(/(\{[\s\S]*\})/);
+      const json=JSON.parse((match?.[1]||text).trim());
+      fillFn(json);
+    }catch(e){alert('Erro ao gerar: '+e.message);}
+    finally{if(btn){btn.disabled=false;btn.textContent=orig;}}
+  }
+
   // SUPABASE
   async function _save(conteudo){
     try{const{error}=await db.from('agentes_trabalhos').upsert({agente_id:_ag.id,aba_id:_aba,client_email:_cliente,data:_data,conteudo},{onConflict:'agente_id,aba_id,client_email,data'});return!error;}catch{return false;}
@@ -533,7 +557,7 @@
   // PEDRO
   async function _onboarding(){
     const d=await _load({});
-    return `${_fiCard()}<div class="aw2-form"><div class="aw2-ft">📋 Onboarding</div>
+    return `${_fiCard()}<div class="aw2-form"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="aw2-ft" style="margin:0">📋 Onboarding</div>${_gerarBtn('onboarding')}</div>
       <div class="aw2-r2">
         <div class="aw2-fg"><label class="aw2-fl">Contrato</label><select class="aw2-s2" id="on-c"><option ${d.contrato==='pendente'?'selected':''} value="pendente">pendente</option><option ${d.contrato==='assinado'?'selected':''} value="assinado">assinado</option><option ${d.contrato==='renovando'?'selected':''} value="renovando">renovando</option></select></div>
         <div class="aw2-fg"><label class="aw2-fl">Nicho</label><input class="aw2-in" id="on-n" value="${d.nicho||''}"></div>
@@ -549,7 +573,7 @@
 
   async function _briefing(){
     const d=await _load({});
-    return `<div class="aw2-form"><div class="aw2-ft">📄 Briefing Mensal → Chloe</div>
+    return `<div class="aw2-form"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="aw2-ft" style="margin:0">📄 Briefing Mensal → Chloe</div>${_gerarBtn('briefing')}</div>
       <div class="aw2-fg"><label class="aw2-fl">O que performou bem</label><textarea class="aw2-ta" id="br-b">${d.bom||''}</textarea></div>
       <div class="aw2-fg"><label class="aw2-fl">O que não performou</label><textarea class="aw2-ta" id="br-r">${d.ruim||''}</textarea></div>
       <div class="aw2-fg"><label class="aw2-fl">Foco do próximo mês</label><textarea class="aw2-ta" id="br-f">${d.foco||''}</textarea></div>
@@ -581,7 +605,7 @@
   // CHLOE
   async function _planejamento(){
     const d=await _load({});
-    return `<div class="aw2-form"><div class="aw2-ft">📋 Planejamento Editorial</div>
+    return `<div class="aw2-form"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="aw2-ft" style="margin:0">📋 Planejamento Editorial</div>${_gerarBtn('planejamento')}</div>
       <div class="aw2-fg"><label class="aw2-fl">Linha editorial (temas e pilares)</label><textarea class="aw2-ta" id="pl-l">${d.linha||''}</textarea></div>
       <div class="aw2-fg"><label class="aw2-fl">Gancho central do mês</label><textarea class="aw2-ta" id="pl-g">${d.gancho||''}</textarea></div>
       <div class="aw2-fg"><label class="aw2-fl">Datas e campanhas</label><input class="aw2-in" id="pl-d" value="${d.datas||''}"></div>
@@ -958,7 +982,7 @@
     </div>
 
     <div class="aw2-form">
-      <div class="aw2-ft" style="margin-bottom:14px">📝 Análise & Notas</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="aw2-ft" style="margin:0">📝 Análise & Notas</div>${_gerarBtn('diagnostico')}</div>
       <div class="aw2-r2">
         <div class="aw2-fg"><label class="aw2-fl">Pontos fortes</label><textarea class="aw2-ta" id="dg-pf">${d.pontos_fortes||''}</textarea></div>
         <div class="aw2-fg"><label class="aw2-fl">Pontos fracos</label><textarea class="aw2-ta" id="dg-pw">${d.pontos_fracos||''}</textarea></div>
@@ -994,7 +1018,7 @@
   // PEDRO — SWOT
   async function _swot(){
     const d=await _load({});
-    return `<div class="aw2-form"><div class="aw2-ft">⚡ Análise SWOT</div>
+    return `<div class="aw2-form"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="aw2-ft" style="margin:0">⚡ Análise SWOT</div>${_gerarBtn('swot')}</div>
       <div class="aw2-r2">
         <div class="aw2-fg"><label class="aw2-fl">💪 Forças (internas)</label><textarea class="aw2-ta" style="min-height:120px" id="sw-forcas">${d.forcas||''}</textarea></div>
         <div class="aw2-fg"><label class="aw2-fl">⚠ Fraquezas (internas)</label><textarea class="aw2-ta" style="min-height:120px" id="sw-fraquezas">${d.fraquezas||''}</textarea></div>
@@ -1012,7 +1036,7 @@
     const d=await _load({pilares:[]});
     const pl=d.pilares||[];
     while(pl.length<5)pl.push({nome:'',percentual:'',descricao:'',formatos:''});
-    return `<div class="aw2-form"><div class="aw2-ft">🎯 Pilares de Conteúdo</div>
+    return `<div class="aw2-form"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="aw2-ft" style="margin:0">🎯 Pilares de Conteúdo</div>${_gerarBtn('pilares')}</div>
       ${pl.slice(0,5).map((p,i)=>`
       <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
         <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:8px">Pilar ${i+1}</div>
@@ -1467,6 +1491,71 @@
     setDgDates(){
       _dgFrom=document.getElementById('dg-from')?.value||_dgFrom;
       _dgTo=document.getElementById('dg-to')?.value||_dgTo;
+    },
+    async gerarAba(aba){
+      if(!_cliente){alert('Selecione um cliente primeiro.');return;}
+      const nome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
+      const fv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
+
+      // Busca contexto extra: concorrentes mapeados + informações/briefings + lista de arquivos
+      const [concData,infos,arquivos]=await Promise.all([
+        db.from('agentes_trabalhos').select('conteudo').eq('agente_id','pedro').eq('aba_id','concorrentes').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||null).catch(()=>null),
+        db.from('informacoes_cliente').select('titulo,conteudo,tipo').eq('client_email',_cliente).order('created_at',{ascending:false}).limit(10).then(r=>r.data||[]).catch(()=>[]),
+        db.from('arquivos_cliente').select('nome').eq('client_email',_cliente).order('created_at',{ascending:false}).limit(30).then(r=>r.data||[]).catch(()=>[]),
+      ]);
+
+      let extra='';
+      if(concData?.lista?.length){
+        const lista=(concData.lista||[]).filter(x=>x.ig);
+        if(lista.length){
+          extra+='\n\nCONCORRENTES MAPEADOS:';
+          lista.forEach((x,i)=>{
+            extra+=`\n• @${x.ig}${x.nicho?` (${x.nicho})`:''}`;
+            if(x.fortes) extra+=`\n  Pontos fortes: ${x.fortes}`;
+            if(x.fracos) extra+=`\n  Pontos fracos/oportunidades: ${x.fracos}`;
+          });
+        }
+      }
+      if(infos.length){
+        extra+='\n\nINFORMAÇÕES E BRIEFINGS DO CLIENTE:';
+        infos.forEach(inf=>{
+          const corpo=(inf.conteudo||'').substring(0,500);
+          extra+=`\n\n[${inf.tipo||'doc'}] ${inf.titulo}:\n${corpo}`;
+        });
+      }
+      if(arquivos.length){
+        extra+=`\n\nArquivos disponíveis: ${arquivos.map(a=>a.nome).join(', ')}`;
+      }
+
+      const cfgs={
+        onboarding:{
+          instrucao:`Para o cliente "${nome}", analise os dados do dossiê e gere o onboarding estratégico completo.\nResponda em JSON: {"nicho":"","subnicho":"","persona":"(descreva o avatar ideal do cliente desse perfil)","posicionamento":"(proposta de valor única)","arcos":"(3-4 arcos editoriais narrativos)","obs":""}`,
+          fill:j=>{fv('on-n',j.nicho);fv('on-sn',j.subnicho);fv('on-p',j.persona);fv('on-pos',j.posicionamento);fv('on-a',j.arcos);fv('on-o',j.obs);}
+        },
+        diagnostico:{
+          instrucao:`Para o cliente "${nome}", analise métricas, posts e dados disponíveis e gere diagnóstico estratégico.\nResponda em JSON: {"pontos_fortes":"(o que está funcionando bem)","pontos_fracos":"(o que precisa melhorar)","posicionamento":"(como o perfil se posiciona hoje vs ideal)","obs":"(recomendações prioritárias)"}`,
+          fill:j=>{fv('dg-pf',j.pontos_fortes);fv('dg-pw',j.pontos_fracos);fv('dg-pos',j.posicionamento);fv('dg-obs',j.obs);}
+        },
+        swot:{
+          instrucao:`Para o cliente "${nome}", gere uma análise SWOT estratégica completa baseada em todos os dados disponíveis, incluindo análise dos concorrentes mapeados.\nResponda em JSON: {"forcas":"(diferenciais e pontos fortes internos, um por linha)","fraquezas":"(pontos a melhorar internos, um por linha)","oportunidades":"(oportunidades de mercado e gaps dos concorrentes, uma por linha)","ameacas":"(riscos, ameaças externas e vantagens dos concorrentes, uma por linha)"}`,
+          fill:j=>{fv('sw-forcas',j.forcas);fv('sw-fraquezas',j.fraquezas);fv('sw-oportunidades',j.oportunidades);fv('sw-ameacas',j.ameacas);}
+        },
+        pilares:{
+          instrucao:`Para o cliente "${nome}", proponha 4-5 pilares editoriais estratégicos para o Instagram baseado no nicho, posicionamento e diferenciação dos concorrentes.\nResponda em JSON: {"pilares":[{"nome":"","percentual":25,"descricao":"(o que esse pilar representa e por que é importante)","formatos":"(reels, carrossel, feed...)"},...]}`,
+          fill:j=>{(j.pilares||[]).slice(0,5).forEach((p,i)=>{fv(`pl${i}-nm`,p.nome);fv(`pl${i}-pc`,p.percentual);fv(`pl${i}-ds`,p.descricao);fv(`pl${i}-ft`,p.formatos);});}
+        },
+        briefing:{
+          instrucao:`Para o cliente "${nome}", analise as métricas e posts do último mês e gere o briefing mensal para a Chloe.\nResponda em JSON: {"bom":"(o que performou bem e por quê)","ruim":"(o que não performou e por quê)","foco":"(estratégia e foco para o próximo mês)","campanha":"(datas especiais ou campanhas relevantes do próximo mês)","obs":"(instruções específicas para a Chloe)"}`,
+          fill:j=>{fv('br-b',j.bom);fv('br-r',j.ruim);fv('br-f',j.foco);fv('br-c',j.campanha);fv('br-o',j.obs);}
+        },
+        planejamento:{
+          instrucao:`Para o cliente "${nome}", gere o planejamento editorial do próximo mês baseado nos pilares e briefing.\nResponda em JSON: {"linha":"(linha editorial principal e temas dos pilares)","gancho":"(gancho central narrativo do mês)","datas":"(datas especiais e campanhas)","qtd_feed":4,"qtd_car":6,"qtd_reels":8,"obs":"(inputs estratégicos do Pedro para a Chloe)"}`,
+          fill:j=>{fv('pl-l',j.linha);fv('pl-g',j.gancho);fv('pl-d',j.datas);fv('pl-f',j.qtd_feed);fv('pl-c',j.qtd_car);fv('pl-r',j.qtd_reels);fv('pl-o',j.obs);}
+        },
+      };
+      const cfg=cfgs[aba];if(!cfg)return;
+      const instrucaoFinal=cfg.instrucao+(extra?`\n\nCONTEXTO ADICIONAL DISPONÍVEL:${extra}`:'');
+      await _gerarComIA(instrucaoFinal,cfg.fill,'aw2-gerar-'+aba);
     },
     // Pedro — Concorrentes
     async saveConcorrentes(){
