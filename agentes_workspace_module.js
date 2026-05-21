@@ -446,7 +446,7 @@
       ${_ctx()}
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
         <div class="aw2-tabs" style="margin-bottom:0;flex:1;">${_ag.abas.map(t=>`<div class="aw2-tab ${t===ab?'active':''}" onclick="_AW2.tab('${t}')">${_ag.labels[t]}</div>`).join('')}</div>
-        ${_cliente?`<button class="aw2-pdf-btn" onclick="_AW2.openPdfModal()">📄 PDF de Aprovação</button>`:''}
+        ${_cliente?`<button class="aw2-pdf-btn" id="aw2-pdf-btn-main" onclick="_AW2.openPdfContextual()">📄 PDF de Aprovação</button>`:''}
       </div>
       <div id="aw2-notif-panel"></div>
       <div id="aw2c"><div class="aw2-empty">Carregando...</div></div>
@@ -492,6 +492,12 @@
       case'chat':              h=_chat();el.innerHTML=h;_initChat();return;
     }
     el.innerHTML=h;
+    // Atualiza label do botão PDF conforme aba ativa
+    const pdfBtn=document.getElementById('aw2-pdf-btn-main');
+    if(pdfBtn){
+      const labels={diagnostico:'📊 PDF de Métricas',briefing:'📄 PDF de Briefing',resultados:'📈 PDF de Resultados',onboarding:'📋 PDF de Onboarding'};
+      pdfBtn.textContent=labels[id]||'📄 PDF de Aprovação';
+    }
   }
 
   // PEDRO
@@ -1354,18 +1360,26 @@
         if(profR.error)throw new Error('Perfil: '+profR.error.message);
         const seguidores=profR.followers_count||0;
 
-        // 2. Insights de conta no período (reach, impressions, profile_views, website_clicks)
+        // 2. Insights principais: reach + impressions (mais confiáveis juntos)
         let alcance=0,impressoes=0,visitas_perfil=0,website_clicks=0;
-        const insR=await fetch(`${BASE}/${aid}/insights?metric=reach,impressions,profile_views,website_clicks&period=day&since=${since}&until=${until}&access_token=${tok}`).then(r=>r.json());
-        if(!insR.error&&insR.data){
-          insR.data.forEach(m=>{
+        const insMain=await fetch(`${BASE}/${aid}/insights?metric=reach,impressions&period=day&since=${since}&until=${until}&access_token=${tok}`).then(r=>r.json());
+        if(!insMain.error&&insMain.data){
+          insMain.data.forEach(m=>{
             const total=(m.values||[]).reduce((s,v)=>s+(v.value||0),0);
             if(m.name==='reach')alcance=total;
             else if(m.name==='impressions')impressoes=total;
-            else if(m.name==='profile_views')visitas_perfil=total;
-            else if(m.name==='website_clicks')website_clicks=total;
           });
         }
+        // profile_views — chamada separada (pode falhar em algumas contas)
+        try{
+          const pvR=await fetch(`${BASE}/${aid}/insights?metric=profile_views&period=day&since=${since}&until=${until}&access_token=${tok}`).then(r=>r.json());
+          if(!pvR.error&&pvR.data?.[0])visitas_perfil=(pvR.data[0].values||[]).reduce((s,v)=>s+(v.value||0),0);
+        }catch{}
+        // website_clicks — opcional, nem toda conta tem
+        try{
+          const wcR=await fetch(`${BASE}/${aid}/insights?metric=website_clicks&period=day&since=${since}&until=${until}&access_token=${tok}`).then(r=>r.json());
+          if(!wcR.error&&wcR.data?.[0])website_clicks=(wcR.data[0].values||[]).reduce((s,v)=>s+(v.value||0),0);
+        }catch{}
 
         // 3. Todos os posts do período (até 50 mais recentes)
         const mediaR=await fetch(`${BASE}/${aid}/media?fields=id,caption,media_type,timestamp,permalink,like_count,comments_count,media_url,thumbnail_url&limit=50&access_token=${tok}`).then(r=>r.json());
@@ -1601,6 +1615,79 @@
         if(error)throw error;
         _flash('cal-s','✓ Post criado!');
       }catch(e){_flash('cal-s','⚠ Erro: '+e.message);}
+    },
+    // Roteador de PDF por aba ativa
+    openPdfContextual(){
+      if(!_cliente)return;
+      if(_aba==='diagnostico')this.gerarPdfMetricas();
+      else this.openPdfModal();
+    },
+    // PDF de Métricas (aba Diagnóstico do Pedro)
+    async gerarPdfMetricas(){
+      if(!_cliente){alert('Selecione um cliente.');return;}
+      const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
+      let meta=null;
+      try{const{data}=await db.from('metricas_instagram').select('*').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle();meta=data;}catch{}
+      if(!meta){alert('Nenhuma sincronização ainda. Clique em Sincronizar primeiro.');return;}
+      const extras=meta.dados_completos||{};
+      const topPosts=extras.top_posts||[];
+      const fN=n=>(n||0).toLocaleString('pt-BR');
+      const fD=s=>s?new Date(s.slice(0,10)+'T12:00:00').toLocaleDateString('pt-BR'):'—';
+      const periodo=extras.period_from?`${fD(extras.period_from)} a ${fD(extras.period_to)}`:`Sync ${fD(meta.data)}`;
+      const kpiBox=(icon,label,val)=>`<div style="background:#FAF8F2;border:1px solid #E8DECE;border-radius:10px;padding:14px 10px;text-align:center;"><div style="font-size:18px;margin-bottom:4px;">${icon}</div><div style="font-size:10px;color:#9B6B3A;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">${label}</div><div style="font-size:20px;font-weight:700;color:#5C3D1E;">${val}</div></div>`;
+      const postRow=p=>`<tr style="border-bottom:1px solid #E8DECE;">
+        <td style="padding:10px 8px;font-size:11px;color:#333;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(p.caption||'').slice(0,60)||'(sem legenda)'}</td>
+        <td style="padding:10px 8px;font-size:11px;color:#666;text-align:center;">${fD(p.timestamp?.slice(0,10))}</td>
+        <td style="padding:10px 8px;font-size:12px;font-weight:600;color:#5C3D1E;text-align:center;">${fN(p.reach)}</td>
+        <td style="padding:10px 8px;font-size:12px;font-weight:600;color:#5C3D1E;text-align:center;">${fN(p.impressions)}</td>
+        <td style="padding:10px 8px;font-size:11px;text-align:center;">${fN(p.like_count)}</td>
+        <td style="padding:10px 8px;font-size:11px;text-align:center;">${fN(p.comments_count)}</td>
+        <td style="padding:10px 8px;font-size:11px;text-align:center;">${fN(p.saved)}</td>
+      </tr>`;
+      const html=`<div style="font-family:Poppins,Arial,sans-serif;background:#fff;padding:48px;max-width:800px;margin:0 auto;">
+        <div style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #E8DECE;">
+          <img src="https://crm.gislainebarbeto.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:56px;object-fit:contain;display:block;margin:0 auto 12px;">
+          <div style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#9B6B3A;margin-bottom:8px;">Relatório de Métricas Instagram</div>
+          <div style="font-size:22px;font-weight:300;color:#5C3D1E;margin-bottom:4px;">${cliNome}</div>
+          <div style="font-size:13px;color:#7A5230;">${periodo}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;">
+          ${kpiBox('👥','Seguidores',fN(meta.seguidores))}
+          ${kpiBox('👁','Alcance',fN(meta.alcance))}
+          ${kpiBox('💫','Impressões',fN(meta.impressoes))}
+          ${kpiBox('🔍','Visitas ao perfil',fN(meta.visitas_perfil))}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px;">
+          ${kpiBox('❤️','Engajamento',`${meta.engajamento||0}%`)}
+          ${kpiBox('🔖','Saves',fN(extras.saves_total||0))}
+          ${kpiBox('🌐','Cliques no site',fN(extras.website_clicks||0))}
+          ${kpiBox('👤','Público',meta.publico_principal||'—')}
+        </div>
+        ${topPosts.length?`
+        <div style="margin-bottom:32px;">
+          <div style="font-size:12px;font-weight:600;color:#5C3D1E;margin-bottom:12px;text-transform:uppercase;letter-spacing:.1em;">🏆 Top Posts por Alcance</div>
+          <table style="width:100%;border-collapse:collapse;">
+            <thead><tr style="background:#F5EFE7;">
+              <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:left;font-weight:500;">Legenda</th>
+              <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Data</th>
+              <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Alcance</th>
+              <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Impressões</th>
+              <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Likes</th>
+              <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Coments</th>
+              <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Saves</th>
+            </tr></thead>
+            <tbody>${topPosts.map(postRow).join('')}</tbody>
+          </table>
+        </div>`:''}
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #E8DECE;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:9px;color:#C8B89A;text-transform:uppercase;letter-spacing:.1em;">Agência Primor · Estratégia · Criatividade · Resultados</div>
+          <div style="font-size:9px;color:#C8B89A;">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
+        </div>
+      </div>`;
+      if(typeof html2pdf==='undefined'){alert('Biblioteca html2pdf não carregada.');return;}
+      const el=document.createElement('div');el.innerHTML=html;document.body.appendChild(el);
+      await html2pdf().set({margin:[8,8],filename:`metricas-${cliNome.replace(/\s+/g,'-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.pdf`,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save();
+      el.remove();
     },
     // PDF de Aprovação
     openPdfModal(){
