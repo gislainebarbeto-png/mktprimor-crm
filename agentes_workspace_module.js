@@ -1407,7 +1407,7 @@
           saves_conta=tvTotals.saves||0;
         }catch{}
         // Opcionais — falha silenciosa
-        try{const t=await _insightsPaged(`${BASE}/${aid}/insights?metric=profile_views&period=day&since=${since}&until=${until}&access_token=${tok}`);visitas_perfil=t.profile_views||0;}catch{}
+        try{const t=await _insightsPaged(`${BASE}/${aid}/insights?metric=profile_views&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${tok}`);visitas_perfil=t.profile_views||0;}catch{}
         try{const t=await _insightsPaged(`${BASE}/${aid}/insights?metric=website_clicks&period=day&since=${since}&until=${until}&access_token=${tok}`);website_clicks=t.website_clicks||0;}catch{}
 
         // 3. Todos os posts do período (até 50 mais recentes)
