@@ -102,6 +102,24 @@
     return null;
   }
 
+  // Busca insights paginando automaticamente (Meta API retorna máx ~30 dias por página)
+  async function _insightsPaged(url){
+    const totals={};
+    let next=url;
+    let guard=0;
+    while(next&&guard++<50){
+      const r=await fetch(next).then(r=>r.json());
+      if(r.error){console.warn('[IG insights]',r.error.code,r.error.message);break;}
+      (r.data||[]).forEach(m=>{
+        if(!totals[m.name])totals[m.name]=0;
+        (m.values||[]).forEach(v=>{totals[m.name]+=(v.value||0);});
+      });
+      // paging.next existe enquanto houver mais dados
+      next=r.paging?.next||null;
+    }
+    return totals;
+  }
+
   // SUPABASE
   async function _save(conteudo){
     try{const{error}=await db.from('agentes_trabalhos').upsert({agente_id:_ag.id,aba_id:_aba,client_email:_cliente,data:_data,conteudo},{onConflict:'agente_id,aba_id,client_email,data'});return!error;}catch{return false;}
@@ -1360,25 +1378,27 @@
         if(profR.error)throw new Error('Perfil: '+profR.error.message);
         const seguidores=profR.followers_count||0;
 
-        // 2. Insights principais: reach + impressions (mais confiáveis juntos)
+        // 2. Insights do período — paginação automática (Meta API: máx 30 dias/página)
         let alcance=0,impressoes=0,visitas_perfil=0,website_clicks=0;
-        const insMain=await fetch(`${BASE}/${aid}/insights?metric=reach,impressions&period=day&since=${since}&until=${until}&access_token=${tok}`).then(r=>r.json());
-        if(!insMain.error&&insMain.data){
-          insMain.data.forEach(m=>{
-            const total=(m.values||[]).reduce((s,v)=>s+(v.value||0),0);
-            if(m.name==='reach')alcance=total;
-            else if(m.name==='impressions')impressoes=total;
-          });
-        }
-        // profile_views — chamada separada (pode falhar em algumas contas)
+        // reach + impressions juntos
+        const mainTotals=await _insightsPaged(
+          `${BASE}/${aid}/insights?metric=reach,impressions&period=day&since=${since}&until=${until}&access_token=${tok}`
+        );
+        alcance=mainTotals.reach||0;
+        impressoes=mainTotals.impressions||0;
+        // profile_views — separado pois falha em algumas contas se junto
         try{
-          const pvR=await fetch(`${BASE}/${aid}/insights?metric=profile_views&period=day&since=${since}&until=${until}&access_token=${tok}`).then(r=>r.json());
-          if(!pvR.error&&pvR.data?.[0])visitas_perfil=(pvR.data[0].values||[]).reduce((s,v)=>s+(v.value||0),0);
+          const pvTotals=await _insightsPaged(
+            `${BASE}/${aid}/insights?metric=profile_views&period=day&since=${since}&until=${until}&access_token=${tok}`
+          );
+          visitas_perfil=pvTotals.profile_views||0;
         }catch{}
-        // website_clicks — opcional, nem toda conta tem
+        // website_clicks — opcional
         try{
-          const wcR=await fetch(`${BASE}/${aid}/insights?metric=website_clicks&period=day&since=${since}&until=${until}&access_token=${tok}`).then(r=>r.json());
-          if(!wcR.error&&wcR.data?.[0])website_clicks=(wcR.data[0].values||[]).reduce((s,v)=>s+(v.value||0),0);
+          const wcTotals=await _insightsPaged(
+            `${BASE}/${aid}/insights?metric=website_clicks&period=day&since=${since}&until=${until}&access_token=${tok}`
+          );
+          website_clicks=wcTotals.website_clicks||0;
         }catch{}
 
         // 3. Todos os posts do período (até 50 mais recentes)
