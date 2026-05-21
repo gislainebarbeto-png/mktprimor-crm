@@ -6093,22 +6093,46 @@ const Admin = {
         await db.from('equipe').update({ nome, cargo, telefone:tel||null, ativo }).eq('id', this._usuarioEditId);
       } else {
         if (!senha || senha.length < 6) { errEl.textContent='Senha deve ter pelo menos 6 caracteres.'; errEl.style.display='block'; this.loader(false); return; }
-        // Cria usuário no Supabase Auth diretamente pelo browser
-        const { data: authData, error: authErr } = await db.auth.signUp({
-          email, password: senha,
-          options: { data: { nome } }
-        });
-        if (authErr) {
-          if (authErr.message.includes('already registered')) throw new Error('Este e-mail já está cadastrado no sistema.');
-          throw authErr;
+        const svcKey = window.PRIMOR_CONFIG?.supabaseServiceKey;
+        const hasSvcKey = svcKey && !svcKey.startsWith('SUA-');
+        if (hasSvcKey) {
+          // Cria usuário via admin REST API com email_confirm:true (sem email de confirmação)
+          const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': svcKey,
+              'Authorization': `Bearer ${svcKey}`,
+            },
+            body: JSON.stringify({ email, password: senha, email_confirm: true, user_metadata: { nome } }),
+          });
+          const authData = await resp.json();
+          if (!resp.ok) {
+            const msg = authData.msg || authData.message || 'Erro ao criar usuário';
+            if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) throw new Error('Este e-mail já está cadastrado no sistema.');
+            throw new Error(msg);
+          }
+          const { error: eqErr } = await db.from('equipe').insert([{
+            email, nome, cargo: cargo || 'operacional',
+            permissoes: {}, ativo: true, telefone: tel || null,
+          }]);
+          if (eqErr) throw new Error('Usuário criado no Auth, mas erro ao salvar na equipe: ' + eqErr.message);
+        } else {
+          // Fallback: signUp padrão (requer confirmação de email — desative em Auth → Settings → Supabase Dashboard)
+          const { data: authData, error: authErr } = await db.auth.signUp({
+            email, password: senha,
+            options: { data: { nome } }
+          });
+          if (authErr) {
+            if (authErr.message.includes('already registered')) throw new Error('Este e-mail já está cadastrado no sistema.');
+            throw authErr;
+          }
+          const { error: eqErr } = await db.from('equipe').insert([{
+            email, nome, cargo: cargo || 'operacional',
+            permissoes: {}, ativo: true, telefone: tel || null,
+          }]);
+          if (eqErr) throw new Error('Usuário criado no Auth, mas erro ao salvar na equipe: ' + eqErr.message);
         }
-        // Insere na tabela equipe
-        const { error: eqErr } = await db.from('equipe').insert([{
-          email, nome, cargo: cargo || 'operacional',
-          permissoes: {}, ativo: true,
-          telefone: tel || null,
-        }]);
-        if (eqErr) throw new Error('Usuário criado no Auth, mas erro ao salvar na equipe: ' + eqErr.message);
       }
       document.getElementById('modal-overlay')?.remove();
       await this.renderUsuarios();
@@ -6159,14 +6183,13 @@ const Admin = {
       const v = perms[mod]?.[acao];
       const checked = v === true;
       const color = ACAO_COLORS[acao];
+      const onclick = canEditPerms ? `onclick="Admin._togglePermBox(this)"` : '';
       return `<td style="text-align:center;padding:6px 4px;">
-        <label style="display:inline-flex;align-items:center;justify-content:center;cursor:${canEditPerms?'pointer':'default'};">
-          <input type="checkbox" class="perm-chk" data-mod="${mod}" data-acao="${acao}" ${checked?'checked':''} ${canEditPerms?'':'disabled'}
-            style="display:none;" onchange="Admin._permCheckChange(this)"/>
-          <div class="perm-box" style="width:20px;height:20px;border-radius:5px;border:2px solid ${checked?color:'var(--border)'};background:${checked?color:'transparent'};display:flex;align-items:center;justify-content:center;transition:all .15s;">
-            ${checked?`<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}
-          </div>
-        </label>
+        <div class="perm-box" data-mod="${mod}" data-acao="${acao}" data-checked="${checked}" data-color="${color}"
+          ${onclick}
+          style="width:20px;height:20px;border-radius:5px;border:2px solid ${checked?color:'var(--border)'};background:${checked?color:'transparent'};display:flex;align-items:center;justify-content:center;transition:all .15s;cursor:${canEditPerms?'pointer':'default'};margin:0 auto;">
+          ${checked?`<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}
+        </div>
       </td>`;
     };
 
@@ -6225,33 +6248,32 @@ const Admin = {
     document.body.appendChild(ov);
   },
 
-  _permCheckChange(el) {
-    const checked = el.checked;
-    const color = { ver:'#1976D2', criar:'#2E7D32', editar:'#E65100', deletar:'#C62828' }[el.dataset.acao] || '#888';
-    const box = el.nextElementSibling;
-    if (box) {
-      box.style.background = checked ? color : 'transparent';
-      box.style.borderColor = checked ? color : 'var(--border)';
-      box.innerHTML = checked ? '<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
-    }
+  _togglePermBox(box) {
+    const isChecked = box.dataset.checked === 'true';
+    const newChecked = !isChecked;
+    const color = box.dataset.color || '#888';
+    box.dataset.checked = String(newChecked);
+    box.style.background = newChecked ? color : 'transparent';
+    box.style.borderColor = newChecked ? color : 'var(--border)';
+    box.innerHTML = newChecked ? '<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
   },
 
   _aplicarPreset(presetKey) {
     const preset = PERM_PRESETS[presetKey]; if (!preset) return;
-    document.querySelectorAll('.perm-chk').forEach(el => {
-      const mod = el.dataset.mod, acao = el.dataset.acao;
+    document.querySelectorAll('.perm-box[data-mod]').forEach(box => {
+      const mod = box.dataset.mod, acao = box.dataset.acao;
       const should = preset[mod]?.[acao] === true;
-      el.checked = should;
-      this._permCheckChange(el);
+      const current = box.dataset.checked === 'true';
+      if (should !== current) this._togglePermBox(box);
     });
   },
 
   async salvarPermissoes() {
     const perms = {};
-    document.querySelectorAll('.perm-chk').forEach(el => {
-      const mod = el.dataset.mod, acao = el.dataset.acao;
+    document.querySelectorAll('.perm-box[data-mod]').forEach(box => {
+      const mod = box.dataset.mod, acao = box.dataset.acao;
       if (!perms[mod]) perms[mod] = {};
-      perms[mod][acao] = el.checked;
+      perms[mod][acao] = box.dataset.checked === 'true';
     });
     this.loader(true);
     try {
