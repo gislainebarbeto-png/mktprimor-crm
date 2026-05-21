@@ -5966,7 +5966,7 @@ const Admin = {
       return;
     }
     main.innerHTML = '<p style="padding:40px;text-align:center;color:var(--muted);">Carregando...</p>';
-    const { data: equipe } = await db.from('equipe').select('*').order('created_at',{ascending:true});
+    const { data: equipe } = await db.from('equipe').select('*').order('id',{ascending:true});
     const list = equipe || [];
     const canCreate = this.perm('usuarios','criar');
     const canEdit   = this.perm('usuarios','editar');
@@ -6008,18 +6008,13 @@ const Admin = {
           </div>
           ${canCreate ? `<button onclick="Admin.novoUsuario()" style="padding:10px 20px;border-radius:9px;background:linear-gradient(135deg,#6A0F8A,#4A0F6A);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;">+ Novo Usuário</button>` : ''}
         </div>
-        ${!list.length ? '<p style="text-align:center;padding:60px;color:var(--muted);font-style:italic;">Nenhum usuário cadastrado ainda.</p>' : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">${cardHtml}</div>`}
-        <div style="margin-top:24px;padding:14px 16px;border:1px solid rgba(201,162,39,.15);border-radius:10px;background:rgba(201,162,39,.04);">
-          <div style="font-size:11px;color:var(--muted);line-height:1.8;">
-            <strong style="color:var(--brown);">SQL — rodar uma vez no Supabase SQL Editor:</strong><br>
-            <code style="font-size:10px;background:rgba(0,0,0,.06);padding:2px 6px;border-radius:4px;display:block;margin-top:6px;white-space:pre-wrap;">ALTER TABLE equipe ADD COLUMN IF NOT EXISTS cargo text DEFAULT 'operacional';
-ALTER TABLE equipe ADD COLUMN IF NOT EXISTS permissoes jsonb DEFAULT '{}';
-ALTER TABLE equipe ADD COLUMN IF NOT EXISTS ativo boolean DEFAULT true;
-ALTER TABLE equipe ADD COLUMN IF NOT EXISTS foto_url text;
-ALTER TABLE equipe ADD COLUMN IF NOT EXISTS telefone text;
-ALTER TABLE equipe ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();</code>
-          </div>
-        </div>
+        ${!list.length
+          ? `<div style="text-align:center;padding:60px 20px;">
+               <div style="font-size:48px;margin-bottom:16px;">👥</div>
+               <div style="font-size:16px;color:var(--text);font-weight:500;margin-bottom:8px;">Nenhum usuário cadastrado ainda</div>
+               <div style="font-size:12px;color:var(--muted);">Clique em "+ Novo Usuário" para adicionar o primeiro membro da equipe.</div>
+             </div>`
+          : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">${cardHtml}</div>`}
       </div>`;
     this._equipeCache = list;
   },
