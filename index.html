@@ -2986,36 +2986,52 @@ const Admin = {
   async conectarTokenManual(clientEmail, clientId) {
     const token = document.getElementById('dp-manual-token')?.value?.trim();
     const statusEl = document.getElementById('manual-token-status');
-    if (!token) { statusEl.textContent = 'Cole o token primeiro.'; statusEl.style.color='#c62828'; return; }
-    statusEl.textContent = 'Buscando Instagram...'; statusEl.style.color='var(--muted)';
+    if (!token) { statusEl.textContent = 'Gere o token primeiro (botão ①).'; statusEl.style.color='#c62828'; return; }
+    statusEl.textContent = '⏳ Buscando páginas...'; statusEl.style.color='var(--muted)';
     try {
-      // Busca as páginas do token
       const accts = await fetch(`https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${token}`).then(r=>r.json());
       if (accts.error) throw new Error('Token inválido: ' + accts.error.message);
       const pages = accts.data || [];
-      if (!pages.length) throw new Error('Nenhuma Página encontrada com este token. Verifique se é um Page Token ou User Token com acesso à Página.');
-      // Usa a primeira página que tiver conta Instagram
-      const page = pages.find(p=>p.instagram_business_account) || pages[0];
+      if (!pages.length) throw new Error('Nenhuma Página encontrada. Verifique se autorizou o acesso às Páginas no popup do Facebook.');
+
+      // Se tiver só uma página, conecta direto. Se tiver mais, mostra seleção.
+      if (pages.length === 1) {
+        await this._salvarPaginaInstagram(pages[0], token, clientEmail, clientId, statusEl);
+      } else {
+        // Mostra botões para selecionar qual página vincular
+        statusEl.style.color = 'var(--muted)';
+        statusEl.innerHTML = `<div style="margin-bottom:6px;font-size:11px;color:var(--text);font-weight:600;">Várias páginas encontradas — escolha qual vincular a este cliente:</div>` +
+          pages.map(p => `<button onclick="Admin._salvarPaginaInstagram(${JSON.stringify(p).replace(/"/g,"'")}, '${token}', '${clientEmail}', ${clientId}, document.getElementById('manual-token-status'))"
+            style="display:block;width:100%;margin-bottom:4px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);cursor:pointer;text-align:left;font-size:12px;">
+            📄 ${p.name} ${p.instagram_business_account ? '<span style="color:#2E7D32;font-size:10px;">· tem Instagram</span>' : ''}
+          </button>`).join('');
+      }
+    } catch(e) {
+      statusEl.textContent = '✗ ' + e.message;
+      statusEl.style.color = '#c62828';
+    }
+  },
+
+  async _salvarPaginaInstagram(page, userToken, clientEmail, clientId, statusEl) {
+    if (typeof page === 'string') page = JSON.parse(page.replace(/'/g, '"'));
+    if (statusEl) { statusEl.innerHTML = ''; statusEl.textContent = `⏳ Conectando @${page.name}...`; statusEl.style.color='var(--muted)'; }
+    try {
       const pageToken = page.access_token;
       let igId = page.instagram_business_account?.id;
       if (!igId) {
         const ig2 = await fetch(`https://graph.facebook.com/v19.0/${page.id}?fields=instagram_business_account&access_token=${pageToken}`).then(r=>r.json());
         igId = ig2.instagram_business_account?.id;
       }
-      if (!igId) throw new Error(`Página "${page.name}" não tem conta Instagram Business vinculada.`);
+      if (!igId) throw new Error(`Página "${page.name}" não tem Instagram Business vinculado.`);
       const igUser = await fetch(`https://graph.facebook.com/v19.0/${igId}?fields=id,username&access_token=${pageToken}`).then(r=>r.json());
       if (igUser.error) throw new Error(igUser.error.message);
-      // Salva no Supabase
       const db2 = window.supabase.createClient(SUPABASE_URL, SUPABASE_SVC);
       await db2.from('instagram_tokens').upsert({ client_email: clientEmail, ig_user_id: igId, ig_username: igUser.username, access_token: pageToken, updated_at: new Date().toISOString() }, { onConflict: 'client_email' });
       await db2.from('clients').update({ instagram_token: pageToken, instagram_account_id: igId }).eq('id', clientId);
-      statusEl.textContent = `✓ Conectado! @${igUser.username} (ID: ${igId})`;
-      statusEl.style.color = '#2E7D32';
-      this._showToast(`Instagram @${igUser.username} conectado com sucesso! ✓`);
-      setTimeout(() => this._cliTabInfo(clientId, {...this._cliClienteData, instagram_token: pageToken, instagram_account_id: igId}), 1500);
+      if (statusEl) { statusEl.textContent = `✓ @${igUser.username} conectado!`; statusEl.style.color='#2E7D32'; }
+      this._showToast(`Instagram @${igUser.username} conectado! ✓`);
     } catch(e) {
-      statusEl.textContent = '✗ ' + e.message;
-      statusEl.style.color = '#c62828';
+      if (statusEl) { statusEl.textContent = '✗ ' + e.message; statusEl.style.color='#c62828'; }
     }
   },
 
