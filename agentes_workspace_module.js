@@ -119,7 +119,13 @@
       firstPage=false;
       (r.data||[]).forEach(m=>{
         if(!totals[m.name])totals[m.name]=0;
-        (m.values||[]).forEach(v=>{totals[m.name]+=(v.value||0);});
+        if(m.total_value?.value!=null){
+          // formato metric_type=total_value
+          totals[m.name]+=m.total_value.value||0;
+        } else {
+          // formato time_series (values array)
+          (m.values||[]).forEach(v=>{totals[m.name]+=(v.value||0);});
+        }
       });
       next=r.paging?.next||null;
     }
@@ -1384,16 +1390,22 @@
         if(profR.error)throw new Error('Perfil: '+profR.error.message);
         const seguidores=profR.followers_count||0;
 
-        // 2. Insights do período — API Meta v19+ (impressions removido; usar views)
-        // Métricas principais — fatal se falhar
+        // 2. Insights do período — API Meta v19+
+        // reach: não precisa de metric_type
         let alcance=0,visualizacoes=0,interacoes=0,saves_conta=0,visitas_perfil=0,website_clicks=0;
-        const mainTotals=await _insightsPaged(
-          `${BASE}/${aid}/insights?metric=reach,views,total_interactions,saves&period=day&since=${since}&until=${until}&access_token=${tok}`
+        const reachTotals=await _insightsPaged(
+          `${BASE}/${aid}/insights?metric=reach&period=day&since=${since}&until=${until}&access_token=${tok}`
         );
-        alcance=mainTotals.reach||0;
-        visualizacoes=mainTotals.views||0;
-        interacoes=mainTotals.total_interactions||0;
-        saves_conta=mainTotals.saves||0;
+        alcance=reachTotals.reach||0;
+        // views, total_interactions, saves precisam de metric_type=total_value
+        try{
+          const tvTotals=await _insightsPaged(
+            `${BASE}/${aid}/insights?metric=views,total_interactions,saves&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${tok}`
+          );
+          visualizacoes=tvTotals.views||0;
+          interacoes=tvTotals.total_interactions||0;
+          saves_conta=tvTotals.saves||0;
+        }catch{}
         // Opcionais — falha silenciosa
         try{const t=await _insightsPaged(`${BASE}/${aid}/insights?metric=profile_views&period=day&since=${since}&until=${until}&access_token=${tok}`);visitas_perfil=t.profile_views||0;}catch{}
         try{const t=await _insightsPaged(`${BASE}/${aid}/insights?metric=website_clicks&period=day&since=${since}&until=${until}&access_token=${tok}`);website_clicks=t.website_clicks||0;}catch{}
