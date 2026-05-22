@@ -164,19 +164,19 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   // imagens: URLs públicas para vision · afterFill: fn async chamada após preencher
   function _repairJson(raw){
     // Fix smart/curly quotes
-    raw=raw.replace(/[‘’]/g,”’”).replace(/[“”]/g,’”’);
+    raw=raw.replace(/['']/g,"'").replace(/[""]/g,'"');
     try{return JSON.parse(raw);}catch(_){
       // Escape unescaped control chars inside string values
-      let out=’’,inS=false,es=false;
+      let out='',inS=false,es=false;
       for(let i=0;i<raw.length;i++){
         const ch=raw[i];
         if(es){out+=ch;es=false;continue;}
-        if(ch===’\\’){out+=ch;es=true;continue;}
-        if(ch===’”’){inS=!inS;out+=ch;continue;}
+        if(ch==='\\'){out+=ch;es=true;continue;}
+        if(ch==='"'){inS=!inS;out+=ch;continue;}
         if(inS){
-          if(ch===’\n’){out+=’\\n’;continue;}
-          if(ch===’\r’){out+=’\\r’;continue;}
-          if(ch===’\t’){out+=’\\t’;continue;}
+          if(ch==='\n'){out+='\\n';continue;}
+          if(ch==='\r'){out+='\\r';continue;}
+          if(ch==='\t'){out+='\\t';continue;}
         }
         out+=ch;
       }
@@ -188,20 +188,20 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     // Find the first { or [ — ignore any code fence header
     let start=-1;
     for(let i=0;i<text.length;i++){
-      if(text[i]===’{‘){start=i;break;}
-      if(text[i]===’[‘){start=i;break;}
+      if(text[i]==='{'){start=i;break;}
+      if(text[i]==='['){start=i;break;}
     }
-    if(start===-1)throw new Error(‘Sem JSON na resposta da IA’);
+    if(start===-1)throw new Error('Sem JSON na resposta da IA');
     // Walk forward counting brackets (respects string escapes)
-    let depth=0,inStr=false,esc=false,raw=’’;
+    let depth=0,inStr=false,esc=false,raw='';
     for(let i=start;i<text.length;i++){
       const ch=text[i];raw+=ch;
       if(esc){esc=false;continue;}
-      if(ch===’\\’&&inStr){esc=true;continue;}
-      if(ch===’”’){inStr=!inStr;continue;}
+      if(ch==='\\'&&inStr){esc=true;continue;}
+      if(ch==='"'){inStr=!inStr;continue;}
       if(!inStr){
-        if(ch===’{‘||ch===’[‘)depth++;
-        else if(ch===’}’||ch===’]’){depth--;if(depth===0)break;}
+        if(ch==='{'||ch==='[')depth++;
+        else if(ch==='}'||ch===']'){depth--;if(depth===0)break;}
       }
     }
     return _repairJson(raw);
