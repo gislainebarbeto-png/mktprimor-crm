@@ -148,8 +148,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     return totals;
   }
 
-  // Botão "Pedir ao Pedro" — navega pro chat e auto-envia prompt da aba
-  const _gerarBtn=(aba)=>`<button class="aw2-btn" onclick="_AW2.pedirAoAgente('${aba}')" style="font-size:11px;padding:5px 14px;background:linear-gradient(135deg,#2563a8,#1a3f6f);gap:5px;display:inline-flex;align-items:center">🧠 Pedir ao Pedro</button>`;
+  // Botão "Pedro" — preenche os campos da aba diretamente com IA
+  const _gerarBtn=(aba)=>`<button id="aw2-gerar-${aba}" class="aw2-btn" onclick="_AW2.gerarAba('${aba}')" style="font-size:11px;padding:5px 14px;background:linear-gradient(135deg,#2563a8,#1a3f6f);gap:5px;display:inline-flex;align-items:center">🧠 Pedro</button>`;
 
   // Tenta ler conteúdo de arquivos de texto (.txt .md .csv .json) via fetch
   async function _tryReadFileContent(url,nome){
