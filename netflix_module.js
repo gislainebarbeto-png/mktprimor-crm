@@ -40,9 +40,9 @@
 
   // ── SEÇÕES ADMIN ─────────────────────────────────────────────────────
   const ADMIN_SECTIONS = [
-    { title:'Visão Geral',       ids:['inicio','posts','relatorio','agentes','comercial'] },
+    { title:'Visão Geral',       ids:['inicio','posts','relatorio','comercial'] },
     { title:'Clientes & Gestão', ids:['clientes','financeiro','info','brand','trafego'] },
-    { title:'Equipe',            ids:['demandas','tarefas','solicitacoes','chat','usuarios'] },
+    { title:'Equipe',            ids:['agentes','demandas','tarefas','solicitacoes','chat','usuarios'] },
     { title:'Conteúdo & Mais',   ids:['automacoes','comece','lab'] },
   ];
 
