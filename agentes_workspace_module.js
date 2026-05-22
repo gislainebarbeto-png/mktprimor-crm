@@ -41,6 +41,7 @@
   let _chatHist={},_chatLoad=false;
   let _arquivosDocs=[];
   let _dgFrom='',_dgTo='';
+  let _concScreenshots={}; // {0:[url,url], 1:[url], ...} — screenshots por concorrente
 
   function _histKey(){return 'primor_chat_'+(_ag?_ag.id:'x')+'__'+(_cliente||'geral');}
   function _histSaveLocal(){
@@ -145,15 +146,21 @@
   }
 
   // Chama anthropic-proxy com contexto completo do cliente e preenche campos
-  async function _gerarComIA(instrucao, fillFn, btnId){
+  // imagens: array de URLs públicas para análise visual (vision)
+  async function _gerarComIA(instrucao, fillFn, btnId, imagens=[]){
     const btn=document.getElementById(btnId);
     const orig=btn?.textContent;
     if(btn){btn.disabled=true;btn.textContent='⏳ Gerando...';}
     try{
       const sp=await _buildSystemPrompt(_ag?.id||'pedro',_cliente);
+      const textoFinal=instrucao+'\n\nResponda SOMENTE com JSON válido, sem texto fora do bloco JSON.';
+      // Se há imagens, monta content como array com blocos de imagem + texto
+      const userContent=imagens.length
+        ?[...imagens.slice(0,10).map(url=>({type:'image',source:{type:'url',url}})),{type:'text',text:textoFinal}]
+        :textoFinal;
       const res=await fetch('https://dloxddrdqsltuwdabwaq.supabase.co/functions/v1/anthropic-proxy',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({system:sp,messages:[{role:'user',content:instrucao+'\n\nResponda SOMENTE com JSON válido, sem texto fora do bloco JSON.'}]})
+        body:JSON.stringify({system:sp,messages:[{role:'user',content:userContent}]})
       });
       const data=await res.json();
       if(!res.ok)throw new Error(data.error?.message||`HTTP ${res.status}`);
@@ -1002,12 +1009,35 @@
     </div>`;
   }
 
+  // Helper: renderiza thumbnails de screenshots de um concorrente
+  function _renderConcScreenshots(idx, urls){
+    const thumbs=(urls||[]).map((url,ui)=>`
+      <div style="position:relative;display:inline-block;flex-shrink:0">
+        <img src="${url}" style="width:76px;height:76px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block">
+        <button onclick="_AW2.removeConcScreenshot(${idx},${ui})" title="Remover" style="position:absolute;top:-6px;right:-6px;background:#e53;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:18px;text-align:center;padding:0">✕</button>
+      </div>`).join('');
+    const addBtn=urls.length<6?`
+      <label style="width:76px;height:76px;border:1px dashed var(--border);border-radius:8px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:var(--muted);gap:2px;flex-shrink:0">
+        <span style="font-size:22px;line-height:1">+</span><span>Print</span>
+        <input type="file" accept="image/*" multiple style="display:none" onchange="_AW2.uploadConcScreenshot(${idx},this)">
+      </label>`:'';
+    return `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px">${thumbs}${addBtn}</div>`;
+  }
+
   // PEDRO — Concorrentes
   async function _concorrentes(){
     const d=await _load({lista:[]});
     const lista=d.lista||[];
-    while(lista.length<5)lista.push({ig:'',nicho:'',fortes:'',fracos:''});
-    return `<div class="aw2-form"><div class="aw2-ft">🔍 Análise de Concorrentes</div>
+    while(lista.length<5)lista.push({ig:'',nicho:'',fortes:'',fracos:'',screenshots:[]});
+    // Sincroniza _concScreenshots com os dados salvos
+    _concScreenshots={};
+    lista.forEach((c,i)=>{_concScreenshots[i]=c.screenshots||[];});
+    return `<div class="aw2-form">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="aw2-ft" style="margin:0">🔍 Análise de Concorrentes</div>
+        ${_gerarBtn('concorrentes')}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Suba prints do Instagram de cada concorrente e clique ✨ Gerar com IA para análise automática.</div>
       ${lista.slice(0,5).map((c,i)=>`
       <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
         <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:8px">Concorrente ${i+1}</div>
@@ -1017,8 +1047,9 @@
         </div>
         <div class="aw2-r2">
           <div class="aw2-fg"><label class="aw2-fl">Pontos fortes</label><textarea class="aw2-ta" id="cc-${i}-fortes">${_esc(c.fortes||'')}</textarea></div>
-          <div class="aw2-fg"><label class="aw2-fl">Pontos fracos</label><textarea class="aw2-ta" id="cc-${i}-fracos">${_esc(c.fracos||'')}</textarea></div>
+          <div class="aw2-fg"><label class="aw2-fl">Pontos fracos / Oportunidades</label><textarea class="aw2-ta" id="cc-${i}-fracos">${_esc(c.fracos||'')}</textarea></div>
         </div>
+        <div id="cc-${i}-shots">${_renderConcScreenshots(i,c.screenshots||[])}</div>
       </div>`).join('')}
       <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveConcorrentes()">Salvar</button><span class="aw2-svd" id="cc-s"></span></div>
     </div>`;
@@ -1549,6 +1580,10 @@
       }
 
       const cfgs={
+        concorrentes:{
+          instrucao:`Para o cliente "${nome}", analise os prints de Instagram dos concorrentes enviados e preencha a análise de cada um.\nCada imagem corresponde a um concorrente na ordem enviada.\nResponda em JSON: {"lista":[{"ig":"@usuario (leia do print)","nicho":"segmento/nicho do negócio","fortes":"o que fazem bem: estética, tipo de conteúdo, engajamento, copy, frequência","fracos":"gaps e oportunidades que o cliente pode explorar"},{"ig":"","nicho":"","fortes":"","fracos":""},{"ig":"","nicho":"","fortes":"","fracos":""},{"ig":"","nicho":"","fortes":"","fracos":""},{"ig":"","nicho":"","fortes":"","fracos":""}]}\nSe um slot não tiver print, retorne strings vazias para ele.`,
+          fill:j=>{(j.lista||[]).slice(0,5).forEach((c,i)=>{const fe=id=>document.getElementById(id);if(fe(`cc-${i}-ig`))fe(`cc-${i}-ig`).value=c.ig||'';if(fe(`cc-${i}-nicho`))fe(`cc-${i}-nicho`).value=c.nicho||'';if(fe(`cc-${i}-fortes`))fe(`cc-${i}-fortes`).value=c.fortes||'';if(fe(`cc-${i}-fracos`))fe(`cc-${i}-fracos`).value=c.fracos||'';});}
+        },
         onboarding:{
           instrucao:`Para o cliente "${nome}", analise os dados do dossiê e gere o onboarding estratégico completo.\nResponda em JSON: {"nicho":"","subnicho":"","persona":"(descreva o avatar ideal do cliente desse perfil)","posicionamento":"(proposta de valor única)","arcos":"(3-4 arcos editoriais narrativos)","obs":""}`,
           fill:j=>{fv('on-n',j.nicho);fv('on-sn',j.subnicho);fv('on-p',j.persona);fv('on-pos',j.posicionamento);fv('on-a',j.arcos);fv('on-o',j.obs);}
@@ -1558,11 +1593,11 @@
           fill:j=>{fv('dg-pf',j.pontos_fortes);fv('dg-pw',j.pontos_fracos);fv('dg-pos',j.posicionamento);fv('dg-obs',j.obs);}
         },
         swot:{
-          instrucao:`Para o cliente "${nome}", gere uma análise SWOT estratégica completa baseada em todos os dados disponíveis, incluindo análise dos concorrentes mapeados.\nResponda em JSON: {"forcas":"(diferenciais e pontos fortes internos, um por linha)","fraquezas":"(pontos a melhorar internos, um por linha)","oportunidades":"(oportunidades de mercado e gaps dos concorrentes, uma por linha)","ameacas":"(riscos, ameaças externas e vantagens dos concorrentes, uma por linha)"}`,
+          instrucao:`Para o cliente "${nome}", gere uma análise SWOT estratégica completa baseada em todos os dados disponíveis, incluindo análise visual dos prints dos concorrentes.\nResponda em JSON: {"forcas":"(diferenciais e pontos fortes internos, um por linha)","fraquezas":"(pontos a melhorar internos, um por linha)","oportunidades":"(gaps dos concorrentes e oportunidades de mercado identificadas nos prints, uma por linha)","ameacas":"(riscos, ameaças externas e vantagens visíveis dos concorrentes, uma por linha)"}`,
           fill:j=>{fv('sw-forcas',j.forcas);fv('sw-fraquezas',j.fraquezas);fv('sw-oportunidades',j.oportunidades);fv('sw-ameacas',j.ameacas);}
         },
         pilares:{
-          instrucao:`Para o cliente "${nome}", proponha 4-5 pilares editoriais estratégicos para o Instagram baseado no nicho, posicionamento e diferenciação dos concorrentes.\nResponda em JSON: {"pilares":[{"nome":"","percentual":25,"descricao":"(o que esse pilar representa e por que é importante)","formatos":"(reels, carrossel, feed...)"},...]}`,
+          instrucao:`Para o cliente "${nome}", proponha 4-5 pilares editoriais estratégicos para o Instagram baseado no nicho, posicionamento e diferenciação visual dos concorrentes nos prints.\nResponda em JSON: {"pilares":[{"nome":"","percentual":25,"descricao":"(o que esse pilar representa e por que é importante)","formatos":"(reels, carrossel, feed...)"},...]}`,
           fill:j=>{(j.pilares||[]).slice(0,5).forEach((p,i)=>{fv(`pl${i}-nm`,p.nome);fv(`pl${i}-pc`,p.percentual);fv(`pl${i}-ds`,p.descricao);fv(`pl${i}-ft`,p.formatos);});}
         },
         briefing:{
@@ -1576,12 +1611,43 @@
       };
       const cfg=cfgs[aba];if(!cfg)return;
       const instrucaoFinal=cfg.instrucao+(extra?`\n\nCONTEXTO ADICIONAL DISPONÍVEL:${extra}`:'');
-      await _gerarComIA(instrucaoFinal,cfg.fill,'aw2-gerar-'+aba);
+      // Passa screenshots de todos os concorrentes para a IA ver visualmente
+      const todasScreenshots=Object.values(_concScreenshots).flat().filter(Boolean).slice(0,10);
+      await _gerarComIA(instrucaoFinal,cfg.fill,'aw2-gerar-'+aba,todasScreenshots);
     },
     // Pedro — Concorrentes
     async saveConcorrentes(){
-      const lista=Array.from({length:5},(_,i)=>({ig:_v('cc-'+i+'-ig'),nicho:_v('cc-'+i+'-nicho'),fortes:_v('cc-'+i+'-fortes'),fracos:_v('cc-'+i+'-fracos')}));
+      const lista=Array.from({length:5},(_,i)=>({ig:_v('cc-'+i+'-ig'),nicho:_v('cc-'+i+'-nicho'),fortes:_v('cc-'+i+'-fortes'),fracos:_v('cc-'+i+'-fracos'),screenshots:_concScreenshots[i]||[]}));
       const ok=await _save({lista});_flash('cc-s',ok?'✓ Salvo':'⚠ Erro');
+    },
+    async uploadConcScreenshot(idx,input){
+      const files=Array.from(input.files||[]);
+      if(!files.length||!_cliente)return;
+      const cont=document.getElementById(`cc-${idx}-shots`);
+      if(cont)cont.style.opacity='0.5';
+      for(const file of files){
+        try{
+          const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+          const path=`concorrentes/${_cliente.replace(/[@.]/g,'_')}/${idx}/${Date.now()}.${ext}`;
+          const{error}=await db.storage.from('posts-media').upload(path,file,{upsert:true,contentType:file.type});
+          if(error)throw error;
+          const{data:{publicUrl}}=db.storage.from('posts-media').getPublicUrl(path);
+          if(!_concScreenshots[idx])_concScreenshots[idx]=[];
+          _concScreenshots[idx].push(publicUrl);
+        }catch(e){alert('Erro ao enviar imagem: '+e.message);}
+      }
+      if(cont){cont.style.opacity='1';cont.innerHTML=_renderConcScreenshots(idx,_concScreenshots[idx]||[]);}
+      // Auto-salva
+      const lista=Array.from({length:5},(_,i)=>({ig:_v('cc-'+i+'-ig'),nicho:_v('cc-'+i+'-nicho'),fortes:_v('cc-'+i+'-fortes'),fracos:_v('cc-'+i+'-fracos'),screenshots:_concScreenshots[i]||[]}));
+      await _save({lista});_flash('cc-s','✓ Salvo');
+    },
+    async removeConcScreenshot(idx,ui){
+      if(!_concScreenshots[idx])return;
+      _concScreenshots[idx].splice(ui,1);
+      const cont=document.getElementById(`cc-${idx}-shots`);
+      if(cont)cont.innerHTML=_renderConcScreenshots(idx,_concScreenshots[idx]);
+      const lista=Array.from({length:5},(_,i)=>({ig:_v('cc-'+i+'-ig'),nicho:_v('cc-'+i+'-nicho'),fortes:_v('cc-'+i+'-fortes'),fracos:_v('cc-'+i+'-fracos'),screenshots:_concScreenshots[i]||[]}));
+      await _save({lista});_flash('cc-s','✓ Removido');
     },
     // Pedro — SWOT
     async saveSwot(){const ok=await _save({forcas:_v('sw-forcas'),fraquezas:_v('sw-fraquezas'),oportunidades:_v('sw-oportunidades'),ameacas:_v('sw-ameacas')});_flash('sw-s',ok?'✓ Salvo':'⚠ Erro');},
