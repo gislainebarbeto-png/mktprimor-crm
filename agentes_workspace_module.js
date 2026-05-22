@@ -162,13 +162,41 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
 
   // Chama anthropic-proxy, preenche campos e salva automaticamente
   // imagens: URLs públicas para vision · afterFill: fn async chamada após preencher
+  function _extractJson(text){
+    // Strip markdown code fences (case-insensitive, any lang label)
+    const fence=text.match(/```(?:json|JSON)?\s*([\s\S]*?)```/);
+    let raw=fence?fence[1].trim():text;
+    // Fallback: grab first {...} or [...] block
+    if(!fence){const m=raw.match(/(\{[\s\S]*\})|(\[[\s\S]*\])/);raw=m?(m[1]||m[2]):raw;}
+    // Fix smart quotes
+    raw=raw.replace(/[‘’]/g,"'").replace(/[“”]/g,'"').trim();
+    // Try direct parse
+    try{return JSON.parse(raw);}catch(_){
+      // Repair: escape unescaped newlines/tabs inside string values
+      let out='',inStr=false,esc=false;
+      for(let i=0;i<raw.length;i++){
+        const ch=raw[i];
+        if(esc){out+=ch;esc=false;continue;}
+        if(ch==='\\'){out+=ch;esc=true;continue;}
+        if(ch==='"'){inStr=!inStr;out+=ch;continue;}
+        if(inStr){
+          if(ch==='\n'){out+='\\n';continue;}
+          if(ch==='\r'){out+='\\r';continue;}
+          if(ch==='\t'){out+='\\t';continue;}
+        }
+        out+=ch;
+      }
+      return JSON.parse(out);
+    }
+  }
+
   async function _gerarComIA(instrucao, fillFn, btnId, imagens=[], afterFill=null){
     const btn=document.getElementById(btnId);
     const orig=btn?.textContent;
     if(btn){btn.disabled=true;btn.textContent='⏳ Gerando...';}
     try{
       const sp=await _buildSystemPrompt(_ag?.id||'pedro',_cliente);
-      const textoFinal=instrucao+'\n\nResponda SOMENTE com JSON válido, sem texto fora do bloco JSON.';
+      const textoFinal=instrucao+'\n\nResponda SOMENTE com JSON válido. Não inclua texto fora do JSON. Não use quebras de linha dentro de valores de string.';
       const userContent=imagens.length
         ?[...imagens.slice(0,10).map(url=>({type:'image',source:{type:'url',url}})),{type:'text',text:textoFinal}]
         :textoFinal;
@@ -179,10 +207,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const data=await res.json();
       if(!res.ok)throw new Error(data.error?.message||`HTTP ${res.status}`);
       const text=data.content?.[0]?.text||'';
-      const match=text.match(/```json\s*([\s\S]*?)```/)||text.match(/(\{[\s\S]*\})/);
-      const json=JSON.parse((match?.[1]||text).trim());
+      const json=_extractJson(text);
       fillFn(json);
-      // Auto-salva após preencher
       if(afterFill){
         if(btn) btn.textContent='💾 Salvando...';
         await afterFill();
