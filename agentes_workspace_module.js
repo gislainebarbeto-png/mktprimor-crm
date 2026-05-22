@@ -382,7 +382,7 @@ WORKSPACE: ao pedir para salvar abas, inclua blocos [[SAVE:aba:{json}]] no final
     if(metricas.length) ctx+=`\nMétricas: `+metricas.map(m=>`${m.mes} seg=${m.seguidores} alc=${m.alcance} eng=${m.engajamento}%`).join(' | ');
     if(posts.length) ctx+=`\nPosts: `+posts.map(p=>`[${p.status}]${t(p.tema_titulo,50)}(${p.tipo||''})`).join(', ');
     if(plan.linha) ctx+=`\nPlan.Chloe: ${t(plan.linha,120)}`;
-    if(briefV.titulo&&agente_id==='gabi') ctx+=`\nBriefV: ${t(briefV.titulo,80)} tom=${t(briefV.tom,60)}`;
+    if(briefV?.titulo&&agente_id==='gabi') ctx+=`\nBriefV: ${t(briefV.titulo,80)} tom=${t(briefV.tom,60)}`;
     if(lancs.length&&agente_id==='elvira'){ctx+=`\nLançamentos:`;lancs.forEach(l=>ctx+=`\n• ${l.data} ${l.tipo} ${t(l.descricao,60)} R$${l.valor}`);}
 
     if(dossie.obs_gerais) ctx+=`\nObs: ${t(dossie.obs_gerais,150)}`;
