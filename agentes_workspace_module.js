@@ -47,6 +47,16 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   let _dgFrom='',_dgTo='';
   let _concScreenshots={}; // {0:[url,url], 1:[url], ...} — screenshots por concorrente
   let _calMes=_hoje().substring(0,7); // YYYY-MM — mês exibido no histórico
+  let _chatPendingMsg=null; // mensagem a auto-enviar quando chat abrir
+
+  const _PEDRO_PROMPTS={
+    onboarding:  'Analise os dados do cliente e preencha o onboarding completo: nicho, subnicho, persona ideal, posicionamento de marca e arcos editoriais. Salve usando [[SAVE:onboarding:{...}]].',
+    diagnostico: 'Faça o diagnóstico de performance do cliente com pontos fortes, pontos fracos e posicionamento atual. Salve usando [[SAVE:diagnostico:{...}]].',
+    swot:        'Monte a análise SWOT completa do cliente (forças, fraquezas, oportunidades, ameaças). Salve usando [[SAVE:swot:{...}]].',
+    pilares:     'Defina os 5 pilares de conteúdo do cliente com nome, percentual, descrição e formatos de cada um. Salve usando [[SAVE:pilares:{...}]].',
+    briefing:    'Crie o briefing mensal para a Chloe: o que funcionou, o que não funcionou, foco do mês, campanha e observações. Salve usando [[SAVE:briefing:{...}]].',
+    concorrentes:'Liste e analise os 5 principais concorrentes do cliente no Instagram (ig, nicho, pontos fortes e fracos de cada). Salve usando [[SAVE:concorrentes:{...}]].',
+  };
 
   function _histKey(){return 'primor_chat_'+(_ag?_ag.id:'x')+'__'+(_cliente||'geral');}
   function _histSaveLocal(){
@@ -138,8 +148,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     return totals;
   }
 
-  // Botão "Gerar com IA" — sempre visível; gerarAba valida se há cliente selecionado
-  const _gerarBtn=(aba)=>`<button id="aw2-gerar-${aba}" class="aw2-btn" onclick="_AW2.gerarAba('${aba}')" style="font-size:11px;padding:5px 12px;background:linear-gradient(135deg,#7B4F2E,#3d2210);gap:4px;display:inline-flex;align-items:center">✨ Gerar com IA</button>`;
+  // Botão "Pedir ao Pedro" — navega pro chat e auto-envia prompt da aba
+  const _gerarBtn=(aba)=>`<button class="aw2-btn" onclick="_AW2.pedirAoAgente('${aba}')" style="font-size:11px;padding:5px 14px;background:linear-gradient(135deg,#2563a8,#1a3f6f);gap:5px;display:inline-flex;align-items:center">🧠 Pedir ao Pedro</button>`;
 
   // Tenta ler conteúdo de arquivos de texto (.txt .md .csv .json) via fetch
   async function _tryReadFileContent(url,nome){
@@ -1530,7 +1540,14 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       if(intro)intro.style.display='none';
       _chatHist[_ag.id].forEach(m=>_addMsg(m.role,m.content));
     }
-    document.getElementById('aw2ci')?.focus();
+    // Auto-send mensagem pendente (acionada pelo botão "Pedir ao Pedro")
+    if(_chatPendingMsg){
+      const inp=document.getElementById('aw2ci');
+      if(inp){inp.value=_chatPendingMsg;_chatPendingMsg=null;setTimeout(()=>_AW2.chatSend(),120);}
+      else{_chatPendingMsg=null;}
+    } else {
+      document.getElementById('aw2ci')?.focus();
+    }
   }
 
   const _ABA_LABELS_CHAT={onboarding:'📋 Onboarding',diagnostico:'📊 Diagnóstico',swot:'⚡ SWOT',pilares:'🎯 Pilares',briefing:'📄 Briefing Mensal',concorrentes:'🔍 Concorrentes',planejamento:'📋 Planejamento',copy:'✍️ Copy',roteiros:'🎬 Roteiro',briefing_visual:'✏️ Brief. Visual',moodboard:'🎨 Moodboard',conceito:'✦ Conceito'};
@@ -1566,6 +1583,12 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     tab(id){_renderAba(id);},
     async setCli(email){_cliente=email;await _loadFiscal(email);_ws();},
     setData(d){_data=d||_hoje();_renderAba(_aba);},
+    pedirAoAgente(aba){
+      if(!_ag){alert('Selecione um agente primeiro.');return;}
+      if(!_cliente){alert('Selecione um cliente para o Pedro ter contexto.');return;}
+      _chatPendingMsg=_PEDRO_PROMPTS[aba]||`Preencha a aba "${aba}" para o cliente.`;
+      _renderAba('chat');
+    },
     // Pedro — Diagnóstico
     async saveDiagnostico(){const c={pontos_fortes:_v('dg-pf'),pontos_fracos:_v('dg-pw'),posicionamento:_v('dg-pos'),obs:_v('dg-obs')};const ok=await _save(c);_flash('dg-s',ok?'✓ Salvo':'⚠ Erro');if(ok)_syncCRM('diagnostico',c);},
     // Pedro — Sincronização Meta API
