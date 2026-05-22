@@ -2387,62 +2387,62 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
           _addMsg('agent',`⚠️ Erro da API: ${errDetail}`);
           return;
         }
-        const rawReply=data.content?.[0]?.text||’Erro ao processar.’;
+        const rawReply=data.content?.[0]?.text||'Erro ao processar.';
         // Parser robusto para blocos [[SAVE:aba:{json}]]
         // Usa indexOf para encontrar inicio/fim, conta brackets para achar fim do JSON
         function _extractSaveCmds(text){
-          const cmds=[];let pos=0;const OPEN=’[[SAVE:’;
+          const cmds=[];let pos=0;const OPEN='[[SAVE:';
           while(pos<text.length){
             const si=text.indexOf(OPEN,pos);if(si===-1)break;
             const afterOpen=si+OPEN.length;
-            const ci=text.indexOf(‘:’,afterOpen);if(ci===-1)break;
+            const ci=text.indexOf(':',afterOpen);if(ci===-1)break;
             const aba=text.substring(afterOpen,ci).trim();
             if(!/^\w+$/.test(aba)){pos=si+1;continue;}
             let depth=0,inStr=false,esc=false,jsonEnd=-1,k=ci+1;
-            while(k<text.length&&text[k]===’ ‘)k++;
+            while(k<text.length&&text[k]===' ')k++;
             const jsonStart=k;
             for(;k<text.length;k++){
               const ch=text[k];
               if(esc){esc=false;continue;}
-              if(ch===’\\’&&inStr){esc=true;continue;}
-              if(ch===’”’){inStr=!inStr;continue;}
+              if(ch==='\\'&&inStr){esc=true;continue;}
+              if(ch==='"'){inStr=!inStr;continue;}
               if(!inStr){
-                if(ch===’{‘||ch===’[‘)depth++;
-                else if(ch===’}’||ch===’]’){depth--;if(depth===0){jsonEnd=k;break;}}
+                if(ch==='{'||ch==='[')depth++;
+                else if(ch==='}'||ch===']'){depth--;if(depth===0){jsonEnd=k;break;}}
               }
             }
             if(jsonEnd===-1){pos=si+1;continue;}
             const jsonStr=text.substring(jsonStart,jsonEnd+1);
-            const fullTag=text.substring(si,jsonEnd+1)+’]]’;
+            const fullTag=text.substring(si,jsonEnd+1)+']]';
             cmds.push({aba,jsonStr,fullTag});
             pos=jsonEnd+2;
           }
           return cmds;
         }
         function _cleanJson(s){
-          return s.replace(/[‘’]/g,”’”).replace(/[“”]/g,’”’).replace(/\n/g,’ ‘).trim();
+          return s.replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/\n/g,' ').trim();
         }
         const saveCmds=_extractSaveCmds(rawReply);
         let displayReply=rawReply;
         saveCmds.forEach(({aba,fullTag})=>{displayReply=displayReply.replace(fullTag,`[[SAVED:${aba}]]`);});
         // Guarda versão sem blocos no histórico para não re-enviar para a API
-        const cleanReply=rawReply.replace(/\[\[SAVE:\w+:[\s\S]*?\]\]/g,’’).trim();
-        _chatHist[_ag.id].push({role:’assistant’,content:cleanReply});
-        _addMsg(‘agent’,displayReply);
-        _histInsertMsg(‘assistant’,cleanReply);_histSaveLocal();
+        const cleanReply=rawReply.replace(/\[\[SAVE:\w+:[\s\S]*?\]\]/g,'').trim();
+        _chatHist[_ag.id].push({role:'assistant',content:cleanReply});
+        _addMsg('agent',displayReply);
+        _histInsertMsg('assistant',cleanReply);_histSaveLocal();
         // Executa saves com feedback visível no chat (após exibir a resposta principal)
         if(saveCmds.length&&!_cliente){
-          _addMsg(‘agent’,’⚠️ Selecione um cliente para salvar os dados nas abas.’);
+          _addMsg('agent','⚠️ Selecione um cliente para salvar os dados nas abas.');
         } else {
           for(const {aba,jsonStr} of saveCmds){
             const cleaned=_cleanJson(jsonStr);
             try{
               const parsed=JSON.parse(cleaned);
               const ok=await _executeSaveCmd(aba,parsed);
-              if(!ok)_addMsg(‘agent’,`⚠️ Falha ao salvar aba “${aba}” — verifique o console.`);
+              if(!ok)_addMsg('agent',`⚠️ Falha ao salvar aba "${aba}" — verifique o console.`);
             }catch(e){
-              console.warn(‘[SAVE cmd]’,aba,e.message,’\nraw:’,cleaned);
-              _addMsg(‘agent’,`⚠️ JSON inválido para “${aba}”: ${e.message}`);
+              console.warn('[SAVE cmd]',aba,e.message,'\nraw:',cleaned);
+              _addMsg('agent',`⚠️ JSON inválido para "${aba}": ${e.message}`);
             }
           }
         }
