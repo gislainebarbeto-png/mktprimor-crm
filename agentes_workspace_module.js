@@ -7,7 +7,10 @@
 
   const SYS = {
     pedro:   `Você é Pedro — Estrategista de Conta e Head de Onboarding da Marketing Primor. Define nicho, persona, posicionamento, arcos editoriais; faz briefing mensal para Chloe e diagnóstico de performance. Responda em português, estratégico e orientado a resultados.
-WORKSPACE: ao pedir para salvar abas, inclua blocos [[SAVE:aba:{json}]] no final (JSON em uma linha). Abas: onboarding={nicho,subnicho,persona,posicionamento,arcos,obs} | diagnostico={pontos_fortes,pontos_fracos,posicionamento,obs} | swot={forcas,fraquezas,oportunidades,ameacas} | pilares={pilares:[{nome,percentual,descricao,formatos}x5]} | briefing={bom,ruim,foco,campanha,obs} | concorrentes={lista:[{ig,nicho,fortes,fracos}x5]}`,
+WORKSPACE: Quando o usuário pedir para salvar em alguma aba, inclua blocos [[SAVE:aba:{json}]] no final da resposta (JSON numa única linha, sem quebras de linha dentro do JSON).
+Abas disponíveis: onboarding={nicho,subnicho,persona,posicionamento,arcos,obs} | diagnostico={pontos_fortes,pontos_fracos,posicionamento,obs} | swot={forcas,fraquezas,oportunidades,ameacas} | pilares={pilares:[{nome,percentual,descricao,formatos}]} | briefing={bom,ruim,foco,campanha,obs} | concorrentes={lista:[{ig,nicho,fortes,fracos}]}
+Exemplo: [[SAVE:swot:{"forcas":"liderança local","fraquezas":"pouca presença digital","oportunidades":"crescimento do nicho","ameacas":"concorrentes grandes"}]]
+IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAVE:]].`,
     chloe:   `Você é Chloe — Arquitetura da Informação e Planejamento de Conteúdo da Marketing Primor. Planeja 30 dias por cliente, cria copy, legendas, roteiros feed/carrossel/Reels com funil de vendas, briefing visual para Gabi. Usa diagnóstico do Pedro. Responda em português com criatividade e organização.`,
     gabi:    `Você é Gabi — Design Visual e Identidade de Marca da Marketing Primor. Cria posts, capas, moodboard, posicionamento visual. Domina hierarquia visual, cria de minimalista a dark/futurista. Recebe briefing da Chloe. Responda em português descrevendo conceitos visuais: paleta, tipografia, composição, referências.`,
     elvira:  `Você é Elvira — Analista Financeira da Marketing Primor. Controla receitas, despesas, lançamentos, fluxo de caixa, DRE, faturamento, lucro, ticket médio, custos fixos, impostos e margem de lucro. Responda em português com precisão. Organize dados em tabelas, calcule indicadores, sinalize riscos.`,
@@ -2361,24 +2364,65 @@ WORKSPACE: ao pedir para salvar abas, inclua blocos [[SAVE:aba:{json}]] no final
           _addMsg('agent',`⚠️ Erro da API: ${errDetail}`);
           return;
         }
-        const rawReply=data.content?.[0]?.text||'Erro ao processar.';
-        // Detecta e executa blocos [[SAVE:aba:{json}]]
-        const saveCmds=[];
-        const displayReply=rawReply.replace(/\[\[SAVE:(\w+):([\s\S]*?)\]\]/g,(match,aba,jsonStr)=>{
-          saveCmds.push({aba,jsonStr:jsonStr.trim()});
-          return `[[SAVED:${aba}]]`;
-        });
-        // Executa os saves em paralelo
-        if(saveCmds.length&&_cliente){
-          await Promise.all(saveCmds.map(async({aba,jsonStr})=>{
-            try{await _executeSaveCmd(aba,JSON.parse(jsonStr));}catch(e){console.warn('[SAVE cmd]',aba,e.message);}
-          }));
+        const rawReply=data.content?.[0]?.text||’Erro ao processar.’;
+        // Parser robusto para blocos [[SAVE:aba:{json}]]
+        // Usa indexOf para encontrar inicio/fim, conta brackets para achar fim do JSON
+        function _extractSaveCmds(text){
+          const cmds=[];let pos=0;const OPEN=’[[SAVE:’;
+          while(pos<text.length){
+            const si=text.indexOf(OPEN,pos);if(si===-1)break;
+            const afterOpen=si+OPEN.length;
+            const ci=text.indexOf(‘:’,afterOpen);if(ci===-1)break;
+            const aba=text.substring(afterOpen,ci).trim();
+            if(!/^\w+$/.test(aba)){pos=si+1;continue;}
+            let depth=0,inStr=false,esc=false,jsonEnd=-1,k=ci+1;
+            while(k<text.length&&text[k]===’ ‘)k++;
+            const jsonStart=k;
+            for(;k<text.length;k++){
+              const ch=text[k];
+              if(esc){esc=false;continue;}
+              if(ch===’\\’&&inStr){esc=true;continue;}
+              if(ch===’”’){inStr=!inStr;continue;}
+              if(!inStr){
+                if(ch===’{‘||ch===’[‘)depth++;
+                else if(ch===’}’||ch===’]’){depth--;if(depth===0){jsonEnd=k;break;}}
+              }
+            }
+            if(jsonEnd===-1){pos=si+1;continue;}
+            const jsonStr=text.substring(jsonStart,jsonEnd+1);
+            const fullTag=text.substring(si,jsonEnd+1)+’]]’;
+            cmds.push({aba,jsonStr,fullTag});
+            pos=jsonEnd+2;
+          }
+          return cmds;
         }
+        function _cleanJson(s){
+          return s.replace(/[‘’]/g,”’”).replace(/[“”]/g,’”’).replace(/\n/g,’ ‘).trim();
+        }
+        const saveCmds=_extractSaveCmds(rawReply);
+        let displayReply=rawReply;
+        saveCmds.forEach(({aba,fullTag})=>{displayReply=displayReply.replace(fullTag,`[[SAVED:${aba}]]`);});
         // Guarda versão sem blocos no histórico para não re-enviar para a API
-        const cleanReply=rawReply.replace(/\[\[SAVE:\w+:[\s\S]*?\]\]/g,'').trim();
-        _chatHist[_ag.id].push({role:'assistant',content:cleanReply});
-        _addMsg('agent',displayReply);
-        _histInsertMsg('assistant',cleanReply);_histSaveLocal();
+        const cleanReply=rawReply.replace(/\[\[SAVE:\w+:[\s\S]*?\]\]/g,’’).trim();
+        _chatHist[_ag.id].push({role:’assistant’,content:cleanReply});
+        _addMsg(‘agent’,displayReply);
+        _histInsertMsg(‘assistant’,cleanReply);_histSaveLocal();
+        // Executa saves com feedback visível no chat (após exibir a resposta principal)
+        if(saveCmds.length&&!_cliente){
+          _addMsg(‘agent’,’⚠️ Selecione um cliente para salvar os dados nas abas.’);
+        } else {
+          for(const {aba,jsonStr} of saveCmds){
+            const cleaned=_cleanJson(jsonStr);
+            try{
+              const parsed=JSON.parse(cleaned);
+              const ok=await _executeSaveCmd(aba,parsed);
+              if(!ok)_addMsg(‘agent’,`⚠️ Falha ao salvar aba “${aba}” — verifique o console.`);
+            }catch(e){
+              console.warn(‘[SAVE cmd]’,aba,e.message,’\nraw:’,cleaned);
+              _addMsg(‘agent’,`⚠️ JSON inválido para “${aba}”: ${e.message}`);
+            }
+          }
+        }
       }catch(e){
         document.getElementById('aw2td')?.remove();
         _addMsg('agent','⚠️ Erro: '+e.message);
