@@ -42,6 +42,7 @@
   let _arquivosDocs=[];
   let _dgFrom='',_dgTo='';
   let _concScreenshots={}; // {0:[url,url], 1:[url], ...} — screenshots por concorrente
+  let _calMes=_hoje().substring(0,7); // YYYY-MM — mês exibido no histórico
 
   function _histKey(){return 'primor_chat_'+(_ag?_ag.id:'x')+'__'+(_cliente||'geral');}
   function _histSaveLocal(){
@@ -1385,29 +1386,89 @@
 
   // CALENDÁRIO (todos os agentes)
   async function _calendario(){
-    let itens=[];
-    try{let q=db.from('agentes_calendario').select('*').eq('agente_id',_ag.id).eq('data',_data).order('created_at');if(_cliente)q=q.eq('client_email',_cliente);const{data}=await q;itens=data||[];}catch{}
-    const FMTS=['feed','carrossel','reels','tarefa','reunião'];
-    const STS=['pendente','em andamento','concluído'];
-    return `<div class="aw2-form" style="margin-bottom:12px"><div class="aw2-ft">🗓 Calendário — ${_fmtD(_data)}</div>
-      <div class="aw2-r2">
-        <div class="aw2-fg"><label class="aw2-fl">Tipo</label><select class="aw2-s2" id="cal-f">${FMTS.map(f=>`<option value="${f}">${f}</option>`).join('')}</select></div>
-        <div class="aw2-fg"><label class="aw2-fl">Status</label><select class="aw2-s2" id="cal-st">${STS.map(s=>`<option value="${s}">${s}</option>`).join('')}</select></div>
-      </div>
-      <div class="aw2-fg"><label class="aw2-fl">Título / tarefa</label><input class="aw2-in" id="cal-ti"></div>
-      <div class="aw2-fg"><label class="aw2-fl">Descrição</label><textarea class="aw2-ta" style="min-height:60px" id="cal-d"></textarea></div>
-      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.addCal()">+ Adicionar</button><span class="aw2-svd" id="cal-s"></span></div>
-    </div>
-    <div class="aw2-ci-items">${itens.map(i=>{
+    const mes=_calMes||_hoje().substring(0,7);
+    const [ano,m]=mes.split('-').map(Number);
+    const dataIni=`${mes}-01`;
+    const lastDay=new Date(ano,m,0).getDate();
+    const dataFim=`${mes}-${String(lastDay).padStart(2,'0')}`;
+    const mesNome=new Date(ano,m-1,15).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    const prevMes=new Date(ano,m-2,1).toISOString().substring(0,7);
+    const nextMes=new Date(ano,m,1).toISOString().substring(0,7);
+
+    // Trabalhos salvos por qualquer agente para este cliente neste mês
+    let trabalhos=[];
+    try{
+      let q=db.from('agentes_trabalhos').select('agente_id,aba_id,data').gte('data',dataIni).lte('data',dataFim).neq('aba_id','_cfg').order('data',{ascending:false});
+      if(_cliente) q=q.eq('client_email',_cliente); else q=q.eq('client_email','');
+      const{data}=await q; trabalhos=data||[];
+    }catch{}
+
+    // Eventos manuais de qualquer agente para este cliente neste mês
+    let manuais=[];
+    try{
+      let q=db.from('agentes_calendario').select('*').gte('data',dataIni).lte('data',dataFim).order('data',{ascending:false});
+      if(_cliente) q=q.eq('client_email',_cliente); else q=q.eq('client_email','');
+      const{data}=await q; manuais=data||[];
+    }catch{}
+
+    const CORES={pedro:'#6B8FA3',chloe:'#9B6B3A',gabi:'#7A5230',elvira:'#4A5E3A',barbeto:'#C9A84C'};
+    const NOMES={pedro:'Pedro',chloe:'Chloe',gabi:'Gabi',elvira:'Elvira',barbeto:'Barbeto'};
+    const ABA={onboarding:'Onboarding',diagnostico:'Diagnóstico',concorrentes:'Concorrentes',swot:'SWOT',pilares:'Pilares',briefing:'Briefing Mensal',resultados:'Resultados',planejamento:'Planejamento',copy:'Copy & Legendas',roteiros:'Roteiro Reels',calendario_posts:'Cal. Posts',briefing_visual:'Brief. Visual',moodboard:'Moodboard',conceito:'Conceito Visual',briefing_designer:'Brief. Designer',posts_revisao:'Posts Revisão',dashboard:'Dashboard',lancamentos:'Lançamentos',dre:'DRE',financeiro_cliente:'Fin. Cliente',aprovacoes:'Aprovações',checklist:'Checklist',painel:'Painel Geral'};
+
+    // Agrupa por data, desduplicando trabalhos (mesmo agente+aba = 1 chip)
+    const porData={};
+    const seen=new Set();
+    trabalhos.forEach(t=>{
+      const k=`${t.data}|${t.agente_id}|${t.aba_id}`;
+      if(seen.has(k))return; seen.add(k);
+      if(!porData[t.data])porData[t.data]=[];
+      porData[t.data].push({tipo:'trabalho',agente:t.agente_id,aba:t.aba_id});
+    });
+    manuais.forEach(ev=>{
+      if(!porData[ev.data])porData[ev.data]=[];
+      porData[ev.data].push({tipo:'manual',...ev});
+    });
+
+    const datas=Object.keys(porData).sort((a,b)=>b.localeCompare(a));
+
+    const chipTrabalho=(t)=>{
+      const cor=CORES[t.agente]||'#888';
+      return `<span style="display:inline-flex;align-items:center;gap:5px;background:${cor}18;border:1px solid ${cor}44;border-radius:20px;padding:4px 11px;font-size:11px;color:var(--text)"><span style="width:7px;height:7px;border-radius:50%;background:${cor};flex-shrink:0"></span><strong style="color:${cor}">${NOMES[t.agente]||t.agente}</strong><span style="opacity:.6">·</span>${ABA[t.aba]||t.aba}</span>`;
+    };
+    const chipManual=(ev)=>{
+      const stCor={pendente:'#B8860B',concluído:'#3A6B3A','em andamento':'#6B8FA3'}[ev.status]||'#888';
       const tiposPost=['feed','carrossel','reels','stories','tiktok'];
-      const isPost=tiposPost.includes(i.formato);
-      return`<div class="aw2-ci-item">
-        <div class="aw2-ci-top"><span class="aw2-b ${i.formato}">${i.formato}</span><span class="aw2-b ${i.status}">${i.status}</span><span style="flex:1"></span>
-          ${isPost&&_cliente?`<button onclick="_AW2.toPost('${i.id}')" style="background:var(--brown);color:#fff;border:none;border-radius:6px;padding:3px 9px;font-size:10px;cursor:pointer;margin-right:6px;">→ Posts</button>`:''}
-          <button class="aw2-del" onclick="_AW2.delCal('${i.id}')">✕</button></div>
-        <div style="font-size:13px;font-weight:500;color:var(--brown)">${_esc(i.titulo)}</div>
-        ${i.descricao?`<div style="font-size:12px;color:var(--muted);margin-top:3px">${_esc(i.descricao)}</div>`:''}
-      </div>`;}).join('')||'<div class="aw2-empty">Nenhum item para este dia.</div>'}
+      const isPost=tiposPost.includes(ev.formato);
+      return `<span style="display:inline-flex;align-items:center;gap:5px;background:${stCor}18;border:1px solid ${stCor}44;border-radius:20px;padding:4px 11px;font-size:11px;color:var(--text)"><span style="width:7px;height:7px;border-radius:50%;background:${stCor};flex-shrink:0"></span>${_esc(ev.titulo)}${ev.formato?` <em style="opacity:.6">${ev.formato}</em>`:''} ${isPost&&_cliente?`<button onclick="_AW2.toPost('${ev.id}')" style="background:${stCor};color:#fff;border:none;border-radius:4px;padding:1px 6px;font-size:9px;cursor:pointer">→Post</button>`:''}<button onclick="_AW2.delCal('${ev.id}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:10px;padding:0;line-height:1;margin-left:2px">✕</button></span>`;
+    };
+
+    const timeline=datas.length ? datas.map(d=>{
+      const label=new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+      const chips=porData[d].map(ev=>ev.tipo==='trabalho'?chipTrabalho(ev):chipManual(ev)).join('');
+      return `<div style="margin-bottom:14px"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:8px">${label}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${chips}</div></div>`;
+    }).join('') : `<div class="aw2-empty">Nenhuma atividade em ${mesNome}.</div>`;
+
+    const FMTS=['feed','carrossel','reels','tarefa','reunião','call','entrega'];
+    const STS=['pendente','em andamento','concluído'];
+
+    return `<div class="aw2-form">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <button onclick="_AW2.calPrevMes()" class="aw2-btn" style="padding:5px 14px;font-size:13px">◄</button>
+        <div style="font-size:14px;font-weight:600;color:var(--text);text-transform:capitalize">${mesNome}</div>
+        <button onclick="_AW2.calNextMes()" class="aw2-btn" style="padding:5px 14px;font-size:13px">►</button>
+      </div>
+      <div style="margin-bottom:22px">${timeline}</div>
+      <div style="border-top:1px solid var(--border);padding-top:16px">
+        <div class="aw2-lbl2">+ Registrar evento / tarefa</div>
+        <div class="aw2-r2">
+          <div class="aw2-fg"><label class="aw2-fl">Data</label><input class="aw2-in" type="date" id="cal-dt" value="${_data}"></div>
+          <div class="aw2-fg"><label class="aw2-fl">Tipo</label><select class="aw2-s2" id="cal-f">${FMTS.map(f=>`<option>${f}</option>`).join('')}</select></div>
+          <div class="aw2-fg"><label class="aw2-fl">Status</label><select class="aw2-s2" id="cal-st">${STS.map(s=>`<option>${s}</option>`).join('')}</select></div>
+        </div>
+        <div class="aw2-fg"><label class="aw2-fl">Título</label><input class="aw2-in" id="cal-ti"></div>
+        <div class="aw2-fg"><label class="aw2-fl">Descrição</label><textarea class="aw2-ta" style="min-height:52px" id="cal-d"></textarea></div>
+        <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.addCal()">+ Adicionar</button><span class="aw2-svd" id="cal-s"></span></div>
+      </div>
     </div>`;
   }
 
@@ -1882,8 +1943,16 @@
     async addRevisao(){try{await db.from('barbeto_revisoes').insert({agente:_v('rv-a'),client_email:_cliente||'',data:_v('rv-d'),entrega:_v('rv-e'),feedback:_v('rv-f'),status:'pendente'});_flash('rv-s','✓ Adicionado');_renderAba('revisao');}catch{_flash('rv-s','⚠ Erro');}},
     async updRev(id,status){try{await db.from('barbeto_revisoes').update({status}).eq('id',id);}catch{}},
     // Calendário
-    async addCal(){try{await db.from('agentes_calendario').insert({agente_id:_ag.id,client_email:_cliente||'',data:_data,formato:_v('cal-f'),titulo:_v('cal-ti'),descricao:_v('cal-d'),status:_v('cal-st')});_flash('cal-s','✓ Adicionado');_renderAba('calendario');}catch{_flash('cal-s','⚠ Erro');}},
+    async addCal(){
+      const dt=document.getElementById('cal-dt')?.value||_data;
+      try{await db.from('agentes_calendario').insert({agente_id:_ag.id,client_email:_cliente||'',data:dt,formato:_v('cal-f'),titulo:_v('cal-ti'),descricao:_v('cal-d'),status:_v('cal-st')});
+      // ajusta mês visível para o mês da data adicionada
+      _calMes=dt.substring(0,7);
+      _flash('cal-s','✓ Adicionado');_renderAba('calendario');}catch{_flash('cal-s','⚠ Erro');}
+    },
     async delCal(id){try{await db.from('agentes_calendario').delete().eq('id',id);_renderAba('calendario');}catch{}},
+    calPrevMes(){const [a,m]=_calMes.split('-').map(Number);_calMes=new Date(a,m-2,1).toISOString().substring(0,7);_renderAba('calendario');},
+    calNextMes(){const [a,m]=_calMes.split('-').map(Number);_calMes=new Date(a,m,1).toISOString().substring(0,7);_renderAba('calendario');},
     async toPost(id){
       try{
         const{data:item}=await db.from('agentes_calendario').select('*').eq('id',id).single();
