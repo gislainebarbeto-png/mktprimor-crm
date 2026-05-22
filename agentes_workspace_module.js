@@ -6,7 +6,17 @@
   'use strict';
 
   const SYS = {
-    pedro:   `Você é Pedro — Estrategista de Conta e Head de Onboarding da Marketing Primor, agência de branding digital quiet luxury. No onboarding define persona, nicho, subnicho, posicionamento e arcos editoriais; cuida do contrato. Na gestão contínua é ponto de contato principal, faz briefing mensal para Chloe, diagnóstico de performance, apresenta resultados e identifica upsell. Responda em português, estratégico e orientado a resultados.`,
+    pedro:   `Você é Pedro — Estrategista de Conta e Head de Onboarding da Marketing Primor, agência de branding digital quiet luxury. No onboarding define persona, nicho, subnicho, posicionamento e arcos editoriais; cuida do contrato. Na gestão contínua é ponto de contato principal, faz briefing mensal para Chloe, diagnóstico de performance, apresenta resultados e identifica upsell. Responda em português, estratégico e orientado a resultados.
+
+## COMANDOS DE WORKSPACE
+Quando a Gislaine pedir para preencher, salvar ou estruturar abas do workspace, use os dados do dossiê do cliente e inclua blocos [[SAVE:]] NO FINAL da sua resposta. Formato obrigatório — JSON em UMA ÚNICA LINHA por bloco, sem quebras internas:
+[[SAVE:onboarding:{"nicho":"...","subnicho":"...","persona":"...","posicionamento":"...","arcos":"...","obs":"..."}]]
+[[SAVE:diagnostico:{"pontos_fortes":"...","pontos_fracos":"...","posicionamento":"...","obs":"..."}]]
+[[SAVE:swot:{"forcas":"...","fraquezas":"...","oportunidades":"...","ameacas":"..."}]]
+[[SAVE:pilares:{"pilares":[{"nome":"...","percentual":25,"descricao":"...","formatos":"..."},{"nome":"...","percentual":20,"descricao":"...","formatos":"..."},{"nome":"...","percentual":20,"descricao":"...","formatos":"..."},{"nome":"...","percentual":20,"descricao":"...","formatos":"..."},{"nome":"...","percentual":15,"descricao":"...","formatos":"..."}]}]]
+[[SAVE:briefing:{"bom":"...","ruim":"...","foco":"...","campanha":"...","obs":"..."}]]
+[[SAVE:concorrentes:{"lista":[{"ig":"","nicho":"","fortes":"","fracos":""},{"ig":"","nicho":"","fortes":"","fracos":""},{"ig":"","nicho":"","fortes":"","fracos":""},{"ig":"","nicho":"","fortes":"","fracos":""},{"ig":"","nicho":"","fortes":"","fracos":""}]}]]
+O sistema detecta esses blocos e salva automaticamente. Use APENAS as abas solicitadas. Preencha TODOS os campos com qualidade estratégica real usando os dados do dossiê — jamais deixe campos vazios se houver contexto disponível.`,
     chloe:   `Você é Chloe — Arquitetura da Informação e Planejamento de Conteúdo da Marketing Primor. Planeja 30 dias por cliente, cria copy, legendas, roteiros feed/carrossel/Reels com funil de vendas, briefing visual para Gabi. Usa diagnóstico do Pedro. Responda em português com criatividade e organização.`,
     gabi:    `Você é Gabi — Design Visual e Identidade de Marca da Marketing Primor. Cria posts, capas, moodboard, posicionamento visual. Domina hierarquia visual, cria de minimalista a dark/futurista. Recebe briefing da Chloe. Responda em português descrevendo conceitos visuais: paleta, tipografia, composição, referências.`,
     elvira:  `Você é Elvira — Analista Financeira da Marketing Primor. Controla receitas, despesas, lançamentos, fluxo de caixa, DRE, faturamento, lucro, ticket médio, custos fixos, impostos e margem de lucro. Responda em português com precisão. Organize dados em tabelas, calcule indicadores, sinalize riscos.`,
@@ -251,6 +261,22 @@
   // SUPABASE
   async function _save(conteudo){
     try{const{error}=await db.from('agentes_trabalhos').upsert({agente_id:_ag.id,aba_id:_aba,client_email:_cliente,data:_data,conteudo},{onConflict:'agente_id,aba_id,client_email,data'});return!error;}catch{return false;}
+  }
+  // Salva em aba específica (usado pelo chat do Pedro via [[SAVE:aba:json]])
+  async function _saveAs(agente_id, aba_id, conteudo){
+    try{const{error}=await db.from('agentes_trabalhos').upsert({agente_id,aba_id,client_email:_cliente,data:_data,conteudo},{onConflict:'agente_id,aba_id,client_email,data'});return!error;}catch{return false;}
+  }
+  // Executa um comando [[SAVE:aba:json]] vindo do chat
+  async function _executeSaveCmd(aba, json){
+    if(!_cliente)return false;
+    const agenteMap={planejamento:'chloe',copy:'chloe',roteiros:'chloe',briefing_visual:'chloe',moodboard:'gabi',conceito:'gabi'};
+    const agente=agenteMap[aba]||'pedro';
+    const ok=await _saveAs(agente,aba,json);
+    if(ok){
+      _syncCRM(aba,json);
+      if(aba==='briefing'){const cliNome=_clientes.find(x=>x.email===_cliente)?.nome||_cliente;_notificar('chloe',`Novo briefing do Pedro para ${cliNome}. Planejamento pode começar!`,'entrega');}
+    }
+    return ok;
   }
   async function _load(fb={}){
     try{const{data}=await db.from('agentes_trabalhos').select('conteudo').eq('agente_id',_ag.id).eq('aba_id',_aba).eq('client_email',_cliente).eq('data',_data).maybeSingle();return data?.conteudo||fb;}catch{return fb;}
@@ -1539,10 +1565,17 @@
     document.getElementById('aw2ci')?.focus();
   }
 
+  const _ABA_LABELS_CHAT={onboarding:'📋 Onboarding',diagnostico:'📊 Diagnóstico',swot:'⚡ SWOT',pilares:'🎯 Pilares',briefing:'📄 Briefing Mensal',concorrentes:'🔍 Concorrentes',planejamento:'📋 Planejamento',copy:'✍️ Copy',roteiros:'🎬 Roteiro',briefing_visual:'✏️ Brief. Visual',moodboard:'🎨 Moodboard',conceito:'✦ Conceito'};
+
   function _addMsg(role,text){
     const el=document.getElementById('aw2msgs');if(!el)return;
     const d=document.createElement('div');d.className=`aw2-msg ${role==='user'?'user':'agent'}`;
-    d.innerHTML=`<div class="aw2-bbl">${_esc(text)}</div><div class="aw2-mt">${_now()}</div>`;
+    // Substitui marcadores [[SAVED:aba]] por chips de confirmação
+    let html=_esc(text).replace(/\[\[SAVED:(\w+)\]\]/g,(_,aba)=>{
+      const label=_ABA_LABELS_CHAT[aba]||aba;
+      return `<span style="display:inline-flex;align-items:center;gap:4px;background:#1a3a2222;border:1px solid #3A8A4A55;border-radius:12px;padding:2px 10px;font-size:11px;color:#4aaa5a;font-weight:500">✓ ${label} salvo</span>`;
+    });
+    d.innerHTML=`<div class="aw2-bbl">${html}</div><div class="aw2-mt">${_now()}</div>`;
     el.appendChild(d);el.scrollTop=el.scrollHeight;
   }
 
@@ -2361,9 +2394,24 @@
           _addMsg('agent',`⚠️ Erro da API: ${errDetail}`);
           return;
         }
-        const reply=data.content?.[0]?.text||'Erro ao processar.';
-        _chatHist[_ag.id].push({role:'assistant',content:reply});_addMsg('agent',reply);
-        _histInsertMsg('assistant',reply);_histSaveLocal();
+        const rawReply=data.content?.[0]?.text||'Erro ao processar.';
+        // Detecta e executa blocos [[SAVE:aba:{json}]]
+        const saveCmds=[];
+        const displayReply=rawReply.replace(/\[\[SAVE:(\w+):([\s\S]*?)\]\]/g,(match,aba,jsonStr)=>{
+          saveCmds.push({aba,jsonStr:jsonStr.trim()});
+          return `[[SAVED:${aba}]]`;
+        });
+        // Executa os saves em paralelo
+        if(saveCmds.length&&_cliente){
+          await Promise.all(saveCmds.map(async({aba,jsonStr})=>{
+            try{await _executeSaveCmd(aba,JSON.parse(jsonStr));}catch(e){console.warn('[SAVE cmd]',aba,e.message);}
+          }));
+        }
+        // Guarda versão sem blocos no histórico para não re-enviar para a API
+        const cleanReply=rawReply.replace(/\[\[SAVE:\w+:[\s\S]*?\]\]/g,'').trim();
+        _chatHist[_ag.id].push({role:'assistant',content:cleanReply});
+        _addMsg('agent',displayReply);
+        _histInsertMsg('assistant',cleanReply);_histSaveLocal();
       }catch(e){
         document.getElementById('aw2td')?.remove();
         _addMsg('agent','⚠️ Erro: '+e.message);
