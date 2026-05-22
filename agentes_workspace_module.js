@@ -253,9 +253,9 @@ WORKSPACE: ao pedir para salvar abas, inclua blocos [[SAVE:aba:{json}]] no final
   async function _save(conteudo){
     try{const{error}=await db.from('agentes_trabalhos').upsert({agente_id:_ag.id,aba_id:_aba,client_email:_cliente,data:_data,conteudo},{onConflict:'agente_id,aba_id,client_email,data'});return!error;}catch{return false;}
   }
-  // Salva em aba específica (usado pelo chat do Pedro via [[SAVE:aba:json]])
+  // Salva em aba específica (chat [[SAVE:]] — sempre salva com a data de hoje)
   async function _saveAs(agente_id, aba_id, conteudo){
-    try{const{error}=await db.from('agentes_trabalhos').upsert({agente_id,aba_id,client_email:_cliente,data:_data,conteudo},{onConflict:'agente_id,aba_id,client_email,data'});return!error;}catch{return false;}
+    try{const{error}=await db.from('agentes_trabalhos').upsert({agente_id,aba_id,client_email:_cliente,data:_hoje(),conteudo},{onConflict:'agente_id,aba_id,client_email,data'});return!error;}catch{return false;}
   }
   // Executa um comando [[SAVE:aba:json]] vindo do chat
   async function _executeSaveCmd(aba, json){
@@ -290,17 +290,30 @@ WORKSPACE: ao pedir para salvar abas, inclua blocos [[SAVE:aba:{json}]] no final
     const cliNome=_clientes.find(c=>c.email===clienteEmail)?.nome||clienteEmail;
 
     const t=(s,n=180)=>(s||'').substring(0,n); // trunca campos longos
-    const [dossie,onb,brief,posts,metricas,conceito,plan,briefV,lancs,perfil]=await Promise.all([
-      db.from('agentes_trabalhos').select('conteudo').eq('agente_id','dossie').eq('aba_id','perfil').eq('client_email',clienteEmail).eq('data','2099-12-31').maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
-      db.from('agentes_trabalhos').select('conteudo').eq('agente_id','pedro').eq('aba_id','onboarding').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
-      db.from('agentes_trabalhos').select('conteudo').eq('agente_id','pedro').eq('aba_id','briefing').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
+    const isPedro=agente_id==='pedro';
+    const isChloe=agente_id==='chloe';
+    const wt=(ag,ab)=>db.from('agentes_trabalhos').select('conteudo').eq('agente_id',ag).eq('aba_id',ab).eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||null).catch(()=>null);
+
+    const [dossie,onb,brief,posts,metricas,perfil,
+           swot,pilares,diag,conc,
+           plan,briefV,copy,conceito,lancs]=await Promise.all([
+      wt('dossie','perfil').then(r=>r||{}),
+      wt('pedro','onboarding').then(r=>r||{}),
+      wt('pedro','briefing').then(r=>r||{}),
       db.from('posts').select('tema_titulo,status,tipo').eq('client_email',clienteEmail).in('status',['criacao','revisao','aprovado']).order('data_post',{ascending:false}).limit(5).then(r=>r.data||[]).catch(()=>[]),
       db.from('metricas').select('mes,seguidores,alcance,engajamento').eq('client_email',clienteEmail).order('mes',{ascending:false}).limit(2).then(r=>r.data||[]).catch(()=>[]),
-      db.from('agentes_trabalhos').select('conteudo').eq('agente_id','gabi').eq('aba_id','conceito').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
-      db.from('agentes_trabalhos').select('conteudo').eq('agente_id','chloe').eq('aba_id','planejamento').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
-      db.from('agentes_trabalhos').select('conteudo').eq('agente_id','chloe').eq('aba_id','briefing_visual').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
-      agente_id==='elvira'?db.from('elvira_lancamentos').select('data,tipo,descricao,valor').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(5).then(r=>r.data||[]).catch(()=>[]):Promise.resolve([]),
       db.from('clients').select('nome,empresa,instagram').eq('email',clienteEmail).maybeSingle().then(r=>r.data||{}).catch(()=>({})),
+      // Abas Pedro — carregadas para Pedro ver o que já existe
+      isPedro?wt('pedro','swot'):Promise.resolve(null),
+      isPedro?wt('pedro','pilares'):Promise.resolve(null),
+      isPedro?wt('pedro','diagnostico'):Promise.resolve(null),
+      isPedro?wt('pedro','concorrentes'):Promise.resolve(null),
+      // Abas Chloe
+      wt('chloe','planejamento').then(r=>r||{}),
+      isChloe?wt('chloe','briefing_visual'):Promise.resolve(null),
+      isChloe?wt('chloe','copy'):Promise.resolve(null),
+      wt('gabi','conceito').then(r=>r||{}),
+      agente_id==='elvira'?db.from('elvira_lancamentos').select('data,tipo,descricao,valor').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(5).then(r=>r.data||[]).catch(()=>[]):Promise.resolve([]),
     ]);
 
     // ── Cabeçalho ──────────────────────────────────────────────────────
@@ -373,6 +386,29 @@ WORKSPACE: ao pedir para salvar abas, inclua blocos [[SAVE:aba:{json}]] no final
     if(lancs.length&&agente_id==='elvira'){ctx+=`\nLançamentos:`;lancs.forEach(l=>ctx+=`\n• ${l.data} ${l.tipo} ${t(l.descricao,60)} R$${l.valor}`);}
 
     if(dossie.obs_gerais) ctx+=`\nObs: ${t(dossie.obs_gerais,150)}`;
+
+    // ── Abas atuais do workspace (Pedro vê tudo para poder atualizar) ──
+    if(isPedro){
+      ctx+=`\n\nABAS PEDRO (conteúdo atual — use para atualizar):`;
+      if(diag) ctx+=`\nDiagnóstico: fortes="${t(diag.pontos_fortes,150)}" | fracos="${t(diag.pontos_fracos,150)}" | pos="${t(diag.posicionamento,100)}" | obs="${t(diag.obs,100)}"`;
+      else ctx+=`\nDiagnóstico: (vazio)`;
+      if(swot) ctx+=`\nSWOT: forcas="${t(swot.forcas,150)}" | fraquezas="${t(swot.fraquezas,150)}" | oport="${t(swot.oportunidades,150)}" | ameacas="${t(swot.ameacas,150)}"`;
+      else ctx+=`\nSWOT: (vazio)`;
+      if(pilares?.pilares?.length) ctx+=`\nPilares: `+(pilares.pilares||[]).filter(p=>p.nome).map(p=>`${p.nome}(${p.percentual||0}%): ${t(p.descricao,80)}`).join(' | ');
+      else ctx+=`\nPilares: (vazio)`;
+      const cc=(conc?.lista||[]).filter(x=>x.ig);
+      if(cc.length) ctx+=`\nConcorrentes: `+cc.map(x=>`@${x.ig}${x.nicho?`(${x.nicho})`:''}${x.fortes?` fortes=${t(x.fortes,60)}`:''}`).join(' | ');
+      else ctx+=`\nConcorrentes: (vazio)`;
+      ctx+=`\nOnboarding: nicho="${t(onb.nicho,80)}" persona="${t(onb.persona,120)}" pos="${t(onb.posicionamento,120)}"`;
+      if(brief.foco) ctx+=`\nBriefing: bem="${t(brief.bom,100)}" foco="${t(brief.foco,100)}"`;
+    }
+    if(isChloe){
+      ctx+=`\n\nABAS CHLOE:`;
+      if(plan.linha) ctx+=`\nPlan: linha="${t(plan.linha,120)}" gancho="${t(plan.gancho,80)}" feed=${plan.qtd_feed} car=${plan.qtd_car} reels=${plan.qtd_reels}`;
+      if(briefV?.titulo) ctx+=`\nBriefV: "${t(briefV.titulo,80)}" tom="${t(briefV.tom,60)}"`;
+      if(copy?.tema) ctx+=`\nCopy: tema="${t(copy.tema,80)}" gancho="${t(copy.gancho,80)}"`;
+    }
+
     ctx+=`\n---`;
     return base+ctx;
   }
