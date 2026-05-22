@@ -172,6 +172,77 @@
     finally{if(btn){btn.disabled=false;btn.textContent=orig;}}
   }
 
+  // Sincroniza dados estruturados do Pedro com as tabelas do CRM principal
+  async function _syncCRM(aba, c){
+    if(!_cliente||!c)return;
+    const cliNome=_clientes.find(x=>x.email===_cliente)?.nome||_cliente;
+    const mes=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+
+    const formatos={
+      onboarding:{
+        tipo:'pedro_onboarding',titulo:'📋 Onboarding Estratégico',
+        corpo:[
+          c.nicho&&`**Nicho:** ${c.nicho}${c.subnicho?` · ${c.subnicho}`:''}`,
+          c.persona&&`**Persona / Avatar:**\n${c.persona}`,
+          c.posicionamento&&`**Posicionamento:**\n${c.posicionamento}`,
+          c.arcos&&`**Arcos editoriais:**\n${c.arcos}`,
+          c.obs&&`**Observações:**\n${c.obs}`,
+        ].filter(Boolean).join('\n\n')
+      },
+      diagnostico:{
+        tipo:'pedro_diagnostico',titulo:'📊 Diagnóstico de Performance',
+        corpo:[
+          c.pontos_fortes&&`**💪 Pontos fortes:**\n${c.pontos_fortes}`,
+          c.pontos_fracos&&`**⚠ Pontos fracos:**\n${c.pontos_fracos}`,
+          c.posicionamento&&`**Posicionamento atual:**\n${c.posicionamento}`,
+          c.obs&&`**Recomendações prioritárias:**\n${c.obs}`,
+        ].filter(Boolean).join('\n\n')
+      },
+      swot:{
+        tipo:'pedro_swot',titulo:'⚡ Análise SWOT',
+        corpo:[
+          c.forcas&&`**💪 Forças (internas):**\n${c.forcas}`,
+          c.fraquezas&&`**⚠ Fraquezas (internas):**\n${c.fraquezas}`,
+          c.oportunidades&&`**🌟 Oportunidades:**\n${c.oportunidades}`,
+          c.ameacas&&`**🚨 Ameaças:**\n${c.ameacas}`,
+        ].filter(Boolean).join('\n\n')
+      },
+      pilares:{
+        tipo:'pedro_pilares',titulo:'🎯 Pilares de Conteúdo',
+        corpo:(c.pilares||[]).filter(p=>p.nome).map(p=>`**${p.nome}** (${p.percentual||0}%)\n${p.descricao||''}\nFormatos: ${p.formatos||''}`).join('\n\n')
+      },
+      concorrentes:{
+        tipo:'pedro_concorrentes',titulo:'🔍 Análise de Concorrentes',
+        corpo:(c.lista||[]).filter(x=>x.ig).map((x,i)=>`**${i+1}. @${x.ig}**${x.nicho?` · ${x.nicho}`:''}\n💪 Fortes: ${x.fortes||'—'}\n⚠ Fracos/Oportunidades: ${x.fracos||'—'}`).join('\n\n')
+      },
+    };
+
+    try{
+      const fmt=formatos[aba];
+      if(fmt&&fmt.corpo){
+        // Upsert em informacoes_cliente — um registro por tipo por cliente
+        const{data:ex}=await db.from('informacoes_cliente').select('id').eq('client_email',_cliente).eq('tipo',fmt.tipo).maybeSingle();
+        if(ex?.id) await db.from('informacoes_cliente').update({titulo:fmt.titulo,conteudo:fmt.corpo}).eq('id',ex.id);
+        else        await db.from('informacoes_cliente').insert({client_email:_cliente,titulo:fmt.titulo,conteudo:fmt.corpo,tipo:fmt.tipo});
+      }
+
+      // Briefing → cria/atualiza demanda para Chloe em Demandas
+      if(aba==='briefing'){
+        const titulo=`📋 Briefing Pedro → Chloe — ${cliNome} — ${mes}`;
+        const descricao=[
+          c.bom&&`✅ **O que performou bem:**\n${c.bom}`,
+          c.ruim&&`❌ **O que não performou:**\n${c.ruim}`,
+          c.foco&&`🎯 **Foco e estratégia do mês:**\n${c.foco}`,
+          c.campanha&&`📅 **Campanhas e datas:**\n${c.campanha}`,
+          c.obs&&`📝 **Instruções para a Chloe:**\n${c.obs}`,
+        ].filter(Boolean).join('\n\n');
+        const{data:dem}=await db.from('demandas').select('id').ilike('titulo',`%Briefing Pedro → Chloe — ${cliNome}%${mes.substring(0,3)}%`).maybeSingle().catch(()=>({data:null}));
+        if(dem?.id) await db.from('demandas').update({descricao,status:'aberta'}).eq('id',dem.id);
+        else        await db.from('demandas').insert({titulo,descricao,status:'aberta',membro:'Chloe',cliente:cliNome,etiquetas:'briefing,pedro'});
+      }
+    }catch(e){console.warn('[syncCRM]',e.message);}
+  }
+
   // SUPABASE
   async function _save(conteudo){
     try{const{error}=await db.from('agentes_trabalhos').upsert({agente_id:_ag.id,aba_id:_aba,client_email:_cliente,data:_data,conteudo},{onConflict:'agente_id,aba_id,client_email,data'});return!error;}catch{return false;}
@@ -1430,7 +1501,7 @@
     async setCli(email){_cliente=email;await _loadFiscal(email);_ws();},
     setData(d){_data=d||_hoje();_renderAba(_aba);},
     // Pedro — Diagnóstico
-    async saveDiagnostico(){const ok=await _save({pontos_fortes:_v('dg-pf'),pontos_fracos:_v('dg-pw'),posicionamento:_v('dg-pos'),obs:_v('dg-obs')});_flash('dg-s',ok?'✓ Salvo':'⚠ Erro');},
+    async saveDiagnostico(){const c={pontos_fortes:_v('dg-pf'),pontos_fracos:_v('dg-pw'),posicionamento:_v('dg-pos'),obs:_v('dg-obs')};const ok=await _save(c);_flash('dg-s',ok?'✓ Salvo':'⚠ Erro');if(ok)_syncCRM('diagnostico',c);},
     // Pedro — Sincronização Meta API
     async fetchMetaInsights(){
       if(!_cliente){alert('Selecione um cliente primeiro.');return;}
@@ -1618,7 +1689,7 @@
     // Pedro — Concorrentes
     async saveConcorrentes(){
       const lista=Array.from({length:5},(_,i)=>({ig:_v('cc-'+i+'-ig'),nicho:_v('cc-'+i+'-nicho'),fortes:_v('cc-'+i+'-fortes'),fracos:_v('cc-'+i+'-fracos'),screenshots:_concScreenshots[i]||[]}));
-      const ok=await _save({lista});_flash('cc-s',ok?'✓ Salvo':'⚠ Erro');
+      const ok=await _save({lista});_flash('cc-s',ok?'✓ Salvo':'⚠ Erro');if(ok)_syncCRM('concorrentes',{lista});
     },
     async uploadConcScreenshot(idx,input){
       const files=Array.from(input.files||[]);
@@ -1650,11 +1721,11 @@
       await _save({lista});_flash('cc-s','✓ Removido');
     },
     // Pedro — SWOT
-    async saveSwot(){const ok=await _save({forcas:_v('sw-forcas'),fraquezas:_v('sw-fraquezas'),oportunidades:_v('sw-oportunidades'),ameacas:_v('sw-ameacas')});_flash('sw-s',ok?'✓ Salvo':'⚠ Erro');},
+    async saveSwot(){const c={forcas:_v('sw-forcas'),fraquezas:_v('sw-fraquezas'),oportunidades:_v('sw-oportunidades'),ameacas:_v('sw-ameacas')};const ok=await _save(c);_flash('sw-s',ok?'✓ Salvo':'⚠ Erro');if(ok)_syncCRM('swot',c);},
     // Pedro — Pilares
     async savePilares(){
       const pilares=Array.from({length:5},(_,i)=>({nome:_v('pl'+i+'-nm'),percentual:_v('pl'+i+'-pc'),descricao:_v('pl'+i+'-ds'),formatos:_v('pl'+i+'-ft')}));
-      const ok=await _save({pilares});_flash('pil-s',ok?'✓ Salvo':'⚠ Erro');
+      const ok=await _save({pilares});_flash('pil-s',ok?'✓ Salvo':'⚠ Erro');if(ok)_syncCRM('pilares',{pilares});
     },
     // Chloe — Copy
     async saveCopy(){const ok=await _save({tema:_v('cp-tema'),gancho:_v('cp-gancho'),corpo:_v('cp-corpo'),cta:_v('cp-cta'),tags:_v('cp-tags'),legenda_final:_v('cp-final')});_flash('cp-s',ok?'✓ Salvo':'⚠ Erro');},
@@ -1683,11 +1754,16 @@
       await _save({itens});_renderAba('checklist');
     },
     // Pedro
-    async saveOnboarding(){const ok=await _save({contrato:_v('on-c'),nicho:_v('on-n'),subnicho:_v('on-sn'),persona:_v('on-p'),posicionamento:_v('on-pos'),arcos:_v('on-a'),obs:_v('on-o')});_flash('on-s',ok?'✓ Salvo':'⚠ Erro');},
+    async saveOnboarding(){const c={contrato:_v('on-c'),nicho:_v('on-n'),subnicho:_v('on-sn'),persona:_v('on-p'),posicionamento:_v('on-pos'),arcos:_v('on-a'),obs:_v('on-o')};const ok=await _save(c);_flash('on-s',ok?'✓ Salvo':'⚠ Erro');if(ok)_syncCRM('onboarding',c);},
     async saveBriefing(){
-      const ok=await _save({bom:_v('br-b'),ruim:_v('br-r'),foco:_v('br-f'),campanha:_v('br-c'),obs:_v('br-o')});
+      const c={bom:_v('br-b'),ruim:_v('br-r'),foco:_v('br-f'),campanha:_v('br-c'),obs:_v('br-o')};
+      const ok=await _save(c);
       _flash('br-s',ok?'✓ Salvo':'⚠ Erro');
-      if(ok){const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente||'cliente';_notificar('chloe',`Novo briefing do Pedro para ${cliNome}. Planejamento pode começar!`,'entrega');}
+      if(ok){
+        const cliNome=_clientes.find(x=>x.email===_cliente)?.nome||_cliente||'cliente';
+        _notificar('chloe',`Novo briefing do Pedro para ${cliNome}. Planejamento pode começar!`,'entrega');
+        _syncCRM('briefing',c);
+      }
     },
     async saveResultado(){const ok=await _save({seguidores:_v('rs-s'),alcance:_v('rs-a'),engajamento:_v('rs-e'),crescimento:_v('rs-c')});_flash('rs-sv',ok?'✓ Salvo':'⚠ Erro');if(ok)_renderAba('resultados');},
     // Chloe
