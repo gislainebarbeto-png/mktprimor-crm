@@ -6,17 +6,8 @@
   'use strict';
 
   const SYS = {
-    pedro:   `Você é Pedro — Estrategista de Conta e Head de Onboarding da Marketing Primor, agência de branding digital quiet luxury. No onboarding define persona, nicho, subnicho, posicionamento e arcos editoriais; cuida do contrato. Na gestão contínua é ponto de contato principal, faz briefing mensal para Chloe, diagnóstico de performance, apresenta resultados e identifica upsell. Responda em português, estratégico e orientado a resultados.
-
-## COMANDOS DE WORKSPACE
-Quando a Gislaine pedir para preencher, salvar ou estruturar abas do workspace, use os dados do dossiê do cliente e inclua blocos [[SAVE:]] NO FINAL da sua resposta. Formato obrigatório — JSON em UMA ÚNICA LINHA por bloco, sem quebras internas:
-[[SAVE:onboarding:{"nicho":"...","subnicho":"...","persona":"...","posicionamento":"...","arcos":"...","obs":"..."}]]
-[[SAVE:diagnostico:{"pontos_fortes":"...","pontos_fracos":"...","posicionamento":"...","obs":"..."}]]
-[[SAVE:swot:{"forcas":"...","fraquezas":"...","oportunidades":"...","ameacas":"..."}]]
-[[SAVE:pilares:{"pilares":[{"nome":"...","percentual":25,"descricao":"...","formatos":"..."},{"nome":"...","percentual":20,"descricao":"...","formatos":"..."},{"nome":"...","percentual":20,"descricao":"...","formatos":"..."},{"nome":"...","percentual":20,"descricao":"...","formatos":"..."},{"nome":"...","percentual":15,"descricao":"...","formatos":"..."}]}]]
-[[SAVE:briefing:{"bom":"...","ruim":"...","foco":"...","campanha":"...","obs":"..."}]]
-[[SAVE:concorrentes:{"lista":[{"ig":"","nicho":"","fortes":"","fracos":""},{"ig":"","nicho":"","fortes":"","fracos":""},{"ig":"","nicho":"","fortes":"","fracos":""},{"ig":"","nicho":"","fortes":"","fracos":""},{"ig":"","nicho":"","fortes":"","fracos":""}]}]]
-O sistema detecta esses blocos e salva automaticamente. Use APENAS as abas solicitadas. Preencha TODOS os campos com qualidade estratégica real usando os dados do dossiê — jamais deixe campos vazios se houver contexto disponível.`,
+    pedro:   `Você é Pedro — Estrategista de Conta e Head de Onboarding da Marketing Primor. Define nicho, persona, posicionamento, arcos editoriais; faz briefing mensal para Chloe e diagnóstico de performance. Responda em português, estratégico e orientado a resultados.
+WORKSPACE: ao pedir para salvar abas, inclua blocos [[SAVE:aba:{json}]] no final (JSON em uma linha). Abas: onboarding={nicho,subnicho,persona,posicionamento,arcos,obs} | diagnostico={pontos_fortes,pontos_fracos,posicionamento,obs} | swot={forcas,fraquezas,oportunidades,ameacas} | pilares={pilares:[{nome,percentual,descricao,formatos}x5]} | briefing={bom,ruim,foco,campanha,obs} | concorrentes={lista:[{ig,nicho,fortes,fracos}x5]}`,
     chloe:   `Você é Chloe — Arquitetura da Informação e Planejamento de Conteúdo da Marketing Primor. Planeja 30 dias por cliente, cria copy, legendas, roteiros feed/carrossel/Reels com funil de vendas, briefing visual para Gabi. Usa diagnóstico do Pedro. Responda em português com criatividade e organização.`,
     gabi:    `Você é Gabi — Design Visual e Identidade de Marca da Marketing Primor. Cria posts, capas, moodboard, posicionamento visual. Domina hierarquia visual, cria de minimalista a dark/futurista. Recebe briefing da Chloe. Responda em português descrevendo conceitos visuais: paleta, tipografia, composição, referências.`,
     elvira:  `Você é Elvira — Analista Financeira da Marketing Primor. Controla receitas, despesas, lançamentos, fluxo de caixa, DRE, faturamento, lucro, ticket médio, custos fixos, impostos e margem de lucro. Responda em português com precisão. Organize dados em tabelas, calcule indicadores, sinalize riscos.`,
@@ -298,30 +289,17 @@ O sistema detecta esses blocos e salva automaticamente. Use APENAS as abas solic
 
     const cliNome=_clientes.find(c=>c.email===clienteEmail)?.nome||clienteEmail;
 
-    const [dossie,onb,brief,posts,demandas,metricas,conceito,plan,briefV,revis,lancs,perfil]=await Promise.all([
-      // Dossiê completo do cliente (fonte primária — salvo na aba Dossiê)
+    const t=(s,n=180)=>(s||'').substring(0,n); // trunca campos longos
+    const [dossie,onb,brief,posts,metricas,conceito,plan,briefV,lancs,perfil]=await Promise.all([
       db.from('agentes_trabalhos').select('conteudo').eq('agente_id','dossie').eq('aba_id','perfil').eq('client_email',clienteEmail).eq('data','2099-12-31').maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
-      // Onboarding Pedro (complementar)
       db.from('agentes_trabalhos').select('conteudo').eq('agente_id','pedro').eq('aba_id','onboarding').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
-      // Briefing mensal Pedro → Chloe
       db.from('agentes_trabalhos').select('conteudo').eq('agente_id','pedro').eq('aba_id','briefing').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
-      // Posts em produção
-      db.from('posts').select('tema_titulo,status,data_post,tipo').eq('client_email',clienteEmail).in('status',['criacao','revisao','aprovado']).order('data_post',{ascending:false}).limit(8).then(r=>r.data||[]).catch(()=>[]),
-      // Demandas abertas
-      db.from('demandas').select('titulo,status,prazo,membro').neq('status','concluída').order('prazo',{ascending:true}).limit(5).then(r=>r.data||[]).catch(()=>[]),
-      // Métricas dos últimos 3 meses
-      db.from('metricas').select('mes,seguidores,alcance,impressoes,engajamento').eq('client_email',clienteEmail).order('mes',{ascending:false}).limit(3).then(r=>r.data||[]).catch(()=>[]),
-      // Conceito visual Gabi (aba de trabalho)
+      db.from('posts').select('tema_titulo,status,tipo').eq('client_email',clienteEmail).in('status',['criacao','revisao','aprovado']).order('data_post',{ascending:false}).limit(5).then(r=>r.data||[]).catch(()=>[]),
+      db.from('metricas').select('mes,seguidores,alcance,engajamento').eq('client_email',clienteEmail).order('mes',{ascending:false}).limit(2).then(r=>r.data||[]).catch(()=>[]),
       db.from('agentes_trabalhos').select('conteudo').eq('agente_id','gabi').eq('aba_id','conceito').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
-      // Planejamento editorial Chloe
       db.from('agentes_trabalhos').select('conteudo').eq('agente_id','chloe').eq('aba_id','planejamento').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
-      // Briefing visual Chloe → Gabi
       db.from('agentes_trabalhos').select('conteudo').eq('agente_id','chloe').eq('aba_id','briefing_visual').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||{}).catch(()=>({})),
-      // Revisões pendentes Barbeto
-      db.from('barbeto_revisoes').select('agente,entrega,status').eq('status','pendente').order('created_at',{ascending:false}).limit(4).then(r=>r.data||[]).catch(()=>[]),
-      // Lançamentos financeiros recentes
-      db.from('elvira_lancamentos').select('data,tipo,descricao,valor').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(5).then(r=>r.data||[]).catch(()=>[]),
-      // Perfil básico (tabela clients)
+      agente_id==='elvira'?db.from('elvira_lancamentos').select('data,tipo,descricao,valor').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(5).then(r=>r.data||[]).catch(()=>[]):Promise.resolve([]),
       db.from('clients').select('nome,empresa,instagram').eq('email',clienteEmail).maybeSingle().then(r=>r.data||{}).catch(()=>({})),
     ]);
 
@@ -347,16 +325,16 @@ O sistema detecta esses blocos e salva automaticamente. Use APENAS as abas solic
     const posicionamento=dossie.posicionamento||onb.posicionamento;
 
     if(nicho||persona||posicionamento){
-      ctx+=`\n\nPerfil estratégico:`;
-      if(nicho)         ctx+=`\n• Nicho: ${nicho}${(dossie.subnicho||onb.subnicho)?' · Sub: '+(dossie.subnicho||onb.subnicho):''}`;
-      if(dossie.tom_voz)ctx+=`\n• Tom de voz: ${dossie.tom_voz}`;
-      if(dossie.objetivo)ctx+=`\n• Objetivo: ${dossie.objetivo}`;
-      if(persona)       ctx+=`\n• Persona: ${persona}`;
-      if(posicionamento)ctx+=`\n• Posicionamento: ${posicionamento}`;
-      if(dossie.diferenciais) ctx+=`\n• Diferenciais: ${dossie.diferenciais}`;
-      if(dossie.concorrentes) ctx+=`\n• Concorrentes: ${dossie.concorrentes}`;
+      ctx+=`\n\nPerfil:`;
+      if(nicho)         ctx+=`\n• Nicho: ${nicho}${(dossie.subnicho||onb.subnicho)?' · '+(dossie.subnicho||onb.subnicho):''}`;
+      if(dossie.tom_voz)ctx+=`\n• Tom: ${t(dossie.tom_voz,80)}`;
+      if(dossie.objetivo)ctx+=`\n• Objetivo: ${t(dossie.objetivo,120)}`;
+      if(persona)       ctx+=`\n• Persona: ${t(persona)}`;
+      if(posicionamento)ctx+=`\n• Posicionamento: ${t(posicionamento)}`;
+      if(dossie.diferenciais) ctx+=`\n• Diferenciais: ${t(dossie.diferenciais)}`;
+      if(dossie.concorrentes) ctx+=`\n• Concorrentes: ${t(dossie.concorrentes,100)}`;
       const arcos=dossie.arcos||onb.arcos;
-      if(arcos)         ctx+=`\n• Arcos editoriais: ${arcos}`;
+      if(arcos)         ctx+=`\n• Arcos: ${t(arcos)}`;
     }
 
     // ── Redes sociais ──────────────────────────────────────────────
@@ -385,66 +363,17 @@ O sistema detecta esses blocos e salva automaticamente. Use APENAS as abas solic
       if(nunca)   ctx+=`\n• ⚠ NUNCA: ${nunca}`;
     }
 
-    // ── Briefing mensal Pedro ──────────────────────────────────────
     if(brief.foco||brief.bom){
-      ctx+=`\n\nBriefing mensal (Pedro):`;
-      if(brief.bom)      ctx+=`\n• Performou bem: ${brief.bom}`;
-      if(brief.ruim)     ctx+=`\n• Não performou: ${brief.ruim}`;
-      if(brief.foco)     ctx+=`\n• Foco do mês: ${brief.foco}`;
-      if(brief.campanha) ctx+=`\n• Campanha: ${brief.campanha}`;
+      ctx+=`\nBriefing: bem=${t(brief.bom,100)} | ruim=${t(brief.ruim,100)} | foco=${t(brief.foco,100)}`;
     }
+    if(metricas.length) ctx+=`\nMétricas: `+metricas.map(m=>`${m.mes} seg=${m.seguidores} alc=${m.alcance} eng=${m.engajamento}%`).join(' | ');
+    if(posts.length) ctx+=`\nPosts: `+posts.map(p=>`[${p.status}]${t(p.tema_titulo,50)}(${p.tipo||''})`).join(', ');
+    if(plan.linha) ctx+=`\nPlan.Chloe: ${t(plan.linha,120)}`;
+    if(briefV.titulo&&agente_id==='gabi') ctx+=`\nBriefV: ${t(briefV.titulo,80)} tom=${t(briefV.tom,60)}`;
+    if(lancs.length&&agente_id==='elvira'){ctx+=`\nLançamentos:`;lancs.forEach(l=>ctx+=`\n• ${l.data} ${l.tipo} ${t(l.descricao,60)} R$${l.valor}`);}
 
-    // ── Métricas recentes ──────────────────────────────────────────
-    if(metricas.length){
-      ctx+=`\n\nMétricas recentes:`;
-      metricas.forEach(m=>ctx+=`\n• ${m.mes}: ${m.seguidores||'—'} seguidores · alcance ${m.alcance||'—'} · eng ${m.engajamento||'—'}%`);
-    }
-
-    // ── Posts em produção ──────────────────────────────────────────
-    if(posts.length){
-      ctx+=`\n\nPosts em produção (${posts.length}):`;
-      posts.forEach(p=>ctx+=`\n• [${p.status}] ${p.tema_titulo||'sem título'} · ${p.tipo||''} · ${p.data_post||''}`);
-    }
-
-    // ── Planejamento Chloe ─────────────────────────────────────────
-    if(plan.linha||plan.gancho){
-      ctx+=`\n\nPlanejamento editorial (Chloe):`;
-      if(plan.linha)  ctx+=`\n• Linha: ${plan.linha}`;
-      if(plan.gancho) ctx+=`\n• Gancho: ${plan.gancho}`;
-      if(plan.qtd_feed||plan.qtd_car||plan.qtd_reels)
-        ctx+=`\n• Qtd: ${plan.qtd_feed||0} feed · ${plan.qtd_car||0} carrossel · ${plan.qtd_reels||0} reels`;
-    }
-
-    // ── Briefing visual Chloe → Gabi ───────────────────────────────
-    if(briefV.titulo&&agente_id==='gabi'){
-      ctx+=`\n\nBriefing visual mais recente:`;
-      if(briefV.titulo)      ctx+=`\n• Post: ${briefV.titulo} · ${briefV.formato||''}`;
-      if(briefV.tom)         ctx+=`\n• Tom: ${briefV.tom}`;
-      if(briefV.elementos)   ctx+=`\n• Elementos: ${briefV.elementos}`;
-      if(briefV.referencias) ctx+=`\n• Refs: ${briefV.referencias}`;
-    }
-
-    // ── Demandas abertas ───────────────────────────────────────────
-    if(demandas.length){
-      ctx+=`\n\nDemandas abertas:`;
-      demandas.forEach(d=>ctx+=`\n• ${d.titulo} [${d.status}]${d.prazo?' · prazo '+d.prazo:''}${d.membro?' · '+d.membro:''}`);
-    }
-
-    // ── Revisões pendentes ─────────────────────────────────────────
-    if(revis.length){
-      ctx+=`\n\nRevisões pendentes (Barbeto):`;
-      revis.forEach(r=>ctx+=`\n• ${r.agente}: ${(r.entrega||'').substring(0,80)}`);
-    }
-
-    // ── Lançamentos Elvira ─────────────────────────────────────────
-    if(lancs.length&&agente_id==='elvira'){
-      ctx+=`\n\nÚltimos lançamentos:`;
-      lancs.forEach(l=>ctx+=`\n• ${l.data||''} · ${l.tipo} · ${l.descricao||''} · R$${l.valor||0}`);
-    }
-
-    if(dossie.obs_gerais) ctx+=`\n\nObs: ${dossie.obs_gerais}`;
-
-    ctx+=`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+    if(dossie.obs_gerais) ctx+=`\nObs: ${t(dossie.obs_gerais,150)}`;
+    ctx+=`\n---`;
     return base+ctx;
   }
 
@@ -2382,10 +2311,12 @@ O sistema detecta esses blocos e salva automaticamente. Use APENAS as abas solic
         td.innerHTML='<div class="aw2-typ"><div class="aw2-dot"></div><div class="aw2-dot"></div><div class="aw2-dot"></div></div>';
         msgs?.appendChild(td);if(msgs)msgs.scrollTop=msgs.scrollHeight;
         const systemPrompt=await _buildSystemPrompt(_ag.id,_cliente);
+        // Envia apenas as últimas 14 mensagens para não explodir o limite de tokens
+        const histSlice=(_chatHist[_ag.id]||[]).slice(-14);
         const res=await fetch('https://dloxddrdqsltuwdabwaq.supabase.co/functions/v1/anthropic-proxy',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({system:systemPrompt,messages:_chatHist[_ag.id]})
+          body:JSON.stringify({system:systemPrompt,messages:histSlice})
         });
         const data=await res.json();
         document.getElementById('aw2td')?.remove();
