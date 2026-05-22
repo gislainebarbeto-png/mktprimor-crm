@@ -20,8 +20,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   const AGENTES = [
     { id:'pedro',   nome:'Pedro',   iniciais:'PE', tipo:'comercial', cargo:'Estrategista de Conta & Head de Onboarding',
       chips:['Onboarding','Diagnóstico','SWOT','Briefing mensal'],
-      abas:['onboarding','diagnostico','concorrentes','swot','pilares','briefing','resultados','arquivos','calendario','chat'],
-      labels:{onboarding:'📋 Onboarding',diagnostico:'📊 Diagnóstico',concorrentes:'🔍 Concorrentes',swot:'⚡ SWOT',pilares:'🎯 Pilares',briefing:'📄 Briefing Mensal',resultados:'📈 Resultados',arquivos:'📁 Arquivos',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
+      abas:['geral','onboarding','diagnostico','concorrentes','swot','pilares','briefing','resultados','arquivos','calendario','chat'],
+      labels:{geral:'🗂 Geral',onboarding:'📋 Onboarding',diagnostico:'📊 Diagnóstico',concorrentes:'🔍 Concorrentes',swot:'⚡ SWOT',pilares:'🎯 Pilares',briefing:'📄 Briefing Mensal',resultados:'📈 Resultados',arquivos:'📁 Arquivos',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
     { id:'chloe',   nome:'Chloe',   iniciais:'CH', tipo:'content',   cargo:'Arquitetura da Informação & Conteúdo',
       chips:['Planejamento 30 dias','Copy & legendas','Roteiros Reels','Briefing Gabi'],
       abas:['planejamento','copy','roteiros','calendario_posts','briefing_visual','arquivos','calendario','chat'],
@@ -660,6 +660,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     el.innerHTML='<div class="aw2-empty">Carregando...</div>';
     let h='';
     switch(id){
+      case'geral':             h=await _geral();break;
       case'onboarding':        h=await _onboarding();break;
       case'diagnostico':       h=await _diagnostico();break;
       case'concorrentes':      h=await _concorrentes();break;
@@ -700,6 +701,131 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   }
 
   // PEDRO
+  async function _geral(){
+    if(!_cliente)return`<div class="aw2-empty">Selecione um cliente para ver o dashboard geral.</div>`;
+    const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
+    const mes=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    const wt=(ag,ab)=>db.from('agentes_trabalhos').select('conteudo').eq('agente_id',ag).eq('aba_id',ab).eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||null).catch(()=>null);
+    const[onb,diag,swot,pil,brief,conc,res]=await Promise.all([
+      wt('pedro','onboarding'),wt('pedro','diagnostico'),wt('pedro','swot'),
+      wt('pedro','pilares'),wt('pedro','briefing'),wt('pedro','concorrentes'),
+      db.from('metricas_instagram').select('*').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data||null).catch(()=>null)
+    ]);
+    const sec=(titulo,conteudo)=>conteudo?`
+      <div class="geral-sec">
+        <div class="geral-sec-title">${titulo}</div>
+        <div class="geral-sec-body">${conteudo}</div>
+      </div>`:'';
+    const row=(l,v)=>v?`<div class="geral-row"><span class="geral-lbl">${l}</span><span class="geral-val">${_esc(String(v))}</span></div>`:'';
+    const box=(l,v)=>v?`<div class="geral-box"><div class="geral-lbl">${l}</div><div class="geral-val" style="margin-top:4px">${_esc(String(v))}</div></div>`:'';
+    const grid2=(items)=>`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${items.filter(Boolean).join('')}</div>`;
+
+    // Onboarding
+    const onbHtml=onb?[
+      row('Nicho',onb.nicho+(onb.subnicho?' / '+onb.subnicho:'')),
+      row('Posicionamento',onb.posicionamento),
+      box('Persona',onb.persona),
+      box('Arcos Editoriais',onb.arcos),
+      onb.obs?row('Obs',onb.obs):''
+    ].filter(Boolean).join(''):null;
+
+    // Diagnostico
+    const diagHtml=diag?grid2([
+      box('Pontos Fortes',diag.pontos_fortes),
+      box('Pontos Fracos',diag.pontos_fracos),
+      box('Posicionamento Atual',diag.posicionamento),
+      box('Recomendacoes',diag.obs)
+    ]):null;
+
+    // SWOT
+    const swotHtml=swot?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      ${[['💪 Forcas',swot.forcas,'#e8f5e9'],['⚠ Fraquezas',swot.fraquezas,'#fff3e0'],['🌟 Oportunidades',swot.oportunidades,'#e3f2fd'],['🚨 Ameacas',swot.ameacas,'#fce4ec']]
+        .filter(([,v])=>v).map(([l,v,bg])=>`<div style="background:${bg};border-radius:8px;padding:12px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#555;margin-bottom:6px">${l}</div><div style="font-size:12px;color:#222;line-height:1.5">${_esc(v)}</div></div>`).join('')}
+    </div>`:null;
+
+    // Pilares
+    const pilaresHtml=pil&&pil.pilares&&pil.pilares.length?`
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px">
+        ${pil.pilares.filter(p=>p.nome).map(p=>`
+          <div style="border:1px solid #e0d6c8;border-radius:8px;padding:12px">
+            <div style="font-size:13px;font-weight:700;color:#4a3728;margin-bottom:2px">${_esc(p.nome)}${p.percentual?` <em style="font-weight:400;color:#999">${p.percentual}%</em>`:''}</div>
+            ${p.descricao?`<div style="font-size:11px;color:#666;margin-top:4px;line-height:1.4">${_esc(p.descricao)}</div>`:''}
+            ${p.formatos?`<div style="font-size:10px;color:#aaa;margin-top:4px">${_esc(p.formatos)}</div>`:''}
+          </div>`).join('')}
+      </div>`:null;
+
+    // Briefing
+    const briefHtml=brief?[
+      brief.bom?box('O que performou bem',brief.bom):'',
+      brief.ruim?box('O que nao performou',brief.ruim):'',
+      brief.foco?box('Foco do mes',brief.foco):'',
+      brief.campanha?box('Campanhas e datas',brief.campanha):'',
+      brief.obs?box('Instrucoes para Chloe',brief.obs):''
+    ].filter(Boolean).join(''):null;
+
+    // Concorrentes
+    const concHtml=conc&&conc.lista&&conc.lista.length?
+      conc.lista.filter(x=>x.ig).map(x=>`
+        <div style="border:1px solid #e0d6c8;border-radius:8px;padding:12px;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:700;color:#4a3728;margin-bottom:4px">@${_esc(x.ig)}${x.nicho?` <em style="font-weight:400;color:#999">· ${_esc(x.nicho)}</em>`:''}</div>
+          ${x.fortes?`<div style="font-size:11px;color:#2e7d32;margin-bottom:2px">💪 ${_esc(x.fortes)}</div>`:''}
+          ${x.fracos?`<div style="font-size:11px;color:#b71c1c">⚠ ${_esc(x.fracos)}</div>`:''}
+        </div>`).join(''):null;
+
+    // Resultados (metricas_instagram)
+    const fN=n=>(n||0).toLocaleString('pt-BR');
+    const resHtml=res?`
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">
+        ${[['👥 Seguidores',fN(res.seguidores)],['👁 Alcance',fN(res.alcance)],['💫 Impressoes',fN(res.impressoes)],['❤️ Engajamento',(res.engajamento||0)+'%'],['🔗 Cliques',fN(res.visitas_perfil)]]
+          .map(([l,v])=>`<div style="background:#f9f6f2;border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#999;text-transform:uppercase;margin-bottom:4px">${l}</div><div style="font-size:18px;font-weight:700;color:#4a3728">${v}</div></div>`).join('')}
+      </div>${res.publico_principal?`<div style="font-size:11px;color:#888;margin-top:8px">Publico principal: ${_esc(res.publico_principal)}</div>`:''}`
+    :null;
+
+    const temDados=onbHtml||diagHtml||swotHtml||pilaresHtml||briefHtml||concHtml||resHtml;
+    if(!temDados)return`<div class="aw2-empty">Nenhum dado salvo ainda. Preencha as abas com o Pedro primeiro.</div>`;
+
+    return`
+    <style>
+      @media print{
+        body,html{margin:0!important;padding:0!important}
+        .aw2-sidebar,.aw2-header,.aw2-topbar,#sidebar,#topbar,.aw2-tabs,.aw2-back,#aw2-print-btn,.aw2-btn,.aw2-sr{display:none!important}
+        #aw2c{padding:0!important;overflow:visible!important}
+        .geral-wrap{padding:20px!important;max-width:100%!important}
+        .geral-sec{page-break-inside:avoid;margin-bottom:18px!important}
+        .geral-sec:nth-child(3n){page-break-after:always}
+      }
+      .geral-wrap{font-family:'Poppins',sans-serif;color:#222;max-width:900px;margin:0 auto;padding:0 4px 32px}
+      .geral-header{background:#4a3728;color:#FAF8F2;border-radius:12px;padding:20px 24px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end}
+      .geral-header-nome{font-size:22px;font-weight:700;font-family:'Cormorant Garamond',serif}
+      .geral-header-meta{font-size:12px;opacity:.75;text-align:right;line-height:1.8}
+      .geral-sec{background:#fff;border:1px solid #e0d6c8;border-radius:10px;padding:16px 18px;margin-bottom:14px}
+      .geral-sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#7A5C00;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #f0e8df}
+      .geral-row{display:flex;gap:12px;margin-bottom:6px;font-size:12px}
+      .geral-lbl{font-size:10px;font-weight:600;text-transform:uppercase;color:#999;white-space:nowrap;min-width:90px;padding-top:2px}
+      .geral-val{font-size:12px;color:#333;line-height:1.5}
+      .geral-box{background:#faf6f2;border-radius:7px;padding:10px 12px;margin-bottom:8px}
+    </style>
+    <div class="geral-wrap">
+      <div class="geral-header">
+        <div>
+          <div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Dashboard Pedro</div>
+          <div class="geral-header-nome">${_esc(cliNome)}</div>
+        </div>
+        <div class="geral-header-meta">
+          Marketing Primor<br>${mes}
+          <br><button id="aw2-print-btn" onclick="window.print()" style="margin-top:8px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#FAF8F2;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer">🖨 Imprimir / PDF</button>
+        </div>
+      </div>
+      ${sec('📋 Onboarding Estrategico',onbHtml)}
+      ${sec('📊 Diagnostico',diagHtml)}
+      ${sec('📈 Resultados Instagram',resHtml)}
+      ${sec('⚡ Analise SWOT',swotHtml)}
+      ${sec('🎯 Pilares Editoriais',pilaresHtml)}
+      ${sec('📄 Briefing Mensal',briefHtml)}
+      ${sec('🔍 Analise de Concorrentes',concHtml)}
+    </div>`;
+  }
+
   async function _onboarding(){
     const d=await _load({});
     return `${_fiCard()}<div class="aw2-form"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="aw2-ft" style="margin:0">📋 Onboarding</div>${_gerarBtn('onboarding')}</div>
