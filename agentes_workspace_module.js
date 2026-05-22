@@ -146,16 +146,15 @@
     catch{return null;}
   }
 
-  // Chama anthropic-proxy com contexto completo do cliente e preenche campos
-  // imagens: array de URLs públicas para análise visual (vision)
-  async function _gerarComIA(instrucao, fillFn, btnId, imagens=[]){
+  // Chama anthropic-proxy, preenche campos e salva automaticamente
+  // imagens: URLs públicas para vision · afterFill: fn async chamada após preencher
+  async function _gerarComIA(instrucao, fillFn, btnId, imagens=[], afterFill=null){
     const btn=document.getElementById(btnId);
     const orig=btn?.textContent;
     if(btn){btn.disabled=true;btn.textContent='⏳ Gerando...';}
     try{
       const sp=await _buildSystemPrompt(_ag?.id||'pedro',_cliente);
       const textoFinal=instrucao+'\n\nResponda SOMENTE com JSON válido, sem texto fora do bloco JSON.';
-      // Se há imagens, monta content como array com blocos de imagem + texto
       const userContent=imagens.length
         ?[...imagens.slice(0,10).map(url=>({type:'image',source:{type:'url',url}})),{type:'text',text:textoFinal}]
         :textoFinal;
@@ -169,6 +168,11 @@
       const match=text.match(/```json\s*([\s\S]*?)```/)||text.match(/(\{[\s\S]*\})/);
       const json=JSON.parse((match?.[1]||text).trim());
       fillFn(json);
+      // Auto-salva após preencher
+      if(afterFill){
+        if(btn) btn.textContent='💾 Salvando...';
+        await afterFill();
+      }
     }catch(e){alert('Erro ao gerar: '+e.message);}
     finally{if(btn){btn.disabled=false;btn.textContent=orig;}}
   }
@@ -1743,9 +1747,42 @@
       };
       const cfg=cfgs[aba];if(!cfg)return;
       const instrucaoFinal=cfg.instrucao+(extra?`\n\nCONTEXTO ADICIONAL DISPONÍVEL:${extra}`:'');
-      // Passa screenshots de todos os concorrentes para a IA ver visualmente
       const todasScreenshots=Object.values(_concScreenshots).flat().filter(Boolean).slice(0,10);
-      await _gerarComIA(instrucaoFinal,cfg.fill,'aw2-gerar-'+aba,todasScreenshots);
+
+      // Mapa de auto-save: após gerar, salva automaticamente e sincroniza com CRM
+      const autoSave={
+        concorrentes: async()=>{
+          const lista=Array.from({length:5},(_,i)=>({ig:_v('cc-'+i+'-ig'),nicho:_v('cc-'+i+'-nicho'),fortes:_v('cc-'+i+'-fortes'),fracos:_v('cc-'+i+'-fracos'),screenshots:_concScreenshots[i]||[]}));
+          const ok=await _save({lista}); if(ok){_flash('cc-s','✓ Gerado e salvo');_syncCRM('concorrentes',{lista});}
+        },
+        onboarding: async()=>{
+          const c={contrato:_v('on-c'),nicho:_v('on-n'),subnicho:_v('on-sn'),persona:_v('on-p'),posicionamento:_v('on-pos'),arcos:_v('on-a'),obs:_v('on-o')};
+          const ok=await _save(c); if(ok){_flash('on-s','✓ Gerado e salvo');_syncCRM('onboarding',c);}
+        },
+        diagnostico: async()=>{
+          const c={pontos_fortes:_v('dg-pf'),pontos_fracos:_v('dg-pw'),posicionamento:_v('dg-pos'),obs:_v('dg-obs')};
+          const ok=await _save(c); if(ok){_flash('dg-s','✓ Gerado e salvo');_syncCRM('diagnostico',c);}
+        },
+        swot: async()=>{
+          const c={forcas:_v('sw-forcas'),fraquezas:_v('sw-fraquezas'),oportunidades:_v('sw-oportunidades'),ameacas:_v('sw-ameacas')};
+          const ok=await _save(c); if(ok){_flash('sw-s','✓ Gerado e salvo');_syncCRM('swot',c);}
+        },
+        pilares: async()=>{
+          const pilares=Array.from({length:5},(_,i)=>({nome:_v('pl'+i+'-nm'),percentual:_v('pl'+i+'-pc'),descricao:_v('pl'+i+'-ds'),formatos:_v('pl'+i+'-ft')}));
+          const ok=await _save({pilares}); if(ok){_flash('pil-s','✓ Gerado e salvo');_syncCRM('pilares',{pilares});}
+        },
+        briefing: async()=>{
+          const c={bom:_v('br-b'),ruim:_v('br-r'),foco:_v('br-f'),campanha:_v('br-c'),obs:_v('br-o')};
+          const ok=await _save(c);
+          if(ok){_flash('br-s','✓ Gerado e salvo');_syncCRM('briefing',c);const cliNome=_clientes.find(x=>x.email===_cliente)?.nome||_cliente;_notificar('chloe',`Novo briefing do Pedro para ${cliNome}. Planejamento pode começar!`,'entrega');}
+        },
+        planejamento: async()=>{
+          const c={linha:_v('pl-l'),gancho:_v('pl-g'),datas:_v('pl-d'),qtd_feed:_v('pl-f'),qtd_car:_v('pl-c'),qtd_reels:_v('pl-r'),obs:_v('pl-o')};
+          const ok=await _save(c); if(ok){_flash('pl-s','✓ Gerado e salvo');const cliNome=_clientes.find(x=>x.email===_cliente)?.nome||_cliente;_notificar('gabi',`Planejamento editorial da Chloe disponível para ${cliNome}.`,'entrega');}
+        },
+      };
+
+      await _gerarComIA(instrucaoFinal,cfg.fill,'aw2-gerar-'+aba,todasScreenshots,autoSave[aba]||null);
     },
     // Pedro — Concorrentes
     async saveConcorrentes(){
