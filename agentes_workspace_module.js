@@ -2341,39 +2341,59 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const existentes=await _loadQuadroCards();
       if(existentes.length&&!confirm(`O quadro já tem ${existentes.length} card${existentes.length!==1?'s':''}. Substituir tudo com o que a IA gerar?`))return;
       const btn=document.getElementById('aw2-quadro-ia-btn');
-      if(btn){btn.disabled=true;}
+      if(btn){btn.disabled=true;btn.textContent='⏳ Carregando contexto...';}
       const allCards=[];
       try{
+        // Planejamento salvo da Chloe
+        const{data:planRow}=await db.from('agentes_trabalhos').select('conteudo').eq('agente_id','chloe').eq('aba_id','planejamento').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().catch(()=>({data:null}));
+        const pl=planRow?.conteudo||{};
+        const qtdFeed=parseInt(pl.qtd_feed)||0;
+        const qtdCar=parseInt(pl.qtd_car)||0;
+        const qtdReels=parseInt(pl.qtd_reels)||0;
+        const total=(qtdFeed+qtdCar+qtdReels)||15;
+
+        // Histórico recente do chat da Chloe como contexto
+        const{data:chatRows}=await db.from('agentes_chat_historico').select('role,content').eq('agente_id','chloe').eq('client_email',_cliente).order('created_at',{ascending:false}).limit(30).catch(()=>({data:[]}));
+        const chatCtx=(chatRows||[]).reverse().map(r=>`${r.role==='user'?'Gislaine':'Chloe'}: ${(r.content||'').slice(0,400)}`).join('\n');
+
         const sp=await _buildSystemPrompt('chloe',_cliente);
         const hoje=new Date(_hoje());
+
+        // Distribuição por fase: proporções 40% / 35% / 25%
+        const nDesp=Math.ceil(total*0.4);
+        const nAut=Math.ceil(total*0.35);
+        const nConv=total-nDesp-nAut;
         const FASES=[
-          {id:'despertar', desc:'DESPERTAR — topo de funil: posts para ATRAIR novos seguidores, gerar curiosidade e conscientizar sobre o problema'},
-          {id:'autoridade',desc:'AUTORIDADE — meio de funil: posts para EDUCAR, construir autoridade e engajar seguidores que já conhecem o cliente'},
-          {id:'conversao', desc:'CONVERSÃO — fundo de funil: posts para CONVERTER com CTA direto, prova social, oferta e urgência'}
+          {id:'despertar', n:nDesp, desc:'DESPERTAR — topo de funil (atrair, conscientizar, gerar curiosidade)'},
+          {id:'autoridade',n:nAut,  desc:'AUTORIDADE — meio de funil (educar, engajar, construir autoridade)'},
+          {id:'conversao', n:nConv, desc:'CONVERSÃO — fundo de funil (converter, CTA, prova social, oferta)'}
         ];
+        const diasPorFase=Math.ceil(30/3);
+
+        const planCtx=pl.linha||pl.gancho||pl.obs?`\n\nPLANEJAMENTO SALVO DA CHLOE:\nLinha editorial: ${pl.linha||''}\nGancho do mês: ${pl.gancho||''}\nDatas e campanhas: ${pl.datas||''}\nFormatos: ${qtdFeed} feed, ${qtdCar} carrossel, ${qtdReels} reels\nObs: ${pl.obs||''}`:'';
+        const chatExtra=chatCtx?`\n\nHISTÓRICO DO CHAT DA CHLOE (use como base para os cards):\n${chatCtx}`:'';
+
         for(let i=0;i<FASES.length;i++){
           const f=FASES[i];
+          if(f.n<=0)continue;
           if(btn)btn.textContent=`⏳ ${f.id} (${i+1}/3)...`;
-          const ini=new Date(hoje);ini.setDate(ini.getDate()+i*10);
-          const fim=new Date(hoje);fim.setDate(fim.getDate()+i*10+9);
+          const ini=new Date(hoje);ini.setDate(ini.getDate()+i*diasPorFase);
+          const fim=new Date(hoje);fim.setDate(fim.getDate()+i*diasPorFase+diasPorFase-1);
           const range=`${ini.toISOString().slice(0,10)} a ${fim.toISOString().slice(0,10)}`;
-          const prompt=`Crie exatamente 7 cards de conteúdo para a fase ${f.desc}. Distribua as datas entre ${range} (não repita a mesma data). Para cada card gere: titulo (tema objetivo e chamativo), formato (reels/feed/carrossel/stories), data (YYYY-MM-DD), horario (varie entre 07:00 09:00 12:00 18:00 19:00 21:00), copy (texto principal completo do post), legenda (legenda pronta pro Instagram com emojis e CTA claro), roteiro (roteiro detalhado: cenas do reel ou slides do carrossel numerados), hashtags (30 hashtags relevantes). Responda SOMENTE com JSON puro: {"cards":[{"fase":"${f.id}","titulo":"...","formato":"...","data":"YYYY-MM-DD","horario":"19:00","status":"planejado","copy":"...","legenda":"...","roteiro":"...","hashtags":"#..."}]}. Sem quebras de linha dentro de valores — use ponto e virgula entre cenas/slides do roteiro.`;
+
+          const fmtHint=i===0?`Priorize reels (${qtdReels} no total do mês) nesta fase.`:i===1?`Priorize carrossel (${qtdCar} no total do mês) nesta fase.`:`Priorize feed (${qtdFeed} no total do mês) nesta fase.`;
+
+          const prompt=`${planCtx}${chatExtra}\n\nCom base no planejamento e histórico acima, crie exatamente ${f.n} cards de conteúdo para a fase ${f.desc}. ${fmtHint} Distribua as datas entre ${range} sem repetir datas. Para cada card: titulo (tema do planejamento, objetivo e chamativo), formato (reels/feed/carrossel/stories), data (YYYY-MM-DD), horario (varie entre 07:00 12:00 18:00 19:00 21:00), copy (texto principal completo), legenda (legenda pronta pro Instagram com emojis e CTA), roteiro (roteiro detalhado com cenas ou slides numerados, separados por ; ), hashtags (bloco com 20 hashtags relevantes). Responda SOMENTE com JSON puro: {"cards":[{"fase":"${f.id}","titulo":"...","formato":"...","data":"YYYY-MM-DD","horario":"19:00","status":"planejado","copy":"...","legenda":"...","roteiro":"...","hashtags":"#..."}]}. Sem quebras de linha dentro dos valores.`;
+
           const text=await _callProxy(sp,[{role:'user',content:prompt}]);
           const json=_extractJson(text);
-          (json.cards||[]).slice(0,10).forEach((c,j)=>{
+          (json.cards||[]).slice(0,f.n+2).forEach((c,j)=>{
             allCards.push({
               id:(Date.now()+i*100+j).toString(36),
-              fase:f.id,
-              titulo:c.titulo||'',
-              formato:c.formato||'',
-              data:c.data||'',
-              horario:c.horario||'',
-              status:'planejado',
-              copy:c.copy||'',
-              legenda:c.legenda||'',
-              roteiro:c.roteiro||'',
-              hashtags:c.hashtags||'',
-              link:'',arquivo_url:'',arquivo_nome:''
+              fase:f.id,titulo:c.titulo||'',formato:c.formato||'',
+              data:c.data||'',horario:c.horario||'',status:'planejado',
+              copy:c.copy||'',legenda:c.legenda||'',roteiro:c.roteiro||'',
+              hashtags:c.hashtags||'',link:'',arquivo_url:'',arquivo_nome:''
             });
           });
         }
