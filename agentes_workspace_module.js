@@ -366,11 +366,11 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       db.from('posts').select('tema_titulo,status,tipo').eq('client_email',clienteEmail).in('status',['criacao','revisao','aprovado']).order('data_post',{ascending:false}).limit(5).then(r=>r.data||[]).catch(()=>[]),
       db.from('metricas').select('mes,seguidores,alcance,engajamento').eq('client_email',clienteEmail).order('mes',{ascending:false}).limit(2).then(r=>r.data||[]).catch(()=>[]),
       db.from('clients').select('nome,empresa,instagram').eq('email',clienteEmail).maybeSingle().then(r=>r.data||{}).catch(()=>({})),
-      // Abas Pedro — carregadas para Pedro ver o que já existe
-      isPedro?wt('pedro','swot'):Promise.resolve(null),
-      isPedro?wt('pedro','pilares'):Promise.resolve(null),
-      isPedro?wt('pedro','diagnostico'):Promise.resolve(null),
-      isPedro?wt('pedro','concorrentes'):Promise.resolve(null),
+      // Abas Pedro — carregadas para Pedro e Chloe (Chloe precisa da estratégia do Pedro)
+      (isPedro||isChloe)?wt('pedro','swot'):Promise.resolve(null),
+      (isPedro||isChloe)?wt('pedro','pilares'):Promise.resolve(null),
+      (isPedro||isChloe)?wt('pedro','diagnostico'):Promise.resolve(null),
+      (isPedro||isChloe)?wt('pedro','concorrentes'):Promise.resolve(null),
       // Abas Chloe
       wt('chloe','planejamento').then(r=>r||{}),
       isChloe?wt('chloe','briefing_visual'):Promise.resolve(null),
@@ -466,6 +466,15 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       if(brief.foco) ctx+=`\nBriefing: bem="${t(brief.bom,100)}" foco="${t(brief.foco,100)}"`;
     }
     if(isChloe){
+      ctx+=`\n\nESTRATÉGIA DO PEDRO (use como base para o seu trabalho):`;
+      if(diag) ctx+=`\nDiagnóstico: fortes="${t(diag.pontos_fortes,150)}" | fracos="${t(diag.pontos_fracos,150)}" | posicionamento="${t(diag.posicionamento,100)}"`;
+      else ctx+=`\nDiagnóstico: (Pedro ainda não preencheu)`;
+      if(swot) ctx+=`\nSWOT: forças="${t(swot.forcas,150)}" | fraquezas="${t(swot.fraquezas,150)}" | oportunidades="${t(swot.oportunidades,150)}" | ameaças="${t(swot.ameacas,100)}"`;
+      else ctx+=`\nSWOT: (Pedro ainda não preencheu)`;
+      if(pilares?.pilares?.length) ctx+=`\nPilares: `+(pilares.pilares||[]).filter(p=>p.nome).map(p=>`${p.nome}(${p.percentual||0}%): ${t(p.descricao,80)}`).join(' | ');
+      else ctx+=`\nPilares: (Pedro ainda não preencheu)`;
+      if(onb.nicho) ctx+=`\nOnboarding: nicho="${t(onb.nicho,80)}" persona="${t(onb.persona,120)}"`;
+      if(brief.foco) ctx+=`\nBriefing: bem="${t(brief.bom,100)}" foco="${t(brief.foco,100)}"`;
       ctx+=`\n\nABAS CHLOE:`;
       if(plan.linha) ctx+=`\nPlan: linha="${t(plan.linha,120)}" gancho="${t(plan.gancho,80)}" feed=${plan.qtd_feed} car=${plan.qtd_car} reels=${plan.qtd_reels}`;
       if(briefV?.titulo) ctx+=`\nBriefV: "${t(briefV.titulo,80)}" tom="${t(briefV.tom,60)}"`;
