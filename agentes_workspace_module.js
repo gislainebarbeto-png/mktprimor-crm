@@ -1476,8 +1476,9 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     return`<div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <div class="aw2-ft" style="margin:0">🗂 Quadro de Planejamento</div>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span style="font-size:10px;color:var(--muted)">${cards.length}/30 cards</span>
+          <button id="aw2-quadro-ia-btn" class="aw2-btn" onclick="_AW2.quadroGerarIA()" style="font-size:11px;padding:5px 14px;background:linear-gradient(135deg,#2563a8,#1a3f6f);gap:5px;display:inline-flex;align-items:center">🧠 Preencher com IA</button>
           <button class="aw2-btn" onclick="_AW2.quadroNewCard('despertar')" style="font-size:11px;padding:5px 14px">+ Novo Card</button>
         </div>
       </div>
@@ -2335,6 +2336,38 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
     },
     quadroCloseModal(){document.getElementById('aw2-qmodal')?.remove();},
+    async quadroGerarIA(){
+      if(!_cliente){alert('Selecione um cliente primeiro.');return;}
+      const existentes=await _loadQuadroCards();
+      if(existentes.length&&!confirm(`O quadro já tem ${existentes.length} card${existentes.length!==1?'s':''}. Substituir tudo com o que a IA gerar?`))return;
+      const btn=document.getElementById('aw2-quadro-ia-btn');
+      if(btn){btn.disabled=true;btn.textContent='⏳ Gerando...';}
+      try{
+        const sp=await _buildSystemPrompt('chloe',_cliente);
+        const hoje=_hoje();
+        const prompt=`Com base em todo o contexto do cliente, crie um quadro de conteúdo completo de 30 dias (a partir de ${hoje}). Distribua os posts em 3 fases: despertar (topo - atrair e conscientizar), autoridade (meio - educar e engajar), conversao (fundo - converter e vender). Para cada card gere: fase, formato (reels/feed/carrossel/stories), titulo (tema objetivo), data (YYYY-MM-DD distribuindo ao longo do mes), horario (ex: 19:00), copy (texto principal do post), legenda (legenda completa pronta pro Instagram com CTA), roteiro (para reels ou carrossel - slide a slide), hashtags (bloco de hashtags). Gere entre 12 e 20 cards equilibrando as 3 fases. Status inicial de todos: planejado. Responda SOMENTE com JSON puro, sem nenhum texto fora dele: {"cards":[{"fase":"despertar","titulo":"...","formato":"reels","data":"YYYY-MM-DD","horario":"19:00","status":"planejado","copy":"...","legenda":"...","roteiro":"...","hashtags":"#..."}]}. Nunca quebre linhas dentro dos valores — use espaco em vez de barra-n.`;
+        const text=await _callProxy(sp,[{role:'user',content:prompt}]);
+        const json=_extractJson(text);
+        const cards=(json.cards||[]).slice(0,30).map((c,i)=>({
+          id:Date.now().toString(36)+(i).toString(36),
+          fase:c.fase||'despertar',
+          titulo:c.titulo||'',
+          formato:c.formato||'',
+          data:c.data||'',
+          horario:c.horario||'',
+          status:'planejado',
+          copy:c.copy||'',
+          legenda:c.legenda||'',
+          roteiro:c.roteiro||'',
+          hashtags:c.hashtags||'',
+          link:'',arquivo_url:'',arquivo_nome:''
+        }));
+        if(!cards.length)throw new Error('A IA não retornou cards.');
+        const ok=await _saveQuadroCards(cards);
+        if(ok)_renderAba('quadro');
+      }catch(e){alert('Erro ao gerar quadro: '+e.message);}
+      finally{if(btn){btn.disabled=false;btn.textContent='🧠 Preencher com IA';}}
+    },
     async quadroSaveCard(){
       const btn=document.getElementById('qm-save-btn');
       if(btn){btn.disabled=true;btn.textContent='⏳ Salvando...';}
