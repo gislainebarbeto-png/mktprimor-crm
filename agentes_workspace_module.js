@@ -161,6 +161,46 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     catch{return null;}
   }
 
+  // Lê stream SSE do Cloudflare Worker e retorna o texto completo
+  async function _readStream(res) {
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let text = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const d = line.slice(6).trim();
+        if (d === '[DONE]') return text;
+        try {
+          const p = JSON.parse(d);
+          if (p.type === 'content_block_delta' && p.delta?.type === 'text_delta') text += p.delta.text;
+        } catch {}
+      }
+    }
+    return text;
+  }
+
+  const _PROXY = 'https://mktprimor-proxy.gislainebarbeto.workers.dev';
+
+  // Chama o proxy e retorna o texto da resposta (suporta streaming e JSON)
+  async function _callProxy(system, messages) {
+    const res = await fetch(_PROXY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system, messages }),
+    });
+    const ct = res.headers.get('Content-Type') || '';
+    if (ct.includes('event-stream')) return _readStream(res);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
+    return data.content?.[0]?.text || '';
+  }
+
   // Chama anthropic-proxy, preenche campos e salva automaticamente
   // imagens: URLs públicas para vision · afterFill: fn async chamada após preencher
   function _repairJson(raw){
@@ -224,13 +264,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const userContent=imagens.length
         ?[...imagens.slice(0,10).map(url=>({type:'image',source:{type:'url',url}})),{type:'text',text:textoFinal}]
         :textoFinal;
-      const res=await fetch('https://mktprimor-proxy.gislainebarbeto.workers.dev',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({system:sp,messages:[{role:'user',content:userContent}]})
-      });
-      const data=await res.json();
-      if(!res.ok)throw new Error(data.error?.message||`HTTP ${res.status}`);
-      const text=data.content?.[0]?.text||'';
+      const text=await _callProxy(sp,[{role:'user',content:userContent}]);
       const json=_extractJson(text);
       fillFn(json);
       if(afterFill){
@@ -2578,19 +2612,16 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         const systemPrompt=await _buildSystemPrompt(_ag.id,_cliente);
         // Envia apenas as últimas 14 mensagens para não explodir o limite de tokens
         const histSlice=(_chatHist[_ag.id]||[]).slice(-14);
-        const res=await fetch('https://mktprimor-proxy.gislainebarbeto.workers.dev',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({system:systemPrompt,messages:histSlice})
-        });
-        const data=await res.json();
-        document.getElementById('aw2td')?.remove();
-        if(!res.ok){
-          const errDetail=data.error?.message||`HTTP ${res.status}`;
-          _addMsg('agent',`⚠️ Erro da API: ${errDetail}`);
+        let rawReply;
+        try{
+          rawReply=await _callProxy(systemPrompt,histSlice);
+        }catch(err){
+          document.getElementById('aw2td')?.remove();
+          _addMsg('agent',`⚠️ Erro da API: ${err.message}`);
           return;
         }
-        const rawReply=data.content?.[0]?.text||'Erro ao processar.';
+        document.getElementById('aw2td')?.remove();
+        rawReply=rawReply||'Erro ao processar.';
         // Parser robusto para blocos [[SAVE:aba:{json}]]
         // Usa indexOf para encontrar inicio/fim, conta brackets para achar fim do JSON
         function _extractSaveCmds(text){

@@ -12,53 +12,41 @@ export default {
     try {
       const { system, messages } = await req.json()
 
-      // Timeout de 25s para não estourar o limite de 30s do Cloudflare Workers
-      const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), 25000)
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': env.ANTHROPIC_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 4096,
+          stream: true,
+          system,
+          messages,
+        }),
+      })
 
-      let res
-      try {
-        res = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          signal: controller.signal,
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': env.ANTHROPIC_KEY,
-            'anthropic-version': '2023-06-01',
-          },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 4096,
-            system,
-            messages,
-          }),
+      if (!res.ok) {
+        const errText = await res.text()
+        let errData
+        try { errData = JSON.parse(errText) } catch { errData = { error: { message: errText } } }
+        return new Response(JSON.stringify(errData), {
+          headers: { ...CORS, 'Content-Type': 'application/json' },
+          status: res.status,
         })
-      } finally {
-        clearTimeout(timer)
       }
 
-      const text = await res.text()
-      let data
-      try {
-        data = JSON.parse(text)
-      } catch {
-        return new Response(
-          JSON.stringify({ error: { message: `Resposta inválida da Anthropic (status ${res.status})` } }),
-          { headers: { ...CORS, 'Content-Type': 'application/json' }, status: 502 }
-        )
-      }
-
-      return new Response(JSON.stringify(data), {
-        headers: { ...CORS, 'Content-Type': 'application/json' },
-        status: res.status,
+      // Passa o stream SSE da Anthropic direto para o browser
+      return new Response(res.body, {
+        headers: { ...CORS, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
+        status: 200,
       })
     } catch (e) {
-      const msg = e.name === 'AbortError'
-        ? 'Timeout: Anthropic demorou mais de 25s. Tente uma pergunta mais curta.'
-        : e.message
-      return new Response(JSON.stringify({ error: { message: msg } }), {
+      return new Response(JSON.stringify({ error: { message: e.message } }), {
         headers: { ...CORS, 'Content-Type': 'application/json' },
-        status: 504,
+        status: 500,
       })
     }
   },
