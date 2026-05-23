@@ -1342,14 +1342,13 @@ const App = {
     }
     Meta.checkOAuthSuccess();
     const VALID_TABS = ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','agentes','usuarios'];
-    const savedTab = sessionStorage.getItem('adminTab');
-    const startTab = (savedTab && VALID_TABS.includes(savedTab) && savedTab !== 'followup' && savedTab !== 'metricas') ? savedTab : 'posts';
+    const savedTab = localStorage.getItem('adminTab');
+    const startTab = (savedTab && VALID_TABS.includes(savedTab)) ? savedTab : null;
     if (this.user.email === ADMIN_EMAIL) {
       document.getElementById('admin-email').textContent = this.user.email;
       this.show('admin-view');
       Admin.isEquipe = false;
-      // Sempre abre o grid de cards (netflix_module), nunca uma aba direta
-      setTimeout(()=>{ if(window.NFModule) NFModule.refresh(); else Admin.tab(startTab); }, 80);
+      setTimeout(()=>{ if(startTab) Admin.tab(startTab); else if(window.NFModule) NFModule.refresh(); else Admin.tab('posts'); }, 80);
     } else {
       // Check if team member
       const { data: equipe } = await db.from('equipe').select('email,permissoes,cargo,ativo').ilike('email', this.user.email).maybeSingle();
@@ -1367,8 +1366,7 @@ const App = {
         Admin.isEquipe = true;
         Admin._perms = equipe.permissoes || {};
         Admin._cargo = equipe.cargo || 'operacional';
-        // Sempre abre o grid de cards (netflix_module)
-        setTimeout(()=>{ if(window.NFModule) NFModule.refresh(); else Admin.tab(startTab); }, 80);
+        setTimeout(()=>{ if(startTab) Admin.tab(startTab); else if(window.NFModule) NFModule.refresh(); else Admin.tab('posts'); }, 80);
       } else {
         document.getElementById('client-email-display').textContent = this.user.email;
         const name = this.user.user_metadata?.nome || this.user.email.split('@')[0];
@@ -1433,7 +1431,7 @@ const Admin = {
 
   async tab(name) {
     Admin.currentTab = name;
-    sessionStorage.setItem('adminTab', name);
+    localStorage.setItem('adminTab', name);
     ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','relatorio','comercial','agentes','tarefas','brand','trafego','usuarios'].forEach(t => {
       document.getElementById('nav-'+t)?.classList.toggle('active', t === name);
     });
