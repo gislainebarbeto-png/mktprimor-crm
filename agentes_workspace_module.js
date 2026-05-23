@@ -2341,29 +2341,44 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const existentes=await _loadQuadroCards();
       if(existentes.length&&!confirm(`O quadro já tem ${existentes.length} card${existentes.length!==1?'s':''}. Substituir tudo com o que a IA gerar?`))return;
       const btn=document.getElementById('aw2-quadro-ia-btn');
-      if(btn){btn.disabled=true;btn.textContent='⏳ Gerando...';}
+      if(btn){btn.disabled=true;}
+      const allCards=[];
       try{
         const sp=await _buildSystemPrompt('chloe',_cliente);
-        const hoje=_hoje();
-        const prompt=`Com base em todo o contexto do cliente, crie um quadro de conteúdo completo de 30 dias (a partir de ${hoje}). Distribua os posts em 3 fases: despertar (topo - atrair e conscientizar), autoridade (meio - educar e engajar), conversao (fundo - converter e vender). Para cada card gere: fase, formato (reels/feed/carrossel/stories), titulo (tema objetivo), data (YYYY-MM-DD distribuindo ao longo do mes), horario (ex: 19:00), copy (texto principal do post), legenda (legenda completa pronta pro Instagram com CTA), roteiro (para reels ou carrossel - slide a slide), hashtags (bloco de hashtags). Gere entre 12 e 20 cards equilibrando as 3 fases. Status inicial de todos: planejado. Responda SOMENTE com JSON puro, sem nenhum texto fora dele: {"cards":[{"fase":"despertar","titulo":"...","formato":"reels","data":"YYYY-MM-DD","horario":"19:00","status":"planejado","copy":"...","legenda":"...","roteiro":"...","hashtags":"#..."}]}. Nunca quebre linhas dentro dos valores — use espaco em vez de barra-n.`;
-        const text=await _callProxy(sp,[{role:'user',content:prompt}]);
-        const json=_extractJson(text);
-        const cards=(json.cards||[]).slice(0,30).map((c,i)=>({
-          id:Date.now().toString(36)+(i).toString(36),
-          fase:c.fase||'despertar',
-          titulo:c.titulo||'',
-          formato:c.formato||'',
-          data:c.data||'',
-          horario:c.horario||'',
-          status:'planejado',
-          copy:c.copy||'',
-          legenda:c.legenda||'',
-          roteiro:c.roteiro||'',
-          hashtags:c.hashtags||'',
-          link:'',arquivo_url:'',arquivo_nome:''
-        }));
-        if(!cards.length)throw new Error('A IA não retornou cards.');
-        const ok=await _saveQuadroCards(cards);
+        const hoje=new Date(_hoje());
+        const FASES=[
+          {id:'despertar', desc:'DESPERTAR — topo de funil: posts para ATRAIR novos seguidores, gerar curiosidade e conscientizar sobre o problema'},
+          {id:'autoridade',desc:'AUTORIDADE — meio de funil: posts para EDUCAR, construir autoridade e engajar seguidores que já conhecem o cliente'},
+          {id:'conversao', desc:'CONVERSÃO — fundo de funil: posts para CONVERTER com CTA direto, prova social, oferta e urgência'}
+        ];
+        for(let i=0;i<FASES.length;i++){
+          const f=FASES[i];
+          if(btn)btn.textContent=`⏳ ${f.id} (${i+1}/3)...`;
+          const ini=new Date(hoje);ini.setDate(ini.getDate()+i*10);
+          const fim=new Date(hoje);fim.setDate(fim.getDate()+i*10+9);
+          const range=`${ini.toISOString().slice(0,10)} a ${fim.toISOString().slice(0,10)}`;
+          const prompt=`Crie exatamente 7 cards de conteúdo para a fase ${f.desc}. Distribua as datas entre ${range} (não repita a mesma data). Para cada card gere: titulo (tema objetivo e chamativo), formato (reels/feed/carrossel/stories), data (YYYY-MM-DD), horario (varie entre 07:00 09:00 12:00 18:00 19:00 21:00), copy (texto principal completo do post), legenda (legenda pronta pro Instagram com emojis e CTA claro), roteiro (roteiro detalhado: cenas do reel ou slides do carrossel numerados), hashtags (30 hashtags relevantes). Responda SOMENTE com JSON puro: {"cards":[{"fase":"${f.id}","titulo":"...","formato":"...","data":"YYYY-MM-DD","horario":"19:00","status":"planejado","copy":"...","legenda":"...","roteiro":"...","hashtags":"#..."}]}. Sem quebras de linha dentro de valores — use ponto e virgula entre cenas/slides do roteiro.`;
+          const text=await _callProxy(sp,[{role:'user',content:prompt}]);
+          const json=_extractJson(text);
+          (json.cards||[]).slice(0,10).forEach((c,j)=>{
+            allCards.push({
+              id:(Date.now()+i*100+j).toString(36),
+              fase:f.id,
+              titulo:c.titulo||'',
+              formato:c.formato||'',
+              data:c.data||'',
+              horario:c.horario||'',
+              status:'planejado',
+              copy:c.copy||'',
+              legenda:c.legenda||'',
+              roteiro:c.roteiro||'',
+              hashtags:c.hashtags||'',
+              link:'',arquivo_url:'',arquivo_nome:''
+            });
+          });
+        }
+        if(!allCards.length)throw new Error('A IA não retornou cards.');
+        const ok=await _saveQuadroCards(allCards);
         if(ok)_renderAba('quadro');
       }catch(e){alert('Erro ao gerar quadro: '+e.message);}
       finally{if(btn){btn.disabled=false;btn.textContent='🧠 Preencher com IA';}}
