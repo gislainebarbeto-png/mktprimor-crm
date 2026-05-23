@@ -24,8 +24,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       labels:{geral:'🗂 Geral',onboarding:'📋 Onboarding',diagnostico:'📊 Diagnóstico',concorrentes:'🔍 Concorrentes',swot:'⚡ SWOT',pilares:'🎯 Pilares',briefing:'📄 Briefing Mensal',resultados:'📈 Resultados',arquivos:'📁 Arquivos',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
     { id:'chloe',   nome:'Chloe',   iniciais:'CH', tipo:'content',   cargo:'Arquitetura da Informação & Conteúdo',
       chips:['Planejamento 30 dias','Copy & legendas','Roteiros Reels','Briefing Gabi'],
-      abas:['planejamento','copy','roteiros','calendario_posts','briefing_visual','arquivos','calendario','chat'],
-      labels:{planejamento:'📋 Planejamento',copy:'✍️ Copy & Legendas',roteiros:'🎬 Roteiros Reels',calendario_posts:'📅 Calendário Posts',briefing_visual:'✏️ Briefing Visual',arquivos:'📁 Arquivos',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
+      abas:['planejamento','quadro','copy','roteiros','calendario_posts','briefing_visual','arquivos','calendario','chat'],
+      labels:{planejamento:'📋 Planejamento',quadro:'🗂 Quadro',copy:'✍️ Copy & Legendas',roteiros:'🎬 Roteiros Reels',calendario_posts:'📅 Calendário Posts',briefing_visual:'✏️ Briefing Visual',arquivos:'📁 Arquivos',calendario:'🗓 Calendário',chat:'💬 Chat IA'} },
     { id:'gabi',    nome:'Gabi',    iniciais:'GA', tipo:'design',    cargo:'Design Visual & Identidade de Marca',
       chips:['Moodboard','Conceito visual','Briefing designer','Revisão de posts'],
       abas:['moodboard','conceito','briefing_designer','posts_revisao','arquivos','calendario','chat'],
@@ -690,6 +690,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       case'briefing':          h=await _briefing();break;
       case'resultados':        h=await _resultados();break;
       case'planejamento':      h=await _planejamento();break;
+      case'quadro':            h=await _quadroChloe();break;
       case'copy':              h=await _copy();break;
       case'roteiros':          h=await _roteiros();break;
       case'calendario_posts':  h=await _calendarioPosts();break;
@@ -1426,6 +1427,63 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         </div>
         <div style="font-size:13px;font-weight:500;color:var(--brown);margin-top:4px">${_esc(p.tema_titulo||'(sem título)')}</div>
       </div>`).join(''):'<div class="aw2-empty">Nenhum post para este mês.</div>'}
+    </div>`;
+  }
+
+  // CHLOE — Quadro Kanban helpers
+  async function _loadQuadroCards(){
+    if(!_cliente)return[];
+    try{
+      const{data}=await db.from('agentes_trabalhos').select('conteudo').eq('agente_id','chloe').eq('aba_id','quadro').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle();
+      return data?.conteudo?.cards||[];
+    }catch{return[];}
+  }
+  async function _saveQuadroCards(cards){
+    return _saveAs('chloe','quadro',{cards});
+  }
+
+  // CHLOE — Quadro de Planejamento (Kanban)
+  async function _quadroChloe(){
+    if(!_cliente)return`<div class="aw2-empty">Selecione um cliente para ver o quadro de planejamento.</div>`;
+    const cards=await _loadQuadroCards();
+    const FASES=[
+      {id:'despertar', label:'DESPERTAR', cor:'#e67e22',desc:'Topo de Funil — Atrair'},
+      {id:'autoridade',label:'AUTORIDADE',cor:'#2980b9',desc:'Meio de Funil — Engajar'},
+      {id:'conversao', label:'CONVERSÃO', cor:'#27ae60',desc:'Fundo de Funil — Converter'}
+    ];
+    const fmtC={reels:'#8e44ad',feed:'#e67e22',carrossel:'#2980b9',stories:'#27ae60',tiktok:'#e74c3c'};
+    const stC={planejado:'#9B6B3A',criando:'#2980b9',pronto:'#27ae60'};
+    const badge=(v,map)=>v?`<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:${map[v]||'#666'}22;color:${map[v]||'#666'};border:1px solid ${map[v]||'#666'}44;white-space:nowrap">${v}</span>`:'';
+    const card2h=c=>`
+      <div onclick="_AW2.quadroEditCard('${c.id}')" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;margin-bottom:8px;position:relative;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow='none'">
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">${badge(c.formato,fmtC)}${badge(c.status||'planejado',stC)}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--brown);line-height:1.35;margin-bottom:5px">${_esc(c.titulo||'(sem título)')}</div>
+        ${c.data?`<div style="font-size:10px;color:var(--muted)">${_fmtD(c.data)}${c.horario?' · ⏰ '+c.horario:''}</div>`:''}
+        ${c.copy?`<div style="font-size:11px;color:var(--text);opacity:.65;margin-top:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${_esc(c.copy.replace(/\n/g,' '))}</div>`:''}
+        ${c.arquivo_nome?`<div style="font-size:10px;color:var(--accent);margin-top:5px">📎 ${_esc(c.arquivo_nome)}</div>`:''}
+        <button onclick="event.stopPropagation();_AW2.quadroDelCard('${c.id}')" class="aw2-del" style="position:absolute;top:8px;right:8px;opacity:.45" title="Remover">✕</button>
+      </div>`;
+    const col=f=>{
+      const fc=cards.filter(c=>c.fase===f.id);
+      return`<div style="flex:0 0 278px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;background:${f.cor}15;border:1px solid ${f.cor}30;margin-bottom:12px">
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:${f.cor}">${f.label}</div><div style="font-size:9px;color:var(--muted);margin-top:1px">${f.desc} · ${fc.length} card${fc.length!==1?'s':''}</div></div>
+          <button onclick="_AW2.quadroNewCard('${f.id}')" style="background:${f.cor};color:#fff;border:none;border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0" title="Novo card">+</button>
+        </div>
+        ${fc.length?fc.map(card2h).join(''):`<div style="font-size:11px;color:var(--muted);text-align:center;padding:20px 8px;border:1px dashed var(--border);border-radius:8px">Nenhum card<br><button onclick="_AW2.quadroNewCard('${f.id}')" style="margin-top:6px;background:none;border:none;color:${f.cor};font-size:11px;cursor:pointer;text-decoration:underline">+ Adicionar</button></div>`}
+      </div>`;
+    };
+    return`<div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="aw2-ft" style="margin:0">🗂 Quadro de Planejamento</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:10px;color:var(--muted)">${cards.length}/30 cards</span>
+          <button class="aw2-btn" onclick="_AW2.quadroNewCard('despertar')" style="font-size:11px;padding:5px 14px">+ Novo Card</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;align-items:flex-start">
+        ${FASES.map(col).join('')}
+      </div>
     </div>`;
   }
 
@@ -2216,6 +2274,110 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       _flash('cal-s','✓ Adicionado');_renderAba('calendario');}catch{_flash('cal-s','⚠ Erro');}
     },
     async delCal(id){try{await db.from('agentes_calendario').delete().eq('id',id);_renderAba('calendario');}catch{}},
+    // Chloe — Quadro Kanban
+    quadroNewCard(fase){
+      _AW2._openQuadroModal({id:'',fase:fase||'despertar',titulo:'',formato:'',data:'',horario:'',status:'planejado',copy:'',legenda:'',roteiro:'',hashtags:'',link:'',arquivo_url:'',arquivo_nome:''});
+    },
+    quadroEditCard(id){
+      _loadQuadroCards().then(cards=>{const c=cards.find(x=>x.id===id);if(c)_AW2._openQuadroModal(c);});
+    },
+    async quadroDelCard(id){
+      if(!confirm('Remover este card?'))return;
+      const cards=await _loadQuadroCards();
+      const ok=await _saveQuadroCards(cards.filter(c=>c.id!==id));
+      if(ok)_renderAba('quadro');
+    },
+    _openQuadroModal(card){
+      document.getElementById('aw2-qmodal')?.remove();
+      const modal=document.createElement('div');
+      modal.id='aw2-qmodal';
+      modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+      const sel=(id,v)=>`<option value="${id}"${card.fase===id?' selected':''}>`;
+      const fmtOpt=v=>['','reels','feed','carrossel','stories','tiktok'].map(f=>`<option value="${f}"${card.formato===f?' selected':''}>${f||'—'}</option>`).join('');
+      const stOpt=()=>['planejado','criando','pronto'].map(s=>`<option value="${s}"${(card.status||'planejado')===s?' selected':''}>${s}</option>`).join('');
+      const escV=t=>(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      modal.innerHTML=`<div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;padding:28px;position:relative">
+        <button onclick="_AW2.quadroCloseModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);line-height:1">✕</button>
+        <div class="aw2-ft" style="margin-bottom:18px">✏️ ${card.id?'Editar':'Novo'} Card</div>
+        <input type="hidden" id="qm-id" value="${escV(card.id)}">
+        <div class="aw2-r2">
+          <div class="aw2-fg"><label class="aw2-fl">Fase</label><select class="aw2-s2" id="qm-fase">
+            <option value="despertar"${card.fase==='despertar'?' selected':''}>DESPERTAR — Topo</option>
+            <option value="autoridade"${card.fase==='autoridade'?' selected':''}>AUTORIDADE — Meio</option>
+            <option value="conversao"${card.fase==='conversao'?' selected':''}>CONVERSÃO — Fundo</option>
+          </select></div>
+          <div class="aw2-fg"><label class="aw2-fl">Formato</label><select class="aw2-s2" id="qm-fmt">${fmtOpt()}</select></div>
+        </div>
+        <div class="aw2-fg"><label class="aw2-fl">Título / Tema</label><input class="aw2-in" id="qm-titulo" value="${escV(card.titulo)}" placeholder="Tema do conteúdo"></div>
+        <div class="aw2-r2">
+          <div class="aw2-fg"><label class="aw2-fl">Data</label><input type="date" class="aw2-in" id="qm-data" value="${escV(card.data)}"></div>
+          <div class="aw2-fg"><label class="aw2-fl">Horário</label><input type="time" class="aw2-in" id="qm-horario" value="${escV(card.horario)}"></div>
+          <div class="aw2-fg"><label class="aw2-fl">Status</label><select class="aw2-s2" id="qm-status">${stOpt()}</select></div>
+        </div>
+        <div class="aw2-fg"><label class="aw2-fl">Copy</label><textarea class="aw2-ta" id="qm-copy" placeholder="Texto principal / copy..." style="min-height:80px">${escV(card.copy)}</textarea></div>
+        <div class="aw2-fg"><label class="aw2-fl">Legenda</label><textarea class="aw2-ta" id="qm-legenda" placeholder="Legenda para o Instagram...">${escV(card.legenda)}</textarea></div>
+        <div class="aw2-fg"><label class="aw2-fl">Roteiro</label><textarea class="aw2-ta" id="qm-roteiro" placeholder="Roteiro para Reels / Carrossel..." style="min-height:80px">${escV(card.roteiro)}</textarea></div>
+        <div class="aw2-fg"><label class="aw2-fl">Hashtags</label><textarea class="aw2-ta" id="qm-tags" placeholder="#hashtag1 #hashtag2..." style="min-height:44px">${escV(card.hashtags)}</textarea></div>
+        <div class="aw2-fg"><label class="aw2-fl">Link de referência</label><input class="aw2-in" id="qm-link" value="${escV(card.link)}" placeholder="https://..."></div>
+        <div class="aw2-fg"><label class="aw2-fl">Arquivo</label>
+          <input type="file" id="qm-file" style="font-size:12px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:5px 8px;width:100%;box-sizing:border-box">
+          ${card.arquivo_nome?`<div style="font-size:10px;color:var(--accent);margin-top:4px">📎 Atual: ${escV(card.arquivo_nome)}${card.arquivo_url?` <a href="${escV(card.arquivo_url)}" target="_blank" style="color:var(--accent)">↗ Abrir</a>`:''}</div>`:''}
+          <input type="hidden" id="qm-arquivo-url" value="${escV(card.arquivo_url)}">
+          <input type="hidden" id="qm-arquivo-nome" value="${escV(card.arquivo_nome)}">
+        </div>
+        <div class="aw2-sr" style="margin-top:20px">
+          <button class="aw2-btn" id="qm-save-btn" onclick="_AW2.quadroSaveCard()">💾 Salvar Card</button>
+          <button onclick="_AW2.quadroCloseModal()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 16px;font-size:12px;cursor:pointer;color:var(--muted)">Cancelar</button>
+          <span class="aw2-svd" id="qm-sv"></span>
+        </div>
+      </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+    },
+    quadroCloseModal(){document.getElementById('aw2-qmodal')?.remove();},
+    async quadroSaveCard(){
+      const btn=document.getElementById('qm-save-btn');
+      if(btn){btn.disabled=true;btn.textContent='⏳ Salvando...';}
+      try{
+        let arquivoUrl=document.getElementById('qm-arquivo-url')?.value||'';
+        let arquivoNome=document.getElementById('qm-arquivo-nome')?.value||'';
+        const file=document.getElementById('qm-file')?.files?.[0];
+        if(file&&_cliente){
+          const ext=(file.name.split('.').pop()||'bin').toLowerCase();
+          const cardId=document.getElementById('qm-id')?.value||Date.now().toString(36);
+          const path=`chloe-quadro/${_cliente.replace(/[@.]/g,'_')}/${cardId}-${Date.now()}.${ext}`;
+          const{error}=await db.storage.from('posts-media').upload(path,file,{upsert:true,contentType:file.type});
+          if(!error){
+            const{data:{publicUrl}}=db.storage.from('posts-media').getPublicUrl(path);
+            arquivoUrl=publicUrl;arquivoNome=file.name;
+          }
+        }
+        const cards=await _loadQuadroCards();
+        const id=document.getElementById('qm-id')?.value||'';
+        if(cards.length>=30&&!id){_flash('qm-sv','⚠ Máximo 30 cards');return;}
+        const card={
+          id:id||Date.now().toString(36),
+          fase:document.getElementById('qm-fase')?.value||'despertar',
+          titulo:document.getElementById('qm-titulo')?.value?.trim()||'',
+          formato:document.getElementById('qm-fmt')?.value||'',
+          data:document.getElementById('qm-data')?.value||'',
+          horario:document.getElementById('qm-horario')?.value||'',
+          status:document.getElementById('qm-status')?.value||'planejado',
+          copy:document.getElementById('qm-copy')?.value?.trim()||'',
+          legenda:document.getElementById('qm-legenda')?.value?.trim()||'',
+          roteiro:document.getElementById('qm-roteiro')?.value?.trim()||'',
+          hashtags:document.getElementById('qm-tags')?.value?.trim()||'',
+          link:document.getElementById('qm-link')?.value?.trim()||'',
+          arquivo_url:arquivoUrl,arquivo_nome:arquivoNome
+        };
+        const idx=cards.findIndex(c=>c.id===card.id);
+        if(idx>=0)cards[idx]=card;else cards.push(card);
+        const ok=await _saveQuadroCards(cards);
+        _flash('qm-sv',ok?'✓ Salvo':'⚠ Erro');
+        if(ok)setTimeout(()=>{document.getElementById('aw2-qmodal')?.remove();_renderAba('quadro');},500);
+      }catch(e){_flash('qm-sv','⚠ Erro: '+e.message);}
+      finally{if(btn){btn.disabled=false;btn.textContent='💾 Salvar Card';}}
+    },
     calPrevMes(){const [a,m]=_calMes.split('-').map(Number);_calMes=new Date(a,m-2,1).toISOString().substring(0,7);_renderAba('calendario');},
     calNextMes(){const [a,m]=_calMes.split('-').map(Number);_calMes=new Date(a,m,1).toISOString().substring(0,7);_renderAba('calendario');},
     async toPost(id){
