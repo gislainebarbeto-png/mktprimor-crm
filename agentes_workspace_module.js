@@ -161,42 +161,19 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     catch{return null;}
   }
 
-  // Lê stream SSE do Cloudflare Worker e retorna o texto completo
-  async function _readStream(res) {
-    const reader = res.body.getReader();
-    const dec = new TextDecoder();
-    let text = '', buf = '';
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop();
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const d = line.slice(6).trim();
-        if (d === '[DONE]') return text;
-        try {
-          const p = JSON.parse(d);
-          if (p.type === 'content_block_delta' && p.delta?.type === 'text_delta') text += p.delta.text;
-        } catch {}
-      }
-    }
-    return text;
-  }
-
   const _PROXY = 'https://mktprimor-proxy.gislainebarbeto.workers.dev';
 
-  // Chama o proxy e retorna o texto da resposta (suporta streaming e JSON)
+  // Chama o proxy e retorna o texto da resposta
   async function _callProxy(system, messages) {
     const res = await fetch(_PROXY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ system, messages }),
     });
-    const ct = res.headers.get('Content-Type') || '';
-    if (ct.includes('event-stream')) return _readStream(res);
-    const data = await res.json();
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error('Resposta inválida do servidor: ' + raw.substring(0, 120)); }
     if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
     return data.content?.[0]?.text || '';
   }
