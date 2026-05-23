@@ -794,16 +794,19 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         .geral-sec{page-break-inside:avoid;margin-bottom:18px!important}
         .geral-sec:nth-child(3n){page-break-after:always}
       }
-      .geral-wrap{font-family:'Poppins',sans-serif;color:#222;max-width:900px;margin:0 auto;padding:0 4px 32px}
-      .geral-header{background:#4a3728;color:#FAF8F2;border-radius:12px;padding:20px 24px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end}
-      .geral-header-nome{font-size:22px;font-weight:700;font-family:'Cormorant Garamond',serif}
-      .geral-header-meta{font-size:12px;opacity:.75;text-align:right;line-height:1.8}
-      .geral-sec{background:#fff;border:1px solid #e0d6c8;border-radius:10px;padding:16px 18px;margin-bottom:14px}
-      .geral-sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#7A5C00;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #f0e8df}
-      .geral-row{display:flex;gap:12px;margin-bottom:6px;font-size:12px}
-      .geral-lbl{font-size:10px;font-weight:600;text-transform:uppercase;color:#999;white-space:nowrap;min-width:90px;padding-top:2px}
-      .geral-val{font-size:12px;color:#333;line-height:1.5}
-      .geral-box{background:#faf6f2;border-radius:7px;padding:10px 12px;margin-bottom:8px}
+      .geral-wrap{font-family:'Poppins',sans-serif;color:#222;max-width:860px;margin:0 auto;padding:4px 4px 40px}
+      .geral-header{background:linear-gradient(135deg,#4a3728,#6b4f35);color:#FAF8F2;border-radius:14px;padding:28px 32px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:flex-end}
+      .geral-header-nome{font-size:26px;font-weight:700;font-family:'Cormorant Garamond',serif;letter-spacing:.01em}
+      .geral-header-meta{font-size:12px;opacity:.7;text-align:right;line-height:2}
+      .geral-sec{background:#fff;border:1px solid #e8ddd4;border-radius:12px;padding:24px 28px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+      .geral-sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#9a7c50;margin-bottom:18px;padding-bottom:10px;border-bottom:2px solid #f5ede4}
+      .geral-row{display:flex;gap:16px;padding:10px 0;border-bottom:1px solid #f5f0ea}
+      .geral-row:last-child{border-bottom:none}
+      .geral-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#bba98a;white-space:nowrap;min-width:110px;padding-top:3px;flex-shrink:0}
+      .geral-val{font-size:12.5px;color:#333;line-height:1.7}
+      .geral-box{border-left:3px solid #e0d0bc;padding:14px 16px;margin-bottom:12px;background:#fdfaf7}
+      .geral-box .geral-lbl{font-size:9px;margin-bottom:6px;display:block}
+      .geral-box .geral-val{font-size:12.5px;color:#333;line-height:1.8}
     </style>
     <div class="geral-wrap">
       <div class="geral-header">
