@@ -31,3 +31,11 @@ jobs:
             README.md
             supabase/**
             config.js
+
+      - name: Deploy Supabase Edge Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          npx supabase@latest functions deploy anthropic-proxy \
+            --project-ref dloxddrdqsltuwdabwaq \
+            --no-verify-jwt
