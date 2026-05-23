@@ -15,8 +15,13 @@ serve(async (req) => {
 
     const geminiKey = Deno.env.get('GEMINI_KEY') ?? ''
 
-    // Converte mensagens do formato Anthropic para Gemini
-    // Anthropic: role "assistant" → Gemini: role "model"
+    if (!geminiKey) {
+      return new Response(
+        JSON.stringify({ error: { message: 'GEMINI_KEY não configurado nos secrets do Supabase' } }),
+        { headers: { ...cors, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
+
     const contents = messages.map((m: { role: string; content: string }) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }],
@@ -28,7 +33,7 @@ serve(async (req) => {
     }
 
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -38,12 +43,18 @@ serve(async (req) => {
 
     const data = await res.json()
 
-    // Extrai texto do formato Gemini e devolve no formato Anthropic esperado pelo frontend
+    if (!res.ok) {
+      return new Response(
+        JSON.stringify({ error: { message: `Gemini erro ${res.status}: ${JSON.stringify(data)}` } }),
+        { headers: { ...cors, 'Content-Type': 'application/json' }, status: res.status }
+      )
+    }
+
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
 
     return new Response(
       JSON.stringify({ content: [{ type: 'text', text }] }),
-      { headers: { ...cors, 'Content-Type': 'application/json' }, status: res.status }
+      { headers: { ...cors, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (e) {
     return new Response(JSON.stringify({ error: { message: e.message } }), {
