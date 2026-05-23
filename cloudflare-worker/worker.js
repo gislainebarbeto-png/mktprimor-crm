@@ -12,31 +12,53 @@ export default {
     try {
       const { system, messages } = await req.json()
 
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': env.ANTHROPIC_KEY,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 8192,
-          system,
-          messages,
-        }),
-      })
+      // Timeout de 25s para não estourar o limite de 30s do Cloudflare Workers
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 25000)
 
-      const data = await res.json()
+      let res
+      try {
+        res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': env.ANTHROPIC_KEY,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 4096,
+            system,
+            messages,
+          }),
+        })
+      } finally {
+        clearTimeout(timer)
+      }
+
+      const text = await res.text()
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch {
+        return new Response(
+          JSON.stringify({ error: { message: `Resposta inválida da Anthropic (status ${res.status})` } }),
+          { headers: { ...CORS, 'Content-Type': 'application/json' }, status: 502 }
+        )
+      }
 
       return new Response(JSON.stringify(data), {
         headers: { ...CORS, 'Content-Type': 'application/json' },
         status: res.status,
       })
     } catch (e) {
-      return new Response(JSON.stringify({ error: { message: e.message } }), {
+      const msg = e.name === 'AbortError'
+        ? 'Timeout: Anthropic demorou mais de 25s. Tente uma pergunta mais curta.'
+        : e.message
+      return new Response(JSON.stringify({ error: { message: msg } }), {
         headers: { ...CORS, 'Content-Type': 'application/json' },
-        status: 500,
+        status: 504,
       })
     }
   },
