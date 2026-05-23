@@ -48,6 +48,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   let _concScreenshots={}; // {0:[url,url], 1:[url], ...} — screenshots por concorrente
   let _calMes=_hoje().substring(0,7); // YYYY-MM — mês exibido no histórico
   let _chatPendingMsg=null; // mensagem a auto-enviar quando chat abrir
+  let _broadcastDraft=null; // última msg do agente para pré-preencher nos outros
 
   const _PEDRO_PROMPTS={
     onboarding:  'Analise os dados do cliente e preencha o onboarding completo: nicho, subnicho, persona ideal, posicionamento de marca e arcos editoriais. Salve usando [[SAVE:onboarding:{...}]].',
@@ -1685,6 +1686,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         <button class="aw2-cs" id="aw2cs" onclick="_AW2.chatSend()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="#FAF8F2"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
         </button>
+        <button title="Enviar última resposta para todos os agentes" onclick="_AW2.broadcastLast(this)" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:var(--muted);font-size:13px;border-radius:8px;transition:color .15s;" onmouseover="this.style.color='var(--brown)'" onmouseout="this.style.color='var(--muted)'">📤</button>
         <button title="Limpar conversa" onclick="_AW2.clearChat()" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:var(--muted);font-size:13px;border-radius:8px;transition:color .15s;" onmouseover="this.style.color='var(--brown)'" onmouseout="this.style.color='var(--muted)'">🗑</button>
       </div>
     </div>`;
@@ -1723,6 +1725,10 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const inp=document.getElementById('aw2ci');
       if(inp){inp.value=_chatPendingMsg;_chatPendingMsg=null;setTimeout(()=>_AW2.chatSend(),120);}
       else{_chatPendingMsg=null;}
+    } else if(_broadcastDraft){
+      // Pré-preenche sem auto-enviar (acionado pelo botão 📤)
+      const inp=document.getElementById('aw2ci');
+      if(inp){inp.value=_broadcastDraft;_AW2.chatRes(inp);inp.focus();}
     } else {
       document.getElementById('aw2ci')?.focus();
     }
@@ -2521,6 +2527,16 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       }catch(e){alert('Erro ao publicar: '+e.message);}
     },
     // Chat
+    broadcastLast(btn){
+      if(!_ag)return;
+      const hist=_chatHist[_ag.id]||[];
+      const lastAgent=[...hist].reverse().find(m=>m.role==='assistant'||m.role==='agent');
+      if(!lastAgent){alert('Nenhuma resposta do agente para enviar.');return;}
+      _broadcastDraft=lastAgent.content;
+      try{navigator.clipboard.writeText(lastAgent.content);}catch(e){}
+      const orig=btn.textContent;btn.textContent='✅';btn.style.color='var(--brown)';
+      setTimeout(()=>{btn.textContent=orig;btn.style.color='';},1800);
+    },
     clearChat(){
       if(!_ag)return;
       if(!confirm('Limpar toda a conversa com '+_ag.nome+'?'))return;
