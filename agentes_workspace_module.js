@@ -223,7 +223,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const userContent=imagens.length
         ?[...imagens.slice(0,10).map(url=>({type:'image',source:{type:'url',url}})),{type:'text',text:textoFinal}]
         :textoFinal;
-      const res=await fetch('https://dloxddrdqsltuwdabwaq.supabase.co/functions/v1/anthropic-proxy',{
+      const res=await fetch('https://mktprimor-proxy.gislainebarbeto.workers.dev',{
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({system:sp,messages:[{role:'user',content:userContent}]})
       });
@@ -2553,7 +2553,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         const systemPrompt=await _buildSystemPrompt(_ag.id,_cliente);
         // Envia apenas as últimas 14 mensagens para não explodir o limite de tokens
         const histSlice=(_chatHist[_ag.id]||[]).slice(-14);
-        const res=await fetch('https://dloxddrdqsltuwdabwaq.supabase.co/functions/v1/anthropic-proxy',{
+        const res=await fetch('https://mktprimor-proxy.gislainebarbeto.workers.dev',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body:JSON.stringify({system:systemPrompt,messages:histSlice})
