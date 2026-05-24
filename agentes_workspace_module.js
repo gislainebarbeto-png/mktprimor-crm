@@ -2350,22 +2350,27 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       if(!card)return;
       if(card.status==='aprovado'){alert('Este card já está aprovado.');return;}
       try{
-        const{error}=await db.from('posts').insert({
+        const tipoVal=['feed','reels','carrossel','stories'].includes(card.formato)?card.formato:'feed';
+        const{error,data:inserted}=await db.from('posts').insert({
           client_email:_cliente,
           tema_titulo:card.titulo||'',
           legenda:card.legenda||'',
           hashtags:card.hashtags||'',
-          tipo:card.formato||'feed',
+          tipo:tipoVal,
           data_post:card.data||_hoje(),
           obs_int:card.horario||'',
           obs:card.copy||'',
-          status:'criacao'
-        });
+          status:'criacao',
+          rede_social:'Instagram',
+          status_abas:{tema:'ajuste',conteudo:'ajuste',midia:'ajuste',legenda:'ajuste'}
+        }).select('id');
+        console.log('[quadroAprovar] insert result:',{error,inserted});
         if(error)throw error;
         card.status='aprovado';
         await _saveQuadroCards(cards);
         _renderAba('quadro');
-      }catch(e){alert('Erro ao aprovar: '+e.message);}
+        alert(`✓ Post "${card.titulo||'(sem título)'}" criado para Gabi! Aparece em Posts p/ Revisão.`);
+      }catch(e){console.error('[quadroAprovar] erro:',e);alert('Erro ao aprovar: '+e.message+'\n'+JSON.stringify(e));}
     },
     async quadroGerarIA(){
       if(!_cliente){alert('Selecione um cliente primeiro.');return;}
