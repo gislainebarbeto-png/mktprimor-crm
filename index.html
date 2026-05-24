@@ -1230,7 +1230,7 @@ const Meta = {
       return;
     }
 
-    // Busca lista de páginas disponíveis para o usuário escolher
+    // Busca lista de páginas — troca code por token UMA vez e retorna token + páginas
     const listRes = await fetch(`${SUPABASE_URL}/functions/v1/instagram-oauth`, {
       method: 'POST', headers,
       body: JSON.stringify({ code, client_email, list_only: true }),
@@ -1238,12 +1238,13 @@ const Meta = {
     if (listRes.error) throw new Error(listRes.error);
 
     const pages = listRes.pages || [];
+    const userToken = listRes.user_token; // token já trocado, reutilizado na segunda chamada
 
     // Só uma conta — conecta direto sem mostrar seletor
     if (pages.length === 1) {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/instagram-oauth`, {
         method: 'POST', headers,
-        body: JSON.stringify({ code, client_email, fb_page_id: pages[0].fb_page_id }),
+        body: JSON.stringify({ user_token: userToken, client_email, fb_page_id: pages[0].fb_page_id }),
       }).then(r => r.json());
       if (res.error) throw new Error(res.error);
       sessionStorage.setItem('_oauth_ok', JSON.stringify({ ig_username: res.ig_username, client_email }));
@@ -1260,7 +1261,7 @@ const Meta = {
           <div style="font-size:12px;color:#666;margin-bottom:18px;">Encontramos ${pages.length} contas conectadas ao seu Facebook. Qual quer vincular ao cliente <strong>${client_email}</strong>?</div>
           <div id="ig-page-list" style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;">
             ${pages.map((p, i) => `
-              <button data-idx="${i}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;background:#fff;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s;">
+              <button data-idx="${i}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;background:#fff;cursor:pointer;text-align:left;font-family:inherit;">
                 <span style="font-size:22px;">📷</span>
                 <div>
                   <div style="font-weight:600;font-size:13px;">@${p.ig_username}</div>
@@ -1279,9 +1280,10 @@ const Meta = {
         const p = pages[parseInt(btn.dataset.idx)];
         modal.remove();
         try {
+          // Usa user_token (já trocado) — não re-usa o code descartado
           const res = await fetch(`${SUPABASE_URL}/functions/v1/instagram-oauth`, {
             method: 'POST', headers,
-            body: JSON.stringify({ code, client_email, fb_page_id: p.fb_page_id }),
+            body: JSON.stringify({ user_token: userToken, client_email, fb_page_id: p.fb_page_id }),
           }).then(r => r.json());
           if (res.error) reject(new Error(res.error));
           else { sessionStorage.setItem('_oauth_ok', JSON.stringify({ ig_username: res.ig_username, client_email })); resolve(); }
