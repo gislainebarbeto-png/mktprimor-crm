@@ -2345,16 +2345,17 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const allCards=[];
       try{
         // Planejamento salvo da Chloe
-        const{data:planRow}=await db.from('agentes_trabalhos').select('conteudo').eq('agente_id','chloe').eq('aba_id','planejamento').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().catch(()=>({data:null}));
-        const pl=planRow?.conteudo||{};
+        let pl={};
+        try{const{data}=await db.from('agentes_trabalhos').select('conteudo').eq('agente_id','chloe').eq('aba_id','planejamento').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle();pl=data?.conteudo||{};}catch(e){}
         const qtdFeed=parseInt(pl.qtd_feed)||0;
         const qtdCar=parseInt(pl.qtd_car)||0;
         const qtdReels=parseInt(pl.qtd_reels)||0;
         const total=(qtdFeed+qtdCar+qtdReels)||15;
 
         // Histórico recente do chat da Chloe como contexto
-        const{data:chatRows}=await db.from('agentes_chat_historico').select('role,content').eq('agente_id','chloe').eq('client_email',_cliente).order('created_at',{ascending:false}).limit(30).catch(()=>({data:[]}));
-        const chatCtx=(chatRows||[]).reverse().map(r=>`${r.role==='user'?'Gislaine':'Chloe'}: ${(r.content||'').slice(0,400)}`).join('\n');
+        let chatRows=[];
+        try{const{data}=await db.from('agentes_chat_historico').select('role,content').eq('agente_id','chloe').eq('client_email',_cliente).order('created_at',{ascending:false}).limit(30);chatRows=data||[];}catch(e){}
+        const chatCtx=chatRows.reverse().map(r=>`${r.role==='user'?'Gislaine':'Chloe'}: ${(r.content||'').slice(0,400)}`).join('\n');
 
         const sp=await _buildSystemPrompt('chloe',_cliente);
         const hoje=new Date(_hoje());
