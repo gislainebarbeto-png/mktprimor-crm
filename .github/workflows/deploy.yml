@@ -38,9 +38,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy Cloudflare Worker
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: cloudflare-worker
+      - name: Deploy Cloudflare Worker via API
+        working-directory: cloudflare-worker
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          curl -X PUT \
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/workers/scripts/mktprimor-proxy" \
+            -H "Authorization: Bearer $CF_TOKEN" \
+            -F 'metadata={"main_module":"worker.js","compatibility_date":"2024-01-01","bindings":[]};type=application/json' \
+            -F 'worker.js=@worker.js;type=application/javascript+module' \
+            --fail-with-body \
+            --silent \
+            --show-error
