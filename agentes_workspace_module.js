@@ -1021,8 +1021,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     const TAGS=['Paleta','Tipografia','Composição','Foto','Ícone','Referência','Concorrente'];
     return `<div class="aw2-form" style="margin-bottom:12px"><div class="aw2-ft">🎨 Adicionar Referência</div>
       <div class="aw2-sr" style="margin-bottom:12px">
-        <button class="aw2-btn" id="gabi-mb-ia-btn" onclick="_AW2.gabMoodboardIA()" style="background:linear-gradient(135deg,#7A5230,#5C2E14);gap:5px;display:inline-flex;align-items:center;font-size:11px">🧠 Sugerir Referências com IA</button>
-        <span style="font-size:10px;color:var(--muted)">Adiciona sugestões de paleta, tipografia e estética</span>
+        <button class="aw2-btn" id="gabi-mb-ia-btn" onclick="_AW2.gabMoodboardIA()" style="background:linear-gradient(135deg,#7A5230,#5C2E14);gap:5px;display:inline-flex;align-items:center;font-size:11px">📸 Importar posts do Instagram</button>
+        <span style="font-size:10px;color:var(--muted)">Importa as últimas 24 mídias do perfil do cliente</span>
       </div>
       <div class="aw2-r2">
         <div class="aw2-fg"><label class="aw2-fl">Categoria</label><select class="aw2-s2" id="mb-t">${TAGS.map(t=>`<option>${t}</option>`).join('')}</select></div>
@@ -1031,11 +1031,23 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       <div class="aw2-fg"><label class="aw2-fl">Descrição / o que usar</label><textarea class="aw2-ta" id="mb-d"></textarea></div>
       <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.addRef()">+ Adicionar</button><span class="aw2-svd" id="mb-s"></span></div>
     </div>
-    <div class="aw2-refs">${refs.map(r=>`
-      <div class="aw2-ref"><span class="aw2-rtag">${r.tag||'Ref'}</span>
-        <div class="aw2-rbody">${_esc(r.descricao)}${r.link?`<br><a href="${r.link}" target="_blank" style="color:var(--copper);font-size:11px">↗ abrir</a>`:''}</div>
-        <button class="aw2-del" onclick="_AW2.delRef('${r.id}')">✕</button>
-      </div>`).join('')||'<div class="aw2-empty">Moodboard vazio.</div>'}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:4px">
+      ${refs.map(r=>{
+        const isImg=r.link&&(r.link.includes('cdninstagram')||r.link.includes('.jpg')||r.link.includes('.png')||r.link.includes('.mp4')||r.link.includes('fbcdn'));
+        const descLines=(r.descricao||'').split('\n');
+        const caption=descLines[0]||'';
+        const igLink=descLines.find(l=>l.startsWith('↗ '))||'';
+        const href=igLink?igLink.slice(2):(isImg?'':r.link||'');
+        return`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface);position:relative">
+          ${isImg?`<img src="${r.link}" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" onerror="this.style.display='none'">`:''}
+          <div style="padding:8px">
+            <span style="font-size:9px;font-weight:600;background:var(--wine);color:#FAF8F2;border-radius:20px;padding:2px 8px">${r.tag||'Ref'}</span>
+            ${caption?`<div style="font-size:11px;color:var(--text);margin-top:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${_esc(caption.substring(0,100))}</div>`:''}
+            ${href?`<a href="${href}" target="_blank" style="font-size:10px;color:var(--accent);margin-top:4px;display:inline-block">↗ ver no Instagram</a>`:''}
+          </div>
+          <button class="aw2-del" onclick="_AW2.delRef('${r.id}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.5);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1">✕</button>
+        </div>`;
+      }).join('')||'<div class="aw2-empty" style="grid-column:1/-1">Moodboard vazio. Clique em "Buscar do Instagram" para importar os posts do cliente.</div>'}
     </div>`;
   }
 
@@ -2299,17 +2311,28 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       if(!_cliente){alert('Selecione um cliente primeiro.');return;}
       const btn=document.getElementById('gabi-mb-ia-btn');
       const orig=btn?.textContent;
-      if(btn){btn.disabled=true;btn.textContent='⏳ Gerando...';}
+      if(btn){btn.disabled=true;btn.textContent='⏳ Buscando posts do Instagram...';}
       try{
-        const sp=await _buildSystemPrompt('gabi',_cliente);
-        const instrucao=`Com base no perfil do cliente e na identidade visual, sugira 5 referências de moodboard variadas para o Instagram. Responda SOMENTE com JSON puro: {"refs":[{"tag":"Paleta","descricao":"descrição do que usar e por quê","link":""},{"tag":"Tipografia","descricao":"...","link":""},{"tag":"Composição","descricao":"...","link":""},{"tag":"Foto","descricao":"...","link":""},{"tag":"Referência","descricao":"...","link":""}]}`;
-        const text=await _callProxy(sp,[{role:'user',content:instrucao}]);
-        const json=_extractJson(text);
-        const refs=json.refs||[];
-        for(const r of refs){
-          try{await db.from('gabi_moodboard').insert({client_email:_cliente,tag:r.tag||'Referência',link:r.link||'',descricao:r.descricao||''});}catch{}
+        const creds=await _getIGCreds(_cliente);
+        if(!creds){alert('Este cliente não tem token do Instagram configurado. Conecte o Instagram na aba de Métricas.');if(btn){btn.disabled=false;btn.textContent=orig;}return;}
+        const BASE='https://graph.facebook.com/v19.0';
+        const mediaR=await fetch(`${BASE}/${creds.aid}/media?fields=id,caption,media_type,permalink,media_url,thumbnail_url,timestamp&limit=24&access_token=${creds.tok}`).then(r=>r.json());
+        if(mediaR.error)throw new Error(mediaR.error.message||'Erro Meta API');
+        const posts=(mediaR.data||[]).filter(p=>p.media_url||p.thumbnail_url);
+        if(!posts.length){alert('Nenhuma mídia encontrada no Instagram deste cliente.');if(btn){btn.disabled=false;btn.textContent=orig;}return;}
+        if(btn)btn.textContent='⏳ Salvando referências...';
+        let count=0;
+        for(const p of posts){
+          const imgUrl=p.thumbnail_url||p.media_url||'';
+          const tag=p.media_type==='VIDEO'?'Vídeo/Reel':p.media_type==='CAROUSEL_ALBUM'?'Carrossel':'Foto';
+          const caption=(p.caption||'').substring(0,160);
+          const desc=caption+(p.permalink?`\n↗ ${p.permalink}`:'');
+          // link = URL da imagem (para exibir no moodboard visual); permalink na descricao
+          try{await db.from('gabi_moodboard').insert({client_email:_cliente,tag,link:imgUrl,descricao:desc});}catch{}
+          count++;
         }
         _renderAba('moodboard');
+        alert(`✓ ${count} posts do Instagram importados para o Moodboard!`);
       }catch(e){alert('Erro: '+e.message);}
       finally{if(btn){btn.disabled=false;btn.textContent=orig;}}
     },
