@@ -1074,7 +1074,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     try{
       // Usa db normal (Gislaine está autenticada) — sem filtro de status para ver tudo
       const{data,error}=await db.from('posts')
-        .select('id,tema_titulo,tipo,status,ref_1,midia_urls,legenda,hashtags')
+        .select('id,tema_titulo,tipo,status,midia_urls,legenda,hashtags')
         .eq('client_email',_cliente)
         .not('status','eq','publicado')
         .order('created_at',{ascending:false})
@@ -1105,7 +1105,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     ${emRevisao.length?emRevisao.map(p=>`<div class="aw2-ci-item" style="border-left:3px solid #d4896a">
       <div class="aw2-ci-top"><span class="aw2-b revisao">Aguardando Barbeto</span></div>
       <div style="font-size:13px;font-weight:500;color:var(--brown)">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo}</div>
-      ${p.ref_1?`<a href="${p.ref_1}" target="_blank" style="font-size:11px;color:var(--accent);margin-top:4px;display:inline-block">🔗 Ver no Canva</a>`:'<span style="font-size:11px;color:var(--muted)">Sem link do Canva</span>'}
+      ${(p.tema_referencias?.[0]||p.tema_referencias)?`<a href="${Array.isArray(p.tema_referencias)?p.tema_referencias[0]:p.tema_referencias}" target="_blank" style="font-size:11px;color:var(--accent);margin-top:4px;display:inline-block">🔗 Ver no Canva</a>`:'<span style="font-size:11px;color:var(--muted)">Sem link do Canva</span>'}
     </div>`).join(''):'<div class="aw2-empty">Nenhum post aguardando revisão.</div>'}
     ${aprovados.length?`<div class="aw2-ft" style="margin:14px 0 8px;display:flex;align-items:center;gap:8px">
       ✅ Aprovados — prontos para publicar (${aprovados.length})
@@ -1223,9 +1223,9 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   async function _aprovacoes(){
     let pendentes=[],aprovados=[];
     try{
-      const{data:pd}=await db.from('posts').select('id,client_email,tema_titulo,tipo,ref_1,created_at').eq('status','revisao').order('created_at',{ascending:false});
+      const{data:pd}=await db.from('posts').select('id,client_email,tema_titulo,tipo,tema_referencias,created_at').eq('status','revisao').order('created_at',{ascending:false});
       pendentes=pd||[];
-      const{data:ap}=await db.from('posts').select('id,client_email,tema_titulo,tipo,ref_1,created_at').eq('status','aprovado').order('created_at',{ascending:false}).limit(10);
+      const{data:ap}=await db.from('posts').select('id,client_email,tema_titulo,tipo,tema_referencias,created_at').eq('status','aprovado').order('created_at',{ascending:false}).limit(10);
       aprovados=ap||[];
     }catch{}
     const cliMap={};_clientes.forEach(c=>{cliMap[c.email]=c.nome||c.email;});
@@ -1241,7 +1241,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         <span style="font-size:11px;color:var(--muted)">${cliMap[p.client_email]||p.client_email}</span>
       </div>
       <div style="font-size:13px;font-weight:600;color:var(--brown);margin-bottom:4px">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo}</div>
-      ${p.ref_1?`<a href="${p.ref_1}" target="_blank" style="font-size:12px;color:var(--accent);display:inline-block;margin-bottom:8px">🔗 Abrir no Canva</a>`:`<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Sem link do Canva ainda</div>`}
+      ${(Array.isArray(p.tema_referencias)?p.tema_referencias[0]:p.tema_referencias)?`<a href="${Array.isArray(p.tema_referencias)?p.tema_referencias[0]:p.tema_referencias}" target="_blank" style="font-size:12px;color:var(--accent);display:inline-block;margin-bottom:8px">🔗 Abrir no Canva</a>`:`<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Sem link do Canva ainda</div>`}
       <div class="aw2-aprov-btns">
         <button class="aw2-btn-ok" onclick="_AW2.aprovarPost('${p.id}','${p.client_email}')">✓ Aprovar</button>
         <button class="aw2-btn-nok" onclick="_AW2.devolverPost('${p.id}','${p.client_email}')">↩ Devolver</button>
@@ -2399,7 +2399,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       if(!postId){_flash('et-s','⚠ Selecione um post');return;}
       if(!url){_flash('et-s','⚠ Adicione o link do Canva');return;}
       try{
-        const{error}=await db.from('posts').update({ref_1:url,status:'revisao'}).eq('id',postId);
+        const{error}=await db.from('posts').update({tema_referencias:[url],status:'revisao'}).eq('id',postId);
         if(error)throw error;
         const{data:post}=await db.from('posts').select('tema_titulo,client_email').eq('id',postId).single();
         const cliNome=_clientes.find(c=>c.email===post?.client_email)?.nome||post?.client_email||'cliente';
