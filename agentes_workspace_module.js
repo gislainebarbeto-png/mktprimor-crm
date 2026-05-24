@@ -1070,22 +1070,32 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   // GABI — Entregas para aprovação da Barbeto + Agendamento no Instagram
   async function _entregas(){
     if(!_cliente)return`<div class="aw2-empty">Selecione um cliente para ver os posts.</div>`;
-    let posts=[];
+    let posts=[],queryErr='';
     try{
-      const svcDb=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
-      const{data}=await svcDb.from('posts').select('id,tema_titulo,tipo,status,ref_1,midia_urls,legenda,hashtags').eq('client_email',_cliente).in('status',['criacao','revisao','aprovado']).order('created_at',{ascending:false}).limit(60);
+      // Usa db normal (Gislaine está autenticada) — sem filtro de status para ver tudo
+      const{data,error}=await db.from('posts')
+        .select('id,tema_titulo,tipo,status,ref_1,midia_urls,legenda,hashtags')
+        .eq('client_email',_cliente)
+        .not('status','eq','publicado')
+        .order('created_at',{ascending:false})
+        .limit(80);
+      if(error)queryErr=error.message;
       posts=data||[];
-    }catch{}
-    const emCriacao=posts.filter(p=>p.status==='criacao');
+    }catch(e){queryErr=e.message;}
+    // Posts que Gabi ainda precisa criar o design (qualquer status exceto revisao/aprovado)
+    const emCriacao=posts.filter(p=>p.status==='criacao'||p.status==='design');
     const emRevisao=posts.filter(p=>p.status==='revisao');
     const aprovados=posts.filter(p=>p.status==='aprovado');
     const temToken=_clientes.find(c=>c.email===_cliente);
-    return `<div class="aw2-form" style="margin-bottom:14px">
+    return `
+      ${queryErr?`<div style="background:#FFEBEE;border:1px solid #FFCDD2;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#C62828">⚠ Erro ao carregar posts: ${_esc(queryErr)}</div>`:''}
+      ${!queryErr&&posts.length===0?`<div style="background:rgba(255,180,0,.1);border:1px solid rgba(255,180,0,.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#92400E">Nenhum post encontrado para <strong>${_cliente}</strong>.<br>Crie posts na aba Posts do painel admin ou aprove cards no Quadro da Chloe.</div>`:''}
+    <div class="aw2-form" style="margin-bottom:14px">
       <div class="aw2-ft">📬 Submeter design para aprovação</div>
-      <div class="aw2-fg"><label class="aw2-fl">Post</label>
+      <div class="aw2-fg"><label class="aw2-fl">Post (${emCriacao.length} disponíveis)</label>
         <select class="aw2-s2" id="et-post">
           <option value="">— Selecionar post —</option>
-          ${emCriacao.map(p=>`<option value="${p.id}">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo}</option>`).join('')}
+          ${emCriacao.map(p=>`<option value="${p.id}">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo} · [${p.status}]</option>`).join('')}
         </select>
       </div>
       <div class="aw2-fg"><label class="aw2-fl">Link do Canva</label><input class="aw2-in" id="et-url" placeholder="https://www.canva.com/design/..."></div>
