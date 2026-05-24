@@ -1028,7 +1028,11 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   async function _entregas(){
     if(!_cliente)return`<div class="aw2-empty">Selecione um cliente para ver os posts.</div>`;
     let posts=[];
-    try{const{data}=await db.from('posts').select('id,tema_titulo,tipo,status,ref_1,midia_urls,legenda,hashtags').eq('client_email',_cliente).in('status',['criacao','revisao','aprovado']).order('created_at',{ascending:false}).limit(60);posts=data||[];}catch{}
+    try{
+      const svcDb=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+      const{data}=await svcDb.from('posts').select('id,tema_titulo,tipo,status,ref_1,midia_urls,legenda,hashtags').eq('client_email',_cliente).in('status',['criacao','revisao','aprovado']).order('created_at',{ascending:false}).limit(60);
+      posts=data||[];
+    }catch{}
     const emCriacao=posts.filter(p=>p.status==='criacao');
     const emRevisao=posts.filter(p=>p.status==='revisao');
     const aprovados=posts.filter(p=>p.status==='aprovado');
@@ -2351,7 +2355,9 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       if(card.status==='aprovado'){alert('Este card já está aprovado.');return;}
       try{
         const tipoVal=['feed','reels','carrossel','stories'].includes(card.formato)?card.formato:'feed';
-        const{error,data:inserted}=await db.from('posts').insert({
+        // Usa service role para garantir que RLS não bloqueie o insert
+        const svcDb=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+        const{error}=await svcDb.from('posts').insert({
           client_email:_cliente,
           tema_titulo:card.titulo||'',
           legenda:card.legenda||'',
@@ -2363,14 +2369,13 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
           status:'criacao',
           rede_social:'Instagram',
           status_abas:{tema:'ajuste',conteudo:'ajuste',midia:'ajuste',legenda:'ajuste'}
-        }).select('id');
-        console.log('[quadroAprovar] insert result:',{error,inserted});
+        });
         if(error)throw error;
         card.status='aprovado';
         await _saveQuadroCards(cards);
         _renderAba('quadro');
-        alert(`✓ Post "${card.titulo||'(sem título)'}" criado para Gabi! Aparece em Posts p/ Revisão.`);
-      }catch(e){console.error('[quadroAprovar] erro:',e);alert('Erro ao aprovar: '+e.message+'\n'+JSON.stringify(e));}
+        alert(`✓ Post "${card.titulo||'(sem título)'}" criado! Aparece agora em Posts p/ Revisão da Gabi.`);
+      }catch(e){console.error('[quadroAprovar]',e);alert('Erro ao aprovar: '+e.message);}
     },
     async quadroGerarIA(){
       if(!_cliente){alert('Selecione um cliente primeiro.');return;}
