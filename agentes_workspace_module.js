@@ -366,28 +366,31 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     const t=(s,n=180)=>(s||'').substring(0,n); // trunca campos longos
     const isPedro=agente_id==='pedro';
     const isChloe=agente_id==='chloe';
+    const isGabi=agente_id==='gabi';
     const wt=(ag,ab)=>db.from('agentes_trabalhos').select('conteudo').eq('agente_id',ag).eq('aba_id',ab).eq('client_email',clienteEmail).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||null).catch(()=>null);
 
     const [dossie,onb,brief,posts,metricas,perfil,
            swot,pilares,diag,conc,
-           plan,briefV,copy,conceito,lancs]=await Promise.all([
+           plan,briefV,copy,conceito,lancs,quadroData]=await Promise.all([
       wt('dossie','perfil').then(r=>r||{}),
       wt('pedro','onboarding').then(r=>r||{}),
       wt('pedro','briefing').then(r=>r||{}),
       db.from('posts').select('tema_titulo,status,tipo').eq('client_email',clienteEmail).in('status',['criacao','revisao','aprovado']).order('data_post',{ascending:false}).limit(5).then(r=>r.data||[]).catch(()=>[]),
       db.from('metricas').select('mes,seguidores,alcance,engajamento').eq('client_email',clienteEmail).order('mes',{ascending:false}).limit(2).then(r=>r.data||[]).catch(()=>[]),
       db.from('clients').select('nome,empresa,instagram').eq('email',clienteEmail).maybeSingle().then(r=>r.data||{}).catch(()=>({})),
-      // Abas Pedro — carregadas para Pedro e Chloe (Chloe precisa da estratégia do Pedro)
-      (isPedro||isChloe)?wt('pedro','swot'):Promise.resolve(null),
-      (isPedro||isChloe)?wt('pedro','pilares'):Promise.resolve(null),
-      (isPedro||isChloe)?wt('pedro','diagnostico'):Promise.resolve(null),
-      (isPedro||isChloe)?wt('pedro','concorrentes'):Promise.resolve(null),
+      // Abas Pedro — carregadas para Pedro, Chloe e Gabi
+      (isPedro||isChloe||isGabi)?wt('pedro','swot'):Promise.resolve(null),
+      (isPedro||isChloe||isGabi)?wt('pedro','pilares'):Promise.resolve(null),
+      (isPedro||isChloe||isGabi)?wt('pedro','diagnostico'):Promise.resolve(null),
+      (isPedro||isChloe||isGabi)?wt('pedro','concorrentes'):Promise.resolve(null),
       // Abas Chloe
       wt('chloe','planejamento').then(r=>r||{}),
-      isChloe?wt('chloe','briefing_visual'):Promise.resolve(null),
+      (isChloe||isGabi)?wt('chloe','briefing_visual'):Promise.resolve(null),
       isChloe?wt('chloe','copy'):Promise.resolve(null),
       wt('gabi','conceito').then(r=>r||{}),
       agente_id==='elvira'?db.from('elvira_lancamentos').select('data,tipo,descricao,valor').eq('client_email',clienteEmail).order('data',{ascending:false}).limit(5).then(r=>r.data||[]).catch(()=>[]):Promise.resolve([]),
+      // Quadro Chloe — cards aprovados pela Barbeto (para Gabi criar os designs)
+      isGabi?wt('chloe','quadro').then(r=>r||{}):Promise.resolve({}),
     ]);
 
     // ── Cabeçalho ──────────────────────────────────────────────────────
@@ -490,6 +493,26 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       if(plan.linha) ctx+=`\nPlan: linha="${t(plan.linha,120)}" gancho="${t(plan.gancho,80)}" feed=${plan.qtd_feed} car=${plan.qtd_car} reels=${plan.qtd_reels}`;
       if(briefV?.titulo) ctx+=`\nBriefV: "${t(briefV.titulo,80)}" tom="${t(briefV.tom,60)}"`;
       if(copy?.tema) ctx+=`\nCopy: tema="${t(copy.tema,80)}" gancho="${t(copy.gancho,80)}"`;
+    }
+
+    if(isGabi){
+      ctx+=`\n\nESTRATÉGIA DO PEDRO E PLANEJAMENTO DA CHLOE (base para criar os visuais):`;
+      if(diag) ctx+=`\nDiagnóstico: fortes="${t(diag.pontos_fortes,150)}" | fracos="${t(diag.pontos_fracos,150)}" | posicionamento="${t(diag.posicionamento,100)}"`;
+      else ctx+=`\nDiagnóstico: (Pedro ainda não preencheu)`;
+      if(swot) ctx+=`\nSWOT: forças="${t(swot.forcas,150)}" | oportunidades="${t(swot.oportunidades,150)}"`;
+      else ctx+=`\nSWOT: (Pedro ainda não preencheu)`;
+      if(pilares?.pilares?.length) ctx+=`\nPilares: `+(pilares.pilares||[]).filter(p=>p.nome).map(p=>`${p.nome}(${p.percentual||0}%): ${t(p.descricao,80)}`).join(' | ');
+      else ctx+=`\nPilares: (Pedro ainda não preencheu)`;
+      if(briefV?.titulo) ctx+=`\nBriefing Visual (Chloe): "${t(briefV.titulo,80)}" tom="${t(briefV.tom,60)}" estilo="${t(briefV.estilo||'',80)}"`;
+      else ctx+=`\nBriefing visual: (Chloe ainda não preencheu)`;
+      if(plan.linha) ctx+=`\nPlanejamento Chloe: ${t(plan.linha,150)}`;
+      const cards=(quadroData?.cards||[]);
+      const aprov=cards.filter(c=>c.status==='aprovado');
+      if(aprov.length) ctx+=`\nPosts aprovados pela Barbeto para design (${aprov.length}): `+aprov.slice(0,12).map(c=>`[${c.fase||''}]"${t(c.titulo,60)}"(${c.formato}/${c.data})`).join(' | ');
+      else ctx+=`\nPosts aprovados: (nenhum ainda — aguardando Barbeto aprovar no Quadro da Chloe)`;
+      ctx+=`\n\nABAS GABI (conteúdo atual):`;
+      if(conceito?.paleta||conceito?.estetica) ctx+=`\nConceito: paleta="${conceito.paleta||''}" fontes="${conceito.fontes||''}" estética="${t(conceito.estetica,120)}" nunca="${t(conceito.nunca,80)}"`;
+      else ctx+=`\nConceito visual: (ainda não definido — use IA para gerar)`;
     }
 
     ctx+=`\n---`;
@@ -997,6 +1020,10 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     try{let q=db.from('gabi_moodboard').select('*').order('created_at',{ascending:false}).limit(80);if(_cliente)q=q.eq('client_email',_cliente);const{data}=await q;refs=data||[];}catch{}
     const TAGS=['Paleta','Tipografia','Composição','Foto','Ícone','Referência','Concorrente'];
     return `<div class="aw2-form" style="margin-bottom:12px"><div class="aw2-ft">🎨 Adicionar Referência</div>
+      <div class="aw2-sr" style="margin-bottom:12px">
+        <button class="aw2-btn" id="gabi-mb-ia-btn" onclick="_AW2.gabMoodboardIA()" style="background:linear-gradient(135deg,#7A5230,#5C2E14);gap:5px;display:inline-flex;align-items:center;font-size:11px">🧠 Sugerir Referências com IA</button>
+        <span style="font-size:10px;color:var(--muted)">Adiciona sugestões de paleta, tipografia e estética</span>
+      </div>
       <div class="aw2-r2">
         <div class="aw2-fg"><label class="aw2-fl">Categoria</label><select class="aw2-s2" id="mb-t">${TAGS.map(t=>`<option>${t}</option>`).join('')}</select></div>
         <div class="aw2-fg"><label class="aw2-fl">Link</label><input class="aw2-in" id="mb-l" placeholder="https://..."></div>
@@ -1015,12 +1042,16 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   async function _conceito(){
     const d=await _load({});
     return `<div class="aw2-form"><div class="aw2-ft">✦ Conceito Visual</div>
+      <div class="aw2-sr" style="margin-bottom:14px">
+        <button class="aw2-btn" id="gabi-cv-ia-btn" onclick="_AW2.gabConceitoIA()" style="background:linear-gradient(135deg,#7A5230,#5C2E14);gap:5px;display:inline-flex;align-items:center">🧠 Gerar com IA</button>
+        <span style="font-size:10px;color:var(--muted)">Usa estratégia do Pedro + briefing da Chloe</span>
+      </div>
       <div class="aw2-fg"><label class="aw2-fl">Paleta (hex)</label><input class="aw2-in" id="cv-p" placeholder="#F5EDE0, #5C2E14" value="${d.paleta||''}"></div>
       <div class="aw2-fg"><label class="aw2-fl">Fontes</label><input class="aw2-in" id="cv-f" placeholder="Cormorant + DM Sans" value="${d.fontes||''}"></div>
       <div class="aw2-fg"><label class="aw2-fl">Estética geral</label><textarea class="aw2-ta" id="cv-e">${d.estetica||''}</textarea></div>
       <div class="aw2-fg"><label class="aw2-fl">Elementos recorrentes</label><textarea class="aw2-ta" id="cv-el">${d.elementos||''}</textarea></div>
       <div class="aw2-fg"><label class="aw2-fl">NUNCA usar</label><textarea class="aw2-ta" id="cv-n">${d.nunca||''}</textarea></div>
-      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveConceito()">Salvar</button><span class="aw2-svd" id="cv-s"></span></div>
+      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveConceito()">💾 Salvar</button><span class="aw2-svd" id="cv-s"></span></div>
     </div>`;
   }
 
@@ -1502,9 +1533,27 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   // GABI — Briefing Designer
   async function _briefingDesigner(){
     const d=await _load({});
+    // Carrega cards aprovados do Quadro da Chloe para o selector
+    let qCards=[];
+    if(_cliente){
+      try{
+        const{data:qd}=await db.from('agentes_trabalhos').select('conteudo').eq('agente_id','chloe').eq('aba_id','quadro').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle();
+        qCards=(qd?.conteudo?.cards||[]).filter(c=>c.status==='aprovado');
+        window._gabiBriefCards=qCards;
+      }catch{window._gabiBriefCards=[];}
+    }
     return `<div class="aw2-form"><div class="aw2-ft">📝 Briefing Designer</div>
+      ${qCards.length?`
+      <div class="aw2-fg" style="background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:12px;margin-bottom:12px">
+        <label class="aw2-fl">🗂 Selecionar post aprovado para gerar briefing</label>
+        <select class="aw2-s2" id="bd-card-sel" style="margin-bottom:8px">
+          <option value="">— Escolha um card da Chloe —</option>
+          ${qCards.map((c,i)=>`<option value="${i}">${_esc(c.titulo||'(sem título)')} · ${c.formato} · ${c.data||''}</option>`).join('')}
+        </select>
+        <button class="aw2-btn" id="gabi-bd-ia-btn" onclick="_AW2.gabBriefingIA()" style="background:linear-gradient(135deg,#7A5230,#5C2E14);font-size:11px;padding:5px 14px">🧠 Gerar Briefing do Card</button>
+      </div>`:`<div class="aw2-empty" style="margin-bottom:12px">Nenhum card aprovado no Quadro da Chloe ainda.</div>`}
       <div class="aw2-r2">
-        <div class="aw2-fg"><label class="aw2-fl">Projeto</label><input class="aw2-in" id="bd-proj" value="${d.projeto||''}"></div>
+        <div class="aw2-fg"><label class="aw2-fl">Projeto / Título</label><input class="aw2-in" id="bd-proj" value="${d.projeto||''}"></div>
         <div class="aw2-fg"><label class="aw2-fl">Formato</label><select class="aw2-s2" id="bd-fmt"><option ${d.formato==='feed'?'selected':''} value="feed">Feed</option><option ${d.formato==='carrossel'?'selected':''} value="carrossel">Carrossel</option><option ${d.formato==='reels'?'selected':''} value="reels">Reels</option><option ${d.formato==='stories'?'selected':''} value="stories">Stories</option></select></div>
       </div>
       <div class="aw2-r2">
@@ -1519,7 +1568,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       </div>
       <div class="aw2-fg"><label class="aw2-fl">Texto no post</label><textarea class="aw2-ta" id="bd-texto">${d.texto||''}</textarea></div>
       <div class="aw2-fg"><label class="aw2-fl">Observações</label><textarea class="aw2-ta" id="bd-obs">${d.obs||''}</textarea></div>
-      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveBriefingDesigner()">Salvar</button><span class="aw2-svd" id="bd-s"></span></div>
+      <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.saveBriefingDesigner()">💾 Salvar</button><span class="aw2-svd" id="bd-s"></span></div>
     </div>`;
   }
 
@@ -2233,6 +2282,58 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     async addRef(){try{await db.from('gabi_moodboard').insert({client_email:_cliente||'',tag:_v('mb-t'),link:_v('mb-l'),descricao:_v('mb-d')});_flash('mb-s','✓ Adicionado');_renderAba('moodboard');}catch{_flash('mb-s','⚠ Erro');}},
     async delRef(id){try{await db.from('gabi_moodboard').delete().eq('id',id);_renderAba('moodboard');}catch{}},
     async saveConceito(){const ok=await _save({paleta:_v('cv-p'),fontes:_v('cv-f'),estetica:_v('cv-e'),elementos:_v('cv-el'),nunca:_v('cv-n')});_flash('cv-s',ok?'✓ Salvo':'⚠ Erro');},
+    async gabConceitoIA(){
+      if(!_cliente){alert('Selecione um cliente primeiro.');return;}
+      await _gerarComIA(
+        `Com base no perfil do cliente, nicho, posicionamento, tom de voz e briefing visual da Chloe, defina o conceito visual completo da identidade de marca para Instagram. Responda em JSON: {"paleta":"#hex1, #hex2, #hex3 (ex: #F5EDE0, #5C2E14, #C9A84C — primárias e destaque)","fontes":"fonte-título (ex: Cormorant Garamond) + fonte-texto (ex: DM Sans)","estetica":"3-4 frases descrevendo a estética visual (ex: elegante, clean, feminino premium, toques dourados, fotografia suave com fundo neutro)","elementos":"elementos recorrentes nos posts (ícones, formas, texturas, molduras, divisores)","nunca":"o que NUNCA deve aparecer nos posts desta marca (ex: fontes sem serifa bold, cores neon, fundo preto)"}`,
+        d=>{
+          const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+          set('cv-p',d.paleta);set('cv-f',d.fontes);set('cv-e',d.estetica);set('cv-el',d.elementos);set('cv-n',d.nunca);
+        },
+        'gabi-cv-ia-btn',
+        [],
+        ()=>_save({paleta:_v('cv-p'),fontes:_v('cv-f'),estetica:_v('cv-e'),elementos:_v('cv-el'),nunca:_v('cv-n')})
+      );
+    },
+    async gabMoodboardIA(){
+      if(!_cliente){alert('Selecione um cliente primeiro.');return;}
+      const btn=document.getElementById('gabi-mb-ia-btn');
+      const orig=btn?.textContent;
+      if(btn){btn.disabled=true;btn.textContent='⏳ Gerando...';}
+      try{
+        const sp=await _buildSystemPrompt('gabi',_cliente);
+        const instrucao=`Com base no perfil do cliente e na identidade visual, sugira 5 referências de moodboard variadas para o Instagram. Responda SOMENTE com JSON puro: {"refs":[{"tag":"Paleta","descricao":"descrição do que usar e por quê","link":""},{"tag":"Tipografia","descricao":"...","link":""},{"tag":"Composição","descricao":"...","link":""},{"tag":"Foto","descricao":"...","link":""},{"tag":"Referência","descricao":"...","link":""}]}`;
+        const text=await _callProxy(sp,[{role:'user',content:instrucao}]);
+        const json=_extractJson(text);
+        const refs=json.refs||[];
+        for(const r of refs){
+          try{await db.from('gabi_moodboard').insert({client_email:_cliente,tag:r.tag||'Referência',link:r.link||'',descricao:r.descricao||''});}catch{}
+        }
+        _renderAba('moodboard');
+      }catch(e){alert('Erro: '+e.message);}
+      finally{if(btn){btn.disabled=false;btn.textContent=orig;}}
+    },
+    async gabBriefingIA(){
+      if(!_cliente){alert('Selecione um cliente primeiro.');return;}
+      const sel=document.getElementById('bd-card-sel');
+      const idx=sel?parseInt(sel.value):NaN;
+      const cards=window._gabiBriefCards||[];
+      const card=isNaN(idx)?null:cards[idx];
+      if(!card){alert('Selecione um card do Quadro da Chloe.');return;}
+      const btn=document.getElementById('gabi-bd-ia-btn');
+      const orig=btn?.textContent;
+      if(btn){btn.disabled=true;btn.textContent='⏳ Gerando...';}
+      try{
+        const sp=await _buildSystemPrompt('gabi',_cliente);
+        const instrucao=`Crie um briefing de designer para o post abaixo. Card da Chloe: título="${card.titulo}" formato=${card.formato} data=${card.data||'a definir'} fase=${card.fase||''} copy="${(card.copy||'').substring(0,200)}" legenda="${(card.legenda||'').substring(0,150)}". Com base no conceito visual do cliente, responda em JSON: {"projeto":"${card.titulo}","formato":"${card.formato}","dimensoes":"${card.formato==='reels'?'1080x1920':card.formato==='stories'?'1080x1920':'1080x1080'}","prazo":"${card.data||''}","referencias":"sugestão de referências visuais específicas para este post","elementos":"elementos obrigatórios (logo, paleta, tipografia, ícones)","cores":"cores exatas para este post","feeling":"3 adjetivos que descrevem o feeling visual","texto":"texto principal que deve aparecer no post (adaptado da copy)","obs":"observações especiais para o designer criar este post"}`;
+        const text=await _callProxy(sp,[{role:'user',content:instrucao}]);
+        const d=_extractJson(text);
+        const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+        set('bd-proj',d.projeto);if(document.getElementById('bd-fmt'))document.getElementById('bd-fmt').value=d.formato||'feed';
+        set('bd-dim',d.dimensoes);set('bd-prazo',d.prazo);set('bd-refs',d.referencias);set('bd-elem',d.elementos);set('bd-cores',d.cores);set('bd-feel',d.feeling);set('bd-texto',d.texto);set('bd-obs',d.obs);
+      }catch(e){alert('Erro: '+e.message);}
+      finally{if(btn){btn.disabled=false;btn.textContent=orig;}}
+    },
     // Gabi — submeter design para aprovação da Barbeto
     async submitEntrega(){
       const postId=document.getElementById('et-post')?.value;
