@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {
-    const { code, client_email, fb_page_id } = await req.json()
+    const { code, client_email, fb_page_id, list_only } = await req.json()
 
     const APP_ID     = Deno.env.get('META_APP_ID')!
     const APP_SECRET = Deno.env.get('META_APP_SECRET')!
@@ -37,74 +37,51 @@ serve(async (req) => {
 
     const userToken = longUser.access_token
 
-    // 3. Tenta acessar a página diretamente com o token do usuário
-    let pageToken: string | null = null
-    let pageName = ''
-    let igId: string | null = null
-
-    if (fb_page_id) {
-      const directPage = await fetch(
-        `https://graph.facebook.com/v19.0/${fb_page_id}?fields=id,name,access_token,instagram_business_account&access_token=${userToken}`
-      ).then(r => r.json())
-
-      if (!directPage.error && directPage.access_token) {
-        pageToken = directPage.access_token
-        pageName = directPage.name
-        igId = directPage.instagram_business_account?.id || null
-      }
-    }
-
-    // 4. Se não conseguiu acesso direto, tenta /me/accounts
-    if (!pageToken) {
-      const accts = await fetch(
-        `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${userToken}`
-      ).then(r => r.json())
-
-      const pages = accts.data || []
-      const page = fb_page_id
-        ? pages.find((p: any) => p.id === String(fb_page_id))
-        : pages[0]
-
-      if (page) {
-        pageToken = page.access_token
-        pageName = page.name
-        igId = page.instagram_business_account?.id || null
-      } else {
-        const ids = pages.map((p: any) => `${p.name} (${p.id})`).join(', ')
-        throw new Error(
-          `Conta do Facebook usada não tem acesso à página da clínica.\n` +
-          `Páginas encontradas: ${ids || 'nenhuma'}.\n\n` +
-          `Solução: a própria cliente deve clicar em "Conectar com Facebook" no portal dela, ` +
-          `usando o login do Facebook da clínica.`
-        )
-      }
-    }
-
-    // 5. Busca IG Account se ainda não tiver
-    if (!igId) {
-      const igLookup = await fetch(
-        `https://graph.facebook.com/v19.0/${fb_page_id || ''}?fields=instagram_business_account&access_token=${pageToken}`
-      ).then(r => r.json())
-      igId = igLookup.instagram_business_account?.id || null
-    }
-
-    if (!igId) throw new Error(
-      `Nenhuma conta Instagram Business vinculada à página "${pageName}". ` +
-      `No Instagram da clínica: Configurações → Conta → Mudar para conta profissional, ` +
-      `depois vincule ao Facebook em Configurações → Conta → Conta vinculada ao Facebook.`
-    )
-
-    // 6. Busca username do Instagram
-    const igUser = await fetch(
-      `https://graph.facebook.com/v19.0/${igId}?fields=id,username&access_token=${pageToken}`
+    // 3. Lista todas as páginas com Instagram conectado
+    const accts = await fetch(
+      `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username}&access_token=${userToken}`
     ).then(r => r.json())
-    if (igUser.error) throw new Error(igUser.error.message)
+
+    const pages = (accts.data || []).filter((p: any) => p.instagram_business_account?.id)
+
+    // Modo lista: retorna páginas disponíveis para o frontend exibir seletor
+    if (list_only) {
+      return new Response(
+        JSON.stringify({
+          pages: pages.map((p: any) => ({
+            fb_page_id: p.id,
+            fb_page_name: p.name,
+            ig_id: p.instagram_business_account.id,
+            ig_username: p.instagram_business_account.username,
+          }))
+        }),
+        { headers: { ...cors, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // 4. Seleciona a página correta
+    const page = fb_page_id
+      ? pages.find((p: any) => p.id === String(fb_page_id))
+      : pages[0]
+
+    if (!page) {
+      const allPages = (accts.data || []).map((p: any) => p.name).join(', ')
+      throw new Error(
+        `Nenhuma página com Instagram Business encontrada.\n` +
+        `Páginas encontradas: ${allPages || 'nenhuma'}.\n` +
+        `Certifique-se que o Instagram está configurado como conta Profissional e vinculado à Página do Facebook.`
+      )
+    }
+
+    const pageToken = page.access_token
+    const igId = page.instagram_business_account.id
+    const igUsername = page.instagram_business_account.username
 
     const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
-    // 7. Salva em instagram_tokens e em clients
+    // 5. Salva em instagram_tokens e em clients
     const { error: tokErr } = await db.from('instagram_tokens').upsert({
-      client_email, ig_user_id: igId, ig_username: igUser.username,
+      client_email, ig_user_id: igId, ig_username: igUsername,
       access_token: pageToken, expires_at: null, updated_at: new Date().toISOString(),
     }, { onConflict: 'client_email' })
     if (tokErr) throw new Error('Erro ao salvar token: ' + tokErr.message)
@@ -115,7 +92,7 @@ serve(async (req) => {
     }).eq('email', client_email)
 
     return new Response(
-      JSON.stringify({ success: true, ig_username: igUser.username, ig_id: igId }),
+      JSON.stringify({ success: true, ig_username: igUsername, ig_id: igId }),
       { headers: { ...cors, 'Content-Type': 'application/json' } }
     )
   } catch (e: any) {

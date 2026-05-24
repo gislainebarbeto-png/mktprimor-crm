@@ -1217,14 +1217,77 @@ const Meta = {
   // Chamado pelo App.init() quando detecta ?code= na URL (retorno do Facebook)
   async handleOAuthCallback(code, state) {
     const { client_email, fb_page_id } = state;
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/instagram-oauth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
-      body: JSON.stringify({ code, client_email, fb_page_id }),
+    const headers = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
+
+    // Se já tem page_id definido, conecta direto
+    if (fb_page_id) {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/instagram-oauth`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ code, client_email, fb_page_id }),
+      }).then(r => r.json());
+      if (res.error) throw new Error(res.error);
+      sessionStorage.setItem('_oauth_ok', JSON.stringify({ ig_username: res.ig_username, client_email }));
+      return;
+    }
+
+    // Busca lista de páginas disponíveis para o usuário escolher
+    const listRes = await fetch(`${SUPABASE_URL}/functions/v1/instagram-oauth`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ code, client_email, list_only: true }),
+    }).then(r => r.json());
+    if (listRes.error) throw new Error(listRes.error);
+
+    const pages = listRes.pages || [];
+
+    // Só uma conta — conecta direto sem mostrar seletor
+    if (pages.length === 1) {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/instagram-oauth`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ code, client_email, fb_page_id: pages[0].fb_page_id }),
+      }).then(r => r.json());
+      if (res.error) throw new Error(res.error);
+      sessionStorage.setItem('_oauth_ok', JSON.stringify({ ig_username: res.ig_username, client_email }));
+      return;
+    }
+
+    // Múltiplas contas — mostra seletor modal
+    await new Promise((resolve, reject) => {
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;';
+      modal.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:28px 24px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+          <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Selecione a conta Instagram</div>
+          <div style="font-size:12px;color:#666;margin-bottom:18px;">Encontramos ${pages.length} contas conectadas ao seu Facebook. Qual quer vincular ao cliente <strong>${client_email}</strong>?</div>
+          <div id="ig-page-list" style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;">
+            ${pages.map((p, i) => `
+              <button data-idx="${i}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;background:#fff;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s;">
+                <span style="font-size:22px;">📷</span>
+                <div>
+                  <div style="font-weight:600;font-size:13px;">@${p.ig_username}</div>
+                  <div style="font-size:11px;color:#888;">Página: ${p.fb_page_name}</div>
+                </div>
+              </button>
+            `).join('')}
+          </div>
+          <button id="ig-sel-cancel" style="margin-top:16px;width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;background:none;cursor:pointer;font-size:12px;color:#999;">Cancelar</button>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.querySelector('#ig-sel-cancel').addEventListener('click', () => { modal.remove(); reject(new Error('Conexão cancelada.')); });
+      modal.querySelector('#ig-page-list').addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-idx]');
+        if (!btn) return;
+        const p = pages[parseInt(btn.dataset.idx)];
+        modal.remove();
+        try {
+          const res = await fetch(`${SUPABASE_URL}/functions/v1/instagram-oauth`, {
+            method: 'POST', headers,
+            body: JSON.stringify({ code, client_email, fb_page_id: p.fb_page_id }),
+          }).then(r => r.json());
+          if (res.error) reject(new Error(res.error));
+          else { sessionStorage.setItem('_oauth_ok', JSON.stringify({ ig_username: res.ig_username, client_email })); resolve(); }
+        } catch(err) { reject(err); }
+      });
     });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    sessionStorage.setItem('_oauth_ok', JSON.stringify({ ig_username: data.ig_username, client_email }));
   },
 
   // Mostra toast de sucesso se houver resultado de OAuth pendente
