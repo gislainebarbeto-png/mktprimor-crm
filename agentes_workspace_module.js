@@ -1452,16 +1452,23 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       {id:'conversao', label:'CONVERSÃO', cor:'#27ae60',desc:'Fundo de Funil — Converter'}
     ];
     const fmtC={reels:'#8e44ad',feed:'#e67e22',carrossel:'#2980b9',stories:'#27ae60',tiktok:'#e74c3c'};
-    const stC={planejado:'#9B6B3A',criando:'#2980b9',pronto:'#27ae60'};
+    const stC={planejado:'#9B6B3A',criando:'#2980b9',pronto:'#e67e22',aprovado:'#16a34a'};
     const badge=(v,map)=>v?`<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:${map[v]||'#666'}22;color:${map[v]||'#666'};border:1px solid ${map[v]||'#666'}44;white-space:nowrap">${v}</span>`:'';
     const card2h=c=>`
-      <div onclick="_AW2.quadroEditCard('${c.id}')" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;margin-bottom:8px;position:relative;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow='none'">
-        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">${badge(c.formato,fmtC)}${badge(c.status||'planejado',stC)}</div>
-        <div style="font-size:13px;font-weight:600;color:var(--brown);line-height:1.35;margin-bottom:5px">${_esc(c.titulo||'(sem título)')}</div>
-        ${c.data?`<div style="font-size:10px;color:var(--muted)">${_fmtD(c.data)}${c.horario?' · ⏰ '+c.horario:''}</div>`:''}
-        ${c.copy?`<div style="font-size:11px;color:var(--text);opacity:.65;margin-top:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${_esc(c.copy.replace(/\n/g,' '))}</div>`:''}
-        ${c.arquivo_nome?`<div style="font-size:10px;color:var(--accent);margin-top:5px">📎 ${_esc(c.arquivo_nome)}</div>`:''}
-        <button onclick="event.stopPropagation();_AW2.quadroDelCard('${c.id}')" class="aw2-del" style="position:absolute;top:8px;right:8px;opacity:.45" title="Remover">✕</button>
+      <div style="background:var(--surface);border:1px solid ${c.status==='aprovado'?'#16a34a55':'var(--border)'};border-radius:10px;padding:12px;margin-bottom:8px;position:relative;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow='none'">
+        <div onclick="_AW2.quadroEditCard('${c.id}')" style="cursor:pointer">
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">${badge(c.formato,fmtC)}${badge(c.status||'planejado',stC)}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--brown);line-height:1.35;margin-bottom:5px">${_esc(c.titulo||'(sem título)')}</div>
+          ${c.data?`<div style="font-size:10px;color:var(--muted)">${_fmtD(c.data)}${c.horario?' · ⏰ '+c.horario:''}</div>`:''}
+          ${c.copy?`<div style="font-size:11px;color:var(--text);opacity:.65;margin-top:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${_esc(c.copy.replace(/\n/g,' '))}</div>`:''}
+          ${c.arquivo_nome?`<div style="font-size:10px;color:var(--accent);margin-top:5px">📎 ${_esc(c.arquivo_nome)}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+          ${c.status==='aprovado'
+            ?`<span style="font-size:10px;color:#16a34a;font-weight:600">✓ Aprovado — no calendário</span>`
+            :`<button onclick="_AW2.quadroAprovarCard('${c.id}')" style="font-size:10px;padding:4px 12px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;font-weight:600">✓ Aprovar</button>`}
+          <button onclick="_AW2.quadroDelCard('${c.id}')" class="aw2-del" style="opacity:.4" title="Remover">✕</button>
+        </div>
       </div>`;
     const col=f=>{
       const fc=cards.filter(c=>c.fase===f.id);
@@ -2295,7 +2302,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
       const sel=(id,v)=>`<option value="${id}"${card.fase===id?' selected':''}>`;
       const fmtOpt=v=>['','reels','feed','carrossel','stories','tiktok'].map(f=>`<option value="${f}"${card.formato===f?' selected':''}>${f||'—'}</option>`).join('');
-      const stOpt=()=>['planejado','criando','pronto'].map(s=>`<option value="${s}"${(card.status||'planejado')===s?' selected':''}>${s}</option>`).join('');
+      const stOpt=()=>['planejado','criando','pronto','aprovado'].map(s=>`<option value="${s}"${(card.status||'planejado')===s?' selected':''}>${s}</option>`).join('');
       const escV=t=>(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       modal.innerHTML=`<div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;padding:28px;position:relative">
         <button onclick="_AW2.quadroCloseModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);line-height:1">✕</button>
@@ -2336,6 +2343,31 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
     },
     quadroCloseModal(){document.getElementById('aw2-qmodal')?.remove();},
+    async quadroAprovarCard(id){
+      if(!_cliente){alert('Selecione um cliente primeiro.');return;}
+      const cards=await _loadQuadroCards();
+      const card=cards.find(c=>c.id===id);
+      if(!card)return;
+      if(card.status==='aprovado'){alert('Este card já foi aprovado.');return;}
+      try{
+        const{data:post,error}=await db.from('posts').insert({
+          client_email:_cliente,
+          tema_titulo:card.titulo||'',
+          legenda:card.legenda||'',
+          hashtags:card.hashtags||'',
+          tipo:card.formato||'feed',
+          data_post:card.data||null,
+          obs_int:card.horario||'',
+          obs:card.copy||'',
+          status:'criacao'
+        }).select('id').single();
+        if(error)throw error;
+        card.status='aprovado';
+        card.post_id=post.id;
+        const ok=await _saveQuadroCards(cards);
+        if(ok)_renderAba('quadro');
+      }catch(e){alert('Erro ao aprovar: '+e.message);}
+    },
     async quadroGerarIA(){
       if(!_cliente){alert('Selecione um cliente primeiro.');return;}
       const existentes=await _loadQuadroCards();
