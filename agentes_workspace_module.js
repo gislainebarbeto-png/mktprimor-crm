@@ -2976,22 +2976,25 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       if(schedDt.getTime()<Date.now()+20*60000){if(errEl){errEl.textContent='O agendamento deve ser pelo menos 20 minutos no futuro.';errEl.style.display='block';}return;}
       if(errEl)errEl.style.display='none';
       try{
-        const igCreds=await _getIGCreds(_cliente);
-        if(!igCreds){alert('Instagram não conectado para este cliente.');return;}
         const{data:post}=await db.from('posts').select('midia_urls,legenda,hashtags,tipo').eq('id',postId).single();
         if(!post?.midia_urls){alert('Este post não tem mídia cadastrada.');return;}
         let mediaUrl='';try{const arr=JSON.parse(post.midia_urls||'[]');mediaUrl=Array.isArray(arr)?arr[0]:arr;}catch{mediaUrl=post.midia_urls;}
         const caption=[(post.legenda||''),(post.hashtags||'')].filter(Boolean).join('\n\n');
-        const{tok,aid}=igCreds;const BASE='https://graph.facebook.com/v19.0';
         const isVideo=['reels','video'].includes((post.tipo||'').toLowerCase());
-        const containerBody={caption,scheduled_publish_time:Math.floor(schedDt.getTime()/1000),access_token:tok};
-        if(isVideo){containerBody.media_type='REELS';containerBody.video_url=mediaUrl;}else{containerBody.image_url=mediaUrl;}
-        const cRes=await fetch(`${BASE}/${aid}/media`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(containerBody)}).then(r=>r.json());
-        if(cRes.error)throw new Error(cRes.error.message);
-        const pRes=await fetch(`${BASE}/${aid}/media_publish`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({creation_id:cRes.id,access_token:tok})}).then(r=>r.json());
-        if(pRes.error)throw new Error(pRes.error.message);
+        const res=await fetch(`${SUPABASE_URL}/functions/v1/instagram-publish`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},
+          body:JSON.stringify({
+            client_email:_cliente,
+            image_url:isVideo?undefined:mediaUrl,
+            video_url:isVideo?mediaUrl:undefined,
+            caption,
+            scheduled_unix:Math.floor(schedDt.getTime()/1000)
+          })
+        }).then(r=>r.json());
+        if(res.error)throw new Error(res.error);
         await db.from('posts').update({status:'publicado',obs_int:`Agendado IG: ${date} ${time}`}).eq('id',postId);
-        await db.from('automacoes').insert({post_id:postId,client_email:_cliente,tipo:'agendado',resultado:`IG media_id:${pRes.id} para ${date} ${time}`}).then(()=>{},()=>{});
+        await db.from('automacoes').insert({post_id:postId,client_email:_cliente,tipo:'agendado',resultado:`IG media_id:${res.media_id} para ${date} ${time}`}).then(()=>{},()=>{});
         document.getElementById('aw2-ig-modal')?.remove();
         alert(`✓ Publicação agendada para ${date} às ${time}!`);
         _renderAba(_aba);
@@ -3000,22 +3003,24 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     async publicarIGAgora(postId){
       if(!confirm('Publicar este post no Instagram agora?'))return;
       try{
-        const igCreds=await _getIGCreds(_cliente);
-        if(!igCreds){alert('Instagram não conectado para este cliente.');return;}
         const{data:post}=await db.from('posts').select('midia_urls,legenda,hashtags,tipo').eq('id',postId).single();
         if(!post?.midia_urls){alert('Este post não tem mídia cadastrada.');return;}
         let mediaUrl='';try{const arr=JSON.parse(post.midia_urls||'[]');mediaUrl=Array.isArray(arr)?arr[0]:arr;}catch{mediaUrl=post.midia_urls;}
         const caption=[(post.legenda||''),(post.hashtags||'')].filter(Boolean).join('\n\n');
-        const{tok,aid}=igCreds;const BASE='https://graph.facebook.com/v19.0';
         const isVideo=['reels','video'].includes((post.tipo||'').toLowerCase());
-        const containerBody={caption,access_token:tok};
-        if(isVideo){containerBody.media_type='REELS';containerBody.video_url=mediaUrl;}else{containerBody.image_url=mediaUrl;}
-        const cRes=await fetch(`${BASE}/${aid}/media`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(containerBody)}).then(r=>r.json());
-        if(cRes.error)throw new Error(cRes.error.message);
-        const pRes=await fetch(`${BASE}/${aid}/media_publish`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({creation_id:cRes.id,access_token:tok})}).then(r=>r.json());
-        if(pRes.error)throw new Error(pRes.error.message);
+        const res=await fetch(`${SUPABASE_URL}/functions/v1/instagram-publish`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},
+          body:JSON.stringify({
+            client_email:_cliente,
+            image_url:isVideo?undefined:mediaUrl,
+            video_url:isVideo?mediaUrl:undefined,
+            caption
+          })
+        }).then(r=>r.json());
+        if(res.error)throw new Error(res.error);
         await db.from('posts').update({status:'publicado',obs_int:`Publicado IG: ${new Date().toLocaleDateString('pt-BR')}`}).eq('id',postId);
-        await db.from('automacoes').insert({post_id:postId,client_email:_cliente,tipo:'publicado',resultado:`IG media_id:${pRes.id}`}).then(()=>{},()=>{});
+        await db.from('automacoes').insert({post_id:postId,client_email:_cliente,tipo:'publicado',resultado:`IG media_id:${res.media_id}`}).then(()=>{},()=>{});
         alert('✓ Post publicado no Instagram!');
         _renderAba(_aba);
       }catch(e){alert('Erro ao publicar: '+e.message);}
