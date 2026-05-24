@@ -1055,8 +1055,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     const d=await _load({});
     return `<div class="aw2-form"><div class="aw2-ft">✦ Conceito Visual</div>
       <div class="aw2-sr" style="margin-bottom:14px">
-        <button class="aw2-btn" id="gabi-cv-ia-btn" onclick="_AW2.gabConceitoIA()" style="background:linear-gradient(135deg,#7A5230,#5C2E14);gap:5px;display:inline-flex;align-items:center">🧠 Gerar com IA</button>
-        <span style="font-size:10px;color:var(--muted)">Usa estratégia do Pedro + briefing da Chloe</span>
+        <button class="aw2-btn" id="gabi-cv-ia-btn" onclick="_AW2.gabConceitoIA()" style="background:linear-gradient(135deg,#7A5230,#5C2E14);gap:5px;display:inline-flex;align-items:center">🧠 Analisar fotos e gerar conceito</button>
+        <span style="font-size:10px;color:var(--muted)">Analisa as fotos reais do Instagram do cliente para identificar paleta e estética</span>
       </div>
       <div class="aw2-fg"><label class="aw2-fl">Paleta (hex)</label><input class="aw2-in" id="cv-p" placeholder="#F5EDE0, #5C2E14" value="${d.paleta||''}"></div>
       <div class="aw2-fg"><label class="aw2-fl">Fontes</label><input class="aw2-in" id="cv-f" placeholder="Cormorant + DM Sans" value="${d.fontes||''}"></div>
@@ -2296,16 +2296,41 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     async saveConceito(){const ok=await _save({paleta:_v('cv-p'),fontes:_v('cv-f'),estetica:_v('cv-e'),elementos:_v('cv-el'),nunca:_v('cv-n')});_flash('cv-s',ok?'✓ Salvo':'⚠ Erro');},
     async gabConceitoIA(){
       if(!_cliente){alert('Selecione um cliente primeiro.');return;}
-      await _gerarComIA(
-        `Com base no perfil do cliente, nicho, posicionamento, tom de voz e briefing visual da Chloe, defina o conceito visual completo da identidade de marca para Instagram. Responda em JSON: {"paleta":"#hex1, #hex2, #hex3 (ex: #F5EDE0, #5C2E14, #C9A84C — primárias e destaque)","fontes":"fonte-título (ex: Cormorant Garamond) + fonte-texto (ex: DM Sans)","estetica":"3-4 frases descrevendo a estética visual (ex: elegante, clean, feminino premium, toques dourados, fotografia suave com fundo neutro)","elementos":"elementos recorrentes nos posts (ícones, formas, texturas, molduras, divisores)","nunca":"o que NUNCA deve aparecer nos posts desta marca (ex: fontes sem serifa bold, cores neon, fundo preto)"}`,
-        d=>{
-          const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
-          set('cv-p',d.paleta);set('cv-f',d.fontes);set('cv-e',d.estetica);set('cv-el',d.elementos);set('cv-n',d.nunca);
-        },
-        'gabi-cv-ia-btn',
-        [],
-        ()=>_save({paleta:_v('cv-p'),fontes:_v('cv-f'),estetica:_v('cv-e'),elementos:_v('cv-el'),nunca:_v('cv-n')})
-      );
+      const btn=document.getElementById('gabi-cv-ia-btn');
+      const orig=btn?.textContent;
+      if(btn){btn.disabled=true;btn.textContent='⏳ Buscando fotos do Instagram...';}
+      try{
+        // 1. Busca fotos reais do Instagram do cliente
+        let imgUrls=[];
+        const creds=await _getIGCreds(_cliente);
+        if(creds){
+          try{
+            const BASE='https://graph.facebook.com/v19.0';
+            const mediaR=await fetch(`${BASE}/${creds.aid}/media?fields=media_type,media_url,thumbnail_url&limit=12&access_token=${creds.tok}`).then(r=>r.json());
+            if(!mediaR.error){
+              imgUrls=(mediaR.data||[])
+                .map(p=>p.thumbnail_url||p.media_url||'')
+                .filter(Boolean)
+                .slice(0,10);
+            }
+          }catch{}
+        }
+        if(btn)btn.textContent='⏳ Analisando identidade visual...';
+        // 2. Passa as imagens reais para a Claude analisar visualmente
+        const instrucao=imgUrls.length
+          ?`Analise as imagens do perfil do Instagram deste cliente e identifique a paleta de cores predominante, a estética visual, os elementos recorrentes e o padrão de design já estabelecido. Com base NESSAS FOTOS REAIS e no perfil estratégico do cliente, defina o conceito visual oficial da marca. Responda em JSON: {"paleta":"cores hex exatas predominantes nas fotos (ex: #F5EDE0, #5C2E14, #C9A84C)","fontes":"fonte-título + fonte-texto que combinam com a estética vista","estetica":"3-4 frases descrevendo o que você vê nas fotos: estilo, ambiente, tom fotográfico, sensação","elementos":"elementos visuais recorrentes nas imagens (texturas, composição, enquadramento, props)","nunca":"o que nunca deve aparecer baseado na identidade já estabelecida"}`
+          :`Com base no perfil do cliente, nicho, posicionamento e briefing visual da Chloe, defina o conceito visual da identidade de marca para Instagram. Responda em JSON: {"paleta":"#hex1, #hex2, #hex3","fontes":"fonte-título + fonte-texto","estetica":"3-4 frases descrevendo a estética visual","elementos":"elementos recorrentes nos posts","nunca":"o que NUNCA deve aparecer"}`;
+        await _gerarComIA(
+          instrucao,
+          d=>{
+            const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+            set('cv-p',d.paleta);set('cv-f',d.fontes);set('cv-e',d.estetica);set('cv-el',d.elementos);set('cv-n',d.nunca);
+          },
+          'gabi-cv-ia-btn',
+          imgUrls,
+          ()=>_save({paleta:_v('cv-p'),fontes:_v('cv-f'),estetica:_v('cv-e'),elementos:_v('cv-el'),nunca:_v('cv-n')})
+        );
+      }catch(e){alert('Erro: '+e.message);if(btn){btn.disabled=false;btn.textContent=orig;}}
     },
     async gabMoodboardIA(){
       if(!_cliente){alert('Selecione um cliente primeiro.');return;}
