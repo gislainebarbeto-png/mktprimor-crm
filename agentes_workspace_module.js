@@ -1113,13 +1113,28 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     </div>
     ${aprovados.map(p=>{
       let imgUrl='';try{const arr=JSON.parse(p.midia_urls||'[]');imgUrl=Array.isArray(arr)?arr[0]:arr;}catch{imgUrl=p.midia_urls||'';}
+      const canvaLink=Array.isArray(p.tema_referencias)?p.tema_referencias[0]:(p.tema_referencias||'');
       return`<div class="aw2-ci-item" style="border-left:3px solid #27ae60">
-        <div class="aw2-ci-top"><span class="aw2-b aprovado">Aprovado</span><span style="flex:1"></span>${imgUrl?'<span style="font-size:10px;color:#3A5030">✓ Tem mídia</span>':'<span style="font-size:10px;color:var(--muted)">Sem mídia</span>'}</div>
+        <div class="aw2-ci-top"><span class="aw2-b aprovado">Aprovado ✓</span><span style="flex:1"></span>${imgUrl?'<span style="font-size:10px;color:#3A5030">✓ Mídia pronta</span>':'<span style="font-size:10px;color:#92400E">⚠ Sem mídia</span>'}</div>
         <div style="font-size:13px;font-weight:500;color:var(--brown);margin-bottom:8px">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo}</div>
-        ${imgUrl?`<div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button onclick="_AW2.agendarModalIG('${p.id}')" class="aw2-btn" style="font-size:11px;padding:6px 14px">📅 Agendar no Instagram</button>
-          <button onclick="_AW2.publicarIGAgora('${p.id}')" style="background:#27ae60;color:#fff;border:none;border-radius:7px;font-size:11px;padding:6px 14px;cursor:pointer;font-family:inherit">▶ Publicar agora</button>
-        </div>`:`<div style="font-size:11px;color:var(--muted)">Adicione a mídia ao post para publicar via Instagram API</div>`}
+        ${canvaLink?`<a href="${canvaLink}" target="_blank" style="font-size:11px;color:var(--accent);display:inline-block;margin-bottom:10px">🎨 Ver design no Canva</a>`:''}
+        ${imgUrl
+          ?`<div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onclick="_AW2.agendarModalIG('${p.id}')" class="aw2-btn" style="font-size:11px;padding:6px 14px">📅 Agendar no Instagram</button>
+              <button onclick="_AW2.publicarIGAgora('${p.id}')" style="background:#27ae60;color:#fff;border:none;border-radius:7px;font-size:11px;padding:6px 14px;cursor:pointer;font-family:inherit">▶ Publicar agora</button>
+            </div>`
+          :`<div style="background:#FEF9C3;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;margin-top:4px">
+              <div style="font-size:11px;font-weight:600;color:#92400E;margin-bottom:6px">📎 Adicionar mídia para publicar</div>
+              <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+                <input id="midia-url-${p.id}" class="aw2-in" placeholder="URL pública da imagem/vídeo (ex: do Canva ou Drive)" style="flex:1;font-size:11px;padding:6px 8px">
+                <button onclick="_AW2.salvarMidiaPost('${p.id}')" style="background:#92400E;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;white-space:nowrap">Salvar URL</button>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <input type="file" id="midia-file-${p.id}" accept="image/*,video/*" style="font-size:10px;flex:1" onchange="_AW2.uploadMidiaPost('${p.id}',this.files[0])">
+              </div>
+              <div style="font-size:10px;color:#92400E;margin-top:6px;opacity:.7">Exporte do Canva como JPG/PNG e faça upload, ou cole a URL pública</div>
+            </div>`
+        }
       </div>`;
     }).join('')}`:''}`;
   }
@@ -2896,6 +2911,28 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       wrap.remove();
     },
     // Gabi — Modal de agendamento Instagram
+    async salvarMidiaPost(postId){
+      const url=document.getElementById(`midia-url-${postId}`)?.value?.trim();
+      if(!url){alert('Cole a URL da imagem ou vídeo.');return;}
+      try{
+        await db.from('posts').update({midia_urls:JSON.stringify([url])}).eq('id',postId);
+        _renderAba(_aba);
+      }catch(e){alert('Erro: '+e.message);}
+    },
+    async uploadMidiaPost(postId,file){
+      if(!file)return;
+      const btn=document.querySelector(`#midia-file-${postId}`);
+      if(btn)btn.disabled=true;
+      try{
+        const ext=file.name.split('.').pop();
+        const path=`posts/gabi/${postId}.${ext}`;
+        const{error:upErr}=await db.storage.from('posts-media').upload(path,file,{upsert:true,contentType:file.type});
+        if(upErr)throw upErr;
+        const{data:{publicUrl}}=db.storage.from('posts-media').getPublicUrl(path);
+        await db.from('posts').update({midia_urls:JSON.stringify([publicUrl])}).eq('id',postId);
+        _renderAba(_aba);
+      }catch(e){alert('Erro no upload: '+e.message);if(btn)btn.disabled=false;}
+    },
     agendarModalIG(postId){
       document.getElementById('aw2-ig-modal')?.remove();
       const min=new Date(Date.now()+25*60000);
