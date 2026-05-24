@@ -1074,9 +1074,9 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     try{
       // Usa db normal (Gislaine está autenticada) — sem filtro de status para ver tudo
       const{data,error}=await db.from('posts')
-        .select('id,tema_titulo,tipo,status,midia_urls,legenda,hashtags')
+        .select('id,tema_titulo,tipo,status,midia_urls,legenda,hashtags,tema_referencias')
         .eq('client_email',_cliente)
-        .not('status','eq','publicado')
+        .neq('status','publicado')
         .order('created_at',{ascending:false})
         .limit(80);
       if(error)queryErr=error.message;
@@ -1088,6 +1088,10 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     const aprovados=posts.filter(p=>p.status==='aprovado');
     const temToken=_clientes.find(c=>c.email===_cliente);
     return `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:11px;color:var(--muted)">${posts.length} post(s) encontrado(s) para ${_cliente}</span>
+        <button onclick="_AW2.refreshEntregas()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;color:var(--muted)">🔄 Atualizar lista</button>
+      </div>
       ${queryErr?`<div style="background:#FFEBEE;border:1px solid #FFCDD2;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#C62828">⚠ Erro ao carregar posts: ${_esc(queryErr)}</div>`:''}
       ${!queryErr&&posts.length===0?`<div style="background:rgba(255,180,0,.1);border:1px solid rgba(255,180,0,.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#92400E">Nenhum post encontrado para <strong>${_cliente}</strong>.<br>Crie posts na aba Posts do painel admin ou aprove cards no Quadro da Chloe.</div>`:''}
     <div class="aw2-form" style="margin-bottom:14px">
@@ -2910,6 +2914,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       }).from(wrap).save();
       wrap.remove();
     },
+    // Gabi — forçar reload da aba Posts p/ Revisão
+    async refreshEntregas(){_renderAba(_aba);},
     // Gabi — Modal de agendamento Instagram
     async salvarMidiaPost(postId){
       const url=document.getElementById(`midia-url-${postId}`)?.value?.trim();
