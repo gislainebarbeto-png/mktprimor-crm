@@ -2005,7 +2005,7 @@ const Admin = {
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:3px;">
             <span class="pchip-tipo" style="color:${sm.dot};">${tipoIco(tipo)} ${tipo} ${statusDot(p.status||'criacao', sm.dot)}</span>
-            ${(p.status==='design'||p.status==='publicado')?`<button onclick="event.stopPropagation();Admin.publicarNoInstagram(${p.id})" title="${p.status==='publicado'?'Reenviar pro Make':'Publicar no Instagram'}" style="flex-shrink:0;padding:2px 5px;border-radius:5px;border:1px solid ${sm.dot}55;background:${sm.bc};color:${sm.dot};font-size:10px;cursor:pointer;line-height:1;font-weight:600;">📤</button>`:''}
+
           </div>
           ${tema?`<span class="pchip-tema" style="color:${sm.c};">${tema}</span>`:''}
           <span class="pchip-titulo" style="color:${sm.c};">${titulo}</span>
@@ -2020,7 +2020,7 @@ const Admin = {
         onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()"
         onclick="event.stopPropagation();Admin.openPost(${p.id})">
         ${thumb?`<img src="${thumb}" class="pcardv-img" onerror="this.style.display='none'"/>`:''}
-        ${(p.status==='design'||p.status==='publicado')?`<button onclick="event.stopPropagation();Admin.publicarNoInstagram(${p.id})" title="${p.status==='publicado'?'Reenviar pro Make':'Publicar no Instagram'}" style="position:absolute;top:6px;right:6px;padding:4px 8px;border-radius:7px;border:none;background:${p.status==='publicado'?'rgba(59,130,246,0.85)':'rgba(168,85,247,0.85)'};color:#fff;font-size:11px;cursor:pointer;font-weight:600;backdrop-filter:blur(4px);">${p.status==='publicado'?'↺ Reenviar':'📤 Publicar'}</button>`:''}
+
         <div class="pcardv-body">
           <div class="pcardv-txt" style="color:${sm.c};">${stripHtml(p.legenda||'—').slice(0,60)}</div>
           <div class="pcardv-status" style="background:${sm.bc};color:${sm.c};">
@@ -2192,17 +2192,13 @@ const Admin = {
           <button class="btn-soft-dp" onclick="Admin.updatePost(${p.id},'criacao')">← Solicitar Ajuste</button>
         ` : ''}
         ${p.status==='aprovado' ? `<button class="btn-advance" style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;" onclick="Admin.updatePost(${p.id},'design')">🎨 Marcar Design Pronto</button>` : ''}
-        ${p.status==='design' ? `<button class="btn-advance" onclick="Admin.publicarNoInstagram(${p.id})">✦ Publicar no Instagram</button>` : ''}
         ${p.status==='publicado' ? `
           <div style="padding:9px;border-radius:9px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);text-align:center;font-size:11px;color:#1E3A8A;margin-bottom:6px;">✦ Publicado no Instagram!</div>
-          <button onclick="Admin.publicarNoInstagram(${p.id})" style="width:100%;padding:9px;border-radius:9px;border:1px solid rgba(59,130,246,0.3);background:transparent;font-size:11px;cursor:pointer;color:#1E3A8A;">↺ Reenviar pro Make</button>
         ` : ''}
         <div style="display:flex;gap:8px;margin-top:10px;">
           <button onclick="Admin.editarPost(${p.id})" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--surface);font-size:12px;cursor:pointer;color:var(--text);">✏ Editar</button>
           <button onclick="Admin.excluirPost(${p.id})" style="flex:1;padding:9px;border-radius:9px;border:1px solid #FFCDD2;background:#FFEBEE;font-size:12px;cursor:pointer;color:#C62828;">🗑 Excluir</button>
         </div>
-        <button onclick="Admin.publicarNoInstagram(${p.id})" style="width:100%;margin-top:8px;padding:9px;border-radius:9px;border:1px solid rgba(99,102,241,0.35);background:rgba(99,102,241,0.08);font-size:12px;cursor:pointer;color:#4338ca;">📤 Enviar pro Make (qualquer status)</button>
-        <button onclick="Admin._diagPublicacao(${p.id})" style="width:100%;margin-top:6px;padding:9px;border-radius:9px;border:1px solid rgba(234,179,8,0.35);background:rgba(234,179,8,0.06);font-size:12px;cursor:pointer;color:#92400e;">🔍 Diagnóstico do Make</button>
       </div>
     `);
   },
@@ -10682,6 +10678,6 @@ document.addEventListener('keydown', e => {
 <script src="comercial_hub_module.js?v=20260518"></script>
 <script src="fiscal_module.js?v=20260518b"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="agentes_workspace_module.js?v=20260523cp"></script>
+<script src="agentes_workspace_module.js?v=20260523cq"></script>
 </body>
 </html>

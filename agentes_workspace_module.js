@@ -2348,24 +2348,23 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const cards=await _loadQuadroCards();
       const card=cards.find(c=>c.id===id);
       if(!card)return;
-      if(card.status==='aprovado'){alert('Este card já foi aprovado.');return;}
+      if(card.status==='aprovado'){alert('Este card já está aprovado.');return;}
       try{
-        const{data:post,error}=await db.from('posts').insert({
+        const{error}=await db.from('posts').insert({
           client_email:_cliente,
           tema_titulo:card.titulo||'',
           legenda:card.legenda||'',
           hashtags:card.hashtags||'',
           tipo:card.formato||'feed',
-          data_post:card.data||null,
+          data_post:card.data||_hoje(),
           obs_int:card.horario||'',
           obs:card.copy||'',
           status:'criacao'
-        }).select('id').single();
+        });
         if(error)throw error;
         card.status='aprovado';
-        card.post_id=post.id;
-        const ok=await _saveQuadroCards(cards);
-        if(ok)_renderAba('quadro');
+        await _saveQuadroCards(cards);
+        _renderAba('quadro');
       }catch(e){alert('Erro ao aprovar: '+e.message);}
     },
     async quadroGerarIA(){
