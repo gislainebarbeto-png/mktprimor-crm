@@ -2072,7 +2072,7 @@ const Admin = {
         ondragstart="event.stopPropagation();event.dataTransfer.setData('postId','${p.id}');this.classList.add('dragging');Admin._dragPostId=${p.id}"
         ondragend="this.classList.remove('dragging')"
         onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()"
-        onclick="event.stopPropagation();Admin.openPost(${p.id})">
+        onclick="event.stopPropagation();Admin.viewPostDetail(${p.id})">
         ${showThumb?`<img src="${thumb}" class="pchip-thumb" onerror="this.style.display='none'" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;"/>`:''}
         ${isVid?`<span style="width:36px;height:36px;border-radius:5px;flex-shrink:0;background:${sm.bc};border:1px solid ${sm.dot}40;display:flex;align-items:center;justify-content:center;font-size:14px;">🎬</span>`:''}
         <div style="flex:1;min-width:0;">
@@ -2091,7 +2091,7 @@ const Admin = {
       const thumb = parseFirst(p.img_url);
       return `<div class="pcardv" style="background:${sm.bc};border-color:${sm.dot}30;position:relative;"
         onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()"
-        onclick="event.stopPropagation();Admin.openPost(${p.id})">
+        onclick="event.stopPropagation();Admin.viewPostDetail(${p.id})">
         ${thumb?`<img src="${thumb}" class="pcardv-img" onerror="this.style.display='none'"/>`:''}
 
         <div class="pcardv-body">
@@ -2195,7 +2195,7 @@ const Admin = {
         <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
           <div style="font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Sem data (${semData.length})</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;">
-            ${semData.map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;const leg=stripHtml(p.legenda||'Post');return`<div onclick="Admin.openPost(${p.id})" onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()" style="padding:4px 9px;border-radius:7px;background:${sm.bc};border:1px solid ${sm.dot}33;cursor:pointer;font-size:11px;color:${sm.c};display:flex;align-items:center;gap:4px;"><span style="width:5px;height:5px;border-radius:50%;background:${sm.dot};display:inline-block;flex-shrink:0;"></span>${leg.slice(0,25)}${leg.length>25?'…':''}</div>`;}).join('')}
+            ${semData.map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;const leg=stripHtml(p.legenda||'Post');return`<div onclick="Admin.viewPostDetail(${p.id})" onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()" style="padding:4px 9px;border-radius:7px;background:${sm.bc};border:1px solid ${sm.dot}33;cursor:pointer;font-size:11px;color:${sm.c};display:flex;align-items:center;gap:4px;"><span style="width:5px;height:5px;border-radius:50%;background:${sm.dot};display:inline-block;flex-shrink:0;"></span>${leg.slice(0,25)}${leg.length>25?'…':''}</div>`;}).join('')}
           </div>
         </div>` : ''}`;
     // Restore scroll position
@@ -2274,6 +2274,91 @@ const Admin = {
         </div>
       </div>
     `);
+  },
+
+  async viewPostDetail(id) {
+    const { data: p } = await db.from('posts').select('*').eq('id', id).single();
+    if (!p) return;
+    const eV = t => (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const stripH = h => h ? h.replace(/<br\s*\/?>/gi,'\n').replace(/<\/div>/gi,'\n').replace(/<\/p>/gi,'\n').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ').replace(/\n{3,}/g,'\n\n').trim() : '';
+    const parseMedia = r => { if(!r)return[]; if(Array.isArray(r))return r.filter(Boolean); try{const a=JSON.parse(r);return Array.isArray(a)?a.filter(Boolean):[r];}catch{return[r];} };
+    const medias = parseMedia(p.midia_urls).concat(parseMedia(p.img_url));
+    const fotoUrl = p.capa_url || medias[0] || '';
+    const tipo = (p.tipo||'Feed');
+    const isReels = tipo.toLowerCase().includes('reels');
+    const isPublicado = p.status === 'publicado';
+    const fmtC = {reels:'#8e44ad',feed:'#e67e22',carrossel:'#2980b9',stories:'#27ae60',tiktok:'#e74c3c',feed:'#e67e22'};
+    const fmtBg = fmtC[tipo.toLowerCase()] || '#9B6B3A';
+    const legenda = stripH(p.legenda_html || p.legenda || '');
+    // If it exists, close any side detail panel
+    this.closeDetail && this.closeDetail();
+    // Remove old overlay if any
+    document.getElementById('vpost-overlay')?.remove();
+    const ov = document.createElement('div');
+    ov.id = 'vpost-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;';
+    ov.onclick = e => { if(e.target===ov) ov.remove(); };
+    ov.innerHTML = `
+      <div style="background:var(--surface);border-radius:16px;width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.45);display:flex;flex-direction:column;">
+        <div style="background:${isPublicado?'#16a34a':fmtBg}10;border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;border-radius:16px 16px 0 0;">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-weight:700;font-size:14px;color:var(--brown)">${eV(p.tema_titulo||'Post')}</span>
+            <span style="background:${fmtBg}22;color:${fmtBg};border:1px solid ${fmtBg}44;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">${tipo.toUpperCase()}</span>
+            ${isPublicado?`<span style="background:#16a34a;color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:.06em">✓ POSTADO</span>`:''}
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px;color:var(--muted)">${p.data_post||'Sem data'}</span>
+            <button onclick="document.getElementById('vpost-overlay').remove();Admin.editarPost(${p.id})" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;color:var(--muted)">✏️ Editar</button>
+            <button onclick="document.getElementById('vpost-overlay').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);line-height:1">✕</button>
+          </div>
+        </div>
+        <div style="display:flex;min-height:200px">
+          <div style="width:175px;flex-shrink:0;border-right:1px solid #e5e5e5;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;background:#fff">
+            ${fotoUrl
+              ? `<div style="position:relative;width:100%">
+                   ${/\.(mp4|mov|webm|m4v)/i.test(fotoUrl)
+                     ? `<video src="${eV(fotoUrl)}" style="width:100%;border-radius:8px;max-height:150px;object-fit:cover" controls></video>`
+                     : `<img src="${eV(fotoUrl)}" style="width:100%;border-radius:8px;max-height:150px;object-fit:cover;${isPublicado?'filter:brightness(.75)':''}"/>`}
+                   ${isPublicado?`<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-12deg);background:rgba(22,163,74,.92);color:#fff;font-size:11px;font-weight:900;padding:4px 10px;border-radius:6px;border:2px solid rgba(255,255,255,.7);letter-spacing:.1em;white-space:nowrap">✓ POSTADO</div>`:''}
+                 </div>`
+              : `<div style="width:100%;height:120px;background:var(--bg);border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span style="font-size:22px">🖼</span><span style="font-size:9px;color:var(--muted);text-align:center">Sem foto</span></div>`}
+            ${fotoUrl ? `<button onclick="Admin.removerMidiaPost(${p.id})" style="width:100%;background:none;border:1px solid #e74c3c44;border-radius:6px;padding:5px;font-size:10px;cursor:pointer;color:#e74c3c;font-weight:600">🗑 Remover mídia</button>` : ''}
+          </div>
+          <div style="flex:1;padding:18px 22px;min-width:0;background:#fff;color:#1a1a1a">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:4px;border-bottom:1px solid #eee;padding-bottom:4px">Título</div>
+            <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:16px;line-height:1.4">${eV(p.tema_titulo||'—')}</div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Legenda</div>
+            <div style="font-size:12px;color:#333;margin-bottom:16px;line-height:1.7;white-space:pre-wrap">${eV(legenda||'—')}</div>
+            ${p.hashtags?`<div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Hashtags</div>
+            <div style="font-size:12px;color:#9B6B3A;font-weight:500;line-height:1.8">${eV(p.hashtags)}</div>`:''}
+            ${p.obs_int?`<div style="margin-top:14px;font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Obs. interna</div><div style="font-size:12px;color:#555;line-height:1.6">${eV(p.obs_int)}</div>`:''}
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;background:var(--bg);border-radius:0 0 16px 16px">
+          ${p.status==='revisao'?`<button onclick="Admin.updatePost(${p.id},'aprovado');document.getElementById('vpost-overlay').remove()" style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer">✓ Aprovar Post</button><button onclick="Admin.updatePost(${p.id},'criacao');document.getElementById('vpost-overlay').remove()" style="background:#e67e22;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer">← Solicitar Ajuste</button>`:''}
+          ${p.status==='aprovado'?`<button onclick="Admin.updatePost(${p.id},'publicado');document.getElementById('vpost-overlay').remove()" style="background:linear-gradient(135deg,#1877F2,#0d5ec9);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer">📤 Marcar Publicado</button>`:''}
+          <button onclick="document.getElementById('vpost-overlay').remove();Admin.editarPost(${p.id})" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 18px;font-size:12px;cursor:pointer;color:var(--text)">✏️ Editar</button>
+          <button onclick="document.getElementById('vpost-overlay').remove()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 18px;font-size:12px;cursor:pointer;color:var(--text)">✕ Fechar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+  },
+
+  async removerMidiaPost(id) {
+    if (!confirm('Remover foto/vídeo deste post? Isso libera espaço no Storage.')) return;
+    const { data: p } = await db.from('posts').select('img_url,midia_urls,capa_url').eq('id', id).single();
+    if (!p) return;
+    // Try to delete from Storage
+    const parseMedia = r => { if(!r)return[]; if(Array.isArray(r))return r.filter(Boolean); try{const a=JSON.parse(r);return Array.isArray(a)?a.filter(Boolean):[r];}catch{return[r];} };
+    const allUrls = [...parseMedia(p.midia_urls), ...parseMedia(p.img_url)].filter(Boolean);
+    for (const url of allUrls) {
+      const part = url.split('/posts-media/')[1];
+      if (part) await db.storage.from('posts-media').remove([decodeURIComponent(part.split('?')[0])]).catch(()=>{});
+    }
+    await db.from('posts').update({ img_url: null, midia_urls: null }).eq('id', id);
+    this.posts = (this.posts||[]).map(x => x.id===id ? {...x, img_url:null, midia_urls:null} : x);
+    document.getElementById('vpost-overlay')?.remove();
+    this._renderPostsView && this._renderPostsView();
   },
 
   async publicarNoInstagram(id) {
@@ -10751,6 +10836,6 @@ document.addEventListener('keydown', e => {
 <script src="comercial_hub_module.js?v=20260518"></script>
 <script src="fiscal_module.js?v=20260518b"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="agentes_workspace_module.js?v=20260525e"></script>
+<script src="agentes_workspace_module.js?v=20260525f"></script>
 </body>
 </html>

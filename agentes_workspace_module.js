@@ -1612,7 +1612,10 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     if(!_cliente)return[];
     try{
       const{data}=await db.from('agentes_trabalhos').select('conteudo').eq('agente_id','chloe').eq('aba_id','quadro').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle();
-      return data?.conteudo?.cards||[];
+      const raw=data?.conteudo?.cards||[];
+      // Deduplica por id (protege contra race conditions de saves simultâneos)
+      const seen=new Set();
+      return raw.filter(c=>{if(!c.id||seen.has(c.id))return false;seen.add(c.id);return true;});
     }catch{return[];}
   }
   async function _saveQuadroCards(cards){
@@ -2658,6 +2661,9 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       try{
         const tipoVal=['feed','reels','carrossel','stories'].includes(card.formato)?card.formato:'feed';
         const svcDb=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+        // Guarda DB-level: se já existe post com o mesmo titulo+cliente+data não cria duplicata
+        const{data:existing}=await svcDb.from('posts').select('id').eq('client_email',_cliente).eq('tema_titulo',card.titulo||'').eq('data_post',card.data||_hoje()).maybeSingle();
+        if(existing?.id){card.post_id=existing.id;await _saveQuadroCards(cards);return;}
         const payload={
           client_email:_cliente,tema_titulo:card.titulo||'',legenda:card.legenda||'',
           hashtags:card.hashtags||'',tipo:tipoVal,data_post:card.data||_hoje(),
