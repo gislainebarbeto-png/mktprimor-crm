@@ -1619,7 +1619,13 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     }catch{return[];}
   }
   async function _saveQuadroCards(cards){
-    return _saveAs('chloe','quadro',{cards});
+    if(!_cliente)return false;
+    try{
+      const svc=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+      const{error}=await svc.from('agentes_trabalhos').upsert({agente_id:'chloe',aba_id:'quadro',client_email:_cliente,data:_hoje(),conteudo:{cards}},{onConflict:'agente_id,aba_id,client_email,data'});
+      if(error)console.error('[_saveQuadroCards]',error.message);
+      return!error;
+    }catch(e){console.error('[_saveQuadroCards]',e);return false;}
   }
 
   // CHLOE — Quadro de Posts (layout visual tipo cronograma)
@@ -2547,7 +2553,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       if(!confirm('Remover este card?'))return;
       const cards=await _loadQuadroCards();
       const ok=await _saveQuadroCards(cards.filter(c=>c.id!==id));
-      if(ok)_renderAba('quadro');
+      if(ok)_renderAba(_aba);
     },
     _openQuadroModal(card){
       document.getElementById('aw2-qmodal')?.remove();
@@ -2627,7 +2633,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         if(error)throw error;
         card.status='aprovado';
         await _saveQuadroCards(cards);
-        _renderAba('quadro');
+        _renderAba(_aba);
         alert(`✓ Post "${card.titulo||'(sem título)'}" criado! Aparece agora em Posts p/ Revisão da Gabi.`);
       }catch(e){console.error('[quadroAprovar]',e);alert('Erro ao aprovar: '+e.message);}
     },
@@ -2640,7 +2646,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       await _saveQuadroCards(cards);
       if(card.status_arte==='aprovado'&&card.status_conteudo==='aprovado'&&!card.post_id)
         await _AW2._quadroCreatePost(card,cards);
-      _renderAba('quadro');
+      _renderAba(_aba);
     },
 
     // Quadro — aprovar/revisar conteúdo
@@ -2651,7 +2657,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       await _saveQuadroCards(cards);
       if(card.status_arte==='aprovado'&&card.status_conteudo==='aprovado'&&!card.post_id)
         await _AW2._quadroCreatePost(card,cards);
-      _renderAba('quadro');
+      _renderAba(_aba);
     },
 
     // Quadro — criar post no DB quando ambos aprovados (lock evita duplicata por race condition)
@@ -2692,7 +2698,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         card.foto_url=publicUrl;
         await _saveQuadroCards(cards);
         if(card.post_id)await db.from('posts').update({midia_urls:JSON.stringify([publicUrl])}).eq('id',card.post_id).catch(()=>{});
-        _renderAba('quadro');
+        _renderAba(_aba);
       }catch(e){alert('Erro no upload: '+e.message);}
     },
 
@@ -2702,7 +2708,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const card=cards.find(c=>c.id===id);if(!card)return;
       card.publicado=!!val;
       await _saveQuadroCards(cards);
-      _renderAba('quadro');
+      _renderAba(_aba);
     },
 
     // Quadro — remover mídia do card (foto + vídeo) e limpar do Storage e do post
@@ -2736,7 +2742,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const card=cards.find(c=>c.id===id);if(!card)return;
       card.video_url=url;
       await _saveQuadroCards(cards);
-      _renderAba('quadro');
+      _renderAba(_aba);
     },
 
     // Quadro — agendar na Meta (cria post se necessário e abre modal de agendamento)
@@ -2863,7 +2869,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         if(idx>=0)cards[idx]=card;else cards.push(card);
         const ok=await _saveQuadroCards(cards);
         _flash('qm-sv',ok?'✓ Salvo':'⚠ Erro');
-        if(ok)setTimeout(()=>{document.getElementById('aw2-qmodal')?.remove();_renderAba('quadro');},500);
+        if(ok)setTimeout(()=>{document.getElementById('aw2-qmodal')?.remove();_renderAba(_aba);},500);
       }catch(e){_flash('qm-sv','⚠ Erro: '+e.message);}
       finally{if(btn){btn.disabled=false;btn.textContent='💾 Salvar Card';}}
     },
