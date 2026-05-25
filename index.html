@@ -2336,11 +2336,19 @@ const Admin = {
             ${p.obs_int?`<div style="margin-top:14px;font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Obs. interna</div><div style="font-size:12px;color:#555;line-height:1.6">${eV(p.obs_int)}</div>`:''}
           </div>
         </div>
-        <div style="border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;background:var(--bg);border-radius:0 0 16px 16px">
-          ${p.status==='revisao'?`<button onclick="Admin.updatePost(${p.id},'aprovado');document.getElementById('vpost-overlay').remove()" style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer">✓ Aprovar Post</button><button onclick="Admin.updatePost(${p.id},'criacao');document.getElementById('vpost-overlay').remove()" style="background:#e67e22;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer">← Solicitar Ajuste</button>`:''}
-          ${p.status==='aprovado'?`<button onclick="Admin.updatePost(${p.id},'publicado');document.getElementById('vpost-overlay').remove()" style="background:linear-gradient(135deg,#1877F2,#0d5ec9);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer">📤 Marcar Publicado</button>`:''}
-          <button onclick="document.getElementById('vpost-overlay').remove();Admin.editarPost(${p.id})" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 18px;font-size:12px;cursor:pointer;color:var(--text)">✏️ Editar</button>
-          <button onclick="document.getElementById('vpost-overlay').remove()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 18px;font-size:12px;cursor:pointer;color:var(--text)">✕ Fechar</button>
+        <div style="border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;background:var(--bg);border-radius:0 0 16px 16px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${isPublicado
+              ? `<span style="background:#16a34a;color:#fff;font-size:12px;font-weight:800;padding:8px 18px;border-radius:8px;letter-spacing:.06em">✅ JÁ POSTADO</span>
+                 <button onclick="Admin.updatePost(${p.id},'aprovado');document.getElementById('vpost-overlay').remove()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:11px;cursor:pointer;color:var(--muted)">Desfazer</button>`
+              : `<button onclick="Admin.marcarPublicadoManual(${p.id})" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.04em">✅ Marcar como Publicado</button>`}
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${p.status==='revisao'?`<button onclick="Admin.updatePost(${p.id},'aprovado');document.getElementById('vpost-overlay').remove()" style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer">✓ Aprovar</button>`:''}
+            <button onclick="document.getElementById('vpost-overlay').remove();Admin.editarPost(${p.id})" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:12px;cursor:pointer;color:var(--text)">✏️ Editar</button>
+            <button onclick="Admin.excluirPostOverlay(${p.id})" style="background:#FFEBEE;border:1px solid #FFCDD2;border-radius:8px;padding:9px 14px;font-size:12px;cursor:pointer;color:#C62828">🗑 Excluir</button>
+            <button onclick="document.getElementById('vpost-overlay').remove()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:12px;cursor:pointer;color:var(--text)">✕</button>
+          </div>
         </div>
       </div>`;
     document.body.appendChild(ov);
@@ -2359,6 +2367,26 @@ const Admin = {
     }
     await db.from('posts').update({ img_url: null, midia_urls: null }).eq('id', id);
     this.posts = (this.posts||[]).map(x => x.id===id ? {...x, img_url:null, midia_urls:null} : x);
+    document.getElementById('vpost-overlay')?.remove();
+    this._renderPostsView && this._renderPostsView();
+  },
+
+  async marcarPublicadoManual(id) {
+    await db.from('posts').update({ status: 'publicado' }).eq('id', id);
+    this.posts = (this.posts||[]).map(x => x.id===id ? {...x, status:'publicado'} : x);
+    document.getElementById('vpost-overlay')?.remove();
+    this._renderPostsView && this._renderPostsView();
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:24px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,.25);';
+    t.textContent = '✅ Post marcado como publicado!';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  },
+
+  async excluirPostOverlay(id) {
+    if (!confirm('Excluir este post permanentemente?')) return;
+    await db.from('posts').delete().eq('id', id);
+    this.posts = (this.posts||[]).filter(x => x.id !== id);
     document.getElementById('vpost-overlay')?.remove();
     this._renderPostsView && this._renderPostsView();
   },
