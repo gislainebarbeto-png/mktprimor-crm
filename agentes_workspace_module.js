@@ -1554,6 +1554,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
           </label>
           ${isReels?`<input id="qcard-video-${c.id}" class="aw2-in" placeholder="Link vídeo Drive..." value="${eV(c.video_url||'')}" style="font-size:10px;padding:5px 7px;width:100%;box-sizing:border-box">
           <button onclick="_AW2.quadroSalvarVideoUrl('${c.id}')" style="width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:4px;font-size:10px;cursor:pointer;color:var(--muted)">Salvar link</button>`:''}
+          ${(c.foto_url||c.video_url)?`<button onclick="_AW2.quadroRemoverMidia('${c.id}')" style="width:100%;background:none;border:1px solid #e74c3c44;border-radius:6px;padding:5px;font-size:10px;cursor:pointer;color:#e74c3c;font-weight:600" title="Remove foto/vídeo do card e do storage">🗑 Remover mídia</button>`:''}
         </div>
         <div style="flex:1;padding:18px 22px;min-width:0;background:#fff;color:#1a1a1a">
           <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:4px;border-bottom:1px solid #eee;padding-bottom:4px">Título</div>
@@ -2674,6 +2675,29 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         if(card.post_id)await db.from('posts').update({midia_urls:JSON.stringify([publicUrl])}).eq('id',card.post_id).catch(()=>{});
         _renderAba('quadro');
       }catch(e){alert('Erro no upload: '+e.message);}
+    },
+
+    // Quadro — remover mídia do card (foto + vídeo) e limpar do Storage e do post
+    async quadroRemoverMidia(id){
+      if(!confirm('Remover a mídia deste card? A foto será apagada do storage permanentemente.'))return;
+      const cards=await _loadQuadroCards();
+      const card=cards.find(c=>c.id===id);if(!card)return;
+      // Tenta apagar do Supabase Storage se for URL do nosso bucket
+      if(card.foto_url&&card.foto_url.includes('posts-media')){
+        try{
+          const path=card.foto_url.split('/posts-media/')[1]?.split('?')[0];
+          if(path)await db.storage.from('posts-media').remove([decodeURIComponent(path)]);
+        }catch{}
+      }
+      // Limpa campos de mídia no card
+      card.foto_url='';
+      card.video_url='';
+      await _saveQuadroCards(cards);
+      // Limpa midia_urls no post do DB se existir
+      if(card.post_id){
+        await db.from('posts').update({midia_urls:null,img_url:null}).eq('id',card.post_id).catch(()=>{});
+      }
+      _renderAba(_ag?.id==='chloe'?'calendario_posts':'quadro');
     },
 
     // Quadro — salvar link de vídeo (reels)
