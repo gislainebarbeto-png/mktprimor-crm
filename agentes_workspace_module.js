@@ -1563,22 +1563,26 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
             ${isReels?`<input id="qcard-video-${c.id}" class="aw2-in" placeholder="Link vídeo Drive..." value="${escV(c.video_url||'')}" style="font-size:10px;padding:5px 7px;width:100%;box-sizing:border-box">
             <button onclick="_AW2.quadroSalvarVideoUrl('${c.id}')" style="width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:4px;font-size:10px;cursor:pointer;color:var(--muted)">Salvar link</button>`:''}
           </div>
-          <div style="flex:1;padding:14px 18px;min-width:0;background:#fff;color:#1a1a1a">
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#555;margin-bottom:2px">TÍTULO</div>
-            <div style="font-size:14px;font-weight:600;color:#2c1a0e;margin-bottom:10px;line-height:1.4">${escV(c.titulo||'(sem título)')}</div>
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#555;margin-bottom:2px">LEGENDA</div>
-            <div style="font-size:12px;color:#222;margin-bottom:10px;line-height:1.6;white-space:pre-wrap;max-height:80px;overflow-y:auto">${escV(c.legenda||'—')}</div>
-            ${isReels&&c.roteiro?`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#555;margin-bottom:6px">ROTEIRO</div>
-            <div style="margin-bottom:12px;max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px">
-              ${c.roteiro.split('\n').map(s=>s.trim()).filter(Boolean).map((s,i)=>`<div style="display:flex;gap:8px;align-items:flex-start;background:#f9f5ff;border:1px solid #e0d0f0;border-radius:8px;padding:8px 10px">
-                <span style="background:#8e44ad;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0;line-height:1.4">${i+1}</span>
-                <span style="font-size:12px;color:#222;line-height:1.5">${escV(s)}</span>
-              </div>`).join('')}
-            </div>`:''}
-            ${isCar&&slides.length?`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#555;margin-bottom:4px">SLIDES DO CARROSSEL (${slides.length})</div>
-            <div style="margin-bottom:10px;max-height:90px;overflow-y:auto">${slides.map((s,i)=>`<div style="font-size:11px;padding:3px 8px;border-left:2px solid #9B6B3A;margin-bottom:3px;background:#faf6f2;border-radius:0 5px 5px 0;color:#222"><b style="color:#9B6B3A">${i+1}.</b> ${escV(s)}</div>`).join('')}</div>`:''}
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#555;margin-bottom:2px">HASHTAGS</div>
-            <div style="font-size:11px;color:#9B6B3A;font-weight:500">${escV(c.hashtags||'—')}</div>
+          <div style="flex:1;padding:18px 22px;min-width:0;background:#fff;color:#1a1a1a">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:4px;border-bottom:1px solid #eee;padding-bottom:4px">Título</div>
+            <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:16px;line-height:1.4">${escV(c.titulo||'(sem título)')}</div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Legenda</div>
+            <div style="font-size:12px;color:#333;margin-bottom:16px;line-height:1.7;white-space:pre-wrap">${escV(c.legenda||'—')}</div>
+            ${isReels&&c.roteiro?(()=>{
+              const byLine=c.roteiro.split('\n').map(s=>s.trim()).filter(Boolean);
+              const items=byLine.length>1?byLine:c.roteiro.split(/;\s*(?=CENA\s)/i).map(s=>s.trim()).filter(Boolean);
+              return`<div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px">Roteiro (${items.length} cenas)</div>
+              <div style="margin-bottom:16px;display:flex;flex-direction:column;gap:8px">
+                ${items.map((s,i)=>`<div style="display:flex;gap:10px;align-items:flex-start;background:#f9f5ff;border:1px solid #ddd0ef;border-radius:10px;padding:10px 14px">
+                  <span style="background:#8e44ad;color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;flex-shrink:0;line-height:1.5;min-width:26px;text-align:center">${i+1}</span>
+                  <span style="font-size:12px;color:#222;line-height:1.6">${escV(s)}</span>
+                </div>`).join('')}
+              </div>`;
+            })():''}
+            ${isCar&&slides.length?`<div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px">Slides do Carrossel (${slides.length})</div>
+            <div style="margin-bottom:16px;display:flex;flex-direction:column;gap:5px">${slides.map((s,i)=>`<div style="font-size:12px;padding:8px 12px;border-left:3px solid #9B6B3A;background:#faf6f2;border-radius:0 8px 8px 0;color:#1a1a1a;line-height:1.5"><b style="color:#9B6B3A">${i+1}.</b> ${escV(s)}</div>`).join('')}</div>`:''}
+            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Hashtags</div>
+            <div style="font-size:12px;color:#9B6B3A;font-weight:500;line-height:1.8">${escV(c.hashtags||'—')}</div>
           </div>
         </div>
         <div style="border-top:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;justify-content:space-between;background:var(--bg)">
