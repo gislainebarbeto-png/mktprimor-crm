@@ -961,7 +961,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   async function _postsChloe(){
     let posts=[];
     if(_cliente){
-      try{const{data}=await db.from('posts').select('id,tema_titulo,tipo,data_post,status,legenda,hashtags,obs,obs_int').eq('client_email',_cliente).order('data_post',{ascending:false}).limit(40);posts=data||[];}catch(e){}
+      try{const{data}=await db.from('posts').select('id,tema_titulo,tipo,data_post,status,legenda,hashtags,obs,obs_int').eq('client_email',_cliente).neq('status','excluido').order('data_post',{ascending:false}).limit(40);posts=data||[];}catch(e){}
     }
     const TIPOS=['feed','carrossel','reels','stories','tiktok'];
     const STATUS=['criacao','revisao','aprovado','publicado'];
@@ -3010,7 +3010,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const fim=`${ano}-${String(mes).padStart(2,'0')}-31`;
       let posts=[];
       try{
-        const{data}=await db.from('posts').select('*').eq('client_email',_cliente).gte('data_post',ini).lte('data_post',fim).order('data_post',{ascending:true});
+        const{data}=await db.from('posts').select('*').eq('client_email',_cliente).neq('status','excluido').gte('data_post',ini).lte('data_post',fim).order('data_post',{ascending:true});
         posts=data||[];
       }catch(e){alert('Erro ao buscar posts: '+e.message);return;}
       if(!posts.length){alert(`Nenhum post encontrado para ${mesNome}/${ano}.`);return;}

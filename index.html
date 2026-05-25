@@ -1843,7 +1843,7 @@ const Admin = {
 
   async renderPosts() {
     const [{ data }, { data: clients }] = await Promise.all([
-      db.from('posts').select('*').order('data_post,created_at',{ascending:true}),
+      db.from('posts').select('*').neq('status','excluido').order('data_post,created_at',{ascending:true}),
       db.from('clients').select('*')
     ]);
     this.posts = data || [];
@@ -1943,6 +1943,7 @@ const Admin = {
             ${views.map(vv=>`<button onclick="Admin._postsView='${vv}';Admin._postsWeekOffset=0;Admin._renderPostsView()" style="padding:6px 11px;font-size:11px;border:none;cursor:pointer;background:${v===vv?'var(--brown)':'var(--surface)'};color:${v===vv?'#F5F5F5':'var(--muted)'};border-right:1px solid var(--border);">${viewLabels[vv]}</button>`).join('')}
           </div>
           <button onclick="Admin.abrirModalPost()" style="padding:7px 14px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;border:none;cursor:pointer;">+ Novo Post</button>
+          <button onclick="Admin.abrirLixeira()" style="padding:7px 12px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer;" title="Lixeira de posts">🗑</button>
         </div>
       </div>
       ${stats?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">${stats}</div>`:''}
@@ -2384,11 +2385,15 @@ const Admin = {
   },
 
   async excluirPostOverlay(id) {
-    if (!confirm('Excluir este post permanentemente?')) return;
-    await db.from('posts').delete().eq('id', id);
+    if (!confirm('Mover este post para a lixeira?')) return;
+    await db.from('posts').update({ status:'excluido' }).eq('id', id);
     this.posts = (this.posts||[]).filter(x => x.id !== id);
     document.getElementById('vpost-overlay')?.remove();
     this._renderPostsView && this._renderPostsView();
+    const t = document.createElement('div');
+    t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 20px;border-radius:24px;font-size:13px;z-index:9999;display:flex;align-items:center;gap:12px;box-shadow:0 6px 24px rgba(0,0,0,.3)';
+    t.innerHTML=`🗑 Post movido para a lixeira &nbsp;<button onclick="Admin.restaurarPost(${id});this.closest('div').remove()" style="background:#fff;color:#333;border:none;border-radius:12px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer">Desfazer</button>`;
+    document.body.appendChild(t); setTimeout(()=>t.remove(),5000);
   },
 
   async publicarNoInstagram(id) {
@@ -2565,7 +2570,7 @@ const Admin = {
 
     // Carrega stats de cada cliente
     list.forEach(async c => {
-      const { data: posts } = await db.from('posts').select('status').eq('client_email', c.email);
+      const { data: posts } = await db.from('posts').select('status').eq('client_email', c.email).neq('status','excluido');
       const el = document.getElementById('cli-stats-'+c.id);
       if (!el || !posts) return;
       const rasc = posts.filter(p=>p.status==='criacao'||p.status==='rascunho').length;
@@ -2803,7 +2808,7 @@ const Admin = {
   },
 
   async _cliTabPosts(id, c) {
-    const { data: posts } = await db.from('posts').select('*').eq('client_email', c.email).order('data_post',{ascending:true});
+    const { data: posts } = await db.from('posts').select('*').eq('client_email', c.email).neq('status','excluido').order('data_post',{ascending:true});
     const content = document.getElementById(this._bcContentId||'cli-tab-content');
     const SM = {
       criacao:  {l:'Criação',  dot:'#F59E0B', bc:'rgba(251,191,36,0.12)'},
@@ -2893,7 +2898,7 @@ const Admin = {
     const content = document.getElementById(this._bcContentId||'cli-tab-content');
     content.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:20px 0;">Carregando feed…</div>`;
 
-    const { data: posts } = await db.from('posts').select('*').eq('client_email', c.email).order('data_post',{ascending:false}).limit(30);
+    const { data: posts } = await db.from('posts').select('*').eq('client_email', c.email).neq('status','excluido').order('data_post',{ascending:false}).limit(30);
     if (!content) return;
 
     const allPosts = posts || [];
@@ -5385,9 +5390,9 @@ const Admin = {
     this.closeDetail();
   },
   async excluirPost(id) {
-    if (!confirm('Excluir este post? Esta ação não pode ser desfeita.')) return;
+    if (!confirm('Mover este post para a lixeira?')) return;
     this.loader(true);
-    await db.from('posts').delete().eq('id',id);
+    await db.from('posts').update({ status:'excluido' }).eq('id',id);
     this.loader(false);
     this.closeDetail();
     if (this._cliCurrentId && this._cliClienteData) {
@@ -5395,6 +5400,46 @@ const Admin = {
     } else {
       this.tab('posts');
     }
+  },
+
+  async restaurarPost(id) {
+    await db.from('posts').update({ status:'criacao' }).eq('id', id);
+    this._renderPostsView && this._renderPostsView();
+  },
+
+  async abrirLixeira() {
+    const { data: lixo } = await db.from('posts').select('*').eq('status','excluido').order('updated_at',{ascending:false}).order('created_at',{ascending:false});
+    document.getElementById('lixeira-overlay')?.remove();
+    const ov = document.createElement('div');
+    ov.id = 'lixeira-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;';
+    ov.onclick = e => { if(e.target===ov) ov.remove(); };
+    const stripH = h => h ? h.replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim() : '';
+    const rows = (lixo||[]).map(p => {
+      const thumb = (() => { try { const a = JSON.parse(p.midia_urls||''); return Array.isArray(a)?a[0]:a; } catch { return p.midia_urls||p.img_url||''; } })();
+      const dt = p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        ${thumb?`<img src="${thumb}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0;" onerror="this.style.display='none'"/>`:'<div style="width:48px;height:48px;border-radius:8px;background:var(--bg);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;">🖼</div>'}
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.tema_titulo||stripH(p.legenda||'Post sem título').slice(0,50)}</div>
+          <div style="font-size:11px;color:var(--muted);">${p.client_email||''} · ${p.tipo||'Feed'} · excluído ${dt}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button onclick="Admin.restaurarPost(${p.id});this.closest('[id=lixeira-overlay]').remove();Admin.abrirLixeira()" style="background:#16a34a;color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer">↩ Restaurar</button>
+          <button onclick="if(confirm('Apagar definitivamente?')){db.from('posts').delete().eq('id',${p.id}).then(()=>{this.closest('div[style]').remove()})}" style="background:#FFEBEE;border:1px solid #FFCDD2;border-radius:7px;padding:6px 10px;font-size:11px;cursor:pointer;color:#C62828">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+    ov.innerHTML = `<div style="background:var(--surface);border-radius:16px;width:100%;max-width:620px;max-height:85vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.45);">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1;border-radius:16px 16px 0 0;">
+        <span style="font-size:16px;font-weight:700;color:var(--text)">🗑 Lixeira · ${(lixo||[]).length} post${(lixo||[]).length!==1?'s':''}</span>
+        <button onclick="document.getElementById('lixeira-overlay').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">✕</button>
+      </div>
+      <div style="padding:0 20px 16px;">
+        ${(lixo||[]).length ? rows : '<p style="text-align:center;padding:40px 0;color:var(--muted);font-style:italic;">Lixeira vazia ✦</p>'}
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
   },
   async excluirCliente(id) {
     if (!confirm('Excluir este cliente? Todos os dados vinculados a ele permanecerão no banco.')) return;
@@ -8234,7 +8279,7 @@ const Client = {
     App.loader(true);
     try {
       const [{ data }, { data: clientData }, { data: igTok }] = await Promise.all([
-        db.from('posts').select('*').eq('client_email', App.user.email).order('created_at',{ascending:false}),
+        db.from('posts').select('*').eq('client_email', App.user.email).neq('status','excluido').order('created_at',{ascending:false}),
         db.from('clients').select('instagram,foto_url,nome,mensagem_gi,arquivos,fb_page_id,instagram_account_id').eq('email', App.user.email).single(),
         db.from('instagram_tokens').select('ig_username,expires_at').eq('client_email', App.user.email).maybeSingle(),
       ]);
@@ -9351,7 +9396,7 @@ ${text}`,
     el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;font-style:italic;">Carregando...</p>';
     const [{ data: mets }, { data: posts }, { data: metricoolRow }] = await Promise.all([
       db.from('metricas').select('*').eq('client_email', App.user.email).order('mes',{ascending:true}),
-      db.from('posts').select('id,legenda,img_url').eq('client_email', App.user.email),
+      db.from('posts').select('id,legenda,img_url').eq('client_email', App.user.email).neq('status','excluido'),
       db.from('arquivos_cliente').select('url').eq('client_email',App.user.email).eq('nome','__metricool__').maybeSingle()
     ]);
     const metricoolUrl = metricoolRow?.url || '';
@@ -10866,6 +10911,6 @@ document.addEventListener('keydown', e => {
 <script src="comercial_hub_module.js?v=20260518"></script>
 <script src="fiscal_module.js?v=20260518b"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="agentes_workspace_module.js?v=20260525i"></script>
+<script src="agentes_workspace_module.js?v=20260525j"></script>
 </body>
 </html>
