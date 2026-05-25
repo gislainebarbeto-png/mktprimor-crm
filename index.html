@@ -2000,8 +2000,6 @@ const Admin = {
   },
 
   _renderCalGrid(posts, SM, cliMap, parseFirst, mode) {
-    // Calendário mostra apenas aprovados e publicados (aprovação é feita pelo cliente)
-    posts = posts.filter(p => p.status === 'aprovado' || p.status === 'publicado');
     const now = new Date();
     const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     const diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -10753,6 +10751,6 @@ document.addEventListener('keydown', e => {
 <script src="comercial_hub_module.js?v=20260518"></script>
 <script src="fiscal_module.js?v=20260518b"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="agentes_workspace_module.js?v=20260525b"></script>
+<script src="agentes_workspace_module.js?v=20260525c"></script>
 </body>
 </html>

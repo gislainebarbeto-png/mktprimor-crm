@@ -1483,116 +1483,112 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     </div>`;
   }
 
-  // CHLOE — Calendário de Posts (leitura da tabela posts)
+  // CHLOE — Calendário de Posts: mesmo template do Quadro, ordenado por data
   async function _calendarioPosts(){
     if(!_cliente)return`<div class="aw2-empty">Selecione um cliente para ver o calendário.</div>`;
-    const cards=await _loadQuadroCards();
-    const approved=cards.filter(c=>c.status_arte==='aprovado'&&c.status_conteudo==='aprovado');
-    const eR=t=>(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const fmtC={reels:'#8e44ad',feed:'#e67e22',carrossel:'#2980b9',stories:'#27ae60'};
+    const allCards=await _loadQuadroCards();
+    // Mostra cards aprovados pelo admin no Quadro (arte+conteúdo), ordenados por data
+    const cards=[...allCards]
+      .filter(c=>c.status_arte==='aprovado'&&c.status_conteudo==='aprovado')
+      .sort((a,b)=>{if(!a.data&&!b.data)return 0;if(!a.data)return 1;if(!b.data)return -1;return a.data.localeCompare(b.data);});
+    if(!cards.length)return`<div class="aw2-empty">Nenhum post aprovado no Quadro ainda. Aprove arte e conteúdo no Quadro para que apareçam aqui.</div>`;
     const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
-
-    // Grid mensal baseado na _data (YYYY-MM-DD → pega mês)
-    const mes=_data.substring(0,7);
-    const [yStr,mStr]=mes.split('-');
-    const ano=parseInt(yStr),mesNum=parseInt(mStr);
-    const daysInMonth=new Date(ano,mesNum,0).getDate();
-    const firstDOW=new Date(ano,mesNum-1,1).getDay();
-    const startBlanks=firstDOW===0?6:firstDOW-1; // segunda=0
-    const DIAS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
-    const mesLabel=new Date(ano,mesNum-1,15).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
-
-    // Agrupa por data (sem duplicata)
-    const dayMap={};
-    const seen=new Set();
-    approved.forEach(c=>{
-      if(!c.data)return;
-      if(seen.has(c.id))return; seen.add(c.id);
-      if(!dayMap[c.data])dayMap[c.data]=[];
-      dayMap[c.data].push(c);
-    });
-
-    // Card selecionado
-    const selCard=_calSelected?approved.find(c=>c.id===_calSelected):(approved[0]||null);
-
-    const dayCell=d=>{
-      const ds=`${yStr}-${mStr}-${String(d).padStart(2,'0')}`;
-      const items=dayMap[ds]||[];
-      const isToday=ds===_hoje();
-      return`<div style="min-height:70px;border:1px solid ${isToday?'var(--brown)':'var(--border)'};border-radius:8px;padding:5px;background:${isToday?'rgba(155,107,58,.05)':'var(--surface)'}">
-        <div style="font-size:11px;font-weight:${isToday?700:500};color:${isToday?'var(--brown)':'var(--muted)'};margin-bottom:3px">${d}</div>
-        ${items.map(c=>`<div onclick="_AW2._calSelect('${c.id}')" style="cursor:pointer;background:${(fmtC[c.formato]||'#9B6B3A')}22;border:1px solid ${(fmtC[c.formato]||'#9B6B3A')}55;border-left:3px solid ${(fmtC[c.formato]||'#9B6B3A')};border-radius:4px;padding:2px 5px;margin-bottom:2px;font-size:9px;color:${fmtC[c.formato]||'#9B6B3A'};font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4" title="${eR(c.titulo||'')}">
-          ${(c.formato||'').toUpperCase()} · ${eR((c.titulo||'').substring(0,16))}
-        </div>`).join('')}
+    const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    // Agrupado por data — separadores de dia
+    const groups={};
+    cards.forEach((c,i)=>{const k=c.data||'__semdata__';if(!groups[k])groups[k]=[];groups[k].push({c,i});});
+    const html=Object.entries(groups).map(([date,items])=>{
+      const dateLabel=date==='__semdata__'?'Sem data':(()=>{const[y,m,d]=date.split('-');return`${d} ${MESES[parseInt(m,10)-1]} ${y}`;})();
+      return`<div style="margin-bottom:32px">
+        <div style="font-size:13px;font-weight:700;color:var(--brown);letter-spacing:.04em;padding:8px 0;border-bottom:2px solid var(--brown);margin-bottom:16px;display:flex;align-items:center;gap:8px">
+          <span>📅</span><span>${dateLabel}</span><span style="font-size:11px;color:var(--muted);font-weight:400">${items.length} post${items.length>1?'s':''}</span>
+        </div>
+        ${items.map(({c,i})=>_renderQuadroCard(c,i)).join('')}
       </div>`;
-    };
-
-    const cells=[];
-    for(let i=0;i<startBlanks;i++)cells.push(`<div></div>`);
-    for(let d=1;d<=daysInMonth;d++)cells.push(dayCell(d));
-
-    const roteiroBlocks=rot=>{
-      if(!rot)return'';
-      const byLine=rot.split('\n').map(s=>s.trim()).filter(Boolean);
-      const items=byLine.length>1?byLine:rot.split(/;\s*(?=CENA\s)/i).map(s=>s.trim()).filter(Boolean);
-      return`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#777;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:8px">Roteiro · ${items.length} cenas</div>
-      <div style="margin-bottom:14px;display:flex;flex-direction:column;gap:7px">
-        ${items.map((s,i)=>`<div style="display:flex;gap:8px;align-items:flex-start;background:#f9f5ff;border:1px solid #ddd0ef;border-radius:8px;padding:9px 12px">
-          <span style="background:#8e44ad;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;flex-shrink:0;min-width:22px;text-align:center;line-height:1.5">${i+1}</span>
-          <span style="font-size:11px;color:#222;line-height:1.6">${eR(s)}</span>
-        </div>`).join('')}
-      </div>`;
-    };
-
-    const detail=selCard?`
-      <div style="background:#fff;border:2px solid var(--border);border-radius:14px;overflow:hidden">
-        <div style="background:var(--bg);padding:10px 14px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-          <span style="font-weight:700;font-size:12px;color:var(--brown)">${selCard.data?_fmtD(selCard.data):'Sem data'}${selCard.horario?' · ⏰ '+selCard.horario:''}</span>
-          <span style="background:${(fmtC[selCard.formato]||'#9B6B3A')}22;color:${fmtC[selCard.formato]||'#9B6B3A'};font-size:9px;padding:2px 8px;border-radius:4px;font-weight:700;border:1px solid ${(fmtC[selCard.formato]||'#9B6B3A')}44">${(selCard.formato||'feed').toUpperCase()}</span>
-        </div>
-        <div style="display:flex">
-          <div style="width:130px;flex-shrink:0;padding:12px;background:#fafafa;border-right:1px solid #eee;display:flex;flex-direction:column;align-items:center;gap:8px">
-            ${selCard.foto_url
-              ?`<img src="${eR(selCard.foto_url)}" style="width:100%;border-radius:8px;object-fit:cover;max-height:150px">`
-              :`<div style="width:100%;height:100px;background:#f5f5f5;border:2px dashed #ddd;border-radius:8px;display:flex;align-items:center;justify-content:center"><span style="font-size:28px">🖼</span></div>`}
-            ${selCard.video_url?`<a href="${eR(selCard.video_url)}" target="_blank" style="font-size:10px;color:#8e44ad;text-align:center;word-break:break-all;display:block">▶ Ver vídeo</a>`:''}
-          </div>
-          <div style="flex:1;padding:14px 16px;overflow-y:auto;max-height:500px;color:#1a1a1a">
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#777;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:6px">Título</div>
-            <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:14px;line-height:1.4">${eR(selCard.titulo||'(sem título)')}</div>
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#777;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:6px">Legenda</div>
-            <div style="font-size:12px;color:#333;margin-bottom:14px;line-height:1.7;white-space:pre-wrap">${eR(selCard.legenda||'—')}</div>
-            ${roteiroBlocks(selCard.roteiro)}
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#777;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:6px">Hashtags</div>
-            <div style="font-size:12px;color:#9B6B3A;font-weight:500;line-height:1.8">${eR(selCard.hashtags||'—')}</div>
-          </div>
-        </div>
-      </div>`
-    :`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;text-align:center;color:var(--muted);font-size:12px">Clique em um post do calendário para ver os detalhes.</div>`;
-
-    const semData=approved.filter(c=>!c.data);
-    return`<div style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start">
-      <div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
-          <div class="aw2-ft" style="margin:0;text-transform:capitalize">📅 ${mesLabel}</div>
-          <span style="font-size:11px;color:var(--muted)">${approved.length} post${approved.length!==1?'s':''} aprovados · ${cliNome}</span>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px">
-          ${DIAS.map(d=>`<div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 2px">${d}</div>`).join('')}
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">
-          ${cells.join('')}
-        </div>
-        ${semData.length?`<div style="margin-top:14px">
-          <div style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.06em;margin-bottom:6px">SEM DATA (${semData.length})</div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px">
-            ${semData.map(c=>`<div onclick="_AW2._calSelect('${c.id}')" style="cursor:pointer;background:${(fmtC[c.formato]||'#9B6B3A')}18;border:1px solid ${(fmtC[c.formato]||'#9B6B3A')}44;border-radius:6px;padding:4px 9px;font-size:10px;color:${fmtC[c.formato]||'#9B6B3A'};font-weight:600">${(c.formato||'feed').toUpperCase()} · ${eR((c.titulo||'').substring(0,24))}</div>`).join('')}
-          </div>
-        </div>`:''}
+    }).join('');
+    return`<div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <div class="aw2-ft" style="margin:0">📅 Calendário de Posts Aprovados</div>
+        <span style="font-size:11px;color:var(--muted)">${cards.length} post${cards.length!==1?'s':''} · ${cliNome}</span>
       </div>
-      <div>
-        <div class="aw2-ft" style="margin-bottom:10px">📌 Detalhes</div>
-        ${detail}
+      ${html}
+    </div>`;
+  }
+
+  // Helper compartilhado — card no template do Quadro (usado em _quadroChloe e _calendarioPosts)
+  function _renderQuadroCard(c,idx){
+    const eV=t=>(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const fmtC={reels:'#8e44ad',feed:'#e67e22',carrossel:'#2980b9',stories:'#27ae60',tiktok:'#e74c3c'};
+    const faseC={despertar:'#e67e22',autoridade:'#2980b9',conversao:'#27ae60'};
+    const mkBadge=(txt,bg)=>`<span style="background:${bg}22;color:${bg};border:1px solid ${bg}44;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600;white-space:nowrap">${txt}</span>`;
+    const isReels=c.formato==='reels';
+    const isCar=c.formato==='carrossel';
+    const arteOk=c.status_arte==='aprovado';
+    const contOk=c.status_conteudo==='aprovado';
+    const ambos=arteOk&&contOk;
+    const slides=Array.isArray(c.slides)?c.slides:(c.slides?String(c.slides).split('\n').filter(Boolean):[]);
+    const fmtBg=fmtC[c.formato]||'#9B6B3A';
+    const faseBg=faseC[c.fase]||'#9B6B3A';
+    return`<div style="background:var(--surface);border:2px solid ${ambos?'#16a34a':c.status_arte==='revisar'||c.status_conteudo==='revisar'?'#e67e22':'var(--border)'};border-radius:14px;margin-bottom:20px;overflow:hidden">
+      <div style="background:${faseBg}10;border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-weight:700;font-size:13px;color:var(--brown)">POST ${idx+1}</span>
+          ${mkBadge((c.formato||'feed').toUpperCase(),fmtBg)}
+          ${mkBadge((c.fase||'').toUpperCase(),faseBg)}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--muted)">${c.data?_fmtD(c.data):'Sem data'}${c.horario?' · ⏰ '+c.horario:''}</span>
+          <span style="font-size:10px;color:var(--muted)">📍 ${eV(c.local||'Instagram e Facebook')}</span>
+          <button onclick="_AW2.quadroEditCard('${c.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer;color:var(--muted)">✏️ Editar</button>
+          <button onclick="_AW2.quadroDelCard('${c.id}')" style="background:none;border:none;font-size:14px;cursor:pointer;color:var(--muted);opacity:.4" title="Remover">✕</button>
+        </div>
+      </div>
+      <div style="display:flex;min-height:180px">
+        <div style="width:175px;flex-shrink:0;border-right:1px solid #e5e5e5;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;background:#fff">
+          ${c.foto_url
+            ?`<img src="${eV(c.foto_url)}" style="width:100%;border-radius:8px;max-height:150px;object-fit:cover">`
+            :`<div style="width:100%;height:120px;background:var(--bg);border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span style="font-size:22px">🖼</span><span style="font-size:9px;color:var(--muted);text-align:center">${isReels?'Capa do Reels':'Foto do post'}</span></div>`}
+          <label style="width:100%;background:var(--brown);color:#FAF8F2;border:none;border-radius:7px;padding:6px;font-size:10px;text-align:center;cursor:pointer;font-weight:600;box-sizing:border-box">
+            📤 ${c.foto_url?'Trocar':'Upload foto'}
+            <input type="file" accept="image/*" style="display:none" onchange="_AW2.quadroUploadFotoCard('${c.id}',this.files[0])">
+          </label>
+          ${isReels?`<input id="qcard-video-${c.id}" class="aw2-in" placeholder="Link vídeo Drive..." value="${eV(c.video_url||'')}" style="font-size:10px;padding:5px 7px;width:100%;box-sizing:border-box">
+          <button onclick="_AW2.quadroSalvarVideoUrl('${c.id}')" style="width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:4px;font-size:10px;cursor:pointer;color:var(--muted)">Salvar link</button>`:''}
+        </div>
+        <div style="flex:1;padding:18px 22px;min-width:0;background:#fff;color:#1a1a1a">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:4px;border-bottom:1px solid #eee;padding-bottom:4px">Título</div>
+          <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:16px;line-height:1.4">${eV(c.titulo||'(sem título)')}</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Legenda</div>
+          <div style="font-size:12px;color:#333;margin-bottom:16px;line-height:1.7;white-space:pre-wrap">${eV(c.legenda||'—')}</div>
+          ${isReels&&c.roteiro?(()=>{
+            const byLine=c.roteiro.split('\n').map(s=>s.trim()).filter(Boolean);
+            const items=byLine.length>1?byLine:c.roteiro.split(/;\s*(?=CENA\s)/i).map(s=>s.trim()).filter(Boolean);
+            return`<div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px">Roteiro (${items.length} cenas)</div>
+            <div style="margin-bottom:16px;display:flex;flex-direction:column;gap:8px">
+              ${items.map((s,i)=>`<div style="display:flex;gap:10px;align-items:flex-start;background:#f9f5ff;border:1px solid #ddd0ef;border-radius:10px;padding:10px 14px">
+                <span style="background:#8e44ad;color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;flex-shrink:0;line-height:1.5;min-width:26px;text-align:center">${i+1}</span>
+                <span style="font-size:12px;color:#222;line-height:1.6">${eV(s)}</span>
+              </div>`).join('')}
+            </div>`;
+          })():''}
+          ${isCar&&slides.length?`<div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px">Slides do Carrossel (${slides.length})</div>
+          <div style="margin-bottom:16px;display:flex;flex-direction:column;gap:5px">${slides.map((s,i)=>`<div style="font-size:12px;padding:8px 12px;border-left:3px solid #9B6B3A;background:#faf6f2;border-radius:0 8px 8px 0;color:#1a1a1a;line-height:1.5"><b style="color:#9B6B3A">${i+1}.</b> ${eV(s)}</div>`).join('')}</div>`:''}
+          <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Hashtags</div>
+          <div style="font-size:12px;color:#9B6B3A;font-weight:500;line-height:1.8">${eV(c.hashtags||'—')}</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;justify-content:space-between;background:var(--bg)">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="_AW2.quadroSetArte('${c.id}','aprovado')" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;opacity:${arteOk?'1':'.7'}">${arteOk?'✓ ARTE APROVADA':'APROVAR ARTE'}</button>
+          <button onclick="_AW2.quadroSetArte('${c.id}','revisar')" style="background:#e67e22;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;opacity:${c.status_arte==='revisar'?'1':'.7'}">${c.status_arte==='revisar'?'⚠ REVISAR ARTE':'REVISAR ARTE'}</button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="_AW2.quadroSetConteudo('${c.id}','aprovado')" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;opacity:${contOk?'1':'.7'}">${contOk?'✓ CONTEÚDO APROVADO':'APROVAR CONTEÚDO'}</button>
+          <button onclick="_AW2.quadroSetConteudo('${c.id}','revisar')" style="background:#e67e22;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;opacity:${c.status_conteudo==='revisar'?'1':'.7'}">${c.status_conteudo==='revisar'?'⚠ REVISAR CONTEÚDO':'REVISAR CONTEÚDO'}</button>
+        </div>
+        ${ambos
+          ?`<button onclick="_AW2.quadroAgendarMeta('${c.id}')" style="background:linear-gradient(135deg,#1877F2,#0d5ec9);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.04em">📅 AGENDAR PUBLICAÇÃO NA META</button>`
+          :`<span style="font-size:10px;color:var(--muted);font-style:italic">Aprove arte e conteúdo para agendar</span>`}
       </div>
     </div>`;
   }
@@ -1613,102 +1609,9 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   async function _quadroChloe(){
     if(!_cliente)return`<div class="aw2-empty">Selecione um cliente para ver o quadro.</div>`;
     const cards=await _loadQuadroCards();
-    const escV=t=>(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
     const fmtC={reels:'#8e44ad',feed:'#e67e22',carrossel:'#2980b9',stories:'#27ae60',tiktok:'#e74c3c'};
-    const faseC={despertar:'#e67e22',autoridade:'#2980b9',conversao:'#27ae60'};
-    const mkBadge=(txt,bg)=>`<span style="background:${bg}22;color:${bg};border:1px solid ${bg}44;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600;white-space:nowrap">${txt}</span>`;
-
-    const cardHTML=(c,idx)=>{
-      const isReels=c.formato==='reels';
-      const isCar=c.formato==='carrossel';
-      const arteOk=c.status_arte==='aprovado';
-      const contOk=c.status_conteudo==='aprovado';
-      const ambos=arteOk&&contOk;
-      const slides=Array.isArray(c.slides)?c.slides:(c.slides?String(c.slides).split('\n').filter(Boolean):[]);
-      const fmtBg=fmtC[c.formato]||'#9B6B3A';
-      const faseBg=faseC[c.fase]||'#9B6B3A';
-      return`<div style="background:var(--surface);border:2px solid ${ambos?'#16a34a':c.status_arte==='revisar'||c.status_conteudo==='revisar'?'#e67e22':'var(--border)'};border-radius:14px;margin-bottom:20px;overflow:hidden">
-        <div style="background:${faseBg}10;border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-weight:700;font-size:13px;color:var(--brown)">POST ${idx+1}</span>
-            ${mkBadge((c.formato||'feed').toUpperCase(),fmtBg)}
-            ${mkBadge((c.fase||'').toUpperCase(),faseBg)}
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <span style="font-size:11px;color:var(--muted)">${c.data?_fmtD(c.data):'Sem data'}${c.horario?' · ⏰ '+c.horario:''}</span>
-            <span style="font-size:10px;color:var(--muted)">📍 ${escV(c.local||'Instagram e Facebook')}</span>
-            <button onclick="_AW2.quadroEditCard('${c.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer;color:var(--muted)">✏️ Editar</button>
-            <button onclick="_AW2.quadroDelCard('${c.id}')" style="background:none;border:none;font-size:14px;cursor:pointer;color:var(--muted);opacity:.4" title="Remover">✕</button>
-          </div>
-        </div>
-        <div style="display:flex;min-height:180px">
-          <div style="width:175px;flex-shrink:0;border-right:1px solid #e5e5e5;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;background:#fff">
-            ${c.foto_url
-              ?`<img src="${escV(c.foto_url)}" style="width:100%;border-radius:8px;max-height:150px;object-fit:cover">`
-              :`<div style="width:100%;height:120px;background:var(--bg);border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span style="font-size:22px">🖼</span><span style="font-size:9px;color:var(--muted);text-align:center">${isReels?'Capa do Reels':'Foto do post'}</span></div>`}
-            <label style="width:100%;background:var(--brown);color:#FAF8F2;border:none;border-radius:7px;padding:6px;font-size:10px;text-align:center;cursor:pointer;font-weight:600;box-sizing:border-box">
-              📤 ${c.foto_url?'Trocar':'Upload foto'}
-              <input type="file" accept="image/*" style="display:none" onchange="_AW2.quadroUploadFotoCard('${c.id}',this.files[0])">
-            </label>
-            ${isReels?`<input id="qcard-video-${c.id}" class="aw2-in" placeholder="Link vídeo Drive..." value="${escV(c.video_url||'')}" style="font-size:10px;padding:5px 7px;width:100%;box-sizing:border-box">
-            <button onclick="_AW2.quadroSalvarVideoUrl('${c.id}')" style="width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:4px;font-size:10px;cursor:pointer;color:var(--muted)">Salvar link</button>`:''}
-          </div>
-          <div style="flex:1;padding:18px 22px;min-width:0;background:#fff;color:#1a1a1a">
-            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:4px;border-bottom:1px solid #eee;padding-bottom:4px">Título</div>
-            <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:16px;line-height:1.4">${escV(c.titulo||'(sem título)')}</div>
-            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Legenda</div>
-            <div style="font-size:12px;color:#333;margin-bottom:16px;line-height:1.7;white-space:pre-wrap">${escV(c.legenda||'—')}</div>
-            ${isReels&&c.roteiro?(()=>{
-              const byLine=c.roteiro.split('\n').map(s=>s.trim()).filter(Boolean);
-              const items=byLine.length>1?byLine:c.roteiro.split(/;\s*(?=CENA\s)/i).map(s=>s.trim()).filter(Boolean);
-              return`<div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px">Roteiro (${items.length} cenas)</div>
-              <div style="margin-bottom:16px;display:flex;flex-direction:column;gap:8px">
-                ${items.map((s,i)=>`<div style="display:flex;gap:10px;align-items:flex-start;background:#f9f5ff;border:1px solid #ddd0ef;border-radius:10px;padding:10px 14px">
-                  <span style="background:#8e44ad;color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;flex-shrink:0;line-height:1.5;min-width:26px;text-align:center">${i+1}</span>
-                  <span style="font-size:12px;color:#222;line-height:1.6">${escV(s)}</span>
-                </div>`).join('')}
-              </div>`;
-            })():''}
-            ${isCar&&slides.length?`<div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px">Slides do Carrossel (${slides.length})</div>
-            <div style="margin-bottom:16px;display:flex;flex-direction:column;gap:5px">${slides.map((s,i)=>`<div style="font-size:12px;padding:8px 12px;border-left:3px solid #9B6B3A;background:#faf6f2;border-radius:0 8px 8px 0;color:#1a1a1a;line-height:1.5"><b style="color:#9B6B3A">${i+1}.</b> ${escV(s)}</div>`).join('')}</div>`:''}
-            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Hashtags</div>
-            <div style="font-size:12px;color:#9B6B3A;font-weight:500;line-height:1.8">${escV(c.hashtags||'—')}</div>
-          </div>
-        </div>
-        <div style="border-top:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;justify-content:space-between;background:var(--bg)">
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button onclick="_AW2.quadroSetArte('${c.id}','aprovado')" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;opacity:${arteOk?'1':'.7'}">${arteOk?'✓ ARTE APROVADA':'APROVAR ARTE'}</button>
-            <button onclick="_AW2.quadroSetArte('${c.id}','revisar')" style="background:#e67e22;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;opacity:${c.status_arte==='revisar'?'1':'.7'}">${c.status_arte==='revisar'?'⚠ REVISAR ARTE':'REVISAR ARTE'}</button>
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button onclick="_AW2.quadroSetConteudo('${c.id}','aprovado')" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;opacity:${contOk?'1':'.7'}">${contOk?'✓ CONTEÚDO APROVADO':'APROVAR CONTEÚDO'}</button>
-            <button onclick="_AW2.quadroSetConteudo('${c.id}','revisar')" style="background:#e67e22;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;opacity:${c.status_conteudo==='revisar'?'1':'.7'}">${c.status_conteudo==='revisar'?'⚠ REVISAR CONTEÚDO':'REVISAR CONTEÚDO'}</button>
-          </div>
-          ${ambos
-            ?`<button onclick="_AW2.quadroAgendarMeta('${c.id}')" style="background:linear-gradient(135deg,#1877F2,#0d5ec9);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.04em">📅 AGENDAR PUBLICAÇÃO NA META</button>`
-            :`<span style="font-size:10px;color:var(--muted);font-style:italic">Aprove arte e conteúdo para agendar</span>`}
-        </div>
-      </div>`;
-    };
-
-    // Calendário lista cronológica — apenas aprovados
-    const sorted=[...cards].filter(c=>c.data&&c.status_arte==='aprovado'&&c.status_conteudo==='aprovado').sort((a,b)=>a.data.localeCompare(b.data));
-    const calRows=sorted.map(c=>{
-      const [y,m,d]=c.data.split('-');
-      const arteOk=c.status_arte==='aprovado';const contOk=c.status_conteudo==='aprovado';
-      return`<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:5px;background:var(--surface)">
-        <div style="text-align:center;min-width:40px;flex-shrink:0"><div style="font-size:16px;font-weight:700;color:var(--brown)">${d}</div><div style="font-size:9px;color:var(--muted)">${MESES[parseInt(m,10)-1]} ${y}</div></div>
-        ${c.horario?`<div style="font-size:12px;font-weight:600;color:var(--brown);min-width:42px;flex-shrink:0">${c.horario}</div>`:'<div style="min-width:42px"></div>'}
-        <span style="background:${fmtC[c.formato]||'#666'}22;color:${fmtC[c.formato]||'#666'};border:1px solid ${fmtC[c.formato]||'#666'}44;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;flex-shrink:0">${(c.formato||'feed').toUpperCase()}</span>
-        <div style="flex:1;font-size:12px;font-weight:500;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(c.titulo||'(sem título)')}</div>
-        <div style="display:flex;gap:4px;flex-shrink:0">
-          ${arteOk?`<span style="background:#16a34a22;color:#16a34a;font-size:9px;padding:2px 6px;border-radius:4px">Arte ✓</span>`:(c.status_arte==='revisar'?`<span style="background:#e67e2222;color:#e67e22;font-size:9px;padding:2px 6px;border-radius:4px">Arte ⚠</span>`:'')}
-          ${contOk?`<span style="background:#16a34a22;color:#16a34a;font-size:9px;padding:2px 6px;border-radius:4px">Conteúdo ✓</span>`:(c.status_conteudo==='revisar'?`<span style="background:#e67e2222;color:#e67e22;font-size:9px;padding:2px 6px;border-radius:4px">Conteúdo ⚠</span>`:'')}
-          ${arteOk&&contOk?`<span style="background:#1877F222;color:#1877F2;font-size:9px;padding:2px 6px;border-radius:4px">✓ Pronto p/ Meta</span>`:''}
-        </div>
-      </div>`;
-    }).join('');
+    // Usa o helper compartilhado _renderQuadroCard para o template do card
 
     return`<div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
@@ -1719,8 +1622,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
           <button class="aw2-btn" onclick="_AW2.quadroNewCard('despertar')" style="font-size:11px;padding:5px 14px">+ Novo Post</button>
         </div>
       </div>
-      ${cards.length===0?`<div class="aw2-empty">Nenhum post ainda. Clique em "Gerar com IA" ou "+ Novo Post".</div>`:cards.map(cardHTML).join('')}
-      ${sorted.length?`<div style="margin-top:24px"><div class="aw2-ft" style="margin-bottom:10px">🗓 Calendário — ${sorted.length} post(s) com data</div>${calRows}</div>`:''}
+      ${cards.length===0?`<div class="aw2-empty">Nenhum post ainda. Clique em "Gerar com IA" ou "+ Novo Post".</div>`:cards.map((c,i)=>_renderQuadroCard(c,i)).join('')}
     </div>`;
   }
 
