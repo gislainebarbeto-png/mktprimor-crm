@@ -1568,8 +1568,13 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
             <div style="font-size:14px;font-weight:600;color:#2c1a0e;margin-bottom:10px;line-height:1.4">${escV(c.titulo||'(sem título)')}</div>
             <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#555;margin-bottom:2px">LEGENDA</div>
             <div style="font-size:12px;color:#222;margin-bottom:10px;line-height:1.6;white-space:pre-wrap;max-height:80px;overflow-y:auto">${escV(c.legenda||'—')}</div>
-            ${isReels&&c.roteiro?`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#555;margin-bottom:4px">ROTEIRO</div>
-            <div style="font-size:12px;color:#222;margin-bottom:10px;line-height:1.6;white-space:pre-wrap;max-height:100px;overflow-y:auto;background:#f9f5f0;border-left:3px solid #8e44ad;padding:8px 10px;border-radius:0 6px 6px 0">${escV(c.roteiro)}</div>`:''}
+            ${isReels&&c.roteiro?`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#555;margin-bottom:6px">ROTEIRO</div>
+            <div style="margin-bottom:12px;max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px">
+              ${c.roteiro.split('\n').map(s=>s.trim()).filter(Boolean).map((s,i)=>`<div style="display:flex;gap:8px;align-items:flex-start;background:#f9f5ff;border:1px solid #e0d0f0;border-radius:8px;padding:8px 10px">
+                <span style="background:#8e44ad;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0;line-height:1.4">${i+1}</span>
+                <span style="font-size:12px;color:#222;line-height:1.5">${escV(s)}</span>
+              </div>`).join('')}
+            </div>`:''}
             ${isCar&&slides.length?`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#555;margin-bottom:4px">SLIDES DO CARROSSEL (${slides.length})</div>
             <div style="margin-bottom:10px;max-height:90px;overflow-y:auto">${slides.map((s,i)=>`<div style="font-size:11px;padding:3px 8px;border-left:2px solid #9B6B3A;margin-bottom:3px;background:#faf6f2;border-radius:0 5px 5px 0;color:#222"><b style="color:#9B6B3A">${i+1}.</b> ${escV(s)}</div>`).join('')}</div>`:''}
             <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#555;margin-bottom:2px">HASHTAGS</div>
