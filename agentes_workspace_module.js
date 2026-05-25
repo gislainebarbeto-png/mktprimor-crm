@@ -68,7 +68,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   }
   function _histInsertMsg(role,content){
     if(!_ag)return;
-    db.from('agentes_chat_historico').insert({agente_id:_ag.id,client_email:_cliente||'',role,content}).then(()=>{},()=>{});
+    const svc=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+    svc.from('agentes_chat_historico').insert({agente_id:_ag.id,client_email:_cliente||'',role,content}).then(()=>{},e=>console.error('[chat save]',e?.message));
   }
   function _histLoad(){
     if(!_ag)return;
@@ -1953,10 +1954,11 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   async function _migrateLegacyChat(localMsgs){
     // Se o Supabase ainda não tem mensagens deste agente+cliente, migra tudo do localStorage
     try{
-      const{count}=await db.from('agentes_chat_historico').select('id',{count:'exact',head:true}).eq('agente_id',_ag.id).eq('client_email',_cliente||'');
+      const svc=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+      const{count}=await svc.from('agentes_chat_historico').select('id',{count:'exact',head:true}).eq('agente_id',_ag.id).eq('client_email',_cliente||'');
       if((count||0)===0&&localMsgs.length){
         const rows=localMsgs.map(m=>({agente_id:_ag.id,client_email:_cliente||'',role:m.role,content:m.content}));
-        await db.from('agentes_chat_historico').insert(rows);
+        await svc.from('agentes_chat_historico').insert(rows);
       }
     }catch(e){}
   }
@@ -3253,7 +3255,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       if(!confirm('Limpar toda a conversa com '+_ag.nome+'?'))return;
       _chatHist[_ag.id]=[];
       try{localStorage.removeItem(_histKey());}catch(e){}
-      db.from('agentes_chat_historico').delete().eq('agente_id',_ag.id).eq('client_email',_cliente||'').then(()=>{},()=>{});
+      const svc=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+      svc.from('agentes_chat_historico').delete().eq('agente_id',_ag.id).eq('client_email',_cliente||'').then(()=>{},()=>{});
       _renderAba('chat');
     },
     saveKey(){
