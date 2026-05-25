@@ -49,6 +49,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   let _calMes=_hoje().substring(0,7); // YYYY-MM — mês exibido no histórico
   let _chatPendingMsg=null; // mensagem a auto-enviar quando chat abrir
   let _broadcastDraft=null; // última msg do agente para pré-preencher nos outros
+  let _quadroCreating=new Set(); // lock para evitar criação duplicada de posts
+  let _calSelected=null; // ID do card selecionado no Calendário Posts
 
   const _PEDRO_PROMPTS={
     onboarding:  'Analise os dados do cliente e preencha o onboarding completo: nicho, subnicho, persona ideal, posicionamento de marca e arcos editoriais. Salve usando [[SAVE:onboarding:{...}]].',
@@ -1484,25 +1486,114 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   // CHLOE — Calendário de Posts (leitura da tabela posts)
   async function _calendarioPosts(){
     if(!_cliente)return`<div class="aw2-empty">Selecione um cliente para ver o calendário.</div>`;
-    const parts=_data.split('-');const y=parts[0];const m=parts[1];
-    const ini=`${y}-${m}-01`;const fim=`${y}-${m}-31`;
-    let posts=[];
-    try{const{data}=await db.from('posts').select('id,tema_titulo,tipo,data_post,status,obs_int').eq('client_email',_cliente).gte('data_post',ini).lte('data_post',fim).order('data_post',{ascending:true});posts=data||[];}catch{}
-    const stColor={criacao:'#e67e22',revisao:'#2980b9',aprovado:'#27ae60',publicado:'#8e44ad'};
-    const stLabel={criacao:'Criação',revisao:'Revisão',aprovado:'Aprovado',publicado:'Publicado'};
+    const cards=await _loadQuadroCards();
+    const approved=cards.filter(c=>c.status_arte==='aprovado'&&c.status_conteudo==='aprovado');
+    const eR=t=>(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const fmtC={reels:'#8e44ad',feed:'#e67e22',carrossel:'#2980b9',stories:'#27ae60'};
     const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
-    return `<div class="aw2-form">
-      <div class="aw2-ft">📅 Calendário de Posts — ${m}/${y}</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${posts.length} post${posts.length!==1?'s':''} para ${cliNome}</div>
-      ${posts.length?posts.map(p=>`<div class="aw2-ci-item">
-        <div class="aw2-ci-top">
-          <span style="font-size:11px;font-weight:600;color:var(--brown)">${p.data_post?new Date(p.data_post+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}):''}</span>
-          <span style="font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 7px">${p.tipo||'—'}</span>
-          <span style="font-size:10px;color:${stColor[p.status]||'#666'};background:${stColor[p.status]||'#666'}18;border-radius:4px;padding:2px 7px">${stLabel[p.status]||p.status}</span>
-          ${p.obs_int&&/^\d{2}:\d{2}$/.test(p.obs_int.trim())?`<span style="font-size:10px;color:var(--muted)">⏰ ${p.obs_int.trim()}</span>`:''}
+
+    // Grid mensal baseado na _data (YYYY-MM-DD → pega mês)
+    const mes=_data.substring(0,7);
+    const [yStr,mStr]=mes.split('-');
+    const ano=parseInt(yStr),mesNum=parseInt(mStr);
+    const daysInMonth=new Date(ano,mesNum,0).getDate();
+    const firstDOW=new Date(ano,mesNum-1,1).getDay();
+    const startBlanks=firstDOW===0?6:firstDOW-1; // segunda=0
+    const DIAS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+    const mesLabel=new Date(ano,mesNum-1,15).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+
+    // Agrupa por data (sem duplicata)
+    const dayMap={};
+    const seen=new Set();
+    approved.forEach(c=>{
+      if(!c.data)return;
+      if(seen.has(c.id))return; seen.add(c.id);
+      if(!dayMap[c.data])dayMap[c.data]=[];
+      dayMap[c.data].push(c);
+    });
+
+    // Card selecionado
+    const selCard=_calSelected?approved.find(c=>c.id===_calSelected):(approved[0]||null);
+
+    const dayCell=d=>{
+      const ds=`${yStr}-${mStr}-${String(d).padStart(2,'0')}`;
+      const items=dayMap[ds]||[];
+      const isToday=ds===_hoje();
+      return`<div style="min-height:70px;border:1px solid ${isToday?'var(--brown)':'var(--border)'};border-radius:8px;padding:5px;background:${isToday?'rgba(155,107,58,.05)':'var(--surface)'}">
+        <div style="font-size:11px;font-weight:${isToday?700:500};color:${isToday?'var(--brown)':'var(--muted)'};margin-bottom:3px">${d}</div>
+        ${items.map(c=>`<div onclick="_AW2._calSelect('${c.id}')" style="cursor:pointer;background:${(fmtC[c.formato]||'#9B6B3A')}22;border:1px solid ${(fmtC[c.formato]||'#9B6B3A')}55;border-left:3px solid ${(fmtC[c.formato]||'#9B6B3A')};border-radius:4px;padding:2px 5px;margin-bottom:2px;font-size:9px;color:${fmtC[c.formato]||'#9B6B3A'};font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4" title="${eR(c.titulo||'')}">
+          ${(c.formato||'').toUpperCase()} · ${eR((c.titulo||'').substring(0,16))}
+        </div>`).join('')}
+      </div>`;
+    };
+
+    const cells=[];
+    for(let i=0;i<startBlanks;i++)cells.push(`<div></div>`);
+    for(let d=1;d<=daysInMonth;d++)cells.push(dayCell(d));
+
+    const roteiroBlocks=rot=>{
+      if(!rot)return'';
+      const byLine=rot.split('\n').map(s=>s.trim()).filter(Boolean);
+      const items=byLine.length>1?byLine:rot.split(/;\s*(?=CENA\s)/i).map(s=>s.trim()).filter(Boolean);
+      return`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#777;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:8px">Roteiro · ${items.length} cenas</div>
+      <div style="margin-bottom:14px;display:flex;flex-direction:column;gap:7px">
+        ${items.map((s,i)=>`<div style="display:flex;gap:8px;align-items:flex-start;background:#f9f5ff;border:1px solid #ddd0ef;border-radius:8px;padding:9px 12px">
+          <span style="background:#8e44ad;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;flex-shrink:0;min-width:22px;text-align:center;line-height:1.5">${i+1}</span>
+          <span style="font-size:11px;color:#222;line-height:1.6">${eR(s)}</span>
+        </div>`).join('')}
+      </div>`;
+    };
+
+    const detail=selCard?`
+      <div style="background:#fff;border:2px solid var(--border);border-radius:14px;overflow:hidden">
+        <div style="background:var(--bg);padding:10px 14px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+          <span style="font-weight:700;font-size:12px;color:var(--brown)">${selCard.data?_fmtD(selCard.data):'Sem data'}${selCard.horario?' · ⏰ '+selCard.horario:''}</span>
+          <span style="background:${(fmtC[selCard.formato]||'#9B6B3A')}22;color:${fmtC[selCard.formato]||'#9B6B3A'};font-size:9px;padding:2px 8px;border-radius:4px;font-weight:700;border:1px solid ${(fmtC[selCard.formato]||'#9B6B3A')}44">${(selCard.formato||'feed').toUpperCase()}</span>
         </div>
-        <div style="font-size:13px;font-weight:500;color:var(--brown);margin-top:4px">${_esc(p.tema_titulo||'(sem título)')}</div>
-      </div>`).join(''):'<div class="aw2-empty">Nenhum post para este mês.</div>'}
+        <div style="display:flex">
+          <div style="width:130px;flex-shrink:0;padding:12px;background:#fafafa;border-right:1px solid #eee;display:flex;flex-direction:column;align-items:center;gap:8px">
+            ${selCard.foto_url
+              ?`<img src="${eR(selCard.foto_url)}" style="width:100%;border-radius:8px;object-fit:cover;max-height:150px">`
+              :`<div style="width:100%;height:100px;background:#f5f5f5;border:2px dashed #ddd;border-radius:8px;display:flex;align-items:center;justify-content:center"><span style="font-size:28px">🖼</span></div>`}
+            ${selCard.video_url?`<a href="${eR(selCard.video_url)}" target="_blank" style="font-size:10px;color:#8e44ad;text-align:center;word-break:break-all;display:block">▶ Ver vídeo</a>`:''}
+          </div>
+          <div style="flex:1;padding:14px 16px;overflow-y:auto;max-height:500px;color:#1a1a1a">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#777;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:6px">Título</div>
+            <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:14px;line-height:1.4">${eR(selCard.titulo||'(sem título)')}</div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#777;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:6px">Legenda</div>
+            <div style="font-size:12px;color:#333;margin-bottom:14px;line-height:1.7;white-space:pre-wrap">${eR(selCard.legenda||'—')}</div>
+            ${roteiroBlocks(selCard.roteiro)}
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#777;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:6px">Hashtags</div>
+            <div style="font-size:12px;color:#9B6B3A;font-weight:500;line-height:1.8">${eR(selCard.hashtags||'—')}</div>
+          </div>
+        </div>
+      </div>`
+    :`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;text-align:center;color:var(--muted);font-size:12px">Clique em um post do calendário para ver os detalhes.</div>`;
+
+    const semData=approved.filter(c=>!c.data);
+    return`<div style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start">
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+          <div class="aw2-ft" style="margin:0;text-transform:capitalize">📅 ${mesLabel}</div>
+          <span style="font-size:11px;color:var(--muted)">${approved.length} post${approved.length!==1?'s':''} aprovados · ${cliNome}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px">
+          ${DIAS.map(d=>`<div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 2px">${d}</div>`).join('')}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">
+          ${cells.join('')}
+        </div>
+        ${semData.length?`<div style="margin-top:14px">
+          <div style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.06em;margin-bottom:6px">SEM DATA (${semData.length})</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            ${semData.map(c=>`<div onclick="_AW2._calSelect('${c.id}')" style="cursor:pointer;background:${(fmtC[c.formato]||'#9B6B3A')}18;border:1px solid ${(fmtC[c.formato]||'#9B6B3A')}44;border-radius:6px;padding:4px 9px;font-size:10px;color:${fmtC[c.formato]||'#9B6B3A'};font-weight:600">${(c.formato||'feed').toUpperCase()} · ${eR((c.titulo||'').substring(0,24))}</div>`).join('')}
+          </div>
+        </div>`:''}
+      </div>
+      <div>
+        <div class="aw2-ft" style="margin-bottom:10px">📌 Detalhes</div>
+        ${detail}
+      </div>
     </div>`;
   }
 
@@ -1601,8 +1692,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       </div>`;
     };
 
-    // Calendário lista cronológica
-    const sorted=[...cards].filter(c=>c.data).sort((a,b)=>a.data.localeCompare(b.data));
+    // Calendário lista cronológica — apenas aprovados
+    const sorted=[...cards].filter(c=>c.data&&c.status_arte==='aprovado'&&c.status_conteudo==='aprovado').sort((a,b)=>a.data.localeCompare(b.data));
     const calRows=sorted.map(c=>{
       const [y,m,d]=c.data.split('-');
       const arteOk=c.status_arte==='aprovado';const contOk=c.status_conteudo==='aprovado';
@@ -2644,9 +2735,10 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       _renderAba('quadro');
     },
 
-    // Quadro — criar post no DB quando ambos aprovados
+    // Quadro — criar post no DB quando ambos aprovados (lock evita duplicata por race condition)
     async _quadroCreatePost(card,cards){
-      if(!_cliente)return;
+      if(!_cliente||_quadroCreating.has(card.id))return;
+      _quadroCreating.add(card.id);
       try{
         const tipoVal=['feed','reels','carrossel','stories'].includes(card.formato)?card.formato:'feed';
         const svcDb=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
@@ -2661,6 +2753,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         const{data,error}=await svcDb.from('posts').insert(payload).select('id').single();
         if(!error&&data?.id){card.post_id=data.id;await _saveQuadroCards(cards);}
       }catch(e){console.error('[_quadroCreatePost]',e);}
+      finally{_quadroCreating.delete(card.id);}
     },
 
     // Quadro — upload foto do card
@@ -2822,6 +2915,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     },
     calPrevMes(){const [a,m]=_calMes.split('-').map(Number);_calMes=new Date(a,m-2,1).toISOString().substring(0,7);_renderAba('calendario');},
     calNextMes(){const [a,m]=_calMes.split('-').map(Number);_calMes=new Date(a,m,1).toISOString().substring(0,7);_renderAba('calendario');},
+    _calSelect(id){_calSelected=id;_renderAba('calendario_posts');},
     async toPost(id){
       try{
         const{data:item}=await db.from('agentes_calendario').select('*').eq('id',id).single();

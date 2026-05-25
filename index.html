@@ -1925,11 +1925,11 @@ const Admin = {
         .pcardv-txt{font-size:10px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
         .pcardv-status{font-size:9px;padding:1px 5px;border-radius:4px;display:inline-flex;align-items:center;gap:3px;margin-top:2px;}
         /* Tooltip */
-        .cal-preview{display:none;position:fixed;z-index:9999;width:230px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,.4);overflow:hidden;pointer-events:none;transition:opacity .1s;}
+        .cal-preview{display:none;position:fixed;z-index:9999;width:320px;background:#fff;border:2px solid var(--border);border-radius:14px;box-shadow:0 12px 48px rgba(0,0,0,.3);overflow:hidden;pointer-events:none;transition:opacity .1s;}
         .cal-preview.show{display:block;}
-        .cal-preview-img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;}
-        .cal-preview-body{padding:10px 12px;}
-        .cal-preview-cap{font-size:12px;color:var(--text);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+        .cal-preview-img{width:100%;max-height:180px;object-fit:cover;display:block;}
+        .cal-preview-body{padding:12px 14px;}
+        .cal-preview-cap{font-size:12px;color:#333;line-height:1.6;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
         /* Boards */
         .client-board{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;overflow:hidden;}
         .client-board-hd{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);}
@@ -1968,19 +1968,27 @@ const Admin = {
 
   _showCalPreview(postId, e) {
     const p = this.posts.find(x=>x.id===postId); if (!p) return;
-    const SM = {criacao:{l:'Criação',c:'#c9a800',bc:'#fffae6',dot:'#f6d12d'},rascunho:{l:'Rascunho',c:'#c9a800',bc:'#fffae6',dot:'#f6d12d'},revisao:{l:'Revisar',c:'#d4762a',bc:'#fdf1e7',dot:'#ffa14e'},aprovado:{l:'Aprovado',c:'#1db855',bc:'#e9f9ee',dot:'#41ff72'},design:{l:'Design',c:'#7c3aed',bc:'#f3e8ff',dot:'#a855f7'},publicado:{l:'Publicado',c:'#5254cc',bc:'#e7e6f5',dot:'#8688ff'}};
-    const m = SM[p.status||'criacao']||SM.criacao;
-    let img = ''; try { const a=JSON.parse(p.img_url); img=Array.isArray(a)?a[0]:p.img_url; } catch{img=p.img_url||'';}
+    const fmtC={reels:'#8e44ad',feed:'#e67e22',carrossel:'#2980b9',stories:'#27ae60'};
+    const esc=t=>(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let img='';
+    try{const a=JSON.parse(p.midia_urls||p.img_url||'');img=Array.isArray(a)?a[0]:String(a);}catch{img=p.img_url||p.midia_urls||'';}
+    const tipo=(p.tipo||'feed').toLowerCase();
+    const fmtColor=fmtC[tipo]||'#9B6B3A';
     const el = document.getElementById('cal-preview'); if (!el) return;
-    el.innerHTML = `${img?`<img src="${img}" class="cal-preview-img" onerror="this.style.display='none'"/>`:''}
-      <div class="cal-preview-body">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-          <span style="font-size:10px;padding:2px 8px;border-radius:8px;background:${m.bc};color:${m.c};">${m.l}</span>
-          ${p.tipo?`<span style="font-size:10px;color:var(--muted);">${p.tipo==='Reels'?'🎬':p.tipo==='Stories'?'📖':'📷'} ${p.tipo}</span>`:''}
+    el.innerHTML = `
+      <div style="background:var(--bg);padding:8px 12px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;font-weight:700;color:#9B6B3A">${p.data_post?new Date(p.data_post+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}):'Sem data'}${p.obs_int&&/^\d{2}:\d{2}/.test(p.obs_int.trim())?' · ⏰ '+p.obs_int.trim():''}</span>
+        <span style="background:${fmtColor}22;color:${fmtColor};border:1px solid ${fmtColor}44;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700">${tipo.toUpperCase()}</span>
+      </div>
+      <div style="display:flex">
+        ${img?`<img src="${esc(img)}" style="width:110px;flex-shrink:0;object-fit:cover;max-height:200px" onerror="this.style.display='none'">`:''}
+        <div style="flex:1;padding:10px 12px;overflow:hidden">
+          <div style="font-size:10px;font-weight:700;color:#777;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:3px;margin-bottom:5px">Título</div>
+          <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px;line-height:1.3">${esc(p.tema_titulo||'(sem título)')}</div>
+          <div style="font-size:10px;font-weight:700;color:#777;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:3px;margin-bottom:5px">Legenda</div>
+          <div class="cal-preview-cap">${esc(p.legenda||'—')}</div>
+          ${p.hashtags?`<div style="font-size:10px;color:#9B6B3A;margin-top:8px;font-weight:500;line-height:1.6">${esc(p.hashtags.split(' ').slice(0,6).join(' '))}${p.hashtags.split(' ').length>6?'…':''}</div>`:''}
         </div>
-        <div class="cal-preview-cap">${p.legenda||'Sem legenda'}</div>
-        ${p.data_post?`<div style="font-size:10px;color:var(--muted);margin-top:5px;">📅 ${new Date(p.data_post+'T12:00').toLocaleDateString('pt-BR')}</div>`:''}
-        ${p.hashtags?`<div style="font-size:10px;color:var(--copper);margin-top:3px;">${p.hashtags.split(' ').slice(0,5).join(' ')}${p.hashtags.split(' ').length>5?'…':''}</div>`:''}
       </div>`;
     el.classList.add('show');
     Admin._calPreviewMove(e);
@@ -1992,6 +2000,8 @@ const Admin = {
   },
 
   _renderCalGrid(posts, SM, cliMap, parseFirst, mode) {
+    // Calendário mostra apenas aprovados e publicados (aprovação é feita pelo cliente)
+    posts = posts.filter(p => p.status === 'aprovado' || p.status === 'publicado');
     const now = new Date();
     const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     const diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -10743,6 +10753,6 @@ document.addEventListener('keydown', e => {
 <script src="comercial_hub_module.js?v=20260518"></script>
 <script src="fiscal_module.js?v=20260518b"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="agentes_workspace_module.js?v=20260525a"></script>
+<script src="agentes_workspace_module.js?v=20260525b"></script>
 </body>
 </html>
