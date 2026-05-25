@@ -1529,12 +1529,14 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     const slides=Array.isArray(c.slides)?c.slides:(c.slides?String(c.slides).split('\n').filter(Boolean):[]);
     const fmtBg=fmtC[c.formato]||'#9B6B3A';
     const faseBg=faseC[c.fase]||'#9B6B3A';
-    return`<div style="background:var(--surface);border:2px solid ${ambos?'#16a34a':c.status_arte==='revisar'||c.status_conteudo==='revisar'?'#e67e22':'var(--border)'};border-radius:14px;margin-bottom:20px;overflow:hidden">
-      <div style="background:${faseBg}10;border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+    const jaPostado=!!c.publicado;
+    return`<div style="background:var(--surface);border:2px solid ${jaPostado?'#16a34a':ambos?'#16a34a':c.status_arte==='revisar'||c.status_conteudo==='revisar'?'#e67e22':'var(--border)'};border-radius:14px;margin-bottom:20px;overflow:hidden;${jaPostado?'opacity:.88':''}">
+      <div style="background:${jaPostado?'#16a34a':faseBg}10;border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-weight:700;font-size:13px;color:var(--brown)">POST ${idx+1}</span>
           ${mkBadge((c.formato||'feed').toUpperCase(),fmtBg)}
           ${mkBadge((c.fase||'').toUpperCase(),faseBg)}
+          ${jaPostado?`<span style="background:#16a34a;color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:.06em">✓ POSTADO</span>`:''}
         </div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span style="font-size:11px;color:var(--muted)">${c.data?_fmtD(c.data):'Sem data'}${c.horario?' · ⏰ '+c.horario:''}</span>
@@ -1546,7 +1548,10 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       <div style="display:flex;min-height:180px">
         <div style="width:175px;flex-shrink:0;border-right:1px solid #e5e5e5;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;background:#fff">
           ${c.foto_url
-            ?`<img src="${eV(c.foto_url)}" style="width:100%;border-radius:8px;max-height:150px;object-fit:cover">`
+            ?`<div style="position:relative;width:100%">
+                <img src="${eV(c.foto_url)}" style="width:100%;border-radius:8px;max-height:150px;object-fit:cover;${jaPostado?'filter:brightness(.75)':''}">
+                ${jaPostado?`<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-12deg);background:rgba(22,163,74,.92);color:#fff;font-size:13px;font-weight:900;padding:5px 12px;border-radius:6px;border:2px solid rgba(255,255,255,.7);letter-spacing:.12em;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.3)">✓ POSTADO</div>`:''}
+              </div>`
             :`<div style="width:100%;height:120px;background:var(--bg);border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span style="font-size:22px">🖼</span><span style="font-size:9px;color:var(--muted);text-align:center">${isReels?'Capa do Reels':'Foto do post'}</span></div>`}
           <label style="width:100%;background:var(--brown);color:#FAF8F2;border:none;border-radius:7px;padding:6px;font-size:10px;text-align:center;cursor:pointer;font-weight:600;box-sizing:border-box">
             📤 ${c.foto_url?'Trocar':'Upload foto'}
@@ -1587,9 +1592,17 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
           <button onclick="_AW2.quadroSetConteudo('${c.id}','aprovado')" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;opacity:${contOk?'1':'.7'}">${contOk?'✓ CONTEÚDO APROVADO':'APROVAR CONTEÚDO'}</button>
           <button onclick="_AW2.quadroSetConteudo('${c.id}','revisar')" style="background:#e67e22;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;opacity:${c.status_conteudo==='revisar'?'1':'.7'}">${c.status_conteudo==='revisar'?'⚠ REVISAR CONTEÚDO':'REVISAR CONTEÚDO'}</button>
         </div>
-        ${ambos
-          ?`<button onclick="_AW2.quadroAgendarMeta('${c.id}')" style="background:linear-gradient(135deg,#1877F2,#0d5ec9);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.04em">📅 AGENDAR PUBLICAÇÃO NA META</button>`
-          :`<span style="font-size:10px;color:var(--muted);font-style:italic">Aprove arte e conteúdo para agendar</span>`}
+        ${jaPostado
+          ?`<div style="display:flex;align-items:center;gap:8px">
+              <span style="background:#16a34a;color:#fff;font-size:12px;font-weight:800;padding:8px 18px;border-radius:8px;letter-spacing:.06em">✅ JÁ POSTADO</span>
+              <button onclick="_AW2.quadroMarcarPostado('${c.id}',false)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:10px;cursor:pointer;color:var(--muted)">Desfazer</button>
+            </div>`
+          :ambos
+            ?`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <button onclick="_AW2.quadroAgendarMeta('${c.id}')" style="background:linear-gradient(135deg,#1877F2,#0d5ec9);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.04em">📅 AGENDAR PUBLICAÇÃO NA META</button>
+                <button onclick="_AW2.quadroMarcarPostado('${c.id}',true)" style="background:#16a34a22;border:1px solid #16a34a44;border-radius:8px;padding:10px 14px;font-size:11px;font-weight:700;cursor:pointer;color:#16a34a">✅ Marcar como postado</button>
+              </div>`
+            :`<span style="font-size:10px;color:var(--muted);font-style:italic">Aprove arte e conteúdo para agendar</span>`}
       </div>
     </div>`;
   }
@@ -2677,6 +2690,15 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       }catch(e){alert('Erro no upload: '+e.message);}
     },
 
+    // Quadro — marcar/desmarcar card como já postado (carimbo verde)
+    async quadroMarcarPostado(id,val){
+      const cards=await _loadQuadroCards();
+      const card=cards.find(c=>c.id===id);if(!card)return;
+      card.publicado=!!val;
+      await _saveQuadroCards(cards);
+      _renderAba('quadro');
+    },
+
     // Quadro — remover mídia do card (foto + vídeo) e limpar do Storage e do post
     async quadroRemoverMidia(id){
       if(!confirm('Remover a mídia deste card? A foto será apagada do storage permanentemente.'))return;
@@ -3169,6 +3191,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         if(res.error)throw new Error(res.error);
         await db.from('posts').update({status:'publicado',obs_int:`Agendado IG: ${date} ${time}`}).eq('id',postId);
         await db.from('automacoes').insert({post_id:postId,client_email:_cliente,tipo:'agendado',resultado:`IG media_id:${res.media_id} para ${date} ${time}`}).then(()=>{},()=>{});
+        // Marca o card do Quadro como publicado (carimbo verde)
+        try{const cs=await _loadQuadroCards();const ck=cs.find(x=>x.post_id===postId);if(ck){ck.publicado=true;await _saveQuadroCards(cs);}}catch{}
         document.getElementById('aw2-ig-modal')?.remove();
         alert(`✓ Publicação agendada para ${date} às ${time}!`);
         _renderAba(_aba);
@@ -3195,6 +3219,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         if(res.error)throw new Error(res.error);
         await db.from('posts').update({status:'publicado',obs_int:`Publicado IG: ${new Date().toLocaleDateString('pt-BR')}`}).eq('id',postId);
         await db.from('automacoes').insert({post_id:postId,client_email:_cliente,tipo:'publicado',resultado:`IG media_id:${res.media_id}`}).then(()=>{},()=>{});
+        // Marca o card do Quadro como publicado (carimbo verde)
+        try{const cs=await _loadQuadroCards();const ck=cs.find(x=>x.post_id===postId);if(ck){ck.publicado=true;await _saveQuadroCards(cs);}}catch{}
         alert('✓ Post publicado no Instagram!');
         _renderAba(_aba);
       }catch(e){alert('Erro ao publicar: '+e.message);}
