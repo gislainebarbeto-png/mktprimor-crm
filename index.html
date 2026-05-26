@@ -2057,6 +2057,7 @@ const Admin = {
           </div>
           ${tema?`<span class="pchip-tema" style="color:${sm.c};">${tema}</span>`:''}
           <span class="pchip-titulo" style="color:${sm.c};">${titulo}</span>
+          ${!isPostado?`<button onclick="event.stopPropagation();Admin.publicarNoInstagram(${p.id})" style="margin-top:4px;display:block;width:100%;background:linear-gradient(135deg,#E1306C,#833AB4);color:#fff;border:none;border-radius:4px;padding:3px 6px;font-size:9px;font-weight:700;cursor:pointer;letter-spacing:.03em;">📸 Publicar</button>`:''}
         </div>
       </div>`;
     };
@@ -2075,6 +2076,7 @@ const Admin = {
           <div class="pcardv-status" style="background:${isPostado?'#dcfce7':sm.bc};color:${isPostado?'#16a34a':sm.c};">
             <span style="width:5px;height:5px;border-radius:50%;background:${isPostado?'#16a34a':sm.dot};display:inline-block;"></span>${isPostado?'Publicado':sm.l}
           </div>
+          ${!isPostado?`<button onclick="event.stopPropagation();Admin.publicarNoInstagram(${p.id})" style="margin-top:6px;width:100%;background:linear-gradient(135deg,#E1306C,#833AB4);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:10px;font-weight:700;cursor:pointer;">📸 Publicar no Instagram</button>`:''}
         </div>
       </div>`;
     };
