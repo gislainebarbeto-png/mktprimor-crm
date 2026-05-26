@@ -3103,16 +3103,22 @@ const Admin = {
             </div>
             <details style="margin-top:12px;">
               <summary style="font-size:11px;font-weight:600;color:var(--brown);cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px;">🔑 Inserir token manualmente (se OAuth não funcionar)</summary>
-              <div style="margin-top:10px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;gap:8px;">
-                <div style="font-size:10px;color:var(--muted);line-height:1.6;">
-                  1. Acesse <a href="https://developers.facebook.com/tools/explorer" target="_blank" style="color:var(--brown);">Graph API Explorer</a><br>
-                  2. Selecione o App <strong>1698396874498822</strong> e gere um <strong>Page Access Token</strong><br>
-                  3. Cole o token e o Instagram Account ID abaixo e clique em Salvar Token
+              <div style="margin-top:10px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;gap:10px;">
+                <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.8;color:#5d4037;">
+                  <strong>Passo 1:</strong> Cole o token que você copiou do Graph API Explorer no campo abaixo<br>
+                  <strong>Passo 2:</strong> Clique em <strong>"Buscar Instagram automaticamente"</strong><br>
+                  <strong>Passo 3:</strong> Se aparecer o @ correto, clique em <strong>"Salvar"</strong>
                 </div>
-                <input id="manual-ig-token" placeholder="Page Access Token (EAABkz...)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:11px;font-family:monospace;background:var(--surface);color:var(--text);box-sizing:border-box;" value="${c.instagram_token||''}"/>
-                <input id="manual-ig-account-id" placeholder="Instagram Account ID (ex: 17841400000000000)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:monospace;background:var(--surface);color:var(--text);box-sizing:border-box;" value="${c.instagram_account_id||''}"/>
-                <button onclick="Admin.salvarTokenManual(${c.id},'${c.email}')" style="padding:8px;border-radius:7px;background:var(--brown);color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:600;">Salvar e validar token →</button>
-                <div id="manual-token-status-${c.id}" style="font-size:11px;"></div>
+                <div>
+                  <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px;">Token (cole aqui o código longo do Facebook):</div>
+                  <textarea id="manual-ig-token" placeholder="EAAYIrtZAkYwYBR..." rows="3" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:11px;font-family:monospace;background:var(--surface);color:var(--text);box-sizing:border-box;resize:vertical;">${c.instagram_token||''}</textarea>
+                </div>
+                <button onclick="Admin.buscarIgPeloToken(${c.id},'${c.email}')" style="padding:10px;border-radius:7px;background:#1877F2;color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:700;">🔍 Buscar Instagram automaticamente</button>
+                <div id="manual-token-status-${c.id}" style="font-size:12px;"></div>
+                <input id="manual-ig-account-id" type="hidden" value="${c.instagram_account_id||''}"/>
+                <div id="manual-ig-confirm-${c.id}" style="display:none;">
+                  <button onclick="Admin.salvarTokenManual(${c.id},'${c.email}')" style="width:100%;padding:10px;border-radius:7px;background:#2E7D32;color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:700;">✅ Salvar e conectar</button>
+                </div>
               </div>
             </details>
           </div>
@@ -5246,33 +5252,56 @@ const Admin = {
     finally { this.loader(false); }
   },
 
-  async salvarTokenManual(clientId, clientEmail) {
-    const token   = document.getElementById('manual-ig-token')?.value.trim();
-    const igId    = document.getElementById('manual-ig-account-id')?.value.trim();
+  async buscarIgPeloToken(clientId, clientEmail) {
+    const token = document.getElementById('manual-ig-token')?.value.trim();
     const statusEl = document.getElementById(`manual-token-status-${clientId}`);
-    if (!token || !igId) { if(statusEl){statusEl.textContent='Preencha o token e o Account ID.';statusEl.style.color='#c62828';} return; }
-    if(statusEl){statusEl.textContent='⏳ Validando token...';statusEl.style.color='var(--muted)';}
+    const confirmEl = document.getElementById(`manual-ig-confirm-${clientId}`);
+    if (!token) { if(statusEl){statusEl.innerHTML='<span style="color:#c62828">Cole o token primeiro no campo acima.</span>';} return; }
+    if(statusEl){statusEl.innerHTML='<span style="color:var(--muted)">⏳ Buscando sua conta Instagram...</span>';}
+    if(confirmEl) confirmEl.style.display='none';
+    try {
+      // Busca as páginas do token para encontrar o Instagram Business Account
+      const pages = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,instagram_business_account{id,username}&access_token=${token}`).then(r=>r.json());
+      if (pages.error) throw new Error(pages.error.message);
+      const pagesWithIg = (pages.data||[]).filter(p=>p.instagram_business_account?.id);
+      if (!pagesWithIg.length) throw new Error('Nenhuma conta Instagram Business encontrada. O Instagram precisa ser Conta Profissional e estar vinculado a uma Página do Facebook.');
+      if (pagesWithIg.length === 1) {
+        const igId = pagesWithIg[0].instagram_business_account.id;
+        const igUser = pagesWithIg[0].instagram_business_account.username;
+        document.getElementById('manual-ig-account-id').value = igId;
+        if(statusEl){statusEl.innerHTML=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;color:#166534;font-size:12px;line-height:1.6;"><strong>✅ Encontrado!</strong><br>Instagram: <strong>@${igUser}</strong><br>ID: ${igId}<br><br>Se estiver correto, clique em <strong>"Salvar e conectar"</strong> abaixo.</div>`;}
+        if(confirmEl) confirmEl.style.display='block';
+      } else {
+        // Várias contas — mostra botões de escolha
+        if(statusEl){statusEl.innerHTML=`<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;">Encontramos ${pagesWithIg.length} contas. Qual é a deste cliente?</div>`+pagesWithIg.map(p=>`<button onclick="(function(){document.getElementById('manual-ig-account-id').value='${p.instagram_business_account.id}';document.getElementById('manual-ig-confirm-${clientId}').style.display='block';document.getElementById('manual-token-status-${clientId}').querySelector('.ig-sel')?.querySelectorAll('button').forEach(b=>b.style.background='var(--bg)');this.style.background='rgba(46,125,50,.12)';this.style.borderColor='#2E7D32';})()" style="display:block;width:100%;margin-bottom:6px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:left;font-family:inherit;font-size:12px;"><strong>@${p.instagram_business_account.username}</strong><br><span style="font-size:10px;color:var(--muted)">Página: ${p.name}</span></button>`).join('');}
+        if(confirmEl) confirmEl.style.display='none';
+      }
+    } catch(e) {
+      if(statusEl){statusEl.innerHTML=`<span style="color:#c62828">✗ ${e.message}</span>`;}
+    }
+  },
+
+  async salvarTokenManual(clientId, clientEmail) {
+    const token = document.getElementById('manual-ig-token')?.value.trim();
+    const igId  = document.getElementById('manual-ig-account-id')?.value.trim();
+    const statusEl = document.getElementById(`manual-token-status-${clientId}`);
+    if (!token || !igId) { if(statusEl){statusEl.innerHTML='<span style="color:#c62828">Clique em "Buscar Instagram automaticamente" primeiro.</span>';} return; }
     this.loader(true);
     try {
-      // Valida o token consultando a API do Instagram
       const test = await fetch(`https://graph.facebook.com/v21.0/${igId}?fields=id,username&access_token=${token}`).then(r=>r.json());
       if (test.error) throw new Error('Token inválido: ' + test.error.message);
       const igUsername = test.username || '';
       const db2 = window.supabase.createClient(SUPABASE_URL, SUPABASE_SVC);
-      // Atualiza clients
       await db2.from('clients').update({ instagram_token: token, instagram_account_id: igId }).eq('id', clientId);
-      // Upsert instagram_tokens (tabela lida pela Edge Function de publicação)
       await db2.from('instagram_tokens').upsert({
-        client_email: clientEmail,
-        ig_user_id: igId,
-        ig_username: igUsername,
-        access_token: token,
-        updated_at: new Date().toISOString(),
+        client_email: clientEmail, ig_user_id: igId, ig_username: igUsername,
+        access_token: token, updated_at: new Date().toISOString(),
       }, { onConflict: 'client_email' });
-      if(statusEl){statusEl.textContent=`✓ Token válido! @${igUsername} conectado.`;statusEl.style.color='#2E7D32';}
-      this._showToast(`Instagram @${igUsername} pronto para publicar ✓`);
+      if(statusEl){statusEl.innerHTML=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;color:#166534;font-size:12px;"><strong>✅ @${igUsername} conectado com sucesso!</strong><br>Agora você já pode publicar posts direto no Instagram.</div>`;}
+      document.getElementById(`manual-ig-confirm-${clientId}`).style.display='none';
+      this._showToast(`✅ Instagram @${igUsername} pronto para publicar!`);
     } catch(e) {
-      if(statusEl){statusEl.textContent='✗ ' + e.message;statusEl.style.color='#c62828';}
+      if(statusEl){statusEl.innerHTML=`<span style="color:#c62828">✗ ${e.message}</span>`;}
     } finally { this.loader(false); }
   },
 
