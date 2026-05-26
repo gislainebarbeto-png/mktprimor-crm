@@ -3099,9 +3099,22 @@ const Admin = {
               ${c.instagram_token && c.instagram_account_id ? '🔄 Reconectar Instagram (Facebook Login)' : '🔗 Conectar Instagram via Facebook Login'}
             </button>
             <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6;">
-              Ao clicar, será redirecionada para o Facebook para autorizar. Após autorizar, voltará aqui automaticamente.<br>
-              <strong>Redirect URI que deve estar cadastrado no Meta App:</strong> <code style="font-size:10px;background:var(--bg);padding:1px 4px;border-radius:3px;">${window?.location?.origin||'https://crm.gislainebarbeto.com.br'}/</code>
+              Ao clicar, será redirecionada para o Facebook para autorizar. Após autorizar, voltará aqui automaticamente.
             </div>
+            <details style="margin-top:12px;">
+              <summary style="font-size:11px;font-weight:600;color:var(--brown);cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px;">🔑 Inserir token manualmente (se OAuth não funcionar)</summary>
+              <div style="margin-top:10px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;gap:8px;">
+                <div style="font-size:10px;color:var(--muted);line-height:1.6;">
+                  1. Acesse <a href="https://developers.facebook.com/tools/explorer" target="_blank" style="color:var(--brown);">Graph API Explorer</a><br>
+                  2. Selecione o App <strong>1698396874498822</strong> e gere um <strong>Page Access Token</strong><br>
+                  3. Cole o token e o Instagram Account ID abaixo e clique em Salvar Token
+                </div>
+                <input id="manual-ig-token" placeholder="Page Access Token (EAABkz...)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:11px;font-family:monospace;background:var(--surface);color:var(--text);box-sizing:border-box;" value="${c.instagram_token||''}"/>
+                <input id="manual-ig-account-id" placeholder="Instagram Account ID (ex: 17841400000000000)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:monospace;background:var(--surface);color:var(--text);box-sizing:border-box;" value="${c.instagram_account_id||''}"/>
+                <button onclick="Admin.salvarTokenManual(${c.id},'${c.email}')" style="padding:8px;border-radius:7px;background:var(--brown);color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:600;">Salvar e validar token →</button>
+                <div id="manual-token-status-${c.id}" style="font-size:11px;"></div>
+              </div>
+            </details>
           </div>
         </div>
         ${fld('Mensagem para a cliente', `<textarea data-rich id="dp-mensagem-gi" rows="3" placeholder="Ex: Essa semana trabalhamos muito no seu posicionamento 🌿" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);color:var(--text);resize:none;margin-top:4px;">${c.mensagem_gi||''}</textarea>`)}
@@ -5231,6 +5244,36 @@ const Admin = {
       this.openCliente(id);
     } catch(e) { alert('Erro: ' + e.message); }
     finally { this.loader(false); }
+  },
+
+  async salvarTokenManual(clientId, clientEmail) {
+    const token   = document.getElementById('manual-ig-token')?.value.trim();
+    const igId    = document.getElementById('manual-ig-account-id')?.value.trim();
+    const statusEl = document.getElementById(`manual-token-status-${clientId}`);
+    if (!token || !igId) { if(statusEl){statusEl.textContent='Preencha o token e o Account ID.';statusEl.style.color='#c62828';} return; }
+    if(statusEl){statusEl.textContent='⏳ Validando token...';statusEl.style.color='var(--muted)';}
+    this.loader(true);
+    try {
+      // Valida o token consultando a API do Instagram
+      const test = await fetch(`https://graph.facebook.com/v21.0/${igId}?fields=id,username&access_token=${token}`).then(r=>r.json());
+      if (test.error) throw new Error('Token inválido: ' + test.error.message);
+      const igUsername = test.username || '';
+      const db2 = window.supabase.createClient(SUPABASE_URL, SUPABASE_SVC);
+      // Atualiza clients
+      await db2.from('clients').update({ instagram_token: token, instagram_account_id: igId }).eq('id', clientId);
+      // Upsert instagram_tokens (tabela lida pela Edge Function de publicação)
+      await db2.from('instagram_tokens').upsert({
+        client_email: clientEmail,
+        ig_user_id: igId,
+        ig_username: igUsername,
+        access_token: token,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'client_email' });
+      if(statusEl){statusEl.textContent=`✓ Token válido! @${igUsername} conectado.`;statusEl.style.color='#2E7D32';}
+      this._showToast(`Instagram @${igUsername} pronto para publicar ✓`);
+    } catch(e) {
+      if(statusEl){statusEl.textContent='✗ ' + e.message;statusEl.style.color='#c62828';}
+    } finally { this.loader(false); }
   },
 
   async buscarIgAccountId(clientId) {
