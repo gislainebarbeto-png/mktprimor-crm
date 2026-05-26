@@ -1238,56 +1238,59 @@ const Meta = {
     if (listRes.error) throw new Error(listRes.error);
 
     const pages = listRes.pages || [];
-    const userToken = listRes.user_token; // token já trocado, reutilizado na segunda chamada
+    const userToken = listRes.user_token;
 
-    // Só uma conta — conecta direto sem mostrar seletor
-    if (pages.length === 1) {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/instagram-oauth`, {
-        method: 'POST', headers,
-        body: JSON.stringify({ user_token: userToken, client_email, fb_page_id: pages[0].fb_page_id }),
-      }).then(r => r.json());
-      if (res.error) throw new Error(res.error);
-      sessionStorage.setItem('_oauth_ok', JSON.stringify({ ig_username: res.ig_username, client_email }));
-      return;
-    }
+    if (pages.length === 0) throw new Error('Nenhuma conta Instagram Business encontrada no Facebook.');
 
-    // Múltiplas contas — mostra seletor modal
+    // Sempre mostra o seletor — mesmo com 1 conta, para confirmar qual vincular ao cliente
     await new Promise((resolve, reject) => {
       const modal = document.createElement('div');
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);';
       modal.innerHTML = `
-        <div style="background:#fff;border-radius:16px;padding:28px 24px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.4);">
-          <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Selecione a conta Instagram</div>
-          <div style="font-size:12px;color:#666;margin-bottom:18px;">Encontramos ${pages.length} contas conectadas ao seu Facebook. Qual quer vincular ao cliente <strong>${client_email}</strong>?</div>
-          <div id="ig-page-list" style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;">
+        <div style="background:#fff;border-radius:20px;padding:28px 24px;max-width:460px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.5);">
+          <div style="font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">Escolha a conta Instagram</div>
+          <div style="font-size:12px;color:#666;margin-bottom:20px;">Vinculando ao cliente <strong>${client_email}</strong>. Selecione a conta correta:</div>
+          <div id="ig-page-list" style="display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;padding-right:2px;">
             ${pages.map((p, i) => `
-              <button data-idx="${i}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;background:#fff;cursor:pointer;text-align:left;font-family:inherit;">
-                <span style="font-size:22px;">📷</span>
-                <div>
-                  <div style="font-weight:600;font-size:13px;">@${p.ig_username}</div>
-                  <div style="font-size:11px;color:#888;">Página: ${p.fb_page_name}</div>
+              <button data-idx="${i}" style="display:flex;align-items:center;gap:14px;padding:13px 16px;border:2px solid #e8e8e8;border-radius:12px;background:#fff;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s;">
+                <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <span style="font-size:20px;filter:brightness(10);">📷</span>
                 </div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-weight:700;font-size:14px;color:#1a1a1a;">@${p.ig_username}</div>
+                  <div style="font-size:11px;color:#888;margin-top:1px;">Página: ${p.fb_page_name}</div>
+                </div>
+                <div style="font-size:18px;color:#ccc;">›</div>
               </button>
             `).join('')}
           </div>
-          <button id="ig-sel-cancel" style="margin-top:16px;width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;background:none;cursor:pointer;font-size:12px;color:#999;">Cancelar</button>
+          <button id="ig-sel-cancel" style="margin-top:16px;width:100%;padding:11px;border:1px solid #e0e0e0;border-radius:10px;background:none;cursor:pointer;font-size:12px;color:#999;font-family:inherit;">Cancelar</button>
         </div>`;
       document.body.appendChild(modal);
+
+      // Hover nos botões
+      modal.querySelectorAll('#ig-page-list button').forEach(btn => {
+        btn.addEventListener('mouseenter', () => btn.style.borderColor = '#1877F2');
+        btn.addEventListener('mouseleave', () => btn.style.borderColor = '#e8e8e8');
+      });
+
       modal.querySelector('#ig-sel-cancel').addEventListener('click', () => { modal.remove(); reject(new Error('Conexão cancelada.')); });
       modal.querySelector('#ig-page-list').addEventListener('click', async (e) => {
         const btn = e.target.closest('button[data-idx]');
         if (!btn) return;
         const p = pages[parseInt(btn.dataset.idx)];
-        modal.remove();
+        btn.style.borderColor = '#1877F2';
+        btn.style.background = '#f0f7ff';
+        btn.querySelector('div:last-child').textContent = '⏳';
         try {
-          // Usa user_token (já trocado) — não re-usa o code descartado
           const res = await fetch(`${SUPABASE_URL}/functions/v1/instagram-oauth`, {
             method: 'POST', headers,
             body: JSON.stringify({ user_token: userToken, client_email, fb_page_id: p.fb_page_id }),
           }).then(r => r.json());
+          modal.remove();
           if (res.error) reject(new Error(res.error));
           else { sessionStorage.setItem('_oauth_ok', JSON.stringify({ ig_username: res.ig_username, client_email })); resolve(); }
-        } catch(err) { reject(err); }
+        } catch(err) { modal.remove(); reject(err); }
       });
     });
   },
