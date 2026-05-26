@@ -1318,14 +1318,6 @@ const App = {
     this.loader(true);
     document.getElementById('login-form').addEventListener('submit', e => this.login(e));
 
-    // Detecta retorno do OAuth implícito (#access_token=...)
-    const _hash = new URLSearchParams(window.location.hash.replace('#',''));
-    const _implicitToken = _hash.get('access_token');
-    if (_implicitToken) {
-      sessionStorage.setItem('_meta_implicit_token', _implicitToken);
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-
     // Detecta retorno do OAuth do Facebook (?code=...&state=...)
     const _p = new URLSearchParams(window.location.search);
     const _code = _p.get('code'), _state = _p.get('state');
@@ -1383,28 +1375,6 @@ const App = {
   },
 
   async route() {
-    // Retoma conexão de Instagram após redirect do Facebook (implicit token flow)
-    const _implicitToken = sessionStorage.getItem('_meta_implicit_token');
-    const _connectState = sessionStorage.getItem('_token_connect');
-    if (_implicitToken && _connectState) {
-      sessionStorage.removeItem('_meta_implicit_token');
-      sessionStorage.removeItem('_token_connect');
-      try {
-        const { clientEmail, clientId } = JSON.parse(_connectState);
-        // Abre a ficha do cliente e inicia a conexão automaticamente
-        sessionStorage.setItem('adminTab', 'clientes');
-        setTimeout(async () => {
-          await Admin.tab('clientes');
-          await Admin.openCliente(clientId);
-          Admin._cliTab('info', clientId);
-          setTimeout(() => {
-            const el = document.getElementById('dp-manual-token');
-            if (el) { el.value = _implicitToken; el.style.borderColor = '#2E7D32'; }
-            Admin.conectarTokenManual(clientEmail, clientId);
-          }, 600);
-        }, 300);
-      } catch(e) { console.error('Token connect resume error:', e); }
-    }
     Meta.checkOAuthSuccess();
     const VALID_TABS = ['followup','posts','clientes','financeiro','arquivos','automacoes','metricas','comece','lab','info','solicitacoes','demandas','chat','agentes','usuarios'];
     const savedTab = localStorage.getItem('adminTab');
@@ -2454,6 +2424,17 @@ const Admin = {
       };
       const caption = [stripHtml(p.legenda), stripHtml(p.hashtags)].filter(Boolean).join('\n\n');
       const isReel = String(p.tipo || '').toLowerCase().includes('reels');
+      const isVideo = isReel || /\.(mp4|mov|webm|m4v)/i.test(mediaUrl);
+
+      // Monta payload conforme tipo
+      const pubPayload = { client_email: p.client_email, caption };
+      if (isVideo) {
+        pubPayload.video_url = mediaUrl;
+      } else if (todasMidias.length > 1) {
+        pubPayload.media_urls = todasMidias.filter(u => !/\.(mp4|mov|webm|m4v)/i.test(u));
+      } else {
+        pubPayload.image_url = mediaUrl;
+      }
 
       // Publica via Edge Function (servidor → Meta API, sem expor token no browser)
       const pubRes = await fetch(`${SUPABASE_URL}/functions/v1/instagram-publish`, {
@@ -2463,12 +2444,7 @@ const Admin = {
           'apikey': SUPABASE_KEY,
           'Authorization': `Bearer ${SUPABASE_KEY}`,
         },
-        body: JSON.stringify({
-          client_email: p.client_email,
-          image_url: isReel ? undefined : mediaUrl,
-          video_url: isReel ? mediaUrl : undefined,
-          caption,
-        }),
+        body: JSON.stringify(pubPayload),
       }).then(r => r.json());
       if (pubRes.error) throw new Error(pubRes.error);
 
@@ -3099,31 +3075,30 @@ const Admin = {
             </div>
             <div id="dp-ig-fetch-status" style="font-size:11px;margin-top:4px;"></div>
           `)}
-          ${fld('Instagram Account ID', inp('dp-ig-account-id',c.instagram_account_id||'','Ex: 17841400000000000'))}
-          ${fld('Token de Acesso (Page Token)', `<textarea id="dp-ig-token" placeholder="EAABkz... (preenchido automaticamente pelo OAuth abaixo)" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:11px;font-family:monospace;background:var(--bg);color:var(--text);resize:none;margin-top:4px;min-height:60px;box-sizing:border-box;">${c.instagram_token||''}</textarea>`)}
-          <button onclick="Admin.salvarDadosCliente(${c.id}).then(()=>Meta.connectInstagram('${c.email}','${c.fb_page_id||''}'))" style="width:100%;margin-top:10px;padding:10px;border-radius:9px;background:linear-gradient(135deg,#1877F2,#0D5FBF);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;">
-            ${c.instagram_token&&c.instagram_account_id ? '🔄 Reconectar Instagram via OAuth (Facebook Login)' : '🔗 Conectar Instagram via OAuth (Facebook Login)'}
-          </button>
-          <div style="margin-top:10px;background:rgba(255,193,7,.06);border:1px solid rgba(255,193,7,.3);border-radius:9px;padding:12px;">
-            <div style="font-size:10px;font-weight:600;color:#b8860b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">🔑 Conectar com token manual (alternativa ao OAuth)</div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.6;">
-              1. Acesse <strong>business.facebook.com</strong> → Configurações → Páginas → selecione a Página → <strong>Informações da Página</strong><br>
-              2. Vá em <strong>Controle de acesso à página</strong> → gere um token de acesso permanente<br>
-              3. Cole abaixo e clique em Buscar Instagram ID
+          <div style="margin-top:4px;padding:14px;background:rgba(24,119,242,.04);border:1px solid rgba(24,119,242,.2);border-radius:10px;">
+            ${c.instagram_token && c.instagram_account_id
+              ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                   <span style="font-size:18px;">✅</span>
+                   <div>
+                     <div style="font-size:12px;font-weight:700;color:#2E7D32;">Instagram conectado</div>
+                     <div style="font-size:11px;color:var(--muted);">ID: ${c.instagram_account_id}</div>
+                   </div>
+                 </div>`
+              : `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                   <span style="font-size:18px;">⚠️</span>
+                   <div>
+                     <div style="font-size:12px;font-weight:700;color:#d4896a;">Não conectado</div>
+                     <div style="font-size:11px;color:var(--muted);">Conecte para publicar e buscar métricas automaticamente.</div>
+                   </div>
+                 </div>`}
+            <button onclick="Admin.salvarDadosCliente(${c.id}).then(()=>Meta.connectInstagram('${c.email}',''))"
+              style="width:100%;padding:11px;border-radius:9px;background:linear-gradient(135deg,#1877F2,#0D5FBF);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.04em;">
+              ${c.instagram_token && c.instagram_account_id ? '🔄 Reconectar Instagram (Facebook Login)' : '🔗 Conectar Instagram via Facebook Login'}
+            </button>
+            <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6;">
+              Ao clicar, será redirecionada para o Facebook para autorizar. Após autorizar, voltará aqui automaticamente.<br>
+              <strong>Redirect URI que deve estar cadastrado no Meta App:</strong> <code style="font-size:10px;background:var(--bg);padding:1px 4px;border-radius:3px;">${window?.location?.origin||'https://crm.gislainebarbeto.com.br'}/</code>
             </div>
-            <div style="margin-bottom:6px;">
-              <button onclick="Admin.gerarTokenFacebook('${c.email}',${c.id})" style="width:100%;padding:8px;border-radius:8px;background:#1877F2;color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:600;">① Gerar token via Facebook</button>
-            </div>
-            <div style="display:flex;gap:6px;">
-              <input id="dp-manual-token" placeholder="② Token gerado aparece aqui automaticamente (ou cole manualmente)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:monospace;background:var(--bg);color:var(--text);" />
-              <button onclick="Admin.conectarTokenManual('${c.email}',${c.id})" style="padding:8px 14px;border-radius:8px;background:#b8860b;color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:600;white-space:nowrap;">③ Buscar e Salvar</button>
-            </div>
-            <div id="manual-token-status" style="font-size:11px;margin-top:6px;"></div>
-          </div>
-          <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.8;background:rgba(24,119,242,.04);border:1px solid rgba(24,119,242,.15);border-radius:8px;padding:10px 12px;">
-            ${c.instagram_token&&c.instagram_account_id
-              ? `<span style="color:#3A8A3A;font-weight:600;">✓ Conectado — publicação e métricas via Meta API ativas</span><br>`
-              : `<span style="color:#d4896a;font-weight:600;">⚠ Não conectado</span><br>`}
           </div>
         </div>
         ${fld('Mensagem para a cliente', `<textarea data-rich id="dp-mensagem-gi" rows="3" placeholder="Ex: Essa semana trabalhamos muito no seu posicionamento 🌿" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:Poppins,sans-serif;font-weight:300;background:var(--bg);color:var(--text);resize:none;margin-top:4px;">${c.mensagem_gi||''}</textarea>`)}
@@ -3188,66 +3163,6 @@ const Admin = {
     } else {
       const d = await createResp.json();
       alert('Erro: ' + (d.msg || d.message || 'Falha'));
-    }
-  },
-
-  gerarTokenFacebook(clientEmail, clientId) {
-    const scope = 'pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish,instagram_manage_insights';
-    const redirect = encodeURIComponent(window.location.origin + '/');
-    // Salva estado para retomar após o redirect
-    sessionStorage.setItem('_token_connect', JSON.stringify({ clientEmail, clientId }));
-    window.location.href = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${META_APP_ID}&redirect_uri=${redirect}&scope=${scope}&response_type=token`;
-  },
-
-  async conectarTokenManual(clientEmail, clientId) {
-    const token = document.getElementById('dp-manual-token')?.value?.trim();
-    const statusEl = document.getElementById('manual-token-status');
-    if (!token) { statusEl.textContent = 'Gere o token primeiro (botão ①).'; statusEl.style.color='#c62828'; return; }
-    statusEl.textContent = '⏳ Buscando páginas...'; statusEl.style.color='var(--muted)';
-    try {
-      const accts = await fetch(`https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${token}`).then(r=>r.json());
-      if (accts.error) throw new Error('Token inválido: ' + accts.error.message);
-      const pages = accts.data || [];
-      if (!pages.length) throw new Error('Nenhuma Página encontrada. Verifique se autorizou o acesso às Páginas no popup do Facebook.');
-
-      // Se tiver só uma página, conecta direto. Se tiver mais, mostra seleção.
-      if (pages.length === 1) {
-        await this._salvarPaginaInstagram(pages[0], token, clientEmail, clientId, statusEl);
-      } else {
-        // Mostra botões para selecionar qual página vincular
-        statusEl.style.color = 'var(--muted)';
-        statusEl.innerHTML = `<div style="margin-bottom:6px;font-size:11px;color:var(--text);font-weight:600;">Várias páginas encontradas — escolha qual vincular a este cliente:</div>` +
-          pages.map(p => `<button onclick="Admin._salvarPaginaInstagram(${JSON.stringify(p).replace(/"/g,"'")}, '${token}', '${clientEmail}', ${clientId}, document.getElementById('manual-token-status'))"
-            style="display:block;width:100%;margin-bottom:4px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);cursor:pointer;text-align:left;font-size:12px;">
-            📄 ${p.name} ${p.instagram_business_account ? '<span style="color:#2E7D32;font-size:10px;">· tem Instagram</span>' : ''}
-          </button>`).join('');
-      }
-    } catch(e) {
-      statusEl.textContent = '✗ ' + e.message;
-      statusEl.style.color = '#c62828';
-    }
-  },
-
-  async _salvarPaginaInstagram(page, userToken, clientEmail, clientId, statusEl) {
-    if (typeof page === 'string') page = JSON.parse(page.replace(/'/g, '"'));
-    if (statusEl) { statusEl.innerHTML = ''; statusEl.textContent = `⏳ Conectando @${page.name}...`; statusEl.style.color='var(--muted)'; }
-    try {
-      const pageToken = page.access_token;
-      let igId = page.instagram_business_account?.id;
-      if (!igId) {
-        const ig2 = await fetch(`https://graph.facebook.com/v19.0/${page.id}?fields=instagram_business_account&access_token=${pageToken}`).then(r=>r.json());
-        igId = ig2.instagram_business_account?.id;
-      }
-      if (!igId) throw new Error(`Página "${page.name}" não tem Instagram Business vinculado.`);
-      const igUser = await fetch(`https://graph.facebook.com/v19.0/${igId}?fields=id,username&access_token=${pageToken}`).then(r=>r.json());
-      if (igUser.error) throw new Error(igUser.error.message);
-      const db2 = window.supabase.createClient(SUPABASE_URL, SUPABASE_SVC);
-      await db2.from('instagram_tokens').upsert({ client_email: clientEmail, ig_user_id: igId, ig_username: igUser.username, access_token: pageToken, updated_at: new Date().toISOString() }, { onConflict: 'client_email' });
-      await db2.from('clients').update({ instagram_token: pageToken, instagram_account_id: igId }).eq('id', clientId);
-      if (statusEl) { statusEl.textContent = `✓ @${igUser.username} conectado!`; statusEl.style.color='#2E7D32'; }
-      this._showToast(`Instagram @${igUser.username} conectado! ✓`);
-    } catch(e) {
-      if (statusEl) { statusEl.textContent = '✗ ' + e.message; statusEl.style.color='#c62828'; }
     }
   },
 
