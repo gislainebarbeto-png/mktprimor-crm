@@ -2507,8 +2507,6 @@ const Admin = {
 
       const igHandle = ig_username || '';
 
-      const igHandle = pubRes.ig_username || '';
-
       // Atualiza status no banco
       await db.from('posts').update({ status: 'publicado' }).eq('id', id);
       this.posts = this.posts.map(x => x.id === id ? {...x, status:'publicado'} : x);
