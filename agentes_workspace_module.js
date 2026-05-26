@@ -1078,10 +1078,9 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     try{
       // Usa db normal (Gislaine está autenticada) — sem filtro de status para ver tudo
       const{data,error}=await db.from('posts')
-        .select('id,tema_titulo,tipo,status,midia_urls,legenda,hashtags,tema_referencias')
+        .select('id,tema_titulo,tipo,status,midia_urls,img_url,capa_url,legenda,hashtags,tema_referencias,data_post')
         .eq('client_email',_cliente)
-        .neq('status','publicado')
-        .order('created_at',{ascending:false})
+        .order('data_post',{ascending:false})
         .limit(80);
       if(error)queryErr=error.message;
       posts=data||[];
@@ -1090,6 +1089,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     const emCriacao=posts.filter(p=>p.status==='criacao'||p.status==='design');
     const emRevisao=posts.filter(p=>p.status==='revisao');
     const aprovados=posts.filter(p=>p.status==='aprovado');
+    const publicados=posts.filter(p=>p.status==='publicado');
     const temToken=_clientes.find(c=>c.email===_cliente);
     return `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -1181,6 +1181,29 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
               </div>
             </div>`
         }
+      </div>`;
+    }).join('')}`:''}
+    ${publicados.length?`<div class="aw2-ft" style="margin:14px 0 8px;display:flex;align-items:center;gap:8px;color:#6B7280;">
+      ✓ Publicados (${publicados.length})
+      <span style="font-size:10px;color:var(--muted)">já postados</span>
+    </div>
+    ${publicados.map(p=>{
+      const thumb=_parseThumb(p);
+      const data=p.data_post?new Date(p.data_post+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}):'Sem data';
+      return`<div class="aw2-ci-item" style="border-left:3px solid #6B7280;padding:10px 12px;opacity:.75;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          ${thumb?`<img src="${thumb}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0;filter:grayscale(.3)" onerror="this.style.display='none'">`:''}
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
+              <span style="background:rgba(107,114,128,.15);color:#6B7280;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">✓ Publicado</span>
+              <span style="font-size:10px;color:var(--muted);">📅 ${data}</span>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:var(--muted);">${_esc(p.tema_titulo||'(sem título)')}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button onclick="Admin&&Admin.viewPostDetail(${p.id})" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;color:var(--muted);">👁 Ver post</button>
+        </div>
       </div>`;
     }).join('')}`:''}`;
   }
