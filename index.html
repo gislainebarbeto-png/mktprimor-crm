@@ -2308,7 +2308,7 @@ const Admin = {
             <div style="font-size:12px;color:#333;margin-bottom:16px;line-height:1.7;white-space:pre-wrap">${eV(legenda||'—')}</div>
             ${p.hashtags?`<div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Hashtags</div>
             <div style="font-size:12px;color:#9B6B3A;font-weight:500;line-height:1.8">${eV(p.hashtags)}</div>`:''}
-            ${p.obs_int?`<div style="margin-top:14px;font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Obs. interna</div><div style="font-size:12px;color:#555;line-height:1.6">${eV(p.obs_int)}</div>`:''}
+            ${p.obs_int?`<div style="margin-top:14px;font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Obs. interna</div><div style="font-size:12px;color:#555;line-height:1.6;white-space:pre-wrap">${eV(stripH(p.obs_int))}</div>`:''}
           </div>
         </div>
         <div style="border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;background:var(--bg);border-radius:0 0 16px 16px">

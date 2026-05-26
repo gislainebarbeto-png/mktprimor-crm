@@ -109,6 +109,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   function _now(){return new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
   function _v(id){const e=document.getElementById(id);return e?e.value.trim():'';}
   function _esc(t){return(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');}
+  function _parseThumb(p){try{const a=JSON.parse(p.capa_url||p.midia_urls||p.img_url||'');if(Array.isArray(a)&&a[0])return a[0];if(typeof a==='string'&&a)return a;}catch{}return p.capa_url||p.midia_urls||p.img_url||'';}
   function _flash(id,m){const e=document.getElementById(id);if(!e)return;e.textContent=m||'✓ Salvo';e.style.display='inline-block';setTimeout(()=>e.style.display='none',2200);}
 
   // Busca token do Instagram — tenta clients primeiro, depois instagram_tokens
@@ -1109,37 +1110,75 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       <div class="aw2-sr"><button class="aw2-btn" onclick="_AW2.submitEntrega()">📤 Enviar para Barbeto aprovar</button><span class="aw2-svd" id="et-s"></span></div>
     </div>
     <div class="aw2-ft" style="margin-bottom:8px">Aguardando revisão da Barbeto (${emRevisao.length})</div>
-    ${emRevisao.length?emRevisao.map(p=>`<div class="aw2-ci-item" style="border-left:3px solid #d4896a">
-      <div class="aw2-ci-top"><span class="aw2-b revisao">Aguardando Barbeto</span></div>
-      <div style="font-size:13px;font-weight:500;color:var(--brown)">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo}</div>
-      ${(p.tema_referencias?.[0]||p.tema_referencias)?`<a href="${Array.isArray(p.tema_referencias)?p.tema_referencias[0]:p.tema_referencias}" target="_blank" style="font-size:11px;color:var(--accent);margin-top:4px;display:inline-block">🔗 Ver no Canva</a>`:'<span style="font-size:11px;color:var(--muted)">Sem link do Canva</span>'}
-    </div>`).join(''):'<div class="aw2-empty">Nenhum post aguardando revisão.</div>'}
+    ${emRevisao.length?emRevisao.map(p=>{
+      const thumb=_parseThumb(p);
+      const leg=(p.legenda||'').replace(/<[^>]*>/g,'').replace(/&[^;]+;/g,' ').trim();
+      const data=p.data_post?new Date(p.data_post+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}):'Sem data';
+      const canvaLink=Array.isArray(p.tema_referencias)?p.tema_referencias[0]:(p.tema_referencias||'');
+      return`<div class="aw2-ci-item" style="border-left:3px solid #d4896a;padding:10px 12px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          ${thumb
+            ? `<img src="${thumb}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;" onerror="this.style.display='none'">`
+            : `<div style="width:64px;height:64px;background:var(--beige);border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--copper);">🖼</div>`}
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
+              <span class="aw2-b revisao">Aguardando Barbeto</span>
+              <span style="font-size:10px;color:var(--muted);">📅 ${data}</span>
+              <span style="font-size:10px;color:var(--muted);">· ${p.tipo||'Feed'}</span>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:var(--brown);margin-bottom:3px;">${_esc(p.tema_titulo||'(sem título)')}</div>
+            ${leg?`<div style="font-size:11px;color:var(--muted);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${_esc(leg.substring(0,100))}${leg.length>100?'…':''}</div>`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+          <button onclick="Admin&&Admin.viewPostDetail(${p.id})" style="background:var(--brown);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">👁 Ver post completo</button>
+          ${canvaLink?`<a href="${canvaLink}" target="_blank" style="font-size:11px;color:var(--accent);padding:5px 10px;border:1px solid var(--accent);border-radius:6px;text-decoration:none;">🔗 Ver no Canva</a>`:''}
+        </div>
+      </div>`;
+    }).join(''):'<div class="aw2-empty">Nenhum post aguardando revisão.</div>'}
     ${aprovados.length?`<div class="aw2-ft" style="margin:14px 0 8px;display:flex;align-items:center;gap:8px">
       ✅ Aprovados — prontos para publicar (${aprovados.length})
       <span style="font-size:10px;color:var(--muted)">via Meta API</span>
     </div>
     ${aprovados.map(p=>{
-      let imgUrl='';try{const arr=JSON.parse(p.midia_urls||'[]');imgUrl=Array.isArray(arr)?arr[0]:arr;}catch{imgUrl=p.midia_urls||'';}
+      const thumb=_parseThumb(p);
+      const leg=(p.legenda||'').replace(/<[^>]*>/g,'').replace(/&[^;]+;/g,' ').trim();
+      const data=p.data_post?new Date(p.data_post+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}):'Sem data';
       const canvaLink=Array.isArray(p.tema_referencias)?p.tema_referencias[0]:(p.tema_referencias||'');
-      return`<div class="aw2-ci-item" style="border-left:3px solid #27ae60">
-        <div class="aw2-ci-top"><span class="aw2-b aprovado">Aprovado ✓</span><span style="flex:1"></span>${imgUrl?'<span style="font-size:10px;color:#3A5030">✓ Mídia pronta</span>':'<span style="font-size:10px;color:#92400E">⚠ Sem mídia</span>'}</div>
-        <div style="font-size:13px;font-weight:500;color:var(--brown);margin-bottom:8px">${_esc(p.tema_titulo||'(sem título)')} · ${p.tipo}</div>
-        ${canvaLink?`<a href="${canvaLink}" target="_blank" style="font-size:11px;color:var(--accent);display:inline-block;margin-bottom:10px">🎨 Ver design no Canva</a>`:''}
-        ${imgUrl
-          ?`<div style="display:flex;gap:8px;flex-wrap:wrap">
+      return`<div class="aw2-ci-item" style="border-left:3px solid #27ae60;padding:10px 12px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          ${thumb
+            ? `<img src="${thumb}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;" onerror="this.style.display='none'">`
+            : `<div style="width:64px;height:64px;background:#f0fdf4;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;">🖼</div>`}
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
+              <span class="aw2-b aprovado">Aprovado ✓</span>
+              <span style="font-size:10px;color:var(--muted);">📅 ${data}</span>
+              <span style="font-size:10px;color:var(--muted);">· ${p.tipo||'Feed'}</span>
+              ${thumb?'<span style="font-size:10px;color:#3A5030;font-weight:600;">✓ com mídia</span>':'<span style="font-size:10px;color:#92400E;font-weight:600;">⚠ sem mídia</span>'}
+            </div>
+            <div style="font-size:13px;font-weight:600;color:var(--brown);margin-bottom:3px;">${_esc(p.tema_titulo||'(sem título)')}</div>
+            ${leg?`<div style="font-size:11px;color:var(--muted);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${_esc(leg.substring(0,100))}${leg.length>100?'…':''}</div>`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+          <button onclick="Admin&&Admin.viewPostDetail(${p.id})" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text);">👁 Ver post</button>
+          ${canvaLink?`<a href="${canvaLink}" target="_blank" style="font-size:11px;color:var(--accent);padding:5px 10px;border:1px solid var(--accent);border-radius:6px;text-decoration:none;">🎨 Canva</a>`:''}
+        </div>
+        ${thumb
+          ?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
               <button onclick="_AW2.agendarModalIG('${p.id}')" class="aw2-btn" style="font-size:11px;padding:6px 14px">📅 Agendar no Instagram</button>
               <button onclick="_AW2.publicarIGAgora('${p.id}')" style="background:#27ae60;color:#fff;border:none;border-radius:7px;font-size:11px;padding:6px 14px;cursor:pointer;font-family:inherit">▶ Publicar agora</button>
             </div>`
-          :`<div style="background:#FEF9C3;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;margin-top:4px">
+          :`<div style="background:#FEF9C3;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;margin-top:8px;">
               <div style="font-size:11px;font-weight:600;color:#92400E;margin-bottom:6px">📎 Adicionar mídia para publicar</div>
               <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
-                <input id="midia-url-${p.id}" class="aw2-in" placeholder="URL pública da imagem/vídeo (ex: do Canva ou Drive)" style="flex:1;font-size:11px;padding:6px 8px">
+                <input id="midia-url-${p.id}" class="aw2-in" placeholder="URL pública da imagem/vídeo" style="flex:1;font-size:11px;padding:6px 8px">
                 <button onclick="_AW2.salvarMidiaPost('${p.id}')" style="background:#92400E;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;white-space:nowrap">Salvar URL</button>
               </div>
               <div style="display:flex;gap:6px;align-items:center">
                 <input type="file" id="midia-file-${p.id}" accept="image/*,video/*" style="font-size:10px;flex:1" onchange="_AW2.uploadMidiaPost('${p.id}',this.files[0])">
               </div>
-              <div style="font-size:10px;color:#92400E;margin-top:6px;opacity:.7">Exporte do Canva como JPG/PNG e faça upload, ou cole a URL pública</div>
             </div>`
         }
       </div>`;
