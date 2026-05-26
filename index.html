@@ -5260,10 +5260,21 @@ const Admin = {
     if(statusEl){statusEl.innerHTML='<span style="color:var(--muted)">⏳ Buscando sua conta Instagram...</span>';}
     if(confirmEl) confirmEl.style.display='none';
     try {
-      // Busca as páginas do token para encontrar o Instagram Business Account
-      const pages = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,instagram_business_account{id,username}&access_token=${token}`).then(r=>r.json());
-      if (pages.error) throw new Error(pages.error.message);
-      const pagesWithIg = (pages.data||[]).filter(p=>p.instagram_business_account?.id);
+      // Tenta como Page Access Token primeiro: /me?fields=instagram_business_account
+      const meRes = await fetch(`https://graph.facebook.com/v21.0/me?fields=id,name,instagram_business_account{id,username}&access_token=${token}`).then(r=>r.json());
+      if (meRes.error) throw new Error(meRes.error.message);
+
+      let pagesWithIg = [];
+      if (meRes.instagram_business_account?.id) {
+        // É um Page Access Token — já tem a conta IG direto
+        pagesWithIg = [{ name: meRes.name, instagram_business_account: meRes.instagram_business_account }];
+      } else {
+        // Pode ser User Token — tenta /me/accounts
+        const accs = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,instagram_business_account{id,username}&access_token=${token}`).then(r=>r.json());
+        if (accs.error) throw new Error('Não encontrou Instagram Business: ' + accs.error.message);
+        pagesWithIg = (accs.data||[]).filter(p=>p.instagram_business_account?.id);
+      }
+
       if (!pagesWithIg.length) throw new Error('Nenhuma conta Instagram Business encontrada. O Instagram precisa ser Conta Profissional e estar vinculado a uma Página do Facebook.');
       if (pagesWithIg.length === 1) {
         const igId = pagesWithIg[0].instagram_business_account.id;
