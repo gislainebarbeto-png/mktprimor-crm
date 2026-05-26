@@ -5316,31 +5316,40 @@ const Admin = {
     if(statusEl){statusEl.innerHTML='<span style="color:var(--muted)">⏳ Buscando sua conta Instagram...</span>';}
     if(confirmEl) confirmEl.style.display='none';
     try {
-      // Tenta como Page Access Token primeiro: /me?fields=instagram_business_account
-      const meRes = await fetch(`https://graph.facebook.com/v21.0/me?fields=id,name,instagram_business_account{id,username}&access_token=${token}`).then(r=>r.json());
-      if (meRes.error) throw new Error(meRes.error.message);
-
       let pagesWithIg = [];
-      if (meRes.instagram_business_account?.id) {
-        // É um Page Access Token — já tem a conta IG direto
+
+      // Tenta como Page Access Token: /me?fields=instagram_business_account
+      const meRes = await fetch(`https://graph.facebook.com/v21.0/me?fields=id,name,instagram_business_account{id,username}&access_token=${token}`).then(r=>r.json());
+
+      if (!meRes.error && meRes.instagram_business_account?.id) {
+        // É Page Token com IG vinculado — usa direto
         pagesWithIg = [{ name: meRes.name, instagram_business_account: meRes.instagram_business_account }];
       } else {
-        // Pode ser User Token — tenta /me/accounts
-        const accs = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,instagram_business_account{id,username}&access_token=${token}`).then(r=>r.json());
-        if (accs.error) throw new Error('Não encontrou Instagram Business: ' + accs.error.message);
+        // Token de usuário ou página sem IG direto — tenta /me/accounts
+        const accs = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username}&access_token=${token}`).then(r=>r.json());
+        if (accs.error) throw new Error(accs.error.message);
         pagesWithIg = (accs.data||[]).filter(p=>p.instagram_business_account?.id);
+        // Para cada página encontrada, usar o PAGE token dela (não o user token)
+        if (pagesWithIg.length) {
+          pagesWithIg = pagesWithIg.map(p => ({
+            ...p,
+            _pageToken: p.access_token, // token da página (o certo para publicar)
+          }));
+        }
       }
 
       if (!pagesWithIg.length) throw new Error('Nenhuma conta Instagram Business encontrada. O Instagram precisa ser Conta Profissional e estar vinculado a uma Página do Facebook.');
       if (pagesWithIg.length === 1) {
         const igId = pagesWithIg[0].instagram_business_account.id;
         const igUser = pagesWithIg[0].instagram_business_account.username;
+        const pageToken = pagesWithIg[0]._pageToken || token;
         document.getElementById('manual-ig-account-id').value = igId;
+        document.getElementById('manual-ig-token').value = pageToken; // garante que salva o page token
         if(statusEl){statusEl.innerHTML=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;color:#166534;font-size:12px;line-height:1.6;"><strong>✅ Encontrado!</strong><br>Instagram: <strong>@${igUser}</strong><br>ID: ${igId}<br><br>Se estiver correto, clique em <strong>"Salvar e conectar"</strong> abaixo.</div>`;}
         if(confirmEl) confirmEl.style.display='block';
       } else {
         // Várias contas — mostra botões de escolha
-        if(statusEl){statusEl.innerHTML=`<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;">Encontramos ${pagesWithIg.length} contas. Qual é a deste cliente?</div>`+pagesWithIg.map(p=>`<button onclick="(function(){document.getElementById('manual-ig-account-id').value='${p.instagram_business_account.id}';document.getElementById('manual-ig-confirm-${clientId}').style.display='block';document.getElementById('manual-token-status-${clientId}').querySelector('.ig-sel')?.querySelectorAll('button').forEach(b=>b.style.background='var(--bg)');this.style.background='rgba(46,125,50,.12)';this.style.borderColor='#2E7D32';})()" style="display:block;width:100%;margin-bottom:6px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:left;font-family:inherit;font-size:12px;"><strong>@${p.instagram_business_account.username}</strong><br><span style="font-size:10px;color:var(--muted)">Página: ${p.name}</span></button>`).join('');}
+        if(statusEl){statusEl.innerHTML=`<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;">Encontramos ${pagesWithIg.length} contas. Qual é a deste cliente?</div>`+pagesWithIg.map(p=>`<button onclick="(function(){document.getElementById('manual-ig-account-id').value='${p.instagram_business_account.id}';document.getElementById('manual-ig-token').value='${(p._pageToken||token).replace(/'/g,"\\'")}';document.getElementById('manual-ig-confirm-${clientId}').style.display='block';})()" style="display:block;width:100%;margin-bottom:6px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:left;font-family:inherit;font-size:12px;"><strong>@${p.instagram_business_account.username}</strong><br><span style="font-size:10px;color:var(--muted)">Página: ${p.name}</span></button>`).join('');}
         if(confirmEl) confirmEl.style.display='none';
       }
     } catch(e) {
