@@ -2983,7 +2983,48 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
       const mes=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
 
-      if(aba==='geral'){window.print();return;}
+      if(aba==='geral'){
+        const[onb,diag,swot,pil,brief,conc,res]=await Promise.all([
+          wt('pedro','onboarding'),wt('pedro','diagnostico'),wt('pedro','swot'),
+          wt('pedro','pilares'),wt('pedro','briefing'),wt('pedro','concorrentes'),
+          db.from('metricas_instagram').select('*').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data||null).catch(()=>null)
+        ]);
+        const box2=(lbl,val)=>val?`<div style="border-left:3px solid #e0d0bc;padding:14px 16px;margin-bottom:12px;background:#fdfaf7;border-radius:0 6px 6px 0;"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#bba98a;margin-bottom:6px;">${lbl}</div><div style="font-size:12px;color:#333;line-height:1.8;white-space:pre-wrap;">${_esc(String(val))}</div></div>`:'';
+        const row2=(lbl,val)=>val?`<div style="display:flex;gap:16px;padding:10px 0;border-bottom:1px solid #f5f0ea;"><span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#bba98a;min-width:130px;flex-shrink:0;">${lbl}</span><span style="font-size:12px;color:#333;line-height:1.7;">${_esc(String(val))}</span></div>`:'';
+        const sec2=(titulo,html2)=>html2?`<div style="background:#fff;border:1px solid #e8ddd4;border-radius:12px;padding:24px 28px;margin-bottom:20px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#9a7c50;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #f5ede4;">${titulo}</div>
+          ${html2}</div>`:'';
+        const fN2=n=>(n||0).toLocaleString('pt-BR');
+        let sections='';
+        if(onb)sections+=sec2('📋 Onboarding Estratégico',row2('Nicho',(onb.nicho||'')+(onb.subnicho?' / '+onb.subnicho:''))+row2('Posicionamento',onb.posicionamento)+box2('Persona',onb.persona)+box2('Arcos Editoriais',onb.arcos));
+        if(diag)sections+=sec2('📊 Diagnóstico',box2('Pontos Fortes',diag.pontos_fortes)+box2('Pontos Fracos',diag.pontos_fracos)+box2('Posicionamento Atual',diag.posicionamento)+box2('Recomendações',diag.obs));
+        if(res)sections+=sec2('📈 Resultados Instagram',`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">${[['👥 Seguidores',fN2(res.seguidores)],['👁 Alcance',fN2(res.alcance)],['💫 Impressões',fN2(res.impressoes)],['❤️ Engajamento',(res.engajamento||0)+'%'],['🔗 Visitas',fN2(res.visitas_perfil)]].map(([l,v])=>`<div style="background:#f9f6f2;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:9px;color:#999;text-transform:uppercase;margin-bottom:4px;">${l}</div><div style="font-size:16px;font-weight:700;color:#4a3728;">${v}</div></div>`).join('')}</div>`);
+        if(swot)sections+=sec2('⚡ Análise SWOT',`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">${[['💪 Forças',swot.forcas,'#e8f5e9','#2e7d32'],['⚠ Fraquezas',swot.fraquezas,'#fff3e0','#e65100'],['🌟 Oportunidades',swot.oportunidades,'#e3f2fd','#1565c0'],['🚨 Ameaças',swot.ameacas,'#fce4ec','#b71c1c']].filter(([,v])=>v).map(([l,v,bg,cor])=>`<div style="background:${bg};border-radius:10px;padding:14px;"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:${cor};margin-bottom:8px;">${l}</div><div style="font-size:12px;color:#333;line-height:1.6;white-space:pre-wrap;">${_esc(v)}</div></div>`).join('')}</div>`);
+        if(pil&&pil.pilares?.length)sections+=sec2('🎯 Pilares Editoriais',pil.pilares.filter(p=>p.nome).map(p=>`<div style="border:1px solid #e0d6c8;border-radius:8px;padding:12px;margin-bottom:8px;"><div style="font-size:12px;font-weight:700;color:#4a3728;">${_esc(p.nome)}${p.percentual?` <span style="font-weight:400;color:#999;">${p.percentual}%</span>`:''}</div>${p.descricao?`<div style="font-size:11px;color:#666;margin-top:4px;">${_esc(p.descricao)}</div>`:''}</div>`).join(''));
+        if(brief)sections+=sec2('📄 Briefing Mensal',box2('O que performou bem',brief.bom)+box2('O que não performou',brief.ruim)+box2('Foco do mês',brief.foco)+box2('Campanhas',brief.campanha)+box2('Obs para Chloe',brief.obs));
+        if(conc&&conc.lista?.length)sections+=sec2('🔍 Análise de Concorrentes',conc.lista.filter(x=>x.ig).map(x=>`<div style="border:1px solid #e0d6c8;border-radius:8px;padding:12px;margin-bottom:8px;"><div style="font-size:12px;font-weight:700;color:#4a3728;">@${_esc(x.ig)}${x.nicho?` <span style="font-weight:400;color:#999;">· ${_esc(x.nicho)}</span>`:''}</div>${x.fortes?`<div style="font-size:11px;color:#2e7d32;margin-top:4px;">💪 ${_esc(x.fortes)}</div>`:''}${x.fracos?`<div style="font-size:11px;color:#b71c1c;margin-top:2px;">⚠ ${_esc(x.fracos)}</div>`:''}</div>`).join(''));
+        if(!sections){alert('Nenhum dado salvo ainda. Preencha as abas com o Pedro primeiro.');return;}
+        const htmlG=`<div style="font-family:Poppins,Arial,sans-serif;background:#fff;padding:48px;max-width:800px;margin:0 auto;">
+          <div style="text-align:center;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid #E8DECE;">
+            <img src="https://crm.gislainebarbeto.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:50px;object-fit:contain;display:block;margin:0 auto 12px;">
+            <div style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#9B6B3A;margin-bottom:8px;">Dashboard Estratégico</div>
+            <div style="font-size:22px;font-weight:300;color:#5C3D1E;margin-bottom:4px;">${_esc(cliNome)}</div>
+            <div style="font-size:12px;color:#9B6B3A;">${mes}</div>
+          </div>
+          ${sections}
+          <div style="margin-top:32px;padding-top:16px;border-top:1px solid #E8DECE;display:flex;justify-content:space-between;">
+            <div style="font-size:9px;color:#C8B89A;text-transform:uppercase;letter-spacing:.1em;">Agência Primor · Estratégia · Criatividade · Resultados</div>
+            <div style="font-size:9px;color:#C8B89A;">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
+          </div>
+        </div>`;
+        const elG=document.createElement('div');
+        elG.style.cssText='position:fixed;left:-9999px;top:0;width:800px;background:#fff;';
+        elG.innerHTML=htmlG;
+        document.body.appendChild(elG);
+        await html2pdf().set({margin:[10,10],filename:`pedro-geral-${cliNome.replace(/\s+/g,'-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.pdf`,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(elG).save();
+        elG.remove();
+        return;
+      }
 
       const wt=(ag,ab)=>db.from('agentes_trabalhos').select('conteudo').eq('agente_id',ag).eq('aba_id',ab).eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||null).catch(()=>null);
 
