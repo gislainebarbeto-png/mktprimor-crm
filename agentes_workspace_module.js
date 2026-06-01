@@ -2014,6 +2014,14 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
 
     // Painel de adição rápida ao Quadro (só aparece para Chloe)
     const quadroPanel=_ag.id==='chloe'?`
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <button onclick="_AW2.quadroGerarIA()" class="aw2-btn" style="flex:1;background:linear-gradient(135deg,#2563a8,#1a3f6f);font-size:12px;padding:9px 14px;">
+          🧠 Gerar Quadro do Planejamento com IA
+        </button>
+        <button onclick="(()=>{const p=document.getElementById('aw2-qpanel');p.style.display=p.style.display==='none'?'block':'none';})()" style="background:none;border:1px solid var(--accent);border-radius:8px;padding:9px 14px;font-size:12px;color:var(--accent);cursor:pointer;font-family:inherit;font-weight:500;white-space:nowrap;">
+          ＋ Post manual
+        </button>
+      </div>
       <div id="aw2-qpanel" style="display:none;background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
           <span style="font-size:13px;font-weight:600;color:var(--brown)">🗂 Adicionar Post ao Quadro</span>
@@ -2042,9 +2050,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
           <span id="qp-status" style="font-size:11px;color:#4aab2a;display:none"></span>
         </div>
       </div>
-      <button onclick="(()=>{const p=document.getElementById('aw2-qpanel');p.style.display=p.style.display==='none'?'block':'none';})()" style="width:100%;background:none;border:1px dashed var(--accent);border-radius:8px;padding:7px;font-size:11px;color:var(--accent);cursor:pointer;margin-bottom:10px;font-family:inherit;font-weight:500">
-        ＋ Adicionar post ao Quadro do mês
-      </button>`:'';
+      `:'';
+
 
     return `<div style="display:flex;flex-direction:column;height:100%;">
       ${quadroPanel}
