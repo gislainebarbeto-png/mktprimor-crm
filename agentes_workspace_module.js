@@ -744,7 +744,16 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     // Atualiza label do botão PDF conforme aba ativa
     const pdfBtn=document.getElementById('aw2-pdf-btn-main');
     if(pdfBtn){
-      const labels={diagnostico:'📊 PDF de Métricas',briefing:'📄 PDF de Briefing',resultados:'📈 PDF de Resultados',onboarding:'📋 PDF de Onboarding'};
+      const labels={
+        geral:'🗂 PDF Geral Pedro',
+        onboarding:'📋 PDF Onboarding',
+        diagnostico:'📊 PDF de Métricas',
+        swot:'⚡ PDF SWOT',
+        pilares:'🎯 PDF Pilares',
+        briefing:'📄 PDF Briefing',
+        concorrentes:'🔍 PDF Concorrentes',
+        resultados:'📈 PDF Resultados',
+      };
       pdfBtn.textContent=labels[id]||'📄 PDF de Aprovação';
     }
   }
@@ -2959,8 +2968,191 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     // Roteador de PDF por aba ativa
     openPdfContextual(){
       if(!_cliente)return;
-      if(_aba==='diagnostico')this.gerarPdfMetricas();
+      const pedroAbas=['geral','onboarding','swot','pilares','briefing','concorrentes','resultados'];
+      if(_aba==='diagnostico') this.gerarPdfMetricas();
+      else if(pedroAbas.includes(_aba)) this.gerarPdfAba(_aba);
       else this.openPdfModal();
+    },
+    // PDF por aba do Pedro (geral, onboarding, swot, pilares, briefing, concorrentes, resultados)
+    async gerarPdfAba(aba){
+      if(!_cliente){alert('Selecione um cliente.');return;}
+      const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
+      const mes=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+
+      // Para a aba Geral, usa o print nativo (já tem CSS @media print)
+      if(aba==='geral'){window.print();return;}
+
+      const wt=(ag,ab)=>db.from('agentes_trabalhos').select('conteudo').eq('agente_id',ag).eq('aba_id',ab).eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||null).catch(()=>null);
+
+      // Estilos base compartilhados
+      const STYLE=`<style>
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Poppins',Arial,sans-serif;background:#fff;color:#222;}
+        .wrap{padding:48px;max-width:800px;margin:0 auto;}
+        .header{text-align:center;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid #E8DECE;}
+        .logo{height:50px;object-fit:contain;display:block;margin:0 auto 12px;}
+        .tag{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#9B6B3A;margin-bottom:8px;}
+        .cli{font-size:22px;font-weight:300;color:#5C3D1E;margin-bottom:4px;}
+        .dt{font-size:12px;color:#9B6B3A;}
+        .sec{margin-bottom:28px;}
+        .sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#9a7c50;padding-bottom:8px;border-bottom:2px solid #f5ede4;margin-bottom:16px;}
+        .row{display:flex;gap:16px;padding:10px 0;border-bottom:1px solid #f5f0ea;}
+        .row:last-child{border-bottom:none;}
+        .lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#bba98a;white-space:nowrap;min-width:130px;padding-top:3px;flex-shrink:0;}
+        .val{font-size:12px;color:#333;line-height:1.7;white-space:pre-wrap;}
+        .box{border-left:3px solid #e0d0bc;padding:14px 16px;margin-bottom:12px;background:#fdfaf7;border-radius:0 6px 6px 0;}
+        .box .lbl{font-size:9px;margin-bottom:6px;display:block;}
+        .box .val{font-size:12px;color:#333;line-height:1.8;}
+        .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+        .quad{border-radius:10px;padding:16px;}
+        .quad-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;}
+        .quad .val{font-size:12px;line-height:1.7;}
+        .pilar{border:1px solid #e0d6c8;border-radius:8px;padding:14px;margin-bottom:10px;}
+        .pilar-nome{font-size:13px;font-weight:700;color:#4a3728;margin-bottom:4px;}
+        .pilar-pct{font-weight:400;color:#999;font-size:12px;}
+        .pilar-desc{font-size:11px;color:#666;line-height:1.5;margin-top:4px;}
+        .pilar-fmt{font-size:10px;color:#aaa;margin-top:4px;}
+        .conc{border:1px solid #e0d6c8;border-radius:8px;padding:14px;margin-bottom:10px;}
+        .conc-ig{font-size:13px;font-weight:700;color:#4a3728;}
+        .conc-nicho{font-weight:400;color:#999;font-size:12px;}
+        .conc-forte{font-size:11px;color:#2e7d32;margin-top:6px;}
+        .conc-fraco{font-size:11px;color:#b71c1c;margin-top:4px;}
+        .footer{margin-top:32px;padding-top:16px;border-top:1px solid #E8DECE;display:flex;justify-content:space-between;align-items:center;}
+        .footer-l{font-size:9px;color:#C8B89A;text-transform:uppercase;letter-spacing:.1em;}
+        .footer-r{font-size:9px;color:#C8B89A;}
+      </style>`;
+
+      const header=(tituloAba)=>`
+        <div class="header">
+          <img src="https://crm.gislainebarbeto.com.br/logo-texto.png.jpeg" crossorigin="anonymous" class="logo">
+          <div class="tag">${tituloAba}</div>
+          <div class="cli">${_esc(cliNome)}</div>
+          <div class="dt">${mes}</div>
+        </div>`;
+
+      const footer=`<div class="footer"><div class="footer-l">Agência Primor · Estratégia · Criatividade · Resultados</div><div class="footer-r">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div></div>`;
+
+      let html='';
+
+      if(aba==='onboarding'){
+        const d=await wt('pedro','onboarding');
+        if(!d){alert('Sem dados de Onboarding. Preencha a aba primeiro.');return;}
+        html=`${STYLE}<div class="wrap">
+          ${header('Onboarding Estratégico')}
+          <div class="sec">
+            ${d.nicho?`<div class="row"><span class="lbl">Nicho</span><span class="val">${_esc(d.nicho+(d.subnicho?' / '+d.subnicho:''))}</span></div>`:''}
+            ${d.posicionamento?`<div class="row"><span class="lbl">Posicionamento</span><span class="val">${_esc(d.posicionamento)}</span></div>`:''}
+            ${d.persona?`<div class="box"><span class="lbl">Persona</span><div class="val">${_esc(d.persona)}</div></div>`:''}
+            ${d.arcos?`<div class="box"><span class="lbl">Arcos Editoriais</span><div class="val">${_esc(d.arcos)}</div></div>`:''}
+            ${d.obs?`<div class="box"><span class="lbl">Observações</span><div class="val">${_esc(d.obs)}</div></div>`:''}
+          </div>
+          ${footer}</div>`;
+
+      } else if(aba==='swot'){
+        const d=await wt('pedro','swot');
+        if(!d){alert('Sem dados de SWOT. Preencha a aba primeiro.');return;}
+        html=`${STYLE}<div class="wrap">
+          ${header('Análise SWOT')}
+          <div class="sec">
+            <div class="grid2">
+              ${d.forcas?`<div class="quad" style="background:#e8f5e9;"><div class="quad-title" style="color:#2e7d32;">💪 Forças</div><div class="val">${_esc(d.forcas)}</div></div>`:''}
+              ${d.fraquezas?`<div class="quad" style="background:#fff3e0;"><div class="quad-title" style="color:#e65100;">⚠ Fraquezas</div><div class="val">${_esc(d.fraquezas)}</div></div>`:''}
+              ${d.oportunidades?`<div class="quad" style="background:#e3f2fd;"><div class="quad-title" style="color:#1565c0;">🌟 Oportunidades</div><div class="val">${_esc(d.oportunidades)}</div></div>`:''}
+              ${d.ameacas?`<div class="quad" style="background:#fce4ec;"><div class="quad-title" style="color:#b71c1c;">🚨 Ameaças</div><div class="val">${_esc(d.ameacas)}</div></div>`:''}
+            </div>
+            ${d.obs?`<div class="box" style="margin-top:16px;"><span class="lbl">Observações estratégicas</span><div class="val">${_esc(d.obs)}</div></div>`:''}
+          </div>
+          ${footer}</div>`;
+
+      } else if(aba==='pilares'){
+        const d=await wt('pedro','pilares');
+        if(!d||!d.pilares?.length){alert('Sem pilares salvos. Preencha a aba primeiro.');return;}
+        html=`${STYLE}<div class="wrap">
+          ${header('Pilares Editoriais')}
+          <div class="sec">
+            ${d.obs?`<div class="box" style="margin-bottom:16px;"><span class="lbl">Estratégia geral</span><div class="val">${_esc(d.obs)}</div></div>`:''}
+            ${d.pilares.filter(p=>p.nome).map(p=>`
+              <div class="pilar">
+                <div class="pilar-nome">${_esc(p.nome)} ${p.percentual?`<span class="pilar-pct">${p.percentual}%</span>`:''}</div>
+                ${p.descricao?`<div class="pilar-desc">${_esc(p.descricao)}</div>`:''}
+                ${p.formatos?`<div class="pilar-fmt">Formatos: ${_esc(p.formatos)}</div>`:''}
+              </div>`).join('')}
+          </div>
+          ${footer}</div>`;
+
+      } else if(aba==='briefing'){
+        const d=await wt('pedro','briefing');
+        if(!d){alert('Sem dados de Briefing. Preencha a aba primeiro.');return;}
+        html=`${STYLE}<div class="wrap">
+          ${header('Briefing Mensal → Chloe')}
+          <div class="sec">
+            ${d.bom?`<div class="box"><span class="lbl">O que performou bem</span><div class="val">${_esc(d.bom)}</div></div>`:''}
+            ${d.ruim?`<div class="box"><span class="lbl">O que não performou</span><div class="val">${_esc(d.ruim)}</div></div>`:''}
+            ${d.foco?`<div class="box"><span class="lbl">Foco do mês</span><div class="val">${_esc(d.foco)}</div></div>`:''}
+            ${d.campanha?`<div class="box"><span class="lbl">Campanhas / Datas especiais</span><div class="val">${_esc(d.campanha)}</div></div>`:''}
+            ${d.obs?`<div class="box"><span class="lbl">Instruções para Chloe</span><div class="val">${_esc(d.obs)}</div></div>`:''}
+          </div>
+          ${footer}</div>`;
+
+      } else if(aba==='concorrentes'){
+        const d=await wt('pedro','concorrentes');
+        if(!d||!d.lista?.length){alert('Sem concorrentes salvos. Preencha a aba primeiro.');return;}
+        html=`${STYLE}<div class="wrap">
+          ${header('Análise de Concorrentes')}
+          <div class="sec">
+            ${d.lista.filter(x=>x.ig).map(x=>`
+              <div class="conc">
+                <div class="conc-ig">@${_esc(x.ig)} ${x.nicho?`<span class="conc-nicho">· ${_esc(x.nicho)}</span>`:''}</div>
+                ${x.fortes?`<div class="conc-forte">💪 ${_esc(x.fortes)}</div>`:''}
+                ${x.fracos?`<div class="conc-fraco">⚠ ${_esc(x.fracos)}</div>`:''}
+                ${x.obs?`<div style="font-size:11px;color:#555;margin-top:4px;">📝 ${_esc(x.obs)}</div>`:''}
+              </div>`).join('')}
+          </div>
+          ${footer}</div>`;
+
+      } else if(aba==='resultados'){
+        let rows=[];
+        try{
+          let q=db.from('metricas_instagram').select('data,seguidores,alcance,impressoes,engajamento,visitas_perfil,publico_principal').eq('client_email',_cliente).order('data',{ascending:false}).limit(12);
+          const{data}=await q; rows=data||[];
+        }catch{}
+        if(!rows.length){alert('Sem métricas salvas para este cliente.');return;}
+        const fN=n=>(n||0).toLocaleString('pt-BR');
+        const fD=s=>s?new Date(s.slice(0,10)+'T12:00').toLocaleDateString('pt-BR'):'—';
+        html=`${STYLE}<div class="wrap">
+          ${header('Histórico de Resultados')}
+          <div class="sec">
+            <table style="width:100%;border-collapse:collapse;font-size:11px;">
+              <thead><tr style="background:#F5EFE7;">
+                <th style="padding:10px 8px;text-align:left;color:#9B6B3A;font-size:10px;font-weight:600;">Data</th>
+                <th style="padding:10px 8px;text-align:center;color:#9B6B3A;font-size:10px;font-weight:600;">Seguidores</th>
+                <th style="padding:10px 8px;text-align:center;color:#9B6B3A;font-size:10px;font-weight:600;">Alcance</th>
+                <th style="padding:10px 8px;text-align:center;color:#9B6B3A;font-size:10px;font-weight:600;">Impressões</th>
+                <th style="padding:10px 8px;text-align:center;color:#9B6B3A;font-size:10px;font-weight:600;">Eng.%</th>
+                <th style="padding:10px 8px;text-align:center;color:#9B6B3A;font-size:10px;font-weight:600;">Visitas</th>
+              </tr></thead>
+              <tbody>
+                ${rows.map(r=>`<tr style="border-bottom:1px solid #E8DECE;">
+                  <td style="padding:9px 8px;color:#555;">${fD(r.data)}</td>
+                  <td style="padding:9px 8px;text-align:center;font-weight:600;color:#5C3D1E;">${fN(r.seguidores)}</td>
+                  <td style="padding:9px 8px;text-align:center;">${fN(r.alcance)}</td>
+                  <td style="padding:9px 8px;text-align:center;">${fN(r.impressoes)}</td>
+                  <td style="padding:9px 8px;text-align:center;">${r.engajamento||'—'}%</td>
+                  <td style="padding:9px 8px;text-align:center;">${fN(r.visitas_perfil)}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          ${footer}</div>`;
+      }
+
+      if(!html)return;
+      if(typeof html2pdf==='undefined'){alert('Biblioteca html2pdf não carregada.');return;}
+      const el=document.createElement('div');el.innerHTML=html;document.body.appendChild(el);
+      const abaLabels={onboarding:'onboarding',swot:'swot',pilares:'pilares',briefing:'briefing',concorrentes:'concorrentes',resultados:'resultados'};
+      const filename=`pedro-${abaLabels[aba]||aba}-${cliNome.replace(/\s+/g,'-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.pdf`;
+      await html2pdf().set({margin:[8,8],filename,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save();
+      el.remove();
     },
     // PDF de Métricas (aba Diagnóstico do Pedro)
     async gerarPdfMetricas(){
