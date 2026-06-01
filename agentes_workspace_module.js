@@ -763,6 +763,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         briefing:'📄 PDF Briefing',
         concorrentes:'🔍 PDF Concorrentes',
         resultados:'📈 PDF Resultados',
+        quadro:'🖨 Imprimir Quadro',
       };
       pdfBtn.textContent=labels[id]||'📄 PDF de Aprovação';
     }
@@ -2010,24 +2011,62 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         ${_clientes.map(c=>`<option value="${c.email}">${c.nome||c.email}</option>`).join('')}
       </select>
     </div>`:'';
-    return `<div class="aw2-chat">
-      <div class="aw2-cb" id="aw2msgs">
-        ${keyBox}
-        ${cliBox}
-        <div class="aw2-intro">
-          <strong style="font-size:14px;color:var(--text);display:block;margin-bottom:3px">✦ ${_ag.nome}</strong>
-          <span style="font-size:12px;color:var(--muted)">${_ag.cargo}${cliNome?` · 👤 ${cliNome}`:''}</span><br>
-          <span style="font-size:11px;color:var(--muted)">${cliNome?'Pronta para receber sua tarefa.':'Selecione um cliente acima para contexto completo.'}</span>
+
+    // Painel de adição rápida ao Quadro (só aparece para Chloe)
+    const quadroPanel=_ag.id==='chloe'?`
+      <div id="aw2-qpanel" style="display:none;background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="font-size:13px;font-weight:600;color:var(--brown)">🗂 Adicionar Post ao Quadro</span>
+          <button onclick="document.getElementById('aw2-qpanel').style.display='none'" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--muted);line-height:1">✕</button>
+        </div>
+        <div class="aw2-r2" style="margin-bottom:8px">
+          <div><div class="aw2-fl">Título / Tema</div><input class="aw2-in" id="qp-titulo" placeholder="Ex: 3 dicas para pele seca"></div>
+          <div><div class="aw2-fl">Formato</div><select class="aw2-s2" id="qp-fmt"><option value="feed">Feed</option><option value="reels">Reels</option><option value="carrossel">Carrossel</option><option value="stories">Stories</option></select></div>
+        </div>
+        <div class="aw2-r2" style="margin-bottom:8px">
+          <div><div class="aw2-fl">Data</div><input class="aw2-in" type="date" id="qp-data"></div>
+          <div><div class="aw2-fl">Horário</div><input class="aw2-in" type="time" id="qp-hora" value="09:00"></div>
+        </div>
+        <div style="margin-bottom:8px"><div class="aw2-fl">Fase do Funil</div>
+          <select class="aw2-s2" id="qp-fase">
+            <option value="despertar">DESPERTAR — Topo (atrai novos)</option>
+            <option value="autoridade">AUTORIDADE — Meio (educa e engaja)</option>
+            <option value="conversao">CONVERSÃO — Fundo (vende e converte)</option>
+          </select>
+        </div>
+        <div style="margin-bottom:8px"><div class="aw2-fl">Copy (texto principal / gancho)</div><textarea class="aw2-ta" id="qp-copy" rows="2" placeholder="Gancho, headline, ideia central..."></textarea></div>
+        <div style="margin-bottom:8px"><div class="aw2-fl">Legenda completa</div><textarea class="aw2-ta" id="qp-legenda" rows="3" placeholder="Legenda para o Instagram..."></textarea></div>
+        <div style="margin-bottom:12px"><div class="aw2-fl">Hashtags</div><textarea class="aw2-ta" id="qp-tags" rows="1" placeholder="#hashtag1 #hashtag2..."></textarea></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button onclick="_AW2.quadroQuickSave()" class="aw2-btn" style="flex:1">✅ Salvar no Quadro</button>
+          <span id="qp-status" style="font-size:11px;color:#4aab2a;display:none"></span>
         </div>
       </div>
-      <div class="aw2-cf">
-        <textarea class="aw2-ci2" id="aw2ci" rows="1" placeholder="Digite sua tarefa ou pergunta..."
-          onkeydown="_AW2.chatKey(event)" oninput="_AW2.chatRes(this)"></textarea>
-        <button class="aw2-cs" id="aw2cs" onclick="_AW2.chatSend()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="#FAF8F2"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
-        </button>
-        <button title="Enviar última resposta para todos os agentes" onclick="_AW2.broadcastLast(this)" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:var(--muted);font-size:13px;border-radius:8px;transition:color .15s;" onmouseover="this.style.color='var(--brown)'" onmouseout="this.style.color='var(--muted)'">📤</button>
-        <button title="Limpar conversa" onclick="_AW2.clearChat()" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:var(--muted);font-size:13px;border-radius:8px;transition:color .15s;" onmouseover="this.style.color='var(--brown)'" onmouseout="this.style.color='var(--muted)'">🗑</button>
+      <button onclick="(()=>{const p=document.getElementById('aw2-qpanel');p.style.display=p.style.display==='none'?'block':'none';})()" style="width:100%;background:none;border:1px dashed var(--accent);border-radius:8px;padding:7px;font-size:11px;color:var(--accent);cursor:pointer;margin-bottom:10px;font-family:inherit;font-weight:500">
+        ＋ Adicionar post ao Quadro do mês
+      </button>`:'';
+
+    return `<div style="display:flex;flex-direction:column;height:100%;">
+      ${quadroPanel}
+      <div class="aw2-chat" style="flex:1;min-height:0">
+        <div class="aw2-cb" id="aw2msgs">
+          ${keyBox}
+          ${cliBox}
+          <div class="aw2-intro">
+            <strong style="font-size:14px;color:var(--text);display:block;margin-bottom:3px">✦ ${_ag.nome}</strong>
+            <span style="font-size:12px;color:var(--muted)">${_ag.cargo}${cliNome?` · 👤 ${cliNome}`:''}</span><br>
+            <span style="font-size:11px;color:var(--muted)">${cliNome?'Pronta para receber sua tarefa.':'Selecione um cliente acima para contexto completo.'}</span>
+          </div>
+        </div>
+        <div class="aw2-cf">
+          <textarea class="aw2-ci2" id="aw2ci" rows="1" placeholder="Digite sua tarefa ou pergunta..."
+            onkeydown="_AW2.chatKey(event)" oninput="_AW2.chatRes(this)"></textarea>
+          <button class="aw2-cs" id="aw2cs" onclick="_AW2.chatSend()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#FAF8F2"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+          </button>
+          <button title="Enviar última resposta para todos os agentes" onclick="_AW2.broadcastLast(this)" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:var(--muted);font-size:13px;border-radius:8px;transition:color .15s;" onmouseover="this.style.color='var(--brown)'" onmouseout="this.style.color='var(--muted)'">📤</button>
+          <button title="Limpar conversa" onclick="_AW2.clearChat()" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:var(--muted);font-size:13px;border-radius:8px;transition:color .15s;" onmouseover="this.style.color='var(--brown)'" onmouseout="this.style.color='var(--muted)'">🗑</button>
+        </div>
       </div>
     </div>`;
   }
@@ -2629,6 +2668,32 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     },
     async delCal(id){try{await db.from('agentes_calendario').delete().eq('id',id);_renderAba('calendario');}catch{}},
     // Chloe — Quadro Kanban
+    async quadroQuickSave(){
+      if(!_cliente){alert('Selecione um cliente primeiro.');return;}
+      const titulo=document.getElementById('qp-titulo')?.value.trim()||'';
+      const fmt=document.getElementById('qp-fmt')?.value||'feed';
+      const data=document.getElementById('qp-data')?.value||'';
+      const hora=document.getElementById('qp-hora')?.value||'';
+      const fase=document.getElementById('qp-fase')?.value||'despertar';
+      const copy=document.getElementById('qp-copy')?.value.trim()||'';
+      const legenda=document.getElementById('qp-legenda')?.value.trim()||'';
+      const tags=document.getElementById('qp-tags')?.value.trim()||'';
+      const st=document.getElementById('qp-status');
+      if(!titulo){alert('Preencha o Título do post.');return;}
+      const cards=await _loadQuadroCards();
+      if(cards.length>=30){alert('Máximo de 30 cards atingido no Quadro.');return;}
+      const newCard={id:Date.now().toString(36),fase,titulo,formato:fmt,data,horario:hora,status:'planejado',copy,legenda,hashtags:tags,slides:[],local:'Instagram e Facebook',link:'',arquivo_url:'',arquivo_nome:'',status_arte:'pendente',status_conteudo:'pendente',foto_url:'',video_url:'',post_id:''};
+      cards.push(newCard);
+      const ok=await _saveQuadroCards(cards);
+      if(ok){
+        // Limpa os campos
+        ['qp-titulo','qp-copy','qp-legenda','qp-tags'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+        document.getElementById('qp-data').value='';
+        if(st){st.textContent=`✓ "${titulo}" salvo no Quadro!`;st.style.display='inline';setTimeout(()=>st.style.display='none',3000);}
+      } else {
+        alert('Erro ao salvar no Quadro. Tente novamente.');
+      }
+    },
     quadroNewCard(fase){
       _AW2._openQuadroModal({id:'',fase:fase||'despertar',titulo:'',formato:'feed',data:'',horario:'',status:'planejado',copy:'',legenda:'',roteiro:'',hashtags:'',slides:[],local:'Instagram e Facebook',link:'',arquivo_url:'',arquivo_nome:'',status_arte:'pendente',status_conteudo:'pendente',foto_url:'',video_url:'',post_id:''});
     },
@@ -2984,7 +3049,53 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const pedroAbas=['geral','onboarding','swot','pilares','briefing','concorrentes','resultados'];
       if(_aba==='diagnostico') this.gerarPdfMetricas();
       else if(pedroAbas.includes(_aba)) this.gerarPdfAba(_aba);
+      else if(_aba==='quadro') this.imprimirQuadro();
       else this.openPdfModal();
+    },
+    async imprimirQuadro(){
+      if(!_cliente)return;
+      const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
+      const mes=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+      const cards=await _loadQuadroCards();
+      if(!cards.length){alert('Nenhum post no Quadro ainda.');return;}
+      const fmtColor={feed:'#e67e22',reels:'#8e44ad',carrossel:'#2980b9',stories:'#27ae60'};
+      const faseLabel={despertar:'🌅 DESPERTAR',autoridade:'⭐ AUTORIDADE',conversao:'🎯 CONVERSÃO'};
+      const fmtD=s=>s?new Date(s+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}):'Sem data';
+      const rows=cards.map(c=>`
+        <tr style="border-bottom:1px solid #E8DECE;vertical-align:top;">
+          <td style="padding:10px 8px;font-size:11px;color:#555;white-space:nowrap;">${fmtD(c.data)}${c.horario?`<br><span style="font-size:10px;color:#999;">${c.horario}</span>`:''}</td>
+          <td style="padding:10px 8px;"><span style="font-size:9px;background:${fmtColor[c.formato]||'#999'}22;color:${fmtColor[c.formato]||'#999'};border-radius:4px;padding:2px 6px;font-weight:600;text-transform:uppercase;">${c.formato||'feed'}</span></td>
+          <td style="padding:10px 8px;font-size:11px;color:#333;font-weight:600;">${(c.titulo||'').replace(/</g,'&lt;')}</td>
+          <td style="padding:10px 8px;font-size:10px;color:#555;">${faseLabel[c.fase]||c.fase||''}</td>
+          <td style="padding:10px 8px;font-size:11px;color:#444;max-width:220px;">${(c.copy||c.legenda||'').substring(0,120).replace(/</g,'&lt;')}${(c.copy||c.legenda||'').length>120?'…':''}</td>
+          <td style="padding:10px 8px;text-align:center;">
+            <div style="width:16px;height:16px;border:2px solid #ccc;border-radius:3px;display:inline-block;"></div>
+          </td>
+        </tr>`).join('');
+      const html=`<div style="font-family:Poppins,Arial,sans-serif;background:#fff;padding:40px;max-width:900px;margin:0 auto;">
+        <div style="text-align:center;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #E8DECE;">
+          <img src="https://crm.gislainebarbeto.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:44px;object-fit:contain;display:block;margin:0 auto 10px;">
+          <div style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#9B6B3A;margin-bottom:6px;">Quadro de Posts — Para Aprovação</div>
+          <div style="font-size:20px;font-weight:300;color:#5C3D1E;margin-bottom:3px;">${cliNome}</div>
+          <div style="font-size:12px;color:#9B6B3A;">${mes} · ${cards.length} posts</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="background:#F5EFE7;">
+            <th style="padding:9px 8px;text-align:left;color:#9B6B3A;font-size:10px;font-weight:600;">Data</th>
+            <th style="padding:9px 8px;text-align:left;color:#9B6B3A;font-size:10px;font-weight:600;">Tipo</th>
+            <th style="padding:9px 8px;text-align:left;color:#9B6B3A;font-size:10px;font-weight:600;">Título / Tema</th>
+            <th style="padding:9px 8px;text-align:left;color:#9B6B3A;font-size:10px;font-weight:600;">Fase</th>
+            <th style="padding:9px 8px;text-align:left;color:#9B6B3A;font-size:10px;font-weight:600;">Copy / Legenda</th>
+            <th style="padding:9px 8px;text-align:center;color:#9B6B3A;font-size:10px;font-weight:600;">✓ OK</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="margin-top:24px;padding-top:14px;border-top:1px solid #E8DECE;display:flex;justify-content:space-between;">
+          <div style="font-size:9px;color:#C8B89A;text-transform:uppercase;letter-spacing:.1em;">Agência Primor · Estratégia · Criatividade · Resultados</div>
+          <div style="font-size:9px;color:#C8B89A;">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
+        </div>
+      </div>`;
+      _abrirJanelaPDF(html,`Quadro de Posts — ${cliNome}`);
     },
     // PDF por aba do Pedro (geral, onboarding, swot, pilares, briefing, concorrentes, resultados)
     async gerarPdfAba(aba){
