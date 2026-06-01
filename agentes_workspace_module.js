@@ -2122,7 +2122,10 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         const from=_dgFrom||new Date().toISOString().slice(0,8)+'01';
         const to=_dgTo||new Date().toISOString().slice(0,10);
         const since=Math.floor(new Date(from+'T00:00:00').getTime()/1000);
-        const until=Math.floor(new Date(to+'T23:59:59').getTime()/1000);
+        // Meta API limita exatamente 30 dias (2592000s) — usa início do dia final para não ultrapassar
+        const untilDate=new Date(to+'T00:00:00');
+        if((untilDate.getTime()/1000-since)>2592000)untilDate.setTime(since*1000+2591999000);
+        const until=Math.floor(untilDate.getTime()/1000);
 
         // 1. Perfil
         const profR=await fetch(`${BASE}/${aid}?fields=followers_count,media_count&access_token=${tok}`).then(r=>r.json());
