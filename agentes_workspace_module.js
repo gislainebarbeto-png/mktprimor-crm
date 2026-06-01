@@ -111,6 +111,16 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   function _esc(t){return(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');}
   function _parseThumb(p){try{const a=JSON.parse(p.capa_url||p.midia_urls||p.img_url||'');if(Array.isArray(a)&&a[0])return a[0];if(typeof a==='string'&&a)return a;}catch{}return p.capa_url||p.midia_urls||p.img_url||'';}
   function _flash(id,m){const e=document.getElementById(id);if(!e)return;e.textContent=m||'✓ Salvo';e.style.display='inline-block';setTimeout(()=>e.style.display='none',2200);}
+  function _abrirJanelaPDF(conteudoHtml, titulo){
+    const win=window.open('','_blank','width=900,height=750');
+    if(!win){alert('Permita popups para este site e tente novamente.');return;}
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${titulo}</title>
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet">
+      <style>*{box-sizing:border-box;}body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}@media print{body{margin:0;}}</style>
+    </head><body>${conteudoHtml}</body></html>`);
+    win.document.close();
+    win.addEventListener('load',()=>{setTimeout(()=>win.print(),400);});
+  }
 
   // Busca token do Instagram — tenta clients primeiro, depois instagram_tokens
   async function _getIGCreds(email){
@@ -3019,11 +3029,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
             <div style="font-size:9px;color:#C8B89A;">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
           </div>
         </div>`;
-        const elG=document.createElement('div');
-        elG.innerHTML=htmlG;
-        document.body.appendChild(elG);
-        await html2pdf().set({margin:[10,10],filename:`pedro-geral-${cliNome.replace(/\s+/g,'-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.pdf`,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(elG).save();
-        elG.remove();
+        _abrirJanelaPDF(htmlG, `Dashboard Estratégico — ${cliNome}`);
         return;
       }
 
@@ -3115,14 +3121,9 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
           </tr>`).join('')}</tbody></table>`;
       }
 
-      if(!content||!titulo)return;
+      if(!content||!titulo){alert('Sem dados para gerar o PDF. Preencha os campos da aba primeiro.');return;}
       const html=`<div style="${W}">${HDR}${titulo}${HDR2}${content}${FTR}</div>`;
-      const el=document.createElement('div');
-      el.innerHTML=html;
-      document.body.appendChild(el);
-      const filename=`pedro-${aba}-${cliNome.replace(/\s+/g,'-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.pdf`;
-      await html2pdf().set({margin:[10,10],filename,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save();
-      el.remove();
+      _abrirJanelaPDF(html, `${titulo} — ${cliNome}`);
     },
     // PDF de Métricas (aba Diagnóstico do Pedro)
     async gerarPdfMetricas(){
