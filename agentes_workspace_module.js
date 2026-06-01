@@ -3020,10 +3020,9 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
           </div>
         </div>`;
         const elG=document.createElement('div');
-        elG.style.cssText='position:fixed;left:-9999px;top:0;width:800px;background:#fff;';
         elG.innerHTML=htmlG;
         document.body.appendChild(elG);
-        await html2pdf().set({margin:[10,10],filename:`pedro-geral-${cliNome.replace(/\s+/g,'-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.pdf`,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(elG).save();
+        await html2pdf().set({margin:[10,10],filename:`pedro-geral-${cliNome.replace(/\s+/g,'-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.pdf`,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(elG).save();
         elG.remove();
         return;
       }
@@ -3119,11 +3118,10 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       if(!content||!titulo)return;
       const html=`<div style="${W}">${HDR}${titulo}${HDR2}${content}${FTR}</div>`;
       const el=document.createElement('div');
-      el.style.cssText='position:fixed;left:-9999px;top:0;width:800px;background:#fff;';
       el.innerHTML=html;
       document.body.appendChild(el);
       const filename=`pedro-${aba}-${cliNome.replace(/\s+/g,'-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.pdf`;
-      await html2pdf().set({margin:[10,10],filename,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save();
+      await html2pdf().set({margin:[10,10],filename,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save();
       el.remove();
     },
     // PDF de Métricas (aba Diagnóstico do Pedro)
