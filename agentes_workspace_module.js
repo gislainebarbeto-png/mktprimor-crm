@@ -2983,6 +2983,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const cliNome=_clientes.find(c=>c.email===_cliente)?.nome||_cliente;
       const mes=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
 
+      const wt=(ag,ab)=>db.from('agentes_trabalhos').select('conteudo').eq('agente_id',ag).eq('aba_id',ab).eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||null).catch(()=>null);
+
       if(aba==='geral'){
         const[onb,diag,swot,pil,brief,conc,res]=await Promise.all([
           wt('pedro','onboarding'),wt('pedro','diagnostico'),wt('pedro','swot'),
@@ -3025,8 +3027,6 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         elG.remove();
         return;
       }
-
-      const wt=(ag,ab)=>db.from('agentes_trabalhos').select('conteudo').eq('agente_id',ag).eq('aba_id',ab).eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle().then(r=>r.data?.conteudo||null).catch(()=>null);
 
       // helpers inline (sem classes CSS — html2canvas precisa de estilos inline)
       const W='font-family:Poppins,Arial,sans-serif;background:#fff;padding:48px;max-width:800px;margin:0 auto;';
