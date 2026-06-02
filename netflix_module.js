@@ -150,35 +150,38 @@
     .nf-hero:hover .nf-hero-edit-overlay{opacity:1;}
     .nf-hero-edit-btn{font-size:10px;padding:5px 11px;background:rgba(0,0,0,0.6);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:7px;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap;}
 
-    .nf-section { margin-bottom:28px;padding:0 20px; }
-    .nf-section-title {
-      font-size:10px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
-      color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:10px;
-    }
-    .nf-section-title::after { content:'';flex:1;height:1px;background:var(--border); }
+    .nf-section { margin-bottom:0;padding:0 20px; }
+    .nf-section-title { display:none; }
 
-    .nf-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:12px; }
+    /* Grid único sem divisões — 2 colunas estilo Notion */
+    .nf-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:12px; }
 
-    /* CARD */
+    /* CARD estilo Notion — capa grande, texto centralizado e em cima */
     .nf-card {
       border-radius:14px;overflow:hidden;cursor:pointer;
-      position:relative;aspect-ratio:3/4;
-      transition:transform .25s,box-shadow .25s;
-      box-shadow:0 4px 16px rgba(0,0,0,0.35);
+      position:relative;height:200px;
+      transition:transform .22s,box-shadow .22s;
+      box-shadow:0 4px 18px rgba(0,0,0,0.38);
     }
-    .nf-card:hover { transform:translateY(-6px) scale(1.02);box-shadow:0 14px 36px rgba(0,0,0,0.55); }
+    .nf-card:hover { transform:translateY(-5px) scale(1.015);box-shadow:0 16px 40px rgba(0,0,0,0.55); }
     .nf-card:active { transform:scale(0.97); }
 
     .nf-card-bg { position:absolute;inset:0;background-size:cover;background-position:center;transition:transform .4s;pointer-events:none; }
-    .nf-card:hover .nf-card-bg { transform:scale(1.07); }
-    .nf-card-overlay { position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.18) 55%,transparent 100%);pointer-events:none; }
-    .nf-has-cover .nf-card-overlay { display:none; }
-    .nf-has-cover .nf-card-body { display:none; }
+    .nf-card:hover .nf-card-bg { transform:scale(1.06); }
+    /* Overlay escuro sempre visível para legibilidade do texto */
+    .nf-card-overlay { position:absolute;inset:0;background:rgba(0,0,0,0.42);pointer-events:none; }
+    .nf-has-cover .nf-card-overlay { background:rgba(0,0,0,0.38); }
 
-    .nf-card-body   { position:absolute;bottom:0;left:0;right:0;padding:12px 12px 14px;pointer-events:none; }
-    .nf-card-icon   { font-size:22px;margin-bottom:5px;display:block;opacity:0.9; }
-    .nf-card-label  { font-size:13px;font-weight:500;color:#fff;display:block;line-height:1.2;margin-bottom:3px; }
-    .nf-card-desc   { font-size:9px;color:rgba(255,255,255,0.5);line-height:1.4;display:block; }
+    /* Corpo centralizado verticalmente */
+    .nf-card-body {
+      position:absolute;inset:0;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:16px;pointer-events:none;text-align:center;
+    }
+    .nf-has-cover .nf-card-body { display:flex; }
+    .nf-card-icon   { display:none; }
+    .nf-card-label  { font-size:15px;font-weight:800;color:#fff;display:block;line-height:1.25;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 2px 8px rgba(0,0,0,0.7); }
+    .nf-card-desc   { display:none; }
 
     .nf-card-badge {
       position:absolute;top:10px;right:10px;
@@ -318,16 +321,20 @@
 
     /* Responsive */
     @media(max-width:600px){
-      .nf-grid { grid-template-columns:repeat(2,1fr);gap:10px; }
-      .nf-hero  { padding:24px 18px 20px;border-radius:0 0 16px 16px; }
-      .nf-section { padding:0 14px; }
+      .nf-grid { grid-template-columns:repeat(2,1fr);gap:8px; }
+      .nf-card { height:160px; }
+      .nf-card-label { font-size:13px; }
+      .nf-hero { padding:24px 18px 20px;border-radius:0 0 16px 16px; }
+      .nf-section { padding:0 12px; }
       #nf-admin-back { bottom:16px;left:16px;font-size:11px;padding:9px 14px; }
     }
     @media(min-width:900px){
-      .nf-grid { grid-template-columns:repeat(auto-fill,minmax(165px,1fr)); }
+      .nf-grid { grid-template-columns:repeat(2,1fr);gap:14px; }
+      .nf-card { height:220px; }
     }
     @media(min-width:1200px){
-      .nf-grid { grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); }
+      .nf-grid { grid-template-columns:repeat(3,1fr);gap:16px; }
+      .nf-card { height:240px; }
     }
   `;
 
@@ -758,31 +765,34 @@
     const customAdmin=_customCards.filter(c=>c.isAdmin!==false);
     const newCardHtml=`<div class="nf-card nf-new-card" data-new="1" data-admin="true"><div class="nf-card-bg"></div><div class="nf-card-overlay"></div><div class="nf-card-body" style="text-align:center;padding-bottom:20px"><span class="nf-card-icon">+</span><span class="nf-card-label">Novo Card</span><span class="nf-card-desc">Criar módulo personalizado</span></div></div>`;
 
+    // Grid plano: todos os módulos das seções + custom + novo card
+    const allAdminMods=[];
+    orderedSections.forEach(sec=>{
+      sec.ids.forEach(id=>{
+        const m=ADMIN_MODULES.find(x=>x.id===id);
+        if(!m)return;
+        if(window.Admin&&Admin.isEquipe){const p=Admin._perms||{};if(p[m.id]&&p[m.id].ver===false)return;}
+        if(!allAdminMods.find(x=>x.id===m.id))allAdminMods.push(m);
+      });
+    });
+
     el.innerHTML=`<div class="nf-home">
       <div class="nf-hero${_adminHeroCover.url?' nf-hero-has-cover':''}" id="nf-admin-hero"${_adminHeroCover.url?` style="background-image:url('${_adminHeroCover.url}');background-position:${_adminHeroCover.pos};"`:''}>
         ${_adminHeroCover.url?'':
           `<div class="nf-hero-title">Painel Agência Primor</div>
-           <div class="nf-hero-sub">Selecione um módulo para começar · Arraste para reordenar</div>`}
+           <div class="nf-hero-sub">Arraste para reordenar</div>`}
         <div class="nf-hero-edit-overlay">
           <button class="nf-hero-edit-btn" onclick="NFModule._openAdminHeroModal()">✎ Capa</button>
           ${_adminHeroCover.url?`<button class="nf-hero-edit-btn" onclick="NFModule._openAdminHeroPosModal()">⊹ Posição</button>`:''}
         </div>
       </div>
-      ${orderedSections.map(sec=>{
-        const mods=ADMIN_MODULES.filter(m=>{
-          if(!sec.ids.includes(m.id))return false;
-          // Filtra módulos que o usuário não tem permissão de ver
-          if(window.Admin&&Admin.isEquipe){
-            const p=Admin._perms||{};
-            if(p[m.id]&&p[m.id].ver===false)return false;
-          }
-          return true;
-        });
-        if(!mods.length)return'';
-        const ordered=sec.ids.map(id=>mods.find(m=>m.id===id)).filter(Boolean);
-        return`<div class="nf-section"><div class="nf-section-title">${sec.title}</div><div class="nf-grid">${ordered.map(m=>renderCard(m,true,badges[m.id])).join('')}</div></div>`;
-      }).join('')}
-      <div class="nf-section"><div class="nf-section-title">Personalizados</div><div class="nf-grid">${customAdmin.map(c=>renderCard({id:c.id,icon:c.icon||'✦',label:c.label,desc:c.desc||'',gradient:'linear-gradient(145deg,#1a1008,#3a2010,#8B5E3C)'},true)).join('')}${newCardHtml}</div></div>
+      <div class="nf-section" style="padding:0 20px;">
+        <div class="nf-grid">
+          ${allAdminMods.map(m=>renderCard(m,true,badges[m.id])).join('')}
+          ${customAdmin.map(c=>renderCard({id:c.id,icon:c.icon||'✦',label:c.label,desc:c.desc||'',gradient:'linear-gradient(145deg,#1a1008,#3a2010,#8B5E3C)'},true)).join('')}
+          ${newCardHtml}
+        </div>
+      </div>
     </div>`;
     attachCardListeners(el);
     enableDragDrop(el,'admin');
@@ -805,25 +815,32 @@
     }catch(e){}
 
     const clientSections=applySavedOrder([
-      {title:'Para começar',  ids:['comece','onboarding','brand','posts','chat','solicitacoes']},
-      {title:'Recursos',      ids:['arquivos','info','financeiro','tarefas','ideias']},
+      {title:'',ids:['comece','onboarding','posts','chat','solicitacoes','arquivos','info','financeiro','tarefas']},
     ],'client');
 
     const customClient=_customCards.filter(c=>c.isAdmin===false);
-    const newCardHtml=`<div class="nf-card nf-new-card" data-new="1" data-admin="false"><div class="nf-card-bg"></div><div class="nf-card-overlay"></div><div class="nf-card-body" style="text-align:center;padding-bottom:20px"><span class="nf-card-icon">+</span><span class="nf-card-label">Novo Card</span><span class="nf-card-desc">Criar módulo personalizado</span></div></div>`;
+    const newCardHtml=`<div class="nf-card nf-new-card" data-new="1" data-admin="false"><div class="nf-card-bg"></div><div class="nf-card-overlay"></div><div class="nf-card-body"><span class="nf-card-label">+ Novo</span></div></div>`;
+
+    const allClientMods=[];
+    clientSections.forEach(sec=>{
+      sec.ids.forEach(id=>{
+        const m=CLIENT_MODULES.find(x=>x.id===id);
+        if(m&&!allClientMods.find(x=>x.id===m.id))allClientMods.push(m);
+      });
+    });
 
     wrap.innerHTML=`<div class="nf-home">
       <div class="nf-hero">
         <div class="nf-hero-title">Seu portal</div>
-        <div class="nf-hero-sub">O que vamos ver hoje? · Arraste para reordenar</div>
+        <div class="nf-hero-sub">Arraste para reordenar</div>
       </div>
-      ${clientSections.map(sec=>{
-        const mods=CLIENT_MODULES.filter(m=>sec.ids.includes(m.id));
-        if(!mods.length)return'';
-        const ordered=sec.ids.map(id=>mods.find(m=>m.id===id)).filter(Boolean);
-        return`<div class="nf-section"><div class="nf-section-title">${sec.title}</div><div class="nf-grid">${ordered.map(m=>renderCard(m,false,badges[m.id])).join('')}</div></div>`;
-      }).join('')}
-      <div class="nf-section"><div class="nf-section-title">Personalizados</div><div class="nf-grid">${customClient.map(c=>renderCard({id:c.id,icon:c.icon||'✦',label:c.label,desc:c.desc||'',gradient:'linear-gradient(145deg,#1a1008,#3a2010,#8B5E3C)'},false)).join('')}${newCardHtml}</div></div>
+      <div class="nf-section" style="padding:0 20px;">
+        <div class="nf-grid">
+          ${allClientMods.map(m=>renderCard(m,false,badges[m.id])).join('')}
+          ${customClient.map(c=>renderCard({id:c.id,icon:c.icon||'✦',label:c.label,desc:c.desc||'',gradient:'linear-gradient(145deg,#1a1008,#3a2010,#8B5E3C)'},false)).join('')}
+          ${newCardHtml}
+        </div>
+      </div>
     </div>`;
     wrap.classList.remove('hidden');
     attachCardListeners(wrap);
