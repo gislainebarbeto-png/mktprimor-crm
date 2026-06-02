@@ -4178,7 +4178,7 @@ const Admin = {
       </div>`;
   },
 
-  // Gera nodes em disposição radial a partir de um template
+  // Layout radial (mapa mental clássico)
   _mmBuildNodes(title, branches) {
     const cx=400, cy=280, r1=165, r2=130;
     const nodes=[{id:1,text:title,x:cx,y:cy,parentId:null,color:'#B8820A'}];
@@ -4198,179 +4198,94 @@ const Admin = {
     return {nodes,nextId:nid};
   },
 
+  // Layout em árvore top-down (organograma)
+  _mmBuildTree(title, branches) {
+    const rootX=500, rootY=80, gapY=140, rootC='#B8820A';
+    const nodes=[{id:1,text:title,x:rootX,y:rootY,parentId:null,color:rootC}];
+    let nid=2;
+    if(!branches||!branches.length) return {nodes,nextId:nid};
+    const N=branches.length;
+    const totalW=Math.max(N*170, 600);
+    const startX=rootX-(totalW/2)+(totalW/(N+1));
+    branches.forEach((b,i)=>{
+      const bx=Math.round(startX+(totalW/(N+1))*i);
+      const by=rootY+gapY;
+      nodes.push({id:nid,text:b.t,x:bx,y:by,parentId:1,color:b.c||'#3498DB'});
+      const pid=nid++;
+      const chs=b.ch||[];
+      if(chs.length){
+        const cStart=bx-(chs.length-1)*70/2;
+        chs.forEach((child,j)=>{
+          nodes.push({id:nid++,text:child,x:Math.round(cStart+j*70),y:by+gapY,parentId:pid,color:b.c||'#3498DB'});
+        });
+      }
+    });
+    return {nodes,nextId:nid};
+  },
+
   // Abre o picker de templates antes de criar o mapa
   _bcNovoMapa(email) {
     const TMPL=[
       {cat:'⭐ Destaque',items:[
         {id:'blank',em:'📄',t:'Em branco',d:'Começa do zero'},
-        {id:'smart',em:'🎯',t:'Metas SMART',d:'S·M·A·R·T',br:[
-          {t:'S — Específica',c:'#E74C3C',ch:['O quê?','Quem?','Onde?','Por quê?']},
-          {t:'M — Mensurável',c:'#E67E22',ch:['Indicador','Meta numérica','Como medir?']},
-          {t:'A — Atingível',c:'#F39C12',ch:['Recursos','Obstáculos','Ações']},
-          {t:'R — Relevante',c:'#2ECC71',ch:['Por que importa?','Impacto']},
-          {t:'T — Temporal',c:'#3498DB',ch:['Prazo','Marcos','Data final']},
-        ]},
-        {id:'brainstorm',em:'💡',t:'Brainstorming',d:'Geração de ideias',br:[
-          {t:'Problema central',c:'#E74C3C'},{t:'Ideia 1',c:'#E67E22'},{t:'Ideia 2',c:'#F1C40F'},
-          {t:'Ideia 3',c:'#2ECC71'},{t:'Ideia 4',c:'#3498DB'},{t:'Ideia 5',c:'#9B59B6'},{t:'Ideia 6',c:'#E91E63'},
-        ]},
-        {id:'decision',em:'⚖️',t:'Matriz de Decisão',d:'Compare opções',br:[
-          {t:'Opção A',c:'#3498DB',ch:['Custo','Prazo','Impacto','Risco']},
-          {t:'Opção B',c:'#2ECC71',ch:['Custo','Prazo','Impacto','Risco']},
-          {t:'Opção C',c:'#E67E22',ch:['Custo','Prazo','Impacto','Risco']},
-          {t:'Critérios',c:'#9B59B6',ch:['Peso 1','Peso 2','Peso 3','Peso 4']},
-        ]},
-        {id:'hmw',em:'🤔',t:'Como Poderia Ser?',d:'How Might We',br:[
-          {t:'Desafio',c:'#E74C3C'},{t:'Usuário',c:'#3498DB'},{t:'Contexto',c:'#9B59B6'},
-          {t:'Solução 1',c:'#2ECC71'},{t:'Solução 2',c:'#F1C40F'},{t:'Solução 3',c:'#E67E22'},
-        ]},
-        {id:'revbrain',em:'🔄',t:'Brainstorming Reverso',d:'Inverta o problema',br:[
-          {t:'Problema original',c:'#E74C3C'},{t:'Como piorar?',c:'#C0392B',ch:['Pior 1','Pior 2','Pior 3']},
-          {t:'Inversão',c:'#3498DB',ch:['Solução 1','Solução 2','Solução 3']},
-          {t:'Ação',c:'#2ECC71',ch:['Próximo passo','Responsável','Prazo']},
-        ]},
-        {id:'knowledge',em:'🗺️',t:'Mapa de Conhecimento',d:'Organize o saber',br:[
-          {t:'Tema principal',c:'#9B59B6'},{t:'Subtema 1',c:'#3498DB',ch:['Conceito','Exemplo','Aplicação']},
-          {t:'Subtema 2',c:'#2ECC71',ch:['Conceito','Exemplo','Aplicação']},
-          {t:'Subtema 3',c:'#E67E22',ch:['Conceito','Exemplo','Aplicação']},
-          {t:'Conexões',c:'#E74C3C',ch:['Link 1','Link 2']},
-        ]},
+        {id:'smart',em:'🎯',t:'Metas SMART',d:'S·M·A·R·T'},
+        {id:'brainstorm',em:'💡',t:'Brainstorming',d:'Geração de ideias'},
+        {id:'decision',em:'⚖️',t:'Matriz de Decisão',d:'Compare opções'},
       ]},
       {cat:'📋 Gestão de Projetos',items:[
-        {id:'proj_plan',em:'📋',t:'Plano de Projeto',d:'Do início ao fim',br:[
-          {t:'Objetivo',c:'#E74C3C',ch:['Meta','Indicador','Prazo']},
-          {t:'Escopo',c:'#E67E22',ch:['Entregas','Exclusões','Restrições']},
-          {t:'Equipe',c:'#F1C40F',ch:['Responsável','Suporte','Stakeholders']},
-          {t:'Cronograma',c:'#2ECC71',ch:['Fase 1','Fase 2','Fase 3','Fase 4']},
-          {t:'Riscos',c:'#E74C3C',ch:['Alto','Médio','Baixo']},
-          {t:'Recursos',c:'#3498DB',ch:['Orçamento','Ferramentas','Materiais']},
-        ]},
-        {id:'retrospectiva',em:'🔁',t:'Retrospectiva',d:'O que aprendemos?',br:[
-          {t:'O que foi bem? ✅',c:'#2ECC71',ch:['Ponto 1','Ponto 2','Ponto 3']},
-          {t:'O que melhorar? ⚠️',c:'#E74C3C',ch:['Ponto 1','Ponto 2','Ponto 3']},
-          {t:'O que tentar? 💡',c:'#3498DB',ch:['Ideia 1','Ideia 2','Ideia 3']},
-          {t:'Agradecimentos 🙏',c:'#F1C40F',ch:['Pessoa 1','Pessoa 2']},
-        ]},
-        {id:'lancamento',em:'🚀',t:'Lançamento de Produto',d:'Do zero ao mercado',br:[
-          {t:'Produto/Serviço',c:'#9B59B6',ch:['Features','Benefícios','Diferenciais']},
-          {t:'Público-alvo',c:'#3498DB',ch:['Persona','Dores','Desejos']},
-          {t:'Marketing',c:'#E67E22',ch:['Canais','Mensagem','CTA']},
-          {t:'Operações',c:'#2ECC71',ch:['Processos','Equipe','Prazo']},
-          {t:'Métricas',c:'#E74C3C',ch:['KPIs','Metas','Análise']},
-        ]},
-        {id:'roadmap',em:'🗓️',t:'Roadmap',d:'Visão trimestral',br:[
-          {t:'Q1',c:'#3498DB',ch:['Iniciativa 1','Iniciativa 2','Iniciativa 3']},
-          {t:'Q2',c:'#2ECC71',ch:['Iniciativa 1','Iniciativa 2','Iniciativa 3']},
-          {t:'Q3',c:'#E67E22',ch:['Iniciativa 1','Iniciativa 2','Iniciativa 3']},
-          {t:'Q4',c:'#9B59B6',ch:['Iniciativa 1','Iniciativa 2','Iniciativa 3']},
-        ]},
-        {id:'scope',em:'🎯',t:'Escopo do Projeto',d:'O que está dentro e fora',br:[
-          {t:'Dentro do escopo ✅',c:'#2ECC71',ch:['Item 1','Item 2','Item 3','Item 4']},
-          {t:'Fora do escopo ❌',c:'#E74C3C',ch:['Item 1','Item 2','Item 3']},
-          {t:'Entregas',c:'#3498DB',ch:['Entrega 1','Entrega 2','Entrega 3']},
-          {t:'Restrições',c:'#E67E22',ch:['Prazo','Orçamento','Recursos']},
-        ]},
-        {id:'riscos',em:'⚠️',t:'Gestão de Riscos',d:'Identifique e mitigue',br:[
-          {t:'Riscos Altos 🔴',c:'#E74C3C',ch:['Risco 1','Risco 2','Mitigação']},
-          {t:'Riscos Médios 🟡',c:'#E67E22',ch:['Risco 1','Risco 2','Mitigação']},
-          {t:'Riscos Baixos 🟢',c:'#F1C40F',ch:['Risco 1','Mitigação']},
-          {t:'Plano de Contingência',c:'#3498DB',ch:['Plano B','Responsável','Prazo']},
-        ]},
+        {id:'proj_plan',em:'📋',t:'Plano de Projeto',d:'Do início ao fim'},
+        {id:'retrospectiva',em:'🔁',t:'Retrospectiva',d:'O que aprendemos?'},
+        {id:'lancamento',em:'🚀',t:'Lançamento de Produto',d:'Do zero ao mercado'},
+        {id:'roadmap',em:'🗓️',t:'Roadmap',d:'Visão trimestral'},
+        {id:'riscos',em:'⚠️',t:'Gestão de Riscos',d:'Identifique e mitigue'},
       ]},
       {cat:'💼 Negócios & Estratégia',items:[
-        {id:'swot',em:'⚡',t:'Análise SWOT',d:'Forças·Fraquezas·Oport.·Ameaças',br:[
-          {t:'Forças 💪',c:'#2ECC71',ch:['Ponto forte 1','Ponto forte 2','Ponto forte 3']},
-          {t:'Fraquezas ⚠️',c:'#E74C3C',ch:['Ponto fraco 1','Ponto fraco 2','Ponto fraco 3']},
-          {t:'Oportunidades 🌟',c:'#3498DB',ch:['Oportunidade 1','Oportunidade 2','Oportunidade 3']},
-          {t:'Ameaças 🚨',c:'#E67E22',ch:['Ameaça 1','Ameaça 2','Ameaça 3']},
-        ]},
-        {id:'okr',em:'📊',t:'OKR',d:'Objetivos e Resultados-chave',br:[
-          {t:'Objetivo',c:'#9B59B6',ch:['Por que é importante?','Impacto esperado']},
-          {t:'KR1 — Resultado-chave',c:'#3498DB',ch:['Métrica','Meta','Prazo']},
-          {t:'KR2 — Resultado-chave',c:'#2ECC71',ch:['Métrica','Meta','Prazo']},
-          {t:'KR3 — Resultado-chave',c:'#E67E22',ch:['Métrica','Meta','Prazo']},
-          {t:'Iniciativas',c:'#E74C3C',ch:['Ação 1','Ação 2','Ação 3']},
-        ]},
-        {id:'pestle',em:'🔭',t:'Análise PESTLE',d:'Macroambiente completo',br:[
-          {t:'Político 🏛️',c:'#E74C3C',ch:['Leis','Políticas','Regulações']},
-          {t:'Econômico 💰',c:'#E67E22',ch:['Inflação','PIB','Câmbio']},
-          {t:'Social 👥',c:'#F1C40F',ch:['Cultura','Tendências','Comportamento']},
-          {t:'Tecnológico 💻',c:'#2ECC71',ch:['Inovação','Automação','Digital']},
-          {t:'Legal ⚖️',c:'#3498DB',ch:['LGPD','Contratos','Compliance']},
-          {t:'Ambiental 🌱',c:'#1ABC9C',ch:['Sustentabilidade','Impacto','Normas']},
-        ]},
-        {id:'lean',em:'📐',t:'Lean Canvas',d:'Modelo de negócio enxuto',br:[
-          {t:'Problema',c:'#E74C3C',ch:['Dor 1','Dor 2','Dor 3']},
-          {t:'Solução',c:'#2ECC71',ch:['Feature 1','Feature 2','Feature 3']},
-          {t:'Proposta de valor',c:'#9B59B6'},
-          {t:'Vantagem única',c:'#1ABC9C'},
-          {t:'Canais',c:'#3498DB',ch:['Online','Offline','Parceiros']},
-          {t:'Segmento',c:'#E67E22',ch:['Público principal','Adotantes iniciais']},
-          {t:'Estrutura de custos',c:'#E74C3C',ch:['Fixos','Variáveis']},
-          {t:'Fontes de receita',c:'#F1C40F',ch:['Produto','Serviço','Assinatura']},
-        ]},
-        {id:'biz_plan',em:'📑',t:'Plano de Negócios',d:'Visão geral do negócio',br:[
-          {t:'Sumário executivo',c:'#9B59B6',ch:['Missão','Visão','Valores']},
-          {t:'Produtos/Serviços',c:'#3498DB',ch:['Descrição','Benefícios','Preço']},
-          {t:'Mercado',c:'#2ECC71',ch:['TAM','SAM','SOM']},
-          {t:'Marketing',c:'#E67E22',ch:['Estratégia','Canais','Orçamento']},
-          {t:'Operações',c:'#E74C3C',ch:['Processos','Equipe','Infraestrutura']},
-          {t:'Financeiro',c:'#F1C40F',ch:['Receita','Custos','Projeção']},
-        ]},
-        {id:'balanced',em:'⚖️',t:'Balanced Scorecard',d:'4 perspectivas estratégicas',br:[
-          {t:'Financeira 💰',c:'#F1C40F',ch:['Faturamento','Lucro','ROI']},
-          {t:'Clientes 👥',c:'#3498DB',ch:['Satisfação','Retenção','NPS']},
-          {t:'Processos ⚙️',c:'#2ECC71',ch:['Qualidade','Eficiência','Inovação']},
-          {t:'Aprendizado 📚',c:'#9B59B6',ch:['Capacitação','Cultura','Tecnologia']},
-        ]},
+        {id:'swot',em:'⚡',t:'Análise SWOT',d:'Forças·Fraquezas·Oport.·Ameaças'},
+        {id:'okr',em:'📊',t:'OKR',d:'Objetivos e Resultados-chave'},
+        {id:'pestle',em:'🔭',t:'Análise PESTLE',d:'Macroambiente completo'},
+        {id:'lean',em:'📐',t:'Lean Canvas',d:'Modelo de negócio enxuto'},
+        {id:'biz_plan',em:'📑',t:'Plano de Negócios',d:'Visão geral do negócio'},
+        {id:'balanced',em:'📈',t:'Balanced Scorecard',d:'4 perspectivas estratégicas'},
       ]},
       {cat:'📱 Marketing & Conteúdo',items:[
-        {id:'persona',em:'👤',t:'Persona',d:'Perfil do cliente ideal',br:[
-          {t:'Dados demográficos',c:'#3498DB',ch:['Idade','Gênero','Localização','Renda']},
-          {t:'Comportamento digital',c:'#9B59B6',ch:['Redes sociais','Hábitos','Consumo']},
-          {t:'Dores e frustrações',c:'#E74C3C',ch:['Problema 1','Problema 2','Problema 3']},
-          {t:'Objetivos e desejos',c:'#2ECC71',ch:['Meta 1','Meta 2','Meta 3']},
-          {t:'Mensagem-chave',c:'#E67E22',ch:['Como falar?','Tom de voz','CTA']},
-        ]},
-        {id:'conteudo',em:'📱',t:'Estratégia de Conteúdo',d:'Pilares e formatos',br:[
-          {t:'Objetivos',c:'#9B59B6',ch:['Awareness','Engajamento','Conversão']},
-          {t:'Pilares editoriais',c:'#3498DB',ch:['Pilar 1','Pilar 2','Pilar 3','Pilar 4']},
-          {t:'Formatos',c:'#2ECC71',ch:['Feed','Reels','Stories','Carrossel']},
-          {t:'Tom de voz',c:'#E67E22',ch:['Informal','Especialista','Empático']},
-          {t:'Frequência',c:'#E74C3C',ch:['Diária','Semanal','Mensal']},
-        ]},
-        {id:'concorrentes',em:'🔍',t:'Análise de Concorrência',d:'Benchmarking completo',br:[
-          {t:'Concorrente 1',c:'#E74C3C',ch:['Pontos fortes','Pontos fracos','Oportunidade para nós']},
-          {t:'Concorrente 2',c:'#3498DB',ch:['Pontos fortes','Pontos fracos','Oportunidade para nós']},
-          {t:'Concorrente 3',c:'#2ECC71',ch:['Pontos fortes','Pontos fracos','Oportunidade para nós']},
-          {t:'Nossa posição',c:'#9B59B6',ch:['Diferencial','Proposta única','Vantagem competitiva']},
-        ]},
-        {id:'jornada',em:'🛤️',t:'Jornada do Cliente',d:'Do discovery à fidelização',br:[
-          {t:'Descoberta 🌱',c:'#E67E22',ch:['Canal','Mensagem','Ação']},
-          {t:'Consideração 🤔',c:'#F1C40F',ch:['Dúvidas','Comparação','Conteúdo']},
-          {t:'Decisão ✅',c:'#2ECC71',ch:['CTA','Oferta','Garantia']},
-          {t:'Pós-venda 🤝',c:'#3498DB',ch:['Onboarding','Suporte','Fidelização']},
-          {t:'Advocacia ❤️',c:'#9B59B6',ch:['Indicação','Avaliação','Comunidade']},
-        ]},
-        {id:'calendario',em:'📅',t:'Calendário Editorial',d:'Planejamento de conteúdo',br:[
-          {t:'Feed',c:'#3498DB',ch:['Segunda','Quarta','Sexta']},
-          {t:'Reels',c:'#E74C3C',ch:['Terça','Quinta']},
-          {t:'Stories',c:'#E67E22',ch:['Diário','Caixinha','Bastidores']},
-          {t:'Carrossel',c:'#2ECC71',ch:['Educativo','Tutorial','Lista']},
-          {t:'Temas do mês',c:'#9B59B6',ch:['Data 1','Data 2','Campanha']},
-        ]},
-        {id:'posicionamento',em:'✦',t:'Posicionamento de Marca',d:'Identidade e voz',br:[
-          {t:'Proposta de valor',c:'#9B59B6',ch:['O que oferece?','Para quem?','Por que você?']},
-          {t:'Identidade visual',c:'#3498DB',ch:['Cores','Tipografia','Logo']},
-          {t:'Tom de voz',c:'#E67E22',ch:['Arquétipos','Vocabulário','Estilo']},
-          {t:'Público-alvo',c:'#2ECC71',ch:['Primário','Secundário','Excluído']},
-          {t:'Concorrência',c:'#E74C3C',ch:['Diferencial 1','Diferencial 2']},
-        ]},
+        {id:'persona',em:'👤',t:'Persona',d:'Perfil do cliente ideal'},
+        {id:'conteudo',em:'📱',t:'Estratégia de Conteúdo',d:'Pilares e formatos'},
+        {id:'concorrentes',em:'🔍',t:'Análise de Concorrência',d:'Benchmarking completo'},
+        {id:'jornada',em:'🛤️',t:'Jornada do Cliente',d:'Do discovery à fidelização'},
+        {id:'calendario',em:'📅',t:'Calendário Editorial',d:'Planejamento de conteúdo'},
+        {id:'posicionamento',em:'✦',t:'Posicionamento de Marca',d:'Identidade e voz'},
+      ]},
+      {cat:'🏢 Organograma',items:[
+        {id:'org_empresa',em:'🏢',t:'Organograma da Empresa',d:'Hierarquia de equipe',tree:true},
+        {id:'org_projeto',em:'📋',t:'Hierarquia de Projeto',d:'Papéis e responsabilidades',tree:true},
+        {id:'org_processo',em:'⚙️',t:'Fluxo de Processo',d:'Etapas sequenciais',tree:true},
+        {id:'org_custom',em:'✏️',t:'Organograma em branco',d:'Monte do zero',tree:true},
       ]},
     ];
 
     // Preview SVG para cada template
-    const previewSvg=(br)=>{
+    const previewSvg=(br,isTree)=>{
+      if(isTree){
+        // Preview top-down para organograma
+        const W=120,H=80;
+        const N=Math.min(br.length,4);
+        let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+        const spacing=W/(N+1);
+        s+=`<rect x="${W/2-14}" y="6" width="28" height="12" rx="6" fill="#333"/>`;
+        for(let i=0;i<N;i++){
+          const bx=(i+1)*spacing;
+          s+=`<line x1="${W/2}" y1="18" x2="${bx}" y2="36" stroke="#aaa" stroke-width="1.5"/>`;
+          s+=`<rect x="${bx-14}" y="36" width="28" height="10" rx="5" fill="${br[i].c||'#3498DB'}"/>`;
+          (br[i].ch||[]).slice(0,2).forEach((c,j)=>{
+            const cx2=bx+(j===0?-14:14);
+            s+=`<line x1="${bx}" y1="46" x2="${cx2}" y2="60" stroke="#ccc" stroke-width="1"/>`;
+            s+=`<rect x="${cx2-10}" y="60" width="20" height="8" rx="4" fill="${br[i].c||'#3498DB'}" opacity=".6"/>`;
+          });
+        }
+        s+=`</svg>`;return s;
+      }
+    };
+    const previewSvgRadial=(br)=>{
       const W=120,H=80,cx=60,cy=40,r=26;
       if(!br) return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect x="46" y="33" width="28" height="14" rx="7" fill="#555"/></svg>`;
       const N=Math.min(br.length,8);
