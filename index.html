@@ -4355,11 +4355,13 @@ const Admin = {
                        : node.borderStyle==='dashed' ? bw+'px dashed '+(noFill?clr:'rgba(255,255,255,0.65)') : 'none';
     const imgR = shape==='circle' ? '50%' : (isRoot ? '19px 19px 0 0' : '9px 9px 0 0');
     const imgHtml = node.imgUrl ? '<div style="overflow:hidden;border-radius:'+imgR+';"><img src="'+node.imgUrl+'" style="width:100%;max-height:90px;object-fit:cover;display:block;pointer-events:none;"/></div>' : '';
-    const pad = isRoot ? '10px 16px' : '6px 11px';
-    const fs = isRoot ? 13 : 11;
+    const szMap = {sm:{fs:9,pad:'3px 7px',mw:48},md:{fs:11,pad:'6px 11px',mw:72},lg:{fs:14,pad:'10px 18px',mw:110}};
+    const sz = szMap[node.size||'md'];
+    const pad = isRoot ? '10px 16px' : sz.pad;
+    const fs = isRoot ? 13 : sz.fs;
     const fw = node.bold ? (isRoot ? 800 : 700) : (isRoot ? 600 : 400);
     const fStyle = node.italic ? 'italic' : 'normal';
-    const mw = shape==='circle' ? (isRoot?80:54) : (isRoot ? 110 : 72);
+    const mw = shape==='circle' ? (isRoot?80:54) : (isRoot ? 110 : sz.mw);
     const hasChildren = this._bcMapaData.nodes.some(n => n.parentId === node.id);
     const collapseBtn = hasChildren
       ? '<div onclick="event.stopPropagation();Admin._bcMmToggleCollapse('+node.id+')" onmousedown="event.stopPropagation()" title="'+(node.collapsed?'Expandir':'Recolher')+'" '
@@ -4439,7 +4441,7 @@ const Admin = {
     svg.innerHTML = nodes.filter(n=>n.parentId!==null && vis.has(n.id)).map(n=>{
       const p = nodes.find(x=>x.id===n.parentId); if (!p) return '';
       const x1=p.x+panX, y1=p.y+panY, x2=n.x+panX, y2=n.y+panY, mx=(x1+x2)/2;
-      return `<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" fill="none" stroke="${n.color||'#888'}" stroke-width="2.5" opacity="0.55" stroke-linecap="round"/>`;
+      return `<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" fill="none" stroke="${n.lineColor||n.color||'#888'}" stroke-width="2.5" opacity="0.55" stroke-linecap="round"/>`;
     }).join('');
   },
 
@@ -4640,6 +4642,10 @@ const Admin = {
       </label>
       ${node.imgUrl ? `<button onclick="Admin._bcMmRemoveImg(${node.id})" style="width:100%;padding:5px;border-radius:7px;background:var(--beige);border:1px solid var(--border);font-size:10px;cursor:pointer;color:var(--muted);margin-bottom:4px;">× Remover foto</button>` : ''}
       <button onclick="Admin._bcMmDelete(${node.id})" style="width:100%;padding:6px;border-radius:7px;background:#FFEBEE;border:1px solid #FFCDD2;color:#C62828;font-size:11px;cursor:pointer;margin-bottom:10px;font-family:Poppins,sans-serif;" ${node.parentId===null?'disabled':''}>× Excluir nó</button>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Tamanho</div>
+      <div style="display:flex;gap:3px;margin-bottom:10px;">
+        ${[['sm','P','Pequeno'],['md','M','Médio'],['lg','G','Grande']].map(([s,lbl,title])=>'<button onclick="Admin._bcMmSetStyle(\'size\',\''+s+'\')" style="flex:1;padding:5px 2px;border-radius:5px;border:2px solid '+((node.size||'md')===s?'var(--brown)':'var(--border)')+';background:'+((node.size||'md')===s?'var(--brown)':'var(--beige)')+';color:'+((node.size||'md')===s?'#fff':'var(--text)')+';font-size:11px;font-weight:600;cursor:pointer;" title="'+title+'">'+lbl+'</button>').join('')}
+      </div>
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Cor do nó</div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:4px;">
         ${colors.map(c=>`<div onclick="Admin._bcMmSetColor('${c}')" style="height:22px;border-radius:5px;background:${c};cursor:pointer;border:2px solid ${(!node.noFill&&node.color===c)?'#555':'transparent'};box-shadow:${(!node.noFill&&node.color===c)?'inset 0 0 0 1px rgba(0,0,0,0.2)':'none'};transition:border-color .1s;" title="${c}"></div>`).join('')}
@@ -4647,6 +4653,11 @@ const Admin = {
       <div onclick="Admin._bcMmSetNoFill()" style="height:22px;border-radius:5px;cursor:pointer;border:2px solid ${node.noFill?'var(--brown)':'var(--border)'};background:transparent;display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:10px;transition:border-color .1s;">
         <span style="font-size:9px;color:${node.noFill?'var(--brown)':'var(--muted)'};text-transform:uppercase;letter-spacing:.06em;font-weight:${node.noFill?'600':'400'};">⊘ Sem cor</span>
       </div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Cor da linha</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:4px;">
+        ${colors.map(c=>`<div onclick="Admin._bcMmSetStyle('lineColor','${c}')" style="height:22px;border-radius:5px;background:${c};cursor:pointer;border:2px solid ${node.lineColor===c?'#555':'transparent'};box-shadow:${node.lineColor===c?'inset 0 0 0 1px rgba(0,0,0,0.2)':'none'};transition:border-color .1s;" title="${c}"></div>`).join('')}
+      </div>
+      ${node.lineColor ? `<div onclick="Admin._bcMmSetStyle('lineColor',null)" style="height:22px;border-radius:5px;cursor:pointer;border:2px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">↺ Auto (cor do nó)</span></div>` : `<div style="height:10px;margin-bottom:8px;display:flex;align-items:center;"><span style="font-size:9px;color:var(--muted);">automático: cor do nó</span></div>`}
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Forma</div>
       <div style="display:flex;gap:3px;margin-bottom:8px;">
         ${[['rounded','⬭','Arred.'],['square','◼','Quad.'],['circle','●','Círculo']].map(([s,icon,lbl])=>'<button onclick="Admin._bcMmSetStyle(\'shape\',\''+s+'\')" style="flex:1;padding:4px 2px;border-radius:5px;border:2px solid '+((node.shape||'rounded')===s?'var(--brown)':'var(--border)')+';background:'+((node.shape||'rounded')===s?'var(--brown)':'var(--beige)')+';color:'+((node.shape||'rounded')===s?'#fff':'var(--text)')+';font-size:13px;cursor:pointer;" title="'+lbl+'">'+icon+'</button>').join('')}
@@ -4698,6 +4709,8 @@ const Admin = {
     else if (prop==='italic') node.italic = value;
     else if (prop==='textColor') { if (value===null) delete node.textColor; else node.textColor = value; }
     else if (prop==='borderWidth') node.borderWidth = value;
+    else if (prop==='lineColor') { if (value===null) delete node.lineColor; else node.lineColor = value; }
+    else if (prop==='size') node.size = value;
     this._bcMmRenderAll(); this._bcMmUpdatePanel();
   },
 
