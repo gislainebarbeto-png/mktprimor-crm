@@ -1111,10 +1111,8 @@
       <div class="client-tab" id="ctab-onboarding" onclick="Client.clientTab('onboarding')">🌿 Onboarding</div>
       <div class="client-tab" id="ctab-financeiro" onclick="Client.clientTab('financeiro')">💰 Financeiro</div>
       <div class="client-tab" id="ctab-arquivos" onclick="Client.clientTab('arquivos')">📁 Arquivos</div>
-      <div class="client-tab" id="ctab-ideias" onclick="Client.clientTab('ideias')">💡 Ideias</div>
       <div class="client-tab" id="ctab-info" onclick="Client.clientTab('info')">📋 Informações</div>
       <div class="client-tab" id="ctab-solicitacoes" onclick="Client.clientTab('solicitacoes')">📅 Solicitações <span class="ctab-badge hidden" id="ctab-sol-badge"></span></div>
-      <div class="client-tab" id="ctab-brand" onclick="Client.clientTab('brand')">✦ Brand Core</div>
       <div class="client-tab" id="ctab-chat" onclick="Client.clientTab('chat')">✉ Chat <span class="ctab-badge hidden" id="ctab-chat-badge"></span></div>
     </div>
   </div>
@@ -8400,7 +8398,7 @@ const Client = {
       this.render(posts);
       this.checkChatBadge();
       Admin.refreshChatBadge();
-      const validClientTabs = ['posts','metricas_ig','comece','onboarding','financeiro','arquivos','ideias','info','solicitacoes','brand','chat'];
+      const validClientTabs = ['posts','metricas_ig','comece','onboarding','financeiro','arquivos','info','solicitacoes','chat'];
       const savedTab = validClientTabs.includes(localStorage.getItem('clientTab')) ? localStorage.getItem('clientTab') : 'posts';
       if (savedTab !== 'posts') this.clientTab(savedTab);
     } finally { App.loader(false); }

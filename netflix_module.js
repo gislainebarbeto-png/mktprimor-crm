@@ -22,18 +22,13 @@
     { id:'posts',        icon:'▦',  label:'Posts',         desc:'Calendário e gestão de conteúdo',       gradient:'linear-gradient(145deg,#1a0830,#4a1060,#8B2FC9)' },
     { id:'clientes',     icon:'◎',  label:'Clientes',      desc:'Contas e portais dos clientes',          gradient:'linear-gradient(145deg,#0a1628,#1a3a6a,#2E6FD4)' },
     { id:'financeiro',   icon:'◈',  label:'Financeiro',    desc:'Cobranças, vencimentos e status',        gradient:'linear-gradient(145deg,#0d1f0d,#1a4a1a,#2E8B57)' },
-    { id:'automacoes',   icon:'✵',  label:'Automações',    desc:'Posts agendados para automação',         gradient:'linear-gradient(145deg,#0d0d1f,#1a1a5a,#4040C0)' },
     { id:'comece',       icon:'✦',  label:'Comece Aqui',   desc:'Onboarding e boas-vindas',               gradient:'linear-gradient(145deg,#1f1408,#5a3a10,#D4567A)' },
-    { id:'lab',          icon:'⊙',  label:'Ideias',        desc:'Banco de ideias e brainstorm',           gradient:'linear-gradient(145deg,#0d1a0d,#2a4a10,#6B8E23)' },
     { id:'info',         icon:'≡',  label:'Informações',   desc:'Documentos e informações',               gradient:'linear-gradient(145deg,#1a0d18,#4a1a45,#8B3A8B)' },
-    { id:'solicitacoes', icon:'◫',  label:'Solicitações',  desc:'Pedidos e ajustes dos clientes',         gradient:'linear-gradient(145deg,#1a1008,#4a2a08,#D4567A)' },
     { id:'demandas',     icon:'⊞',  label:'Demandas',      desc:'Briefings e demandas da equipe',         gradient:'linear-gradient(145deg,#1f0d0d,#5a1a1a,#C0392B)' },
     { id:'chat',         icon:'◷',  label:'Chat',          desc:'Mensagens com os clientes',              gradient:'linear-gradient(145deg,#081a1a,#104040,#1A8FA0)' },
     { id:'relatorio',    icon:'📝', label:'Diário',        desc:'Relatório diário da equipe',             gradient:'linear-gradient(145deg,#1a1218,#3a2040,#7A1A2A)' },
     { id:'comercial',    icon:'◈',  label:'Comercial',     desc:'Pipeline e gestão comercial',            gradient:'linear-gradient(145deg,#0f1a0a,#2a4a14,#4A7C30)' },
     { id:'agentes',      icon:'✦',  label:'Agentes IA',    desc:'Automações e agentes inteligentes',      gradient:'linear-gradient(145deg,#0a0a1f,#1a1040,#6030C0)' },
-    { id:'tarefas',      icon:'✓',  label:'Tarefas',       desc:'Projetos e kanban da equipe',            gradient:'linear-gradient(145deg,#0d1a1f,#1a4a5a,#1A8FA0)' },
-    { id:'brand',        icon:'✦',  label:'Brand Core',    desc:'Identidade e posicionamento da marca',   gradient:'linear-gradient(145deg,#0a1628,#1a3a6a,#2E6FD4)' },
     { id:'trafego',      icon:'📡', label:'Tráfego',       desc:'Campanhas, análises e relatórios',        gradient:'linear-gradient(145deg,#0f1a0a,#1e3a10,#2d6a1a)' },
     { id:'usuarios',     icon:'👥', label:'Usuários',      desc:'Equipe, cargos e permissões de acesso',   gradient:'linear-gradient(145deg,#1a0820,#3a1050,#6A0F8A)' },
   ];
@@ -41,16 +36,14 @@
   // ── SEÇÕES ADMIN ─────────────────────────────────────────────────────
   const ADMIN_SECTIONS = [
     { title:'Visão Geral',       ids:['inicio','posts','relatorio','comercial'] },
-    { title:'Clientes & Gestão', ids:['clientes','financeiro','info','brand','trafego'] },
-    { title:'Equipe',            ids:['agentes','demandas','tarefas','solicitacoes','chat','usuarios'] },
-    { title:'Conteúdo & Mais',   ids:['automacoes','comece','lab'] },
+    { title:'Clientes & Gestão', ids:['clientes','financeiro','info','trafego'] },
+    { title:'Equipe',            ids:['agentes','demandas','chat','usuarios'] },
+    { title:'Conteúdo & Mais',   ids:['comece'] },
   ];
 
   // ── MÓDULOS DO PORTAL CLIENTE ─────────────────────────────────────────
   const CLIENT_MODULES = [
     { id:'posts',        icon:'▦',  label:'Posts',         desc:'Seu conteúdo e aprovações',            gradient:'linear-gradient(145deg,#1a0830,#4a1060,#8B2FC9)' },
-    { id:'brand',        icon:'✦',  label:'Brand Core',    desc:'Identidade e posicionamento da marca',  gradient:'linear-gradient(145deg,#0a1628,#1a3a6a,#2E6FD4)' },
-    { id:'ideias',       icon:'⊙',  label:'Ideias',        desc:'Banco de ideias e brainstorm',          gradient:'linear-gradient(145deg,#0d1a0d,#2a4a10,#6B8E23)' },
     { id:'chat',         icon:'◷',  label:'Chat',          desc:'Mensagens com a equipe',                gradient:'linear-gradient(145deg,#081a1a,#104040,#1A8FA0)' },
     { id:'solicitacoes', icon:'◫',  label:'Solicitações',  desc:'Seus pedidos e ajustes',                gradient:'linear-gradient(145deg,#1a1008,#4a2a08,#D4567A)' },
     { id:'arquivos',     icon:'▤',  label:'Arquivos',      desc:'Arquivos e links compartilhados',       gradient:'linear-gradient(145deg,#1a1408,#4a3a10,#B8860B)' },
