@@ -4396,7 +4396,8 @@ const Admin = {
       s+=`</svg>`;return s;
     };
 
-    window._mmTmpl=TMPL; // guarda globalmente para evitar problema de scope
+    window._mmTmpl=TMPL;
+    window._mmEmail=email; // email global para os onclicks
 
     document.getElementById('mm-tmpl-modal')?.remove();
     const modal=document.createElement('div');
@@ -4407,12 +4408,13 @@ const Admin = {
         <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">${cat.cat}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
           ${cat.items.map(tmpl=>`
-            <div data-tid="${tmpl.id}" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:all .18s;"
+            <div onclick="Admin._mmCriarTemplate(window._mmEmail,'${tmpl.id}')"
+              style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:all .18s;"
               onmouseover="this.style.borderColor='var(--brown)';this.style.transform='translateY(-2px)'"
               onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
-              <div style="background:rgba(100,100,150,.08);border-radius:10px;padding:8px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;height:80px;">${previewSvg(tmpl.br)}</div>
-              <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;">${tmpl.t}</div>
-              <div style="font-size:10px;color:var(--muted);">${tmpl.d}</div>
+              <div style="background:rgba(100,100,150,.08);border-radius:10px;padding:8px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;height:80px;pointer-events:none;">${previewSvg(tmpl.br)}</div>
+              <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;pointer-events:none;">${tmpl.t}</div>
+              <div style="font-size:10px;color:var(--muted);pointer-events:none;">${tmpl.d}</div>
             </div>`).join('')}
         </div>
       </div>`).join('');
@@ -4428,13 +4430,7 @@ const Admin = {
         ${cats}
       </div>`;
     document.body.appendChild(modal);
-    // Click via delegação para evitar problema de quotes no onclick
-    const _em=email;
-    modal.addEventListener('click',e=>{
-      const card=e.target.closest('[data-tid]');
-      if(card){Admin._mmCriarTemplate(_em,card.dataset.tid);return;}
-      if(e.target===modal)modal.remove();
-    });
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
   },
 
   async _mmCriarTemplate(email, tmplId) {
