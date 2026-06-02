@@ -3334,6 +3334,12 @@ const Admin = {
       }
       return;
     }
+    // Se veio do card Mapa Mental, volta para o seletor de clientes
+    if (this._bcFromMapaMental) {
+      this._bcFromMapaMental = false;
+      this.renderBrandCoreAdmin();
+      return;
+    }
     this._cliTabBrandCore(id, c);
   },
 
@@ -9348,24 +9354,45 @@ ${text}`,
     el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando clientes...</p>';
     const { data: clients } = await db.from('clients').select('id,nome,empresa,email,foto_url').order('nome');
     const list = clients || [];
-    el.innerHTML = `<div style="padding:32px;max-width:900px;">
-      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;">
-        <span style="font-family:'Montserrat',sans-serif;font-weight:200;font-size:22px;text-transform:uppercase;letter-spacing:.12em;color:var(--text);">✦ Brand</span>
-        <span style="font-family:'Great Vibes',cursive;font-size:34px;color:var(--rose);line-height:1;">Core</span>
+    el.innerHTML = `<div style="padding:28px;max-width:860px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+        <span style="font-size:28px;">🧠</span>
+        <div>
+          <div style="font-size:20px;font-weight:700;color:var(--text);">Mapa Mental</div>
+          <div style="font-size:12px;color:var(--muted);">Selecione o cliente para abrir o mapa mental</div>
+        </div>
       </div>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:24px;">Selecione um cliente para acessar o Brand Core:</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;">
+      <div style="height:1px;background:var(--border);margin:20px 0;"></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
         ${list.map(c=>`
-          <div onclick="Admin._openBrandClient('${c.id}')" style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 16px;text-align:center;transition:all .2s;" onmouseover="this.style.borderColor='var(--brown)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div onclick="Admin._openMapaMental('${c.id}')" style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 14px;text-align:center;transition:all .2s;"
+            onmouseover="this.style.borderColor='var(--brown)';this.style.transform='translateY(-3px)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
             ${c.foto_url
-              ? `<img src="${c.foto_url}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;margin-bottom:10px;">`
-              : `<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--wine),var(--rose));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:#fff;margin:0 auto 10px;">${(c.nome||'?')[0].toUpperCase()}</div>`}
-            <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;">${c.nome||'-'}</div>
-            <div style="font-size:11px;color:var(--muted);">${c.empresa||''}</div>
+              ? `<img src="${c.foto_url}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;margin-bottom:10px;">`
+              : `<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--wine),var(--rose));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin:0 auto 10px;">${(c.nome||'?')[0].toUpperCase()}</div>`}
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">${c.nome||'-'}</div>
+            <div style="font-size:10px;color:var(--muted);">${c.empresa||''}</div>
+            <div style="margin-top:10px;font-size:10px;color:var(--brown);font-weight:600;letter-spacing:.05em;">Abrir mapa →</div>
           </div>`).join('')}
         ${!list.length ? '<p style="color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:40px;">Nenhum cliente cadastrado.</p>' : ''}
       </div>
     </div>`;
+  },
+
+  async _openMapaMental(clientId) {
+    const el = document.getElementById('admin-main'); if (!el) return;
+    el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando...</p>';
+    const { data: c } = await db.from('clients').select('*').eq('id', clientId).single();
+    if (!c) return;
+    this._bcReadOnly = false;
+    this._bcContentId = 'admin-main';
+    this._bcSection = 'estrategias'; // vai direto para mapas mentais
+    this._bcSubSection = null;
+    this._bcFromMapaMental = true; // flag: ← volta para seletor, não para menu brand core
+    this._cliCurrentId = c.id;
+    this._cliClienteData = c;
+    this._cliTabBrandCore(c.id, c);
   },
 
   async _openBrandClient(clientId) {
