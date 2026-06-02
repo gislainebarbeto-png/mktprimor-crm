@@ -535,51 +535,118 @@
     const currentGrad = getGradients()[mod.id]||'';
     const modal = document.createElement('div');
     modal.className='nf-cover-modal'; modal.id='nf-cover-modal';
-    const gradSwatches = PRESET_GRADIENTS.map((g,i)=>`
-      <div onclick="NFModule._applyGradient('${mod.id}','${g}')"
-        title="Gradiente ${i+1}"
-        style="height:48px;border-radius:10px;cursor:pointer;background:${g};
-               transition:transform .15s,box-shadow .15s;
-               ${currentGrad===g?'outline:3px solid #fff;outline-offset:2px;':''}"
-        onmouseover="this.style.transform='scale(1.06)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.5)'"
-        onmouseout="this.style.transform='';this.style.boxShadow=''"></div>`).join('');
+
+    // Parse existing gradient se tiver
+    let initC1='#1a0820', initC2='#6b2737', initC3='#c0392b', initAngle=135, initStops=2;
+    if(currentGrad){
+      try{
+        const m=currentGrad.match(/(\d+)deg/);if(m)initAngle=parseInt(m[1]);
+        const cols=currentGrad.match(/#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)/g)||[];
+        if(cols[0])initC1=cols[0];if(cols[1])initC2=cols[1];if(cols[2]){initC3=cols[2];initStops=3;}
+      }catch(e){}
+    }
+
+    const presetSwatches = PRESET_GRADIENTS.map((g,i)=>`
+      <div onclick="NFModule._applyPresetGrad('${mod.id}','${g}')"
+        style="height:36px;border-radius:8px;cursor:pointer;background:${g};transition:transform .15s;"
+        onmouseover="this.style.transform='scale(1.06)'"
+        onmouseout="this.style.transform=''"></div>`).join('');
+
     modal.innerHTML=`
-      <div class="nf-cover-box" style="max-width:480px;">
-        <h3>Capa — ${mod.label}</h3>
-        <div class="nf-drop-zone" id="nf-drop-zone">
-          <input type="file" id="nf-file-input" accept="image/*">
-          <div class="nf-drop-icon">🖼️</div>
-          <div class="nf-drop-text"><strong>Clique ou arraste</strong> uma imagem aqui</div>
-          <div class="nf-drop-text" style="font-size:10px;margin-top:4px;opacity:.6">JPG · PNG · WEBP · até 5MB</div>
+      <div class="nf-cover-box" style="max-width:520px;max-height:90vh;overflow-y:auto;">
+        <h3>✎ Capa — ${mod.label}</h3>
+
+        <!-- ABAS -->
+        <div style="display:flex;gap:4px;margin-bottom:16px;background:var(--bg);border-radius:10px;padding:4px;">
+          <button id="nf-tab-grad" onclick="NFModule._coverTab('grad')" style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;background:var(--wine);color:#fff;font-family:inherit;">🎨 Degradê</button>
+          <button id="nf-tab-img" onclick="NFModule._coverTab('img')" style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:12px;background:transparent;color:var(--muted);font-family:inherit;">🖼️ Imagem</button>
         </div>
-        <div class="nf-or">ou cole uma URL de imagem</div>
-        <input type="text" id="nf-cover-url" class="nf-cover-url-input" placeholder="https://..." value="${current}">
-        <div class="nf-cover-preview" id="nf-cover-prev">
-          ${current?`<img src="${current}" onerror="this.parentElement.innerHTML='Imagem inválida'">`:' Prévia aqui'}
+
+        <!-- ABA DEGRADÊ -->
+        <div id="nf-panel-grad">
+          <!-- Prévia ao vivo -->
+          <div id="nf-grad-preview" style="height:100px;border-radius:12px;margin-bottom:16px;transition:background .2s;"></div>
+
+          <!-- Ângulo -->
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;">Ângulo</span>
+              <span id="nf-angle-val" style="font-size:12px;font-weight:700;color:var(--text);">${initAngle}°</span>
+            </div>
+            <input type="range" id="nf-angle" min="0" max="360" value="${initAngle}" oninput="NFModule._updateGradPreview()" style="width:100%;accent-color:var(--wine);">
+            <div style="display:flex;justify-content:space-between;margin-top:4px;">
+              ${[0,45,90,135,180,225,270,315].map(a=>`<button onclick="document.getElementById('nf-angle').value=${a};NFModule._updateGradPreview()" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-size:10px;cursor:pointer;color:var(--muted);">${a}°</button>`).join('')}
+            </div>
+          </div>
+
+          <!-- Paradas de cor -->
+          <div style="margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;">Cores</span>
+              <label style="font-size:11px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" id="nf-3stops" ${initStops===3?'checked':''} onchange="NFModule._updateGradPreview()" style="accent-color:var(--wine);">
+                3 cores
+              </label>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;">
+                <input type="color" id="nf-c1" value="${initC1}" oninput="NFModule._updateGradPreview()" style="width:100%;height:44px;border:none;border-radius:10px;cursor:pointer;padding:0;">
+                <span style="font-size:9px;color:var(--muted);">Cor 1</span>
+              </div>
+              <div id="nf-c2-wrap" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;">
+                <input type="color" id="nf-c2" value="${initStops===3?initC2:initC2}" oninput="NFModule._updateGradPreview()" style="width:100%;height:44px;border:none;border-radius:10px;cursor:pointer;padding:0;">
+                <span style="font-size:9px;color:var(--muted);" id="nf-c2-label">${initStops===3?'Cor 2':'Cor 2'}</span>
+              </div>
+              <div id="nf-c3-wrap" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;${initStops!==3?'opacity:.3;pointer-events:none;':''}">
+                <input type="color" id="nf-c3" value="${initC3}" oninput="NFModule._updateGradPreview()" style="width:100%;height:44px;border:none;border-radius:10px;cursor:pointer;padding:0;">
+                <span style="font-size:9px;color:var(--muted);">Cor 3</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Degradês prontos -->
+          <div style="margin-bottom:14px;">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Predefinições</div>
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;">${presetSwatches}</div>
+          </div>
+
+          <button onclick="NFModule._saveGradient('${mod.id}')" style="width:100%;padding:11px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--wine),#a01830);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">✓ Aplicar degradê</button>
         </div>
-        <div style="margin-top:18px;">
-          <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">🎨 Ou escolha um degradê de cor</div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">${gradSwatches}</div>
-          <div id="nf-grad-selected" style="font-size:11px;color:var(--muted);margin-top:8px;min-height:16px;">${currentGrad?'Degradê selecionado ✓':''}</div>
-        </div>
-        <div class="nf-cover-btns" style="margin-top:16px;">
-          <button class="nf-cover-save" id="nf-save-btn" onclick="NFModule._saveCover('${mod.id}')">Salvar foto</button>
-          <button class="nf-cover-remove" onclick="NFModule._removeCover('${mod.id}')">Remover tudo</button>
-          <button class="nf-cover-cancel" onclick="NFModule._closeModal()">Cancelar</button>
+
+        <!-- ABA IMAGEM -->
+        <div id="nf-panel-img" style="display:none;">
+          <div class="nf-drop-zone" id="nf-drop-zone">
+            <input type="file" id="nf-file-input" accept="image/*">
+            <div class="nf-drop-icon">🖼️</div>
+            <div class="nf-drop-text"><strong>Clique ou arraste</strong> uma imagem</div>
+            <div class="nf-drop-text" style="font-size:10px;margin-top:4px;opacity:.6">JPG · PNG · WEBP · até 5MB</div>
+          </div>
+          <div class="nf-or">ou cole uma URL</div>
+          <input type="text" id="nf-cover-url" class="nf-cover-url-input" placeholder="https://..." value="${current}">
+          <div class="nf-cover-preview" id="nf-cover-prev">${current?`<img src="${current}" onerror="this.parentElement.innerHTML='Inválida'">`:' Prévia aqui'}</div>
+          <div class="nf-cover-btns" style="margin-top:14px;">
+            <button class="nf-cover-save" id="nf-save-btn" onclick="NFModule._saveCover('${mod.id}')">Salvar imagem</button>
+            <button class="nf-cover-remove" onclick="NFModule._removeCover('${mod.id}')">Remover tudo</button>
+            <button class="nf-cover-cancel" onclick="NFModule._closeModal()">Cancelar</button>
+          </div>
         </div>
       </div>`;
+
     document.body.appendChild(modal);
     modal.addEventListener('click',e=>{if(e.target===modal)NFModule._closeModal();});
 
+    // Init prévia
+    NFModule._updateGradPreview();
+
     const dz=document.getElementById('nf-drop-zone');
-    dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
-    dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
-    dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)handleFile(f,mod.id);});
-    document.getElementById('nf-file-input').addEventListener('change',e=>{const f=e.target.files[0];if(f)handleFile(f,mod.id);});
-    document.getElementById('nf-cover-url').addEventListener('input',e=>{
+    dz&&dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+    dz&&dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+    dz&&dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)handleFile(f,mod.id);});
+    document.getElementById('nf-file-input')?.addEventListener('change',e=>{const f=e.target.files[0];if(f)handleFile(f,mod.id);});
+    document.getElementById('nf-cover-url')?.addEventListener('input',e=>{
       const url=e.target.value.trim();
       const prev=document.getElementById('nf-cover-prev');
-      prev.innerHTML=url?`<img src="${url}" onerror="this.parentElement.innerHTML='Inválida'">`:' Prévia aqui';
+      if(prev)prev.innerHTML=url?`<img src="${url}" onerror="this.parentElement.innerHTML='Inválida'">`:' Prévia aqui';
     });
     window._nfOnSave=onSave; window._nfCurrentModule=mod.id;
   }
@@ -1033,16 +1100,44 @@
     _removeCover(id){removeCover(id);removeGradient(id);NFModule._closeModal();if(window._nfOnSave)window._nfOnSave();},
     _closeModal(){document.getElementById('nf-cover-modal')?.remove();},
     _applyGradient(id,gradient){
-      removeGradient(id); // clear first
-      saveGradient(id,gradient);
-      removeCover(id);
-      const sel=document.getElementById('nf-grad-selected');
-      if(sel) sel.textContent='Degradê selecionado ✓';
-      // highlight selected swatch
-      document.querySelectorAll('#nf-cover-modal [onclick*="_applyGradient"]').forEach(el=>{
-        el.style.outline=el.onclick?.toString().includes(`'${gradient}'`)||el.getAttribute('onclick')?.includes(gradient)?'3px solid #fff':'';
-        el.style.outlineOffset='2px';
-      });
+      saveGradient(id,gradient);removeCover(id);
+      NFModule._closeModal();
+      if(window._nfOnSave)window._nfOnSave();
+    },
+    _applyPresetGrad(id,g){
+      saveGradient(id,g);removeCover(id);
+      NFModule._closeModal();
+      if(window._nfOnSave)window._nfOnSave();
+    },
+    _coverTab(tab){
+      document.getElementById('nf-panel-grad').style.display=tab==='grad'?'':'none';
+      document.getElementById('nf-panel-img').style.display=tab==='img'?'':'none';
+      document.getElementById('nf-tab-grad').style.background=tab==='grad'?'var(--wine)':'transparent';
+      document.getElementById('nf-tab-grad').style.color=tab==='grad'?'#fff':'var(--muted)';
+      document.getElementById('nf-tab-img').style.background=tab==='img'?'var(--wine)':'transparent';
+      document.getElementById('nf-tab-img').style.color=tab==='img'?'#fff':'var(--muted)';
+    },
+    _updateGradPreview(){
+      const angle=document.getElementById('nf-angle')?.value||135;
+      const c1=document.getElementById('nf-c1')?.value||'#1a0820';
+      const c2=document.getElementById('nf-c2')?.value||'#6b2737';
+      const c3=document.getElementById('nf-c3')?.value||'#c0392b';
+      const use3=document.getElementById('nf-3stops')?.checked;
+      const c3wrap=document.getElementById('nf-c3-wrap');
+      if(c3wrap)c3wrap.style.opacity=use3?'1':'.3';
+      if(c3wrap)c3wrap.style.pointerEvents=use3?'auto':'none';
+      document.getElementById('nf-angle-val').textContent=angle+'°';
+      const grad=use3
+        ?`linear-gradient(${angle}deg,${c1},${c2},${c3})`
+        :`linear-gradient(${angle}deg,${c1},${c2})`;
+      const prev=document.getElementById('nf-grad-preview');
+      if(prev)prev.style.background=grad;
+      window._nfCurrentGrad=grad;
+    },
+    _saveGradient(id){
+      const grad=window._nfCurrentGrad;
+      if(!grad)return;
+      saveGradient(id,grad);removeCover(id);
       NFModule._closeModal();
       if(window._nfOnSave)window._nfOnSave();
     },
