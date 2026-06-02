@@ -3334,9 +3334,9 @@ const Admin = {
       }
       return;
     }
-    // Se veio do card Mapa Mental, volta para o seletor de clientes
-    if (this._bcFromMapaMental) {
-      this._bcFromMapaMental = false;
+    // Quando aberto pelo card Mapa Mental, _bcContentId é 'admin-main'
+    // Volta para o seletor de clientes do mapa mental
+    if (this._bcContentId === 'admin-main') {
       this.renderBrandCoreAdmin();
       return;
     }
@@ -8340,6 +8340,54 @@ const Admin = {
     if (cal) cal.querySelectorAll('.cal-day').forEach(d => { d.style.outline=''; d.style.borderRadius=''; });
     el.style.outline = '2px solid var(--brown)';
     el.style.borderRadius = '4px';
+  },
+
+  // ── MAPA MENTAL — definido diretamente no Admin ──────────────────────
+  async renderBrandCoreAdmin() {
+    const el = document.getElementById('admin-main');
+    if (!el) return;
+    el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando...</p>';
+    const { data: clients } = await db.from('clients').select('id,nome,empresa,email,foto_url').order('nome');
+    const list = clients || [];
+    el.innerHTML = `
+      <div style="padding:28px;max-width:860px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+          <span style="font-size:28px;">🧠</span>
+          <div>
+            <div style="font-size:20px;font-weight:700;color:var(--text);">Mapa Mental</div>
+            <div style="font-size:12px;color:var(--muted);">Selecione o cliente para ver e criar mapas</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;">
+          ${list.map(c => `
+            <div onclick="Admin._mmAbrirCliente('${c.id}')"
+              style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 14px;text-align:center;transition:all .2s;"
+              onmouseover="this.style.borderColor='var(--brown)';this.style.transform='translateY(-3px)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
+              ${c.foto_url
+                ? `<img src="${c.foto_url}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;margin-bottom:10px;">`
+                : `<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--wine),var(--rose));display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;margin:0 auto 10px;">${(c.nome||'?')[0].toUpperCase()}</div>`}
+              <div style="font-size:12px;font-weight:600;color:var(--text);">${c.nome||'-'}</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px;">${c.empresa||''}</div>
+            </div>`).join('')}
+          ${!list.length ? '<p style="color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:40px;">Nenhum cliente.</p>' : ''}
+        </div>
+      </div>`;
+  },
+
+  async _mmAbrirCliente(clientId) {
+    const el = document.getElementById('admin-main');
+    if (!el) return;
+    el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando...</p>';
+    const { data: c } = await db.from('clients').select('*').eq('id', clientId).single();
+    if (!c) return;
+    this._bcReadOnly = false;
+    this._bcContentId = 'admin-main';
+    this._bcSection = 'estrategias';
+    this._bcSubSection = null;
+    this._cliCurrentId = c.id;
+    this._cliClienteData = c;
+    this._bcEstrategias(c.id, c);
   }
 };
 
@@ -9349,51 +9397,6 @@ ${text}`,
     if (name==='chat')        this.renderChatTab();
   },
 
-  async renderBrandCoreAdmin() {
-    const el = document.getElementById('admin-main'); if (!el) return;
-    el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando clientes...</p>';
-    const { data: clients } = await db.from('clients').select('id,nome,empresa,email,foto_url').order('nome');
-    const list = clients || [];
-    el.innerHTML = `<div style="padding:28px;max-width:860px;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-        <span style="font-size:28px;">🧠</span>
-        <div>
-          <div style="font-size:20px;font-weight:700;color:var(--text);">Mapa Mental</div>
-          <div style="font-size:12px;color:var(--muted);">Selecione o cliente para ver e criar mapas mentais</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
-        ${list.map(c=>`
-          <div onclick="Admin._openMapaMental('${c.id}')"
-            style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 14px;text-align:center;transition:all .2s;"
-            onmouseover="this.style.borderColor='var(--brown)';this.style.transform='translateY(-3px)'"
-            onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
-            ${c.foto_url
-              ? `<img src="${c.foto_url}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;margin-bottom:10px;">`
-              : `<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--wine),var(--rose));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin:0 auto 10px;">${(c.nome||'?')[0].toUpperCase()}</div>`}
-            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">${c.nome||'-'}</div>
-            <div style="font-size:10px;color:var(--muted);">${c.empresa||''}</div>
-          </div>`).join('')}
-        ${!list.length?'<p style="color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:40px;">Nenhum cliente cadastrado.</p>':''}
-      </div>
-    </div>`;
-  },
-
-  async _openMapaMental(clientId) {
-    const el = document.getElementById('admin-main'); if (!el) return;
-    el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando...</p>';
-    const { data: c } = await db.from('clients').select('*').eq('id', clientId).single();
-    if (!c) return;
-    this._bcReadOnly = false;
-    this._bcContentId = 'admin-main';
-    this._bcSection = 'estrategias';
-    this._bcSubSection = null;
-    this._bcFromMapaMental = true;
-    this._cliCurrentId = c.id;
-    this._cliClienteData = c;
-    this._bcEstrategias(c.id, c); // chama diretamente a função de mapas, sem passar pelo menu brand core
-  },
-
   async _openBrandClient(clientId) {
     const el = document.getElementById('admin-main'); if (!el) return;
     el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando...</p>';
@@ -10197,10 +10200,8 @@ ${text}`,
   }
 };
 
-// Expõe funções do Client no Admin (definidas no Client por organização de código)
-Admin.renderBrandCoreAdmin = function(){ return Client.renderBrandCoreAdmin.call(Admin); };
-Admin._openMapaMental      = function(id){ return Client._openMapaMental.call(Admin, id); };
-Admin._openBrandClient     = function(id){ return Client._openBrandClient.call(Admin, id); };
+// _openBrandClient exposto no Admin via Client (usado na ficha do cliente)
+Admin._openBrandClient = function(id){ return Client._openBrandClient.call(Admin, id); };
 
 const Theme = {
   _mq: window.matchMedia('(prefers-color-scheme: dark)'),
