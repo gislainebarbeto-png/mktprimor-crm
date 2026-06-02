@@ -6,6 +6,7 @@
   'use strict';
 
   const STORAGE_KEY  = 'primor_module_covers';
+  const GRADIENT_KEY = 'primor_card_gradients';
   const BUCKET       = 'posts-media';
   const COVER_FOLDER = 'module-covers';
   const CUSTOM_KEY   = 'primor_custom_cards';
@@ -15,6 +16,25 @@
   let _customCards   = [];
   let _savedOrder    = {};
   let _adminHeroCover= {url:'', pos:'50% 50%'};
+
+  function getGradients(){ try{return JSON.parse(localStorage.getItem(GRADIENT_KEY)||'{}')}catch{return{}} }
+  function saveGradient(id,g){ const c=getGradients();c[id]=g;localStorage.setItem(GRADIENT_KEY,JSON.stringify(c)); }
+  function removeGradient(id){ const c=getGradients();delete c[id];localStorage.setItem(GRADIENT_KEY,JSON.stringify(c)); }
+
+  const PRESET_GRADIENTS = [
+    'linear-gradient(135deg,#0f0c29,#302b63,#24243e)',
+    'linear-gradient(135deg,#1a0a0a,#6b2737,#c0392b)',
+    'linear-gradient(135deg,#0a1628,#1a3a6a,#2980b9)',
+    'linear-gradient(135deg,#0d1f0d,#1a5c2a,#27ae60)',
+    'linear-gradient(135deg,#1a0820,#6a0080,#ab47bc)',
+    'linear-gradient(135deg,#2c1810,#8b4513,#d4896a)',
+    'linear-gradient(135deg,#0d0d0d,#1a1a1a,#333)',
+    'linear-gradient(135deg,#1a1008,#5a3a00,#c9a84c)',
+    'linear-gradient(135deg,#1a0a18,#5c1a5c,#e91e63)',
+    'linear-gradient(135deg,#001f3f,#003d7a,#0074cc)',
+    'linear-gradient(135deg,#1a0000,#800000,#c0392b)',
+    'linear-gradient(135deg,#001a00,#004d00,#16a34a)',
+  ];
 
   // ── TODOS OS MÓDULOS (lateral + dashboard) ───────────────────────────
   const ADMIN_MODULES = [
@@ -29,6 +49,7 @@
     { id:'relatorio',    icon:'📝', label:'Diário',        desc:'Relatório diário da equipe',             gradient:'linear-gradient(145deg,#1a1218,#3a2040,#7A1A2A)' },
     { id:'comercial',    icon:'◈',  label:'Comercial',     desc:'Pipeline e gestão comercial',            gradient:'linear-gradient(145deg,#0f1a0a,#2a4a14,#4A7C30)' },
     { id:'agentes',      icon:'✦',  label:'Agentes IA',    desc:'Automações e agentes inteligentes',      gradient:'linear-gradient(145deg,#0a0a1f,#1a1040,#6030C0)' },
+    { id:'brand',        icon:'🧠', label:'Mapa Mental',   desc:'Identidade visual por cliente',           gradient:'linear-gradient(145deg,#0a1628,#1a3a6a,#2E6FD4)' },
     { id:'trafego',      icon:'📡', label:'Tráfego',       desc:'Campanhas, análises e relatórios',        gradient:'linear-gradient(145deg,#0f1a0a,#1e3a10,#2d6a1a)' },
     { id:'usuarios',     icon:'👥', label:'Usuários',      desc:'Equipe, cargos e permissões de acesso',   gradient:'linear-gradient(145deg,#1a0820,#3a1050,#6A0F8A)' },
   ];
@@ -36,7 +57,7 @@
   // ── SEÇÕES ADMIN ─────────────────────────────────────────────────────
   const ADMIN_SECTIONS = [
     { title:'Visão Geral',       ids:['inicio','posts','relatorio','comercial'] },
-    { title:'Clientes & Gestão', ids:['clientes','financeiro','info','trafego'] },
+    { title:'Clientes & Gestão', ids:['clientes','financeiro','info','brand','trafego'] },
     { title:'Equipe',            ids:['agentes','demandas','chat','usuarios'] },
     { title:'Conteúdo & Mais',   ids:['comece'] },
   ];
@@ -511,10 +532,19 @@
   // ── MODAL DE CAPA ────────────────────────────────────────────────────
   function openCoverModal(mod, onSave){
     const current = getCovers()[mod.id]||'';
+    const currentGrad = getGradients()[mod.id]||'';
     const modal = document.createElement('div');
     modal.className='nf-cover-modal'; modal.id='nf-cover-modal';
+    const gradSwatches = PRESET_GRADIENTS.map((g,i)=>`
+      <div onclick="NFModule._applyGradient('${mod.id}','${g}')"
+        title="Gradiente ${i+1}"
+        style="height:48px;border-radius:10px;cursor:pointer;background:${g};
+               transition:transform .15s,box-shadow .15s;
+               ${currentGrad===g?'outline:3px solid #fff;outline-offset:2px;':''}"
+        onmouseover="this.style.transform='scale(1.06)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.5)'"
+        onmouseout="this.style.transform='';this.style.boxShadow=''"></div>`).join('');
     modal.innerHTML=`
-      <div class="nf-cover-box">
+      <div class="nf-cover-box" style="max-width:480px;">
         <h3>Capa — ${mod.label}</h3>
         <div class="nf-drop-zone" id="nf-drop-zone">
           <input type="file" id="nf-file-input" accept="image/*">
@@ -522,14 +552,19 @@
           <div class="nf-drop-text"><strong>Clique ou arraste</strong> uma imagem aqui</div>
           <div class="nf-drop-text" style="font-size:10px;margin-top:4px;opacity:.6">JPG · PNG · WEBP · até 5MB</div>
         </div>
-        <div class="nf-or">ou cole uma URL</div>
+        <div class="nf-or">ou cole uma URL de imagem</div>
         <input type="text" id="nf-cover-url" class="nf-cover-url-input" placeholder="https://..." value="${current}">
         <div class="nf-cover-preview" id="nf-cover-prev">
           ${current?`<img src="${current}" onerror="this.parentElement.innerHTML='Imagem inválida'">`:' Prévia aqui'}
         </div>
-        <div class="nf-cover-btns">
-          <button class="nf-cover-save" id="nf-save-btn" onclick="NFModule._saveCover('${mod.id}')">Salvar</button>
-          <button class="nf-cover-remove" onclick="NFModule._removeCover('${mod.id}')">Remover</button>
+        <div style="margin-top:18px;">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">🎨 Ou escolha um degradê de cor</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">${gradSwatches}</div>
+          <div id="nf-grad-selected" style="font-size:11px;color:var(--muted);margin-top:8px;min-height:16px;">${currentGrad?'Degradê selecionado ✓':''}</div>
+        </div>
+        <div class="nf-cover-btns" style="margin-top:16px;">
+          <button class="nf-cover-save" id="nf-save-btn" onclick="NFModule._saveCover('${mod.id}')">Salvar foto</button>
+          <button class="nf-cover-remove" onclick="NFModule._removeCover('${mod.id}')">Remover tudo</button>
           <button class="nf-cover-cancel" onclick="NFModule._closeModal()">Cancelar</button>
         </div>
       </div>`;
@@ -700,10 +735,12 @@
   // ── RENDER CARD ──────────────────────────────────────────────────────
   function renderCard(mod, isAdmin, badge){
     const cover=getCovers()[mod.id];
+    const gradient=getGradients()[mod.id];
     const hasCover=!!cover;
-    const bgStyle=cover
-      ?`background-image:url('${cover}');background-size:cover;background-position:center;`
-      :`${mod.gradient};`;
+    let bgStyle;
+    if(cover) bgStyle=`background-image:url('${cover}');background-size:cover;background-position:center;`;
+    else if(gradient) bgStyle=`background:${gradient};`;
+    else bgStyle=`background:${mod.gradient};`;
     const editBtn=`<div class="nf-card-edit" data-edit="${mod.id}">✎ Capa</div>`;
     const badgeHtml=badge?`<div class="nf-card-badge">${badge}</div>`:'';
     return `<div class="nf-card${hasCover?' nf-has-cover':''}" data-id="${mod.id}" data-admin="${isAdmin}">
@@ -989,12 +1026,26 @@
     _saveAdminHeroPos:_saveAdminHeroPosFn,
     _saveCover(id){
       const url=document.getElementById('nf-cover-url')?.value.trim();
-      if(url)saveCover(id,url);
+      if(url){saveCover(id,url);removeGradient(id);}
       NFModule._closeModal();
       if(window._nfOnSave)window._nfOnSave();
     },
-    _removeCover(id){removeCover(id);NFModule._closeModal();if(window._nfOnSave)window._nfOnSave();},
+    _removeCover(id){removeCover(id);removeGradient(id);NFModule._closeModal();if(window._nfOnSave)window._nfOnSave();},
     _closeModal(){document.getElementById('nf-cover-modal')?.remove();},
+    _applyGradient(id,gradient){
+      removeGradient(id); // clear first
+      saveGradient(id,gradient);
+      removeCover(id);
+      const sel=document.getElementById('nf-grad-selected');
+      if(sel) sel.textContent='Degradê selecionado ✓';
+      // highlight selected swatch
+      document.querySelectorAll('#nf-cover-modal [onclick*="_applyGradient"]').forEach(el=>{
+        el.style.outline=el.onclick?.toString().includes(`'${gradient}'`)||el.getAttribute('onclick')?.includes(gradient)?'3px solid #fff':'';
+        el.style.outlineOffset='2px';
+      });
+      NFModule._closeModal();
+      if(window._nfOnSave)window._nfOnSave();
+    },
     refresh(){renderAdminGrid();renderClientGrid();},
 
     // ── Custom Cards ─────────────────────────────────────────────────
