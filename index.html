@@ -10197,8 +10197,10 @@ ${text}`,
   }
 };
 
-// _openBrandClient: usado na ficha do cliente (brand core completo)
-Admin._openBrandClient = function(clientId){ return Client._openBrandClient.call(Admin, clientId); };
+// Expõe funções do Client no Admin (definidas no Client por organização de código)
+Admin.renderBrandCoreAdmin = function(){ return Client.renderBrandCoreAdmin.call(Admin); };
+Admin._openMapaMental      = function(id){ return Client._openMapaMental.call(Admin, id); };
+Admin._openBrandClient     = function(id){ return Client._openBrandClient.call(Admin, id); };
 
 const Theme = {
   _mq: window.matchMedia('(prefers-color-scheme: dark)'),
