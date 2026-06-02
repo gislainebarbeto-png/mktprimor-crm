@@ -9351,48 +9351,109 @@ ${text}`,
 
   async renderBrandCoreAdmin() {
     const el = document.getElementById('admin-main'); if (!el) return;
-    el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando clientes...</p>';
+    el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando...</p>';
     const { data: clients } = await db.from('clients').select('id,nome,empresa,email,foto_url').order('nome');
     const list = clients || [];
-    el.innerHTML = `<div style="padding:28px;max-width:860px;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
-        <span style="font-size:28px;">🧠</span>
+
+    el.innerHTML = `<div style="padding:24px;max-width:900px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+        <span style="font-size:26px;">🧠</span>
         <div>
           <div style="font-size:20px;font-weight:700;color:var(--text);">Mapa Mental</div>
-          <div style="font-size:12px;color:var(--muted);">Selecione o cliente para abrir o mapa mental</div>
+          <div style="font-size:12px;color:var(--muted);">Selecione o cliente na lista ao lado</div>
         </div>
       </div>
-      <div style="height:1px;background:var(--border);margin:20px 0;"></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
-        ${list.map(c=>`
-          <div onclick="Admin._openMapaMental('${c.id}')" style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 14px;text-align:center;transition:all .2s;"
-            onmouseover="this.style.borderColor='var(--brown)';this.style.transform='translateY(-3px)'"
-            onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
-            ${c.foto_url
-              ? `<img src="${c.foto_url}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;margin-bottom:10px;">`
-              : `<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--wine),var(--rose));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin:0 auto 10px;">${(c.nome||'?')[0].toUpperCase()}</div>`}
-            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">${c.nome||'-'}</div>
-            <div style="font-size:10px;color:var(--muted);">${c.empresa||''}</div>
-            <div style="margin-top:10px;font-size:10px;color:var(--brown);font-weight:600;letter-spacing:.05em;">Abrir mapa →</div>
-          </div>`).join('')}
-        ${!list.length ? '<p style="color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:40px;">Nenhum cliente cadastrado.</p>' : ''}
+      <div style="display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start;">
+        <!-- Lista de clientes -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+          <div style="padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);">Clientes</div>
+          ${list.map(c=>`
+            <div id="mm-cli-${c.id}" onclick="Admin._openMapaMental('${c.id}')"
+              style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border);"
+              onmouseover="this.style.background='var(--beige)'" onmouseout="this.style.background=''">
+              ${c.foto_url
+                ? `<img src="${c.foto_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+                : `<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--wine),var(--rose));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${(c.nome||'?')[0].toUpperCase()}</div>`}
+              <div style="min-width:0;">
+                <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.nome||'-'}</div>
+                <div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.empresa||''}</div>
+              </div>
+            </div>`).join('')}
+          ${!list.length?'<div style="padding:20px;color:var(--muted);font-size:12px;text-align:center;">Nenhum cliente.</div>':''}
+        </div>
+        <!-- Área do mapa -->
+        <div id="mm-content" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;min-height:300px;display:flex;align-items:center;justify-content:center;">
+          <div style="text-align:center;color:var(--muted);">
+            <div style="font-size:40px;margin-bottom:12px;">🧠</div>
+            <div style="font-size:14px;">Selecione um cliente para ver os mapas mentais</div>
+          </div>
+        </div>
       </div>
     </div>`;
   },
 
   async _openMapaMental(clientId) {
-    const el = document.getElementById('admin-main'); if (!el) return;
-    el.innerHTML = '<p style="padding:40px;color:var(--muted);text-align:center;font-size:13px;">Carregando...</p>';
+    // Destaca cliente selecionado
+    document.querySelectorAll('[id^="mm-cli-"]').forEach(el=>el.style.background='');
+    const selEl = document.getElementById('mm-cli-'+clientId);
+    if(selEl) selEl.style.background='var(--beige)';
+
+    const area = document.getElementById('mm-content');
+    if(!area) { // fallback: se não achou a área (veio de outro lugar), abre no admin-main
+      const el = document.getElementById('admin-main'); if (!el) return;
+      const { data: c } = await db.from('clients').select('*').eq('id', clientId).single();
+      if (!c) return;
+      this._bcReadOnly = false;
+      this._bcContentId = 'admin-main';
+      this._bcSection = 'estrategias';
+      this._bcSubSection = null;
+      this._bcFromMapaMental = true;
+      this._cliCurrentId = c.id;
+      this._cliClienteData = c;
+      this._cliTabBrandCore(c.id, c);
+      return;
+    }
+
+    area.innerHTML = '<p style="color:var(--muted);font-size:13px;">Carregando mapas...</p>';
     const { data: c } = await db.from('clients').select('*').eq('id', clientId).single();
     if (!c) return;
+    const { data: mapas } = await db.from('informacoes_cliente')
+      .select('*').eq('client_email', c.email).eq('tipo', 'bc_mapa')
+      .order('created_at', {ascending:false});
+
     this._bcReadOnly = false;
-    this._bcContentId = 'admin-main';
-    this._bcSection = 'estrategias'; // vai direto para mapas mentais
+    this._bcContentId = 'mm-content';
+    this._bcSection = 'estrategias';
     this._bcSubSection = null;
-    this._bcFromMapaMental = true; // flag: ← volta para seletor, não para menu brand core
+    this._bcFromMapaMental = true;
     this._cliCurrentId = c.id;
     this._cliClienteData = c;
-    this._cliTabBrandCore(c.id, c);
+
+    area.innerHTML = `
+      <div style="width:100%;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--text);">${c.nome||''}</div>
+            <div style="font-size:11px;color:var(--muted);">${(mapas||[]).length} mapa(s)</div>
+          </div>
+          <button onclick="Admin._bcNovoMapa('${c.email}')" style="padding:8px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:600;">+ Novo mapa</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;">
+          ${(mapas||[]).map(m=>{
+            let d={}; try{d=JSON.parse(m.conteudo||'{}')}catch{}
+            return `<div onclick="Admin._bcAbrirMapa('${m.id}','${c.email}')"
+              style="border-radius:12px;border:1px solid var(--border);background:var(--bg);padding:16px;cursor:pointer;transition:all .18s;"
+              onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.08)'"
+              onmouseleave="this.style.transform='';this.style.boxShadow=''">
+              <div style="font-size:22px;margin-bottom:8px;">🗺</div>
+              <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;">${d.title||m.titulo}</div>
+              <div style="font-size:10px;color:var(--muted);">${(d.nodes||[]).length} nós</div>
+              <div style="margin-top:8px;font-size:10px;color:var(--brown);font-weight:600;">Abrir →</div>
+            </div>`;
+          }).join('')}
+        </div>
+        ${!(mapas||[]).length?`<div style="text-align:center;padding:40px 20px;color:var(--muted);font-style:italic;font-size:14px;">Nenhum mapa ainda.<br>Clique em "+ Novo mapa" para criar.</div>`:''}
+      </div>`;
   },
 
   async _openBrandClient(clientId) {
