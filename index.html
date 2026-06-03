@@ -4376,7 +4376,7 @@ const Admin = {
         +'color:'+clr+';font-size:10px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;'
         +'z-index:15;pointer-events:auto;user-select:none;box-shadow:0 1px 4px rgba(0,0,0,0.15);">'+(node.collapsed?'▶':'−')+'</div>'
       : '';
-    const mkAddBtn = (dir,pos) => this._bcReadOnly ? '' :
+    const mkAddBtn = (dir,pos) => (this._bcReadOnly || !isSel) ? '' :
       '<div onclick="event.stopPropagation();Admin._bcMmAddChild('+node.id+',\''+dir+'\')" onmousedown="event.stopPropagation()" title="+ '+dir+'" '
       +'style="position:absolute;'+pos+';width:20px;height:20px;border-radius:50%;background:'+clr+';border:2.5px solid #fff;'
       +'color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;'
