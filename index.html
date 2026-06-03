@@ -4350,11 +4350,14 @@ const Admin = {
     const selBorderVal = isSel ? (noFill ? '3px solid '+clr : '3px solid rgba(255,255,255,0.9)') : (noFill ? '2px solid '+clr : '2px solid transparent');
     const bxShadow = (isSel ? '0 0 0 3px '+clr+',' : '') + '0 3px 14px rgba(0,0,0,0.18)';
     const shape = node.shape || 'rounded';
-    const borderR = shape==='square' ? '5px' : shape==='circle' ? '50%' : (isRoot ? '22px' : '12px');
+    const borderR = shape==='square' ? '5px' : shape==='circle' ? '50%'
+      : shape==='cloud' ? '50% 50% 50% 50% / 40% 60% 40% 60%'
+      : (isRoot ? '22px' : '12px');
     const bw = node.borderWidth || 2;
-    const outlineStyle = node.borderStyle==='solid' ? bw+'px solid '+(noFill?clr:'rgba(255,255,255,0.4)')
-                       : node.borderStyle==='dotted' ? bw+'px dotted '+(noFill?clr:'rgba(255,255,255,0.65)')
-                       : node.borderStyle==='dashed' ? bw+'px dashed '+(noFill?clr:'rgba(255,255,255,0.65)') : 'none';
+    const bclr = node.borderColor || (noFill ? clr : 'rgba(255,255,255,0.55)');
+    const outlineStyle = node.borderStyle==='solid'  ? bw+'px solid '+bclr
+                       : node.borderStyle==='dotted' ? bw+'px dotted '+bclr
+                       : node.borderStyle==='dashed' ? bw+'px dashed '+bclr : 'none';
     const imgR = shape==='circle' ? '50%' : (isRoot ? '19px 19px 0 0' : '9px 9px 0 0');
     const imgHtml = node.imgUrl ? '<div style="overflow:hidden;border-radius:'+imgR+';"><img src="'+node.imgUrl+'" style="width:100%;max-height:90px;object-fit:cover;display:block;pointer-events:none;"/></div>' : '';
     const pad = isRoot ? '10px 16px' : '6px 11px';
@@ -4720,15 +4723,26 @@ const Admin = {
       </div>
       ${node.lineColor ? `<div onclick="Admin._bcMmSetStyle('lineColor',null)" style="height:22px;border-radius:5px;cursor:pointer;border:2px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">↺ Resetar (auto)</span></div>` : `<div style="height:8px;margin-bottom:10px;"></div>`}
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Forma</div>
-      <div style="display:flex;gap:3px;margin-bottom:8px;">
-        ${[['rounded','⬭','Arred.'],['square','◼','Quad.'],['circle','●','Círculo']].map(([s,icon,lbl])=>'<button onclick="Admin._bcMmSetStyle(\'shape\',\''+s+'\')" style="flex:1;padding:4px 2px;border-radius:5px;border:2px solid '+((node.shape||'rounded')===s?'var(--brown)':'var(--border)')+';background:'+((node.shape||'rounded')===s?'var(--brown)':'var(--beige)')+';color:'+((node.shape||'rounded')===s?'#fff':'var(--text)')+';font-size:13px;cursor:pointer;" title="'+lbl+'">'+icon+'</button>').join('')}
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-bottom:8px;">
+        ${[['rounded','⬭','Arred.'],['square','◼','Quad.'],['circle','●','Círculo'],['cloud','☁','Nuvem']].map(([s,icon,lbl])=>'<button onclick="Admin._bcMmSetStyle(\'shape\',\''+s+'\')" style="padding:4px 2px;border-radius:5px;border:2px solid '+((node.shape||'rounded')===s?'var(--brown)':'var(--border)')+';background:'+((node.shape||'rounded')===s?'var(--brown)':'var(--beige)')+';color:'+((node.shape||'rounded')===s?'#fff':'var(--text)')+';font-size:13px;cursor:pointer;" title="'+lbl+'">'+icon+'</button>').join('')}
       </div>
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Borda</div>
       <div style="display:flex;gap:3px;margin-bottom:5px;">
-        ${[['none','—'],['solid','▬'],['dotted','···'],['dashed','- -']].map(([k,lbl])=>'<button onclick="Admin._bcMmSetStyle(\'border\',\''+k+'\')" style="flex:1;padding:4px 2px;border-radius:5px;border:2px solid '+((node.borderStyle||'none')===k?'var(--brown)':'var(--border)')+';background:'+((node.borderStyle||'none')===k?'var(--brown)':'var(--beige)')+';color:'+((node.borderStyle||'none')===k?'#fff':'var(--text)')+';font-size:11px;cursor:pointer;">'+lbl+'</button>').join('')}
+        ${[['none','⊘ Sem'],['solid','▬'],['dotted','···'],['dashed','- -']].map(([k,lbl])=>'<button onclick="Admin._bcMmSetStyle(\'border\',\''+k+'\')" style="flex:1;padding:4px 2px;border-radius:5px;border:2px solid '+((node.borderStyle||'none')===k?'var(--brown)':'var(--border)')+';background:'+((node.borderStyle||'none')===k?'var(--brown)':'var(--beige)')+';color:'+((node.borderStyle||'none')===k?'#fff':'var(--text)')+';font-size:10px;cursor:pointer;">'+lbl+'</button>').join('')}
       </div>
-      <div style="display:flex;gap:3px;margin-bottom:10px;">
+      <div style="display:flex;gap:3px;margin-bottom:8px;">
         ${[1,2,3,4].map(w=>'<button onclick="Admin._bcMmSetStyle(\'borderWidth\','+w+')" style="flex:1;padding:3px 2px;border-radius:5px;border:2px solid '+(curBw===w?'var(--brown)':'var(--border)')+';background:'+(curBw===w?'var(--brown)':'var(--beige)')+';color:'+(curBw===w?'#fff':'var(--text)')+';font-size:10px;cursor:pointer;">'+w+'px</button>').join('')}
+      </div>
+      <div style="display:flex;gap:5px;align-items:center;margin-bottom:10px;">
+        <input type="color" value="${node.borderColor||'#ffffff'}"
+          oninput="Admin._bcMmColorLive('border',this.value);var h=this.parentNode.querySelector('[data-hexfor=border]');if(h)h.value=this.value"
+          onchange="Admin._bcMmSetStyle('borderColor',this.value)"
+          style="width:42px;height:28px;border:none;border-radius:7px;cursor:pointer;padding:2px;background:none;flex-shrink:0;">
+        <input type="text" data-hexfor="border" value="${node.borderColor||''}" maxlength="7" placeholder="cor da borda"
+          oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value)){Admin._bcMmColorLive('border',this.value);var c=this.parentNode.querySelector('[type=color]');if(c)c.value=this.value}"
+          onchange="if(/^#[0-9A-Fa-f]{6}$/.test(this.value))Admin._bcMmSetStyle('borderColor',this.value)"
+          style="flex:1;padding:4px 8px;border-radius:7px;border:1px solid var(--border);background:var(--beige);color:var(--text);font-size:11px;font-family:monospace;">
+        ${node.borderColor ? `<button onclick="Admin._bcMmSetStyle('borderColor',null)" style="padding:4px 7px;border-radius:6px;border:1px solid var(--border);background:var(--beige);color:var(--muted);font-size:10px;cursor:pointer;flex-shrink:0;">↺</button>` : ''}
       </div>
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Texto</div>
       <div style="display:flex;gap:4px;margin-bottom:6px;">
@@ -4785,6 +4799,7 @@ const Admin = {
     else if (prop==='lineColor') { if (value===null) delete node.lineColor; else node.lineColor = value; }
     else if (prop==='resetSize') { delete node.width; delete node.height; }
     else if (prop==='fontSize') node.fontSize = Math.max(6, Math.min(72, value));
+    else if (prop==='borderColor') { if (value===null) delete node.borderColor; else node.borderColor = value; }
     this._bcMmRenderAll(); this._bcMmUpdatePanel();
   },
 
@@ -4839,6 +4854,7 @@ const Admin = {
     if (type==='node') { node.color = val; node.noFill = false; }
     else if (type==='line') node.lineColor = val;
     else if (type==='text') node.textColor = val;
+    else if (type==='border') node.borderColor = val;
     const el = document.getElementById('mm-node-'+node.id);
     if (el) {
       if (type==='node') {
