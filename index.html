@@ -4376,11 +4376,16 @@ const Admin = {
         +'color:'+clr+';font-size:10px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;'
         +'z-index:15;pointer-events:auto;user-select:none;box-shadow:0 1px 4px rgba(0,0,0,0.15);">'+(node.collapsed?'▶':'−')+'</div>'
       : '';
-    const addBtn = this._bcReadOnly ? '' : '<div onclick="event.stopPropagation();Admin._bcMmAddChild('+node.id+')" onmousedown="event.stopPropagation()" title="Adicionar filho" '
-      +'style="position:absolute;right:-40px;top:50%;transform:translateY(-50%);'
-      +'width:22px;height:22px;border-radius:50%;background:'+clr+';border:2.5px solid #fff;'
-      +'color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;'
+    const mkAddBtn = (dir,pos) => this._bcReadOnly ? '' :
+      '<div onclick="event.stopPropagation();Admin._bcMmAddChild('+node.id+',\''+dir+'\')" onmousedown="event.stopPropagation()" title="+ '+dir+'" '
+      +'style="position:absolute;'+pos+';width:20px;height:20px;border-radius:50%;background:'+clr+';border:2.5px solid #fff;'
+      +'color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;'
       +'z-index:20;pointer-events:auto;user-select:none;box-shadow:0 2px 6px rgba(0,0,0,0.22);">+</div>';
+    const addBtn =
+        mkAddBtn('right', 'right:-36px;top:50%;transform:translateY(-50%)')
+      + mkAddBtn('left',  'left:-36px;top:50%;transform:translateY(-50%)')
+      + mkAddBtn('bottom','bottom:-30px;left:50%;transform:translateX(-50%)')
+      + mkAddBtn('top',   'top:-30px;left:50%;transform:translateX(-50%)');
     const resizeHandle = this._bcReadOnly ? '' :
       '<div class="mm-resize-handle" onmousedown="event.stopPropagation();event.preventDefault();Admin._bcMmResizeDown(event,'+node.id+')" '
       +'ontouchstart="event.stopPropagation();event.preventDefault();Admin._bcMmResizeTouchDown(event,'+node.id+')" '
@@ -4768,7 +4773,7 @@ const Admin = {
       ${node.textColor ? `<div onclick="Admin._bcMmSetStyle('textColor',null)" style="height:22px;border-radius:5px;cursor:pointer;border:2px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;margin-bottom:4px;"><span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">↺ Resetar (auto)</span></div>` : ''}`;
   },
 
-  _bcMmAddChild(parentId) {
+  _bcMmAddChild(parentId, dir) {
     const selId = (parentId !== undefined && parentId !== null) ? parentId : this._bcMapaSel;
     if (!selId || !this._bcMapaData) { this._showToast('Selecione um nó primeiro'); return; }
     const parent = this._bcMapaData.nodes.find(n=>n.id===selId); if (!parent) return;
@@ -4776,9 +4781,12 @@ const Admin = {
     const color = palette[this._bcMapaData.nextId % palette.length];
     const id = this._bcMapaData.nextId++;
     const siblings = this._bcMapaData.nodes.filter(n=>n.parentId===selId).length;
-    const side = parent.x < 0 ? -1 : 1;
-    const x = parent.x + side * (180 + (siblings%2)*30);
-    const y = parent.y + (Math.floor(siblings/2)*100) - (Math.ceil(siblings/2)*50);
+    const spread = (siblings % 2 === 0 ? 1 : -1) * Math.ceil(siblings / 2) * 70;
+    let x, y;
+    if      (dir==='left')   { x = parent.x - 200; y = parent.y + spread; }
+    else if (dir==='top')    { x = parent.x + spread; y = parent.y - 150; }
+    else if (dir==='bottom') { x = parent.x + spread; y = parent.y + 150; }
+    else                     { x = parent.x + 200;    y = parent.y + spread; }
     const newNode = {id, text:'Novo ramo', x, y, parentId:selId, color, imgUrl:null};
     this._bcMapaData.nodes.push(newNode);
     this._bcMapaSel = id;
