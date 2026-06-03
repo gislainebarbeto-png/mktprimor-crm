@@ -4358,7 +4358,7 @@ const Admin = {
     const imgR = shape==='circle' ? '50%' : (isRoot ? '19px 19px 0 0' : '9px 9px 0 0');
     const imgHtml = node.imgUrl ? '<div style="overflow:hidden;border-radius:'+imgR+';"><img src="'+node.imgUrl+'" style="width:100%;max-height:90px;object-fit:cover;display:block;pointer-events:none;"/></div>' : '';
     const pad = isRoot ? '10px 16px' : '6px 11px';
-    const fs = isRoot ? 13 : 11;
+    const fs = isRoot ? 13 : (node.width ? Math.max(8, Math.min(36, Math.round(node.width * 0.14))) : 11);
     const fw = node.bold ? (isRoot ? 800 : 700) : (isRoot ? 600 : 400);
     const fStyle = node.italic ? 'italic' : 'normal';
     const defMw = shape==='circle' ? (isRoot?80:54) : (isRoot ? 110 : 72);
@@ -4503,7 +4503,10 @@ const Admin = {
       node.width  = Math.max(50, Math.round(this._bcMmResizeStart.w + dx));
       node.height = Math.max(24, Math.round(this._bcMmResizeStart.h + dy));
       const el = document.getElementById('mm-node-'+this._bcMmResizing);
-      if (el) { el.style.width = node.width+'px'; el.style.height = node.height+'px'; el.style.minWidth=''; el.style.maxWidth=''; }
+      if (el) {
+        el.style.width = node.width+'px'; el.style.height = node.height+'px'; el.style.minWidth=''; el.style.maxWidth='';
+        if (node.parentId !== null) { const td=el.querySelector('.mm-node-text'); if(td) td.style.fontSize=Math.max(8,Math.min(36,Math.round(node.width*0.14)))+'px'; }
+      }
       return;
     }
     if (this._bcMapaDrag && this._bcMapaData) {
@@ -4563,7 +4566,10 @@ const Admin = {
       node.width  = Math.max(50, Math.round(this._bcMmResizeStart.w + dx));
       node.height = Math.max(24, Math.round(this._bcMmResizeStart.h + dy));
       const el = document.getElementById('mm-node-'+this._bcMmResizing);
-      if (el) { el.style.width = node.width+'px'; el.style.height = node.height+'px'; el.style.minWidth=''; el.style.maxWidth=''; }
+      if (el) {
+        el.style.width = node.width+'px'; el.style.height = node.height+'px'; el.style.minWidth=''; el.style.maxWidth='';
+        if (node.parentId !== null) { const td=el.querySelector('.mm-node-text'); if(td) td.style.fontSize=Math.max(8,Math.min(36,Math.round(node.width*0.14)))+'px'; }
+      }
       return;
     }
     if (this._bcMapaDrag && this._bcMapaData) {
@@ -4689,16 +4695,28 @@ const Admin = {
       ${(node.width||node.height) ? `<button onclick="Admin._bcMmSetStyle('resetSize',true)" style="width:100%;padding:5px;border-radius:7px;background:var(--beige);border:1px solid var(--border);color:var(--muted);font-size:10px;cursor:pointer;margin-bottom:10px;">↺ Redefinir tamanho</button>` : '<div style="height:10px;margin-bottom:4px;"></div>'}
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Cor do nó</div>
       <div style="display:flex;gap:5px;align-items:center;margin-bottom:4px;">
-        <input type="color" value="${node.noFill?'#ffffff':(node.color||'#B8820A')}" oninput="Admin._bcMmSetColor(this.value)" style="width:42px;height:32px;border:none;border-radius:7px;cursor:pointer;padding:2px;background:none;flex-shrink:0;">
-        <input type="text" value="${node.noFill?'':(node.color||'#B8820A')}" maxlength="7" placeholder="#000000" oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value))Admin._bcMmSetColor(this.value)" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border);background:var(--beige);color:var(--text);font-size:11px;font-family:monospace;">
+        <input type="color" value="${node.noFill?'#ffffff':(node.color||'#B8820A')}"
+          oninput="Admin._bcMmColorLive('node',this.value);var h=this.parentNode.querySelector('[data-hexfor=node]');if(h)h.value=this.value"
+          onchange="Admin._bcMmSetColor(this.value)"
+          style="width:42px;height:32px;border:none;border-radius:7px;cursor:pointer;padding:2px;background:none;flex-shrink:0;">
+        <input type="text" data-hexfor="node" value="${node.noFill?'':(node.color||'#B8820A')}" maxlength="7" placeholder="#000000"
+          oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value)){Admin._bcMmColorLive('node',this.value);var c=this.parentNode.querySelector('[type=color]');if(c)c.value=this.value}"
+          onchange="if(/^#[0-9A-Fa-f]{6}$/.test(this.value))Admin._bcMmSetColor(this.value)"
+          style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border);background:var(--beige);color:var(--text);font-size:11px;font-family:monospace;">
       </div>
       <div onclick="Admin._bcMmSetNoFill()" style="height:22px;border-radius:5px;cursor:pointer;border:2px solid ${node.noFill?'var(--brown)':'var(--border)'};background:transparent;display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:10px;transition:border-color .1s;">
         <span style="font-size:9px;color:${node.noFill?'var(--brown)':'var(--muted)'};text-transform:uppercase;letter-spacing:.06em;font-weight:${node.noFill?'600':'400'};">⊘ Sem cor</span>
       </div>
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Cor da linha</div>
       <div style="display:flex;gap:5px;align-items:center;margin-bottom:4px;">
-        <input type="color" value="${node.lineColor||node.color||'#B8820A'}" oninput="Admin._bcMmSetStyle('lineColor',this.value)" style="width:42px;height:32px;border:none;border-radius:7px;cursor:pointer;padding:2px;background:none;flex-shrink:0;">
-        <input type="text" value="${node.lineColor||''}" maxlength="7" placeholder="auto (cor do nó)" oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value))Admin._bcMmSetStyle('lineColor',this.value)" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border);background:var(--beige);color:var(--text);font-size:11px;font-family:monospace;">
+        <input type="color" value="${node.lineColor||node.color||'#B8820A'}"
+          oninput="Admin._bcMmColorLive('line',this.value);var h=this.parentNode.querySelector('[data-hexfor=line]');if(h)h.value=this.value"
+          onchange="Admin._bcMmSetStyle('lineColor',this.value)"
+          style="width:42px;height:32px;border:none;border-radius:7px;cursor:pointer;padding:2px;background:none;flex-shrink:0;">
+        <input type="text" data-hexfor="line" value="${node.lineColor||''}" maxlength="7" placeholder="auto (cor do nó)"
+          oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value)){Admin._bcMmColorLive('line',this.value);var c=this.parentNode.querySelector('[type=color]');if(c)c.value=this.value}"
+          onchange="if(/^#[0-9A-Fa-f]{6}$/.test(this.value))Admin._bcMmSetStyle('lineColor',this.value)"
+          style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border);background:var(--beige);color:var(--text);font-size:11px;font-family:monospace;">
       </div>
       ${node.lineColor ? `<div onclick="Admin._bcMmSetStyle('lineColor',null)" style="height:22px;border-radius:5px;cursor:pointer;border:2px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">↺ Resetar (auto)</span></div>` : `<div style="height:8px;margin-bottom:10px;"></div>`}
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Forma</div>
@@ -4719,8 +4737,14 @@ const Admin = {
       </div>
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Cor da letra</div>
       <div style="display:flex;gap:5px;align-items:center;margin-bottom:4px;">
-        <input type="color" value="${node.textColor||autoTextClr}" oninput="Admin._bcMmSetStyle('textColor',this.value)" style="width:42px;height:32px;border:none;border-radius:7px;cursor:pointer;padding:2px;background:none;flex-shrink:0;">
-        <input type="text" value="${node.textColor||''}" maxlength="7" placeholder="auto (${autoTextClr})" oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value))Admin._bcMmSetStyle('textColor',this.value)" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border);background:var(--beige);color:var(--text);font-size:11px;font-family:monospace;">
+        <input type="color" value="${node.textColor||autoTextClr}"
+          oninput="Admin._bcMmColorLive('text',this.value);var h=this.parentNode.querySelector('[data-hexfor=text]');if(h)h.value=this.value"
+          onchange="Admin._bcMmSetStyle('textColor',this.value)"
+          style="width:42px;height:32px;border:none;border-radius:7px;cursor:pointer;padding:2px;background:none;flex-shrink:0;">
+        <input type="text" data-hexfor="text" value="${node.textColor||''}" maxlength="7" placeholder="auto (${autoTextClr})"
+          oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value)){Admin._bcMmColorLive('text',this.value);var c=this.parentNode.querySelector('[type=color]');if(c)c.value=this.value}"
+          onchange="if(/^#[0-9A-Fa-f]{6}$/.test(this.value))Admin._bcMmSetStyle('textColor',this.value)"
+          style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border);background:var(--beige);color:var(--text);font-size:11px;font-family:monospace;">
       </div>
       ${node.textColor ? `<div onclick="Admin._bcMmSetStyle('textColor',null)" style="height:22px;border-radius:5px;cursor:pointer;border:2px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;margin-bottom:4px;"><span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">↺ Resetar (auto)</span></div>` : ''}`;
   },
@@ -4801,6 +4825,25 @@ const Admin = {
     const node = this._bcMapaData.nodes.find(n=>n.id===this._bcMapaSel); if (!node) return;
     node.noFill = !node.noFill;
     this._bcMmRenderAll(); this._bcMmUpdatePanel();
+  },
+
+  _bcMmColorLive(type, val) {
+    if (!this._bcMapaSel || !this._bcMapaData) return;
+    const node = this._bcMapaData.nodes.find(n=>n.id===this._bcMapaSel); if (!node) return;
+    if (type==='node') { node.color = val; node.noFill = false; }
+    else if (type==='line') node.lineColor = val;
+    else if (type==='text') node.textColor = val;
+    const el = document.getElementById('mm-node-'+node.id);
+    if (el) {
+      if (type==='node') {
+        el.style.background = val;
+        const rh = el.querySelector('.mm-resize-handle'); if (rh) rh.style.background = val;
+        const ab = el.querySelector('[title="Adicionar filho"]'); if (ab) ab.style.background = val;
+      }
+      if (type==='text') { const td = el.querySelector('.mm-node-text'); if (td) td.style.color = val; }
+    }
+    this._bcMmUpdateSvg();
+    this._bcMmAutoSave();
   },
 
   async _bcMmUploadImg(input, nodeId) {
