@@ -4358,7 +4358,7 @@ const Admin = {
     const imgR = shape==='circle' ? '50%' : (isRoot ? '19px 19px 0 0' : '9px 9px 0 0');
     const imgHtml = node.imgUrl ? '<div style="overflow:hidden;border-radius:'+imgR+';"><img src="'+node.imgUrl+'" style="width:100%;max-height:90px;object-fit:cover;display:block;pointer-events:none;"/></div>' : '';
     const pad = isRoot ? '10px 16px' : '6px 11px';
-    const fs = isRoot ? 13 : (node.width ? Math.max(8, Math.min(36, Math.round(node.width * 0.14))) : 11);
+    const fs = node.fontSize ? node.fontSize : (isRoot ? 13 : (node.width ? Math.max(8, Math.min(36, Math.round(node.width * 0.14))) : 11));
     const fw = node.bold ? (isRoot ? 800 : 700) : (isRoot ? 600 : 400);
     const fStyle = node.italic ? 'italic' : 'normal';
     const defMw = shape==='circle' ? (isRoot?80:54) : (isRoot ? 110 : 72);
@@ -4735,6 +4735,11 @@ const Admin = {
         <button onclick="Admin._bcMmSetStyle('bold',${!node.bold})" style="flex:1;padding:5px;border-radius:6px;border:2px solid ${node.bold?'var(--brown)':'var(--border)'};background:${node.bold?'var(--brown)':'var(--beige)'};color:${node.bold?'#fff':'var(--text)'};font-size:13px;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif;">N</button>
         <button onclick="Admin._bcMmSetStyle('italic',${!node.italic})" style="flex:1;padding:5px;border-radius:6px;border:2px solid ${node.italic?'var(--brown)':'var(--border)'};background:${node.italic?'var(--brown)':'var(--beige)'};color:${node.italic?'#fff':'var(--text)'};font-size:13px;font-style:italic;cursor:pointer;font-family:Poppins,sans-serif;">I</button>
       </div>
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:10px;">
+        <button onclick="Admin._bcMmSetStyle('fontSize',(${node.fontSize||11})-1)" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--beige);color:var(--text);font-size:16px;font-weight:700;cursor:pointer;line-height:1;flex-shrink:0;">−</button>
+        <div style="flex:1;text-align:center;font-size:13px;font-weight:600;color:var(--text);">${node.fontSize||11}px</div>
+        <button onclick="Admin._bcMmSetStyle('fontSize',(${node.fontSize||11})+1)" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--beige);color:var(--text);font-size:16px;font-weight:700;cursor:pointer;line-height:1;flex-shrink:0;">+</button>
+      </div>
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Cor da letra</div>
       <div style="display:flex;gap:5px;align-items:center;margin-bottom:4px;">
         <input type="color" value="${node.textColor||autoTextClr}"
@@ -4779,6 +4784,7 @@ const Admin = {
     else if (prop==='borderWidth') node.borderWidth = value;
     else if (prop==='lineColor') { if (value===null) delete node.lineColor; else node.lineColor = value; }
     else if (prop==='resetSize') { delete node.width; delete node.height; }
+    else if (prop==='fontSize') node.fontSize = Math.max(6, Math.min(72, value));
     this._bcMmRenderAll(); this._bcMmUpdatePanel();
   },
 
