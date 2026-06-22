@@ -17,7 +17,7 @@ serve(async (req) => {
 
     const APP_ID     = Deno.env.get('META_APP_ID')
     const APP_SECRET = Deno.env.get('META_APP_SECRET')
-    const REDIRECT   = Deno.env.get('META_REDIRECT_URI') || 'https://crm.gislainebarbeto.com.br/'
+    const REDIRECT   = Deno.env.get('META_REDIRECT_URI') || 'https://crm.marketingprimor.com.br/'
 
     if (!APP_ID || !APP_SECRET) {
       throw new Error('Secrets META_APP_ID / META_APP_SECRET não estão configurados no Supabase. Adicione em Settings → Edge Functions → Secrets.')
