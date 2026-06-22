@@ -2426,7 +2426,7 @@ const Admin = {
         .select('ig_user_id, access_token, ig_username')
         .eq('client_email', p.client_email)
         .single();
-      if (!tok?.access_token) throw new Error('Instagram não conectado para este cliente. Atualize o token na ficha do cliente.');
+      if (!tok?.access_token || !tok?.ig_user_id) throw new Error('Instagram não conectado para este cliente. Reconecte o Instagram na ficha do cliente (botão "Conectar Instagram").');
 
       const BASE = 'https://graph.facebook.com/v21.0';
       const { ig_user_id, access_token, ig_username } = tok;
