@@ -19,4 +19,4 @@ for FILE in "${FILES[@]}"; do
 done
 
 echo ""
-echo "Deploy concluído! Site: https://crm.marketingprimor.com.br"
+echo "Deploy concluído! Site: https://portal.marketingprimor.com.br"

@@ -14,7 +14,7 @@ URL: https://dloxddrdqsltuwdabwaq.supabase.co
 
 ## Deploy
 
-Hospedado em: crm.marketingprimor.com.br (Hostinger)
+Hospedado em: portal.marketingprimor.com.br (Hostinger)
 
 ## Como atualizar
 
