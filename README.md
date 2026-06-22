@@ -14,7 +14,7 @@ URL: https://dloxddrdqsltuwdabwaq.supabase.co
 
 ## Deploy
 
-Hospedado em: portal.marketingprimor.com.br (Hostinger)
+Hospedado em: crm.gislainebarbeto.com.br (Hostinger)
 
 ## Como atualizar
 

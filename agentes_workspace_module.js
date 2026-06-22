@@ -3081,7 +3081,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         </tr>`).join('');
       const html=`<div style="font-family:Poppins,Arial,sans-serif;background:#fff;padding:40px;max-width:900px;margin:0 auto;">
         <div style="text-align:center;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #E8DECE;">
-          <img src="https://portal.marketingprimor.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:44px;object-fit:contain;display:block;margin:0 auto 10px;">
+          <img src="https://crm.gislainebarbeto.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:44px;object-fit:contain;display:block;margin:0 auto 10px;">
           <div style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#9B6B3A;margin-bottom:6px;">Quadro de Posts — Para Aprovação</div>
           <div style="font-size:20px;font-weight:300;color:#5C3D1E;margin-bottom:3px;">${cliNome}</div>
           <div style="font-size:12px;color:#9B6B3A;">${mes} · ${cards.length} posts</div>
@@ -3136,7 +3136,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         if(!sections){alert('Nenhum dado salvo ainda. Preencha as abas com o Pedro primeiro.');return;}
         const htmlG=`<div style="font-family:Poppins,Arial,sans-serif;background:#fff;padding:48px;max-width:800px;margin:0 auto;">
           <div style="text-align:center;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid #E8DECE;">
-            <img src="https://portal.marketingprimor.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:50px;object-fit:contain;display:block;margin:0 auto 12px;">
+            <img src="https://crm.gislainebarbeto.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:50px;object-fit:contain;display:block;margin:0 auto 12px;">
             <div style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#9B6B3A;margin-bottom:8px;">Dashboard Estratégico</div>
             <div style="font-size:22px;font-weight:300;color:#5C3D1E;margin-bottom:4px;">${_esc(cliNome)}</div>
             <div style="font-size:12px;color:#9B6B3A;">${mes}</div>
@@ -3154,7 +3154,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       // helpers inline (sem classes CSS — html2canvas precisa de estilos inline)
       const W='font-family:Poppins,Arial,sans-serif;background:#fff;padding:48px;max-width:800px;margin:0 auto;';
       const HDR=`<div style="text-align:center;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid #E8DECE;">
-        <img src="https://portal.marketingprimor.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:50px;object-fit:contain;display:block;margin:0 auto 12px;">
+        <img src="https://crm.gislainebarbeto.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:50px;object-fit:contain;display:block;margin:0 auto 12px;">
         <div style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#9B6B3A;margin-bottom:8px;">`;
       const HDR2=`</div><div style="font-size:22px;font-weight:300;color:#5C3D1E;margin-bottom:4px;">${_esc(cliNome)}</div>
         <div style="font-size:12px;color:#9B6B3A;">${mes}</div></div>`;
@@ -3267,7 +3267,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       </tr>`;
       const html=`<div style="font-family:Poppins,Arial,sans-serif;background:#fff;padding:48px;max-width:800px;margin:0 auto;">
         <div style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #E8DECE;">
-          <img src="https://portal.marketingprimor.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:56px;object-fit:contain;display:block;margin:0 auto 12px;">
+          <img src="https://crm.gislainebarbeto.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:56px;object-fit:contain;display:block;margin:0 auto 12px;">
           <div style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#9B6B3A;margin-bottom:8px;">Relatório de Métricas Instagram</div>
           <div style="font-size:22px;font-weight:300;color:#5C3D1E;margin-bottom:4px;">${cliNome}</div>
           <div style="font-size:13px;color:#7A5230;">${periodo}</div>
@@ -3390,7 +3390,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
 
       const html=`<div style="font-family:Poppins,Arial,sans-serif;background:#FAF8F2;padding:48px;max-width:760px;margin:0 auto;">
         <div style="text-align:center;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid #E8DECE;">
-          <img src="https://portal.marketingprimor.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:64px;object-fit:contain;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;">
+          <img src="https://crm.gislainebarbeto.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:64px;object-fit:contain;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;">
           <div style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#9B6B3A;margin-bottom:10px;">Aprovação de Conteúdo</div>
           <div style="font-size:24px;font-weight:300;color:#5C3D1E;margin-bottom:4px;">${cliNome}</div>
           <div style="font-size:13px;color:#7A5230;">${mesNome} · ${ano}</div>
@@ -3446,7 +3446,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const wrap=document.createElement('div');
       wrap.innerHTML=`<div style="font-family:Poppins,Arial,sans-serif;background:#FAF8F2;padding:40px;max-width:680px;margin:0 auto;">
         <div style="text-align:center;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #E8DECE;">
-          <img src="https://portal.marketingprimor.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:52px;object-fit:contain;display:block;margin:0 auto 10px">
+          <img src="https://crm.gislainebarbeto.com.br/logo-texto.png.jpeg" crossorigin="anonymous" style="height:52px;object-fit:contain;display:block;margin:0 auto 10px">
           <div style="font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:#9B6B3A;margin-bottom:6px">Marketing Primor</div>
           <div style="font-size:18px;font-weight:300;color:#5C3D1E">${doc.titulo}</div>
           <div style="font-size:12px;color:#7A5230;margin-top:4px">${cliNome} · ${_fmtD(doc.data)}</div>

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Marketing Primor CRM — a client-side-only SPA for a marketing agency. No build step, no package manager, no server. All logic runs in the browser via vanilla JavaScript with Supabase as the backend.
 
-**Deployed at:** portal.marketingprimor.com.br via Hostinger  
+**Deployed at:** crm.gislainebarbeto.com.br via Hostinger  
 **Auto-deploy:** Push para `main` no GitHub → GitHub Actions faz deploy via FTP para Hostinger automaticamente.
 
 ## Running Locally
