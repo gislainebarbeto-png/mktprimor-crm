@@ -4633,6 +4633,7 @@ const Admin = {
 
   _bcMmNodeDblClick(e, nodeId) {
     e.stopPropagation();
+    if (this._bcMmEditingId === nodeId) return;
     const el = document.getElementById('mm-node-'+nodeId); if (!el) return;
     const node = this._bcMapaData?.nodes.find(n=>n.id===nodeId); if (!node) return;
     this._bcMmEditingId = nodeId;
