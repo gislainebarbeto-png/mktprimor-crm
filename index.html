@@ -4472,6 +4472,7 @@ const Admin = {
   _bcMmNodeDown(e, nodeId) {
     e.stopPropagation();
     if (this._bcReadOnly) return;
+    if (this._bcMmEditingId !== null) return;
     this._bcMapaDrag = nodeId;
     const wrap = document.getElementById('bc-mm-wrap'); if (!wrap) return;
     const rect = wrap.getBoundingClientRect();
@@ -4545,6 +4546,7 @@ const Admin = {
   _bcMmNodeTouchDown(e, nodeId) {
     e.stopPropagation();
     if (this._bcReadOnly) return;
+    if (this._bcMmEditingId !== null) return;
     const t = e.touches[0];
     this._bcMapaDrag = nodeId;
     const wrap = document.getElementById('bc-mm-wrap'); if (!wrap) return;
@@ -4636,9 +4638,12 @@ const Admin = {
     this._bcMmEditingId = nodeId;
     const textDiv = el.querySelector('.mm-node-text'); if (!textDiv) return;
     textDiv.style.pointerEvents = 'auto';
+    const wrap = document.getElementById('bc-mm-wrap');
+    if (wrap) wrap.style.userSelect = 'text';
     textDiv.innerHTML = `<input id="mm-inp-${nodeId}" type="text"
       value="${(node.text||'').replace(/"/g,'&quot;')}"
-      style="background:transparent;border:none;outline:none;color:#fff;font-size:inherit;font-weight:inherit;text-align:center;width:calc(100% - 4px);font-family:Poppins,sans-serif;cursor:text;"
+      style="background:transparent;border:none;outline:none;color:#fff;font-size:inherit;font-weight:inherit;text-align:center;width:calc(100% - 4px);font-family:Poppins,sans-serif;cursor:text;user-select:text;-webkit-user-select:text;"
+      onmousedown="event.stopPropagation()"
       onclick="event.stopPropagation()"
       onblur="Admin._bcMmFinishEdit(${nodeId})"
       onkeydown="Admin._bcMmEditKey(event,${nodeId})"/>`;
@@ -4652,6 +4657,8 @@ const Admin = {
     const node = this._bcMapaData?.nodes.find(n=>n.id===nodeId); if (!node) return;
     node.text = val;
     this._bcMmEditingId = null;
+    const wrap = document.getElementById('bc-mm-wrap');
+    if (wrap) wrap.style.userSelect = '';
     const el = document.getElementById('mm-node-'+nodeId);
     const textDiv = el?.querySelector('.mm-node-text');
     if (textDiv) { textDiv.innerHTML = val; textDiv.style.pointerEvents = 'none'; }
