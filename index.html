@@ -2023,9 +2023,10 @@ const Admin = {
 
     // Cores fixas por integrante do cliente "Alinhadas" (destaque no calendário)
     const SUBCLI = {
-      'Priscila': { bg:'#f1e9fb', border:'#8b5cf6', text:'#5b21b6', dot:'#8b5cf6' },
-      'Lara':     { bg:'#ffe3f1', border:'#ec4899', text:'#9d174d', dot:'#ec4899' },
-      'Planner':  { bg:'linear-gradient(135deg,#ffe3f1 0%,#d8f5e3 100%)', border:'#22a35e', text:'#166534', dot:'#22a35e' }
+      'Priscila': { bg:'#af93cc22', border:'#af93cc', text:'#5b3a82', dot:'#af93cc' },
+      'Lara':     { bg:'#dd8e9a22', border:'#dd8e9a', text:'#9c3f52', dot:'#dd8e9a' },
+      'Planner':  { bg:'#a4aa9722', border:'#a4aa97', text:'#4f5647', dot:'#a4aa97' },
+      'Todos':    { bg:'#f4c43022', border:'#f4c430', text:'#8a6d1a', dot:'#f4c430' }
     };
     // Chip compact (mensal/quinzenal) — tipo + tema + título, drag-and-drop
     const stripHtml = s => s ? s.replace(/<[^>]*>/g,'').replace(/&[^;]+;/g,' ').trim() : '';
@@ -10844,6 +10845,7 @@ document.addEventListener('keydown', e => {
                   <option value="Priscila">Priscila</option>
                   <option value="Lara">Lara</option>
                   <option value="Planner">Planner</option>
+                  <option value="Todos">Todos</option>
                 </select>
               </div>
             </div>
