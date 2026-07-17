@@ -2021,6 +2021,12 @@ const Admin = {
     });
     const getDay = (date) => byDay[`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`] || [];
 
+    // Cores fixas por integrante do cliente "Alinhadas" (destaque no calendário)
+    const SUBCLI = {
+      'Priscila': { bg:'#f1e9fb', border:'#8b5cf6', text:'#5b21b6', dot:'#8b5cf6' },
+      'Lara':     { bg:'#ffe3f1', border:'#ec4899', text:'#9d174d', dot:'#ec4899' },
+      'Planner':  { bg:'linear-gradient(135deg,#ffe3f1 0%,#d8f5e3 100%)', border:'#22a35e', text:'#166534', dot:'#22a35e' }
+    };
     // Chip compact (mensal/quinzenal) — tipo + tema + título, drag-and-drop
     const stripHtml = s => s ? s.replace(/<[^>]*>/g,'').replace(/&[^;]+;/g,' ').trim() : '';
     const tipoIco = (t) => t==='Reels'?'R ':t==='Stories'?'S ':t&&t.includes('Carrossel')?'C ':'';
@@ -2040,7 +2046,11 @@ const Admin = {
       const isVid = thumb && /\.(mp4|mov|webm|m4v)/i.test(thumb);
       const showThumb = thumb && !isVid;
       const isPostado = p.status === 'publicado';
-      return `<div class="pchip pchip-st-${p.status||'criacao'}" style="background:${isPostado?'#f0fdf4':sm.bc};border-color:${isPostado?'#16a34a66':sm.dot+'40'};display:flex;gap:5px;align-items:flex-start;padding:5px 7px;position:relative;overflow:hidden;"
+      const sub = SUBCLI[p.cliente_nome];
+      const bg = isPostado ? '#f0fdf4' : (sub ? sub.bg : sm.bc);
+      const borderCol = isPostado ? '#16a34a66' : (sub ? sub.border+'70' : sm.dot+'40');
+      const txtCol = (sub && !isPostado) ? sub.text : sm.c;
+      return `<div class="pchip pchip-st-${p.status||'criacao'}" style="background:${bg};border-color:${borderCol};display:flex;gap:5px;align-items:flex-start;padding:5px 7px;position:relative;overflow:hidden;"
         draggable="true"
         ondragstart="event.stopPropagation();event.dataTransfer.setData('postId','${p.id}');this.classList.add('dragging');Admin._dragPostId=${p.id}"
         ondragend="this.classList.remove('dragging')"
@@ -2048,13 +2058,14 @@ const Admin = {
         onclick="event.stopPropagation();Admin.viewPostDetail(${p.id})">
         ${isPostado?`<div style="position:absolute;top:3px;right:-14px;background:#16a34a;color:#fff;font-size:7px;font-weight:900;padding:2px 18px;transform:rotate(35deg);letter-spacing:.08em;transform-origin:center;pointer-events:none;z-index:2">POSTADO</div>`:''}
         ${showThumb?`<img src="${thumb}" class="pchip-thumb" onerror="this.style.display='none'" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;${isPostado?'filter:brightness(.8)':''}"/>`:''}
-        ${isVid?`<span style="width:36px;height:36px;border-radius:5px;flex-shrink:0;background:${sm.bc};border:1px solid ${sm.dot}40;display:flex;align-items:center;justify-content:center;font-size:14px;">🎬</span>`:''}
+        ${isVid?`<span style="width:36px;height:36px;border-radius:5px;flex-shrink:0;background:${bg};border:1px solid ${borderCol};display:flex;align-items:center;justify-content:center;font-size:14px;">🎬</span>`:''}
         <div style="flex:1;min-width:0;">
+          ${sub?`<span style="display:inline-block;background:${sub.border};color:#fff;font-size:8px;font-weight:800;padding:1px 6px;border-radius:8px;letter-spacing:.02em;margin-bottom:2px;">${p.cliente_nome}</span>`:''}
           <div style="display:flex;align-items:center;justify-content:space-between;gap:3px;">
             <span class="pchip-tipo" style="color:${isPostado?'#16a34a':sm.dot};">${tipoIco(tipo)} ${tipo} ${isPostado?'<span style="font-size:8px;background:#16a34a;color:#fff;border-radius:3px;padding:1px 4px;font-weight:700">✓</span>':statusDot(p.status||'criacao', sm.dot)}</span>
           </div>
-          ${tema?`<span class="pchip-tema" style="color:${sm.c};">${tema}</span>`:''}
-          <span class="pchip-titulo" style="color:${sm.c};">${titulo}</span>
+          ${tema?`<span class="pchip-tema" style="color:${txtCol};">${tema}</span>`:''}
+          <span class="pchip-titulo" style="color:${txtCol};">${titulo}</span>
           ${!isPostado?`<button onclick="event.stopPropagation();Admin.publicarNoInstagram(${p.id})" style="margin-top:4px;display:block;width:100%;background:linear-gradient(135deg,#E1306C,#833AB4);color:#fff;border:none;border-radius:4px;padding:3px 6px;font-size:9px;font-weight:700;cursor:pointer;letter-spacing:.03em;">📸 Publicar</button>`:''}
         </div>
       </div>`;
@@ -2064,15 +2075,20 @@ const Admin = {
     const cardVisual = (p, sm) => {
       const thumb = parseFirst(p.img_url) || parseFirst(p.midia_urls) || p.capa_url || '';
       const isPostado = p.status === 'publicado';
-      return `<div class="pcardv" style="background:${isPostado?'#f0fdf4':sm.bc};border-color:${isPostado?'#16a34a55':sm.dot+'30'};position:relative;overflow:hidden;"
+      const sub = SUBCLI[p.cliente_nome];
+      const bg = isPostado ? '#f0fdf4' : (sub ? sub.bg : sm.bc);
+      const borderCol = isPostado ? '#16a34a55' : (sub ? sub.border+'60' : sm.dot+'30');
+      const txtCol = (sub && !isPostado) ? sub.text : sm.c;
+      return `<div class="pcardv" style="background:${bg};border-color:${borderCol};position:relative;overflow:hidden;"
         onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()"
         onclick="event.stopPropagation();Admin.viewPostDetail(${p.id})">
         ${thumb?`<img src="${thumb}" class="pcardv-img" onerror="this.style.display='none'" style="${isPostado?'filter:brightness(.75)':''}"/>`:''}
+        ${sub?`<div style="position:absolute;top:6px;left:6px;background:${sub.border};color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:.03em;z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.25);">${p.cliente_nome}</div>`:''}
         ${isPostado?`<div style="position:absolute;top:10px;left:50%;transform:translateX(-50%) rotate(-12deg);background:rgba(22,163,74,.92);color:#fff;font-size:11px;font-weight:900;padding:4px 14px;border-radius:6px;border:2px solid rgba(255,255,255,.7);letter-spacing:.12em;white-space:nowrap;pointer-events:none;z-index:3;text-shadow:0 1px 2px rgba(0,0,0,.3)">✓ POSTADO</div>`:''}
         <div class="pcardv-body">
-          <div class="pcardv-txt" style="color:${sm.c};">${stripHtml(p.legenda||'—').slice(0,60)}</div>
-          <div class="pcardv-status" style="background:${isPostado?'#dcfce7':sm.bc};color:${isPostado?'#16a34a':sm.c};">
-            <span style="width:5px;height:5px;border-radius:50%;background:${isPostado?'#16a34a':sm.dot};display:inline-block;"></span>${isPostado?'Publicado':sm.l}
+          <div class="pcardv-txt" style="color:${txtCol};">${stripHtml(p.legenda||'—').slice(0,60)}</div>
+          <div class="pcardv-status" style="background:${isPostado?'#dcfce7':bg};color:${isPostado?'#16a34a':txtCol};">
+            <span style="width:5px;height:5px;border-radius:50%;background:${isPostado?'#16a34a':(sub?sub.dot:sm.dot)};display:inline-block;"></span>${isPostado?'Publicado':sm.l}
           </div>
           ${!isPostado?`<button onclick="event.stopPropagation();Admin.publicarNoInstagram(${p.id})" style="margin-top:6px;width:100%;background:linear-gradient(135deg,#E1306C,#833AB4);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:10px;font-weight:700;cursor:pointer;">📸 Publicar no Instagram</button>`:''}
         </div>
@@ -3182,7 +3198,7 @@ const Admin = {
       </div>
       <div style="margin-top:16px;padding:12px 16px;background:rgba(196,150,122,.06);border:1px solid rgba(201,162,39,.15);border-radius:12px;font-size:11px;color:var(--muted);line-height:2;max-width:700px;">
         <strong style="color:var(--brown);">Acesso da cliente:</strong><br>
-        crm.gislainebarbeto.com.br · <strong>${c.email}</strong> · <strong>${c.access_code||'Primor2026!'}</strong>
+        crm.marketingprimor.com.br · <strong>${c.email}</strong> · <strong>${c.access_code||'Primor2026!'}</strong>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
           <button onclick="Admin.confirmarAcessoCliente('${c.email}')" style="padding:7px 14px;border-radius:8px;background:#1B5E20;color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:600;" title="Confirma o email no Supabase Auth para que a cliente possa logar imediatamente">✓ Confirmar acesso</button>
           <button onclick="Admin.redefinirSenhaCliente('${c.email}',${c.id})" style="padding:7px 14px;border-radius:8px;background:rgba(100,80,180,.15);color:var(--text);border:1px solid rgba(100,80,180,.25);cursor:pointer;font-size:11px;" title="Recria o usuário no Auth com a senha atual do campo Senha de acesso">↺ Recriar acesso</button>
@@ -5484,6 +5500,7 @@ const Admin = {
     document.getElementById('mp-data').value = '';
     document.getElementById('mp-rede').value = 'Instagram';
     document.getElementById('mp-tipo').value = 'Feed · Foto';
+    document.getElementById('mp-subcliente').value = '';
     document.getElementById('mp-status').value = 'revisao';
     document.getElementById('mp-status-abas').value = 'todos_aprovados';
     this._setPostPreview('');
@@ -5526,6 +5543,7 @@ const Admin = {
 
   async salvarPost() {
     const clientEmail = document.getElementById('mp-cliente').value;
+    const clienteNome = document.getElementById('mp-subcliente').value || null;
     const temaTitulo  = document.getElementById('mp-tema-titulo').value.trim();
     const redeSocial  = document.getElementById('mp-rede').value;
     const conteudo    = document.getElementById('mp-conteudo').value.trim();
@@ -5572,6 +5590,7 @@ const Admin = {
 
       const payload = {
         client_email: clientEmail,
+        cliente_nome: clienteNome,
         legenda,
         hashtags,
         tipo,
@@ -5777,6 +5796,7 @@ const Admin = {
     this._editPostId = id;
     // Pre-fill fields
     document.getElementById('mp-cliente').value  = p.client_email||'';
+    document.getElementById('mp-subcliente').value = p.cliente_nome||'';
     document.getElementById('mp-tema-titulo').value = p.tema_titulo||'';
     document.getElementById('mp-rede').value = p.rede_social||'Instagram';
     const refs = this._parsePostMedia(p.tema_referencias);
@@ -10815,6 +10835,15 @@ document.addEventListener('keydown', e => {
                   <option value="Feed · Carrossel">Feed · Carrossel</option>
                   <option value="Reels">Reels</option>
                   <option value="Stories">Stories</option>
+                </select>
+              </div>
+              <div class="modal-field">
+                <label>Integrante (Alinhadas)</label>
+                <select id="mp-subcliente" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;color:var(--text);">
+                  <option value="">— Nenhum —</option>
+                  <option value="Priscila">Priscila</option>
+                  <option value="Lara">Lara</option>
+                  <option value="Planner">Planner</option>
                 </select>
               </div>
             </div>
