@@ -2023,22 +2023,17 @@ const Admin = {
 
     // Cores fixas por integrante do cliente "Alinhadas" (destaque no calendário)
     const SUBCLI = {
-      'Priscila': { bg:'#af93cc22', border:'#af93cc', text:'#5b3a82', dot:'#af93cc' },
-      'Lara':     { bg:'#dd8e9a22', border:'#dd8e9a', text:'#9c3f52', dot:'#dd8e9a' },
-      'Planner':  { bg:'#a4aa9722', border:'#a4aa97', text:'#4f5647', dot:'#a4aa97' },
-      'Todos':    { bg:'#f4c43022', border:'#f4c430', text:'#8a6d1a', dot:'#f4c430' }
+      'Priscila': { bg:'#8a67ad45', border:'#8a67ad', text:'#3d2856', dot:'#8a67ad' },
+      'Lara':     { bg:'#c96a7d45', border:'#c96a7d', text:'#6e2532', dot:'#c96a7d' },
+      'Planner':  { bg:'#a4aa9745', border:'#a4aa97', text:'#3d4238', dot:'#a4aa97' },
+      'Todos':    { bg:'#f4c43045', border:'#f4c430', text:'#6b5410', dot:'#f4c430' }
     };
+    // Bolinha de status simplificada: amarelo = não postado, verde = entregue/aprovado/publicado, vermelho = revisão (reprovado)
+    const statusColor = (status) => status==='revisao' ? '#ef4444' : (status==='aprovado'||status==='publicado') ? '#22c55e' : '#f4c430';
     // Chip compact (mensal/quinzenal) — tipo + tema + título, drag-and-drop
     const stripHtml = s => s ? s.replace(/<[^>]*>/g,'').replace(/&[^;]+;/g,' ').trim() : '';
     const tipoIco = (t) => t==='Reels'?'R ':t==='Stories'?'S ':t&&t.includes('Carrossel')?'C ':'';
-    const statusDot = (status, color) => {
-      const s = `width:14px;height:14px;border-radius:50%;background:${color};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;vertical-align:middle;font-size:9px;font-weight:800;color:white;line-height:1;font-style:normal;`;
-      if (status==='publicado') return `<span style="${s}">&#10003;</span>`;
-      if (status==='aprovado')  return `<span style="${s}; font-size:8px;">&#10003;</span>`;
-      if (status==='design')    return `<span style="${s}; font-size:9px;">D</span>`;
-      if (status==='revisao')   return `<span style="${s}">!</span>`;
-      return `<span style="${s}"><span style="width:5px;height:5px;border-radius:50%;background:white;display:block;flex-shrink:0;"></span></span>`;
-    };
+    const statusDot = (status) => `<span style="width:10px;height:10px;border-radius:50%;background:${statusColor(status)};display:inline-block;flex-shrink:0;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,.08);"></span>`;
     const chipCompact = (p, sm) => {
       const tipo = p.tipo||'Feed';
       const tema = p.tema_titulo ? stripHtml(p.tema_titulo).slice(0,30) : '';
@@ -2061,9 +2056,9 @@ const Admin = {
         ${showThumb?`<img src="${thumb}" class="pchip-thumb" onerror="this.style.display='none'" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;${isPostado?'filter:brightness(.8)':''}"/>`:''}
         ${isVid?`<span style="width:36px;height:36px;border-radius:5px;flex-shrink:0;background:${bg};border:1px solid ${borderCol};display:flex;align-items:center;justify-content:center;font-size:14px;">🎬</span>`:''}
         <div style="flex:1;min-width:0;">
-          ${sub?`<span style="display:inline-block;background:${sub.border};color:#fff;font-size:8px;font-weight:800;padding:1px 6px;border-radius:8px;letter-spacing:.02em;margin-bottom:2px;">${p.cliente_nome}</span>`:''}
+          ${sub?`<div style="text-align:center;background:${sub.border};color:#fff;font-size:11px;font-weight:800;padding:2px 4px;border-radius:6px;letter-spacing:.02em;margin-bottom:3px;">${p.cliente_nome}</div>`:''}
           <div style="display:flex;align-items:center;justify-content:space-between;gap:3px;">
-            <span class="pchip-tipo" style="color:${isPostado?'#16a34a':sm.dot};">${tipoIco(tipo)} ${tipo} ${isPostado?'<span style="font-size:8px;background:#16a34a;color:#fff;border-radius:3px;padding:1px 4px;font-weight:700">✓</span>':statusDot(p.status||'criacao', sm.dot)}</span>
+            <span class="pchip-tipo" style="color:${isPostado?'#16a34a':sm.dot};">${tipoIco(tipo)} ${tipo} ${isPostado?'<span style="font-size:8px;background:#16a34a;color:#fff;border-radius:3px;padding:1px 4px;font-weight:700">✓</span>':statusDot(p.status||'criacao')}</span>
           </div>
           ${tema?`<span class="pchip-tema" style="color:${txtCol};">${tema}</span>`:''}
           <span class="pchip-titulo" style="color:${txtCol};">${titulo}</span>
@@ -2084,12 +2079,12 @@ const Admin = {
         onmouseenter="Admin._showCalPreview(${p.id},event)" onmouseleave="Admin._hideCalPreview()"
         onclick="event.stopPropagation();Admin.viewPostDetail(${p.id})">
         ${thumb?`<img src="${thumb}" class="pcardv-img" onerror="this.style.display='none'" style="${isPostado?'filter:brightness(.75)':''}"/>`:''}
-        ${sub?`<div style="position:absolute;top:6px;left:6px;background:${sub.border};color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:.03em;z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.25);">${p.cliente_nome}</div>`:''}
+        ${sub?`<div style="position:absolute;top:6px;left:50%;transform:translateX(-50%);background:${sub.border};color:#fff;font-size:13px;font-weight:800;padding:3px 12px;border-radius:8px;letter-spacing:.03em;z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.25);white-space:nowrap;">${p.cliente_nome}</div>`:''}
         ${isPostado?`<div style="position:absolute;top:10px;left:50%;transform:translateX(-50%) rotate(-12deg);background:rgba(22,163,74,.92);color:#fff;font-size:11px;font-weight:900;padding:4px 14px;border-radius:6px;border:2px solid rgba(255,255,255,.7);letter-spacing:.12em;white-space:nowrap;pointer-events:none;z-index:3;text-shadow:0 1px 2px rgba(0,0,0,.3)">✓ POSTADO</div>`:''}
         <div class="pcardv-body">
           <div class="pcardv-txt" style="color:${txtCol};">${stripHtml(p.legenda||'—').slice(0,60)}</div>
           <div class="pcardv-status" style="background:${isPostado?'#dcfce7':bg};color:${isPostado?'#16a34a':txtCol};">
-            <span style="width:5px;height:5px;border-radius:50%;background:${isPostado?'#16a34a':(sub?sub.dot:sm.dot)};display:inline-block;"></span>${isPostado?'Publicado':sm.l}
+            <span style="width:8px;height:8px;border-radius:50%;background:${isPostado?'#16a34a':statusColor(p.status||'criacao')};display:inline-block;"></span>${isPostado?'Publicado':sm.l}
           </div>
           ${!isPostado?`<button onclick="event.stopPropagation();Admin.publicarNoInstagram(${p.id})" style="margin-top:6px;width:100%;background:linear-gradient(135deg,#E1306C,#833AB4);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:10px;font-weight:700;cursor:pointer;">📸 Publicar no Instagram</button>`:''}
         </div>
