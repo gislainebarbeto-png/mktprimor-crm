@@ -1065,6 +1065,10 @@
         <button class="theme-btn" data-mode="auto" title="Seguir PC" onclick="Theme.set('auto')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
         <button class="theme-btn" data-mode="dark" title="Escuro" onclick="Theme.set('dark')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
       </div>
+      <button id="header-chat-btn" onclick="Admin.tab('chat')" title="Mensagens dos clientes" style="position:relative;background:none;border:none;cursor:pointer;font-size:18px;color:var(--text);padding:6px;">
+        ✉
+        <span id="header-chat-badge" class="hidden" style="position:absolute;top:0;right:0;background:#C62828;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px;line-height:1.4;"></span>
+      </button>
       <span class="header-user" id="admin-email"></span>
       <button class="btn-out" onclick="App.logout()">Sair</button>
     </div>
@@ -1384,6 +1388,8 @@ const App = {
       document.getElementById('admin-email').textContent = this.user.email;
       this.show('admin-view');
       Admin.isEquipe = false;
+      Admin.refreshChatBadge();
+      Admin._startChatBadgePolling();
       setTimeout(()=>{ if(startTab) Admin.tab(startTab); else if(window.NFModule) NFModule.refresh(); else Admin.tab('posts'); }, 80);
     } else {
       // Check if team member
@@ -1402,6 +1408,8 @@ const App = {
         Admin.isEquipe = true;
         Admin._perms = equipe.permissoes || {};
         Admin._cargo = equipe.cargo || 'operacional';
+        Admin.refreshChatBadge();
+        Admin._startChatBadgePolling();
         setTimeout(()=>{ if(startTab) Admin.tab(startTab); else if(window.NFModule) NFModule.refresh(); else Admin.tab('posts'); }, 80);
       } else {
         document.getElementById('client-email-display').textContent = this.user.email;
@@ -8637,8 +8645,12 @@ const Admin = {
   },
   async refreshChatBadge() {
     const { count } = await db.from('mensagens').select('*',{count:'exact',head:true}).eq('de','client').eq('lida',false);
-    const badge = document.getElementById('nb-chat');
+    const badge = document.getElementById('header-chat-badge');
     if (badge) { badge.textContent = count||''; badge.classList.toggle('hidden', !count); }
+  },
+  _startChatBadgePolling() {
+    if (this._chatBadgeInterval) return;
+    this._chatBadgeInterval = setInterval(() => this.refreshChatBadge(), 45000);
   },
 
   // ── CALENDÁRIO DE POSTS NOS MODAIS ──
