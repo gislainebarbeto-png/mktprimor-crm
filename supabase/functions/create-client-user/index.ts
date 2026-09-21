@@ -12,8 +12,8 @@ serve(async (req) => {
 
   try {
     await requireAdmin(req)
-    const { email, password, nome, cargo, foto_url, telefone } = await req.json()
-    if (!email || !password || !nome) throw new Error('email, password e nome são obrigatórios')
+    const { nome, empresa, instagram, email, senha, foto_url } = await req.json()
+    if (!nome || !email || !senha) throw new Error('nome, email e senha são obrigatórios')
 
     const db = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -24,31 +24,25 @@ serve(async (req) => {
     // Cria o usuário no Supabase Auth (auto-confirmado, sem email de confirmação)
     const { data: authData, error: authErr } = await db.auth.admin.createUser({
       email,
-      password,
-      user_metadata: { nome },
+      password: senha,
       email_confirm: true,
+      user_metadata: { nome, empresa, instagram },
     })
     if (authErr) {
       if (authErr.message.includes('already registered') || authErr.message.includes('already been registered')) {
-        throw new Error('Este e-mail já está cadastrado no sistema.')
+        throw new Error('Este e-mail já está cadastrado.')
       }
       throw new Error(authErr.message)
     }
 
-    // Insere na tabela equipe
-    const { error: eqErr } = await db.from('equipe').insert([{
-      email,
-      nome,
-      cargo: cargo || 'operacional',
-      permissoes: {},
-      ativo: true,
-      foto_url: foto_url || null,
-      telefone: telefone || null,
+    // Insere na tabela clients
+    const { error: clErr } = await db.from('clients').insert([{
+      nome, empresa, instagram, email, access_code: senha, foto_url: foto_url || null,
     }])
-    if (eqErr) {
-      // Se falhou ao inserir na equipe, tenta deletar o usuário Auth criado
+    if (clErr) {
+      // Se falhou ao inserir o cliente, tenta desfazer o usuário Auth criado
       await db.auth.admin.deleteUser(authData.user.id)
-      throw new Error('Erro ao salvar na equipe: ' + eqErr.message)
+      throw new Error('Erro ao salvar cliente: ' + clErr.message)
     }
 
     return new Response(JSON.stringify({ success: true, user_id: authData.user.id }), {

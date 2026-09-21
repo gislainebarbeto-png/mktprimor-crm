@@ -188,6 +188,16 @@ CSS custom properties em `:root`:
 - Dark mode sobrescreve as variáveis em `html.dark { ... }`
 - Fontes: Poppins (UI), Cormorant Garamond (display/headings) via Google Fonts CDN
 
+## Segurança — service_role key
+
+**A service_role key do Supabase NUNCA deve aparecer em código client-side** (`index.html`, `formulario.html`, `manual-cliente.html`, nenhum `*_module.js`). Ela roda apenas dentro das Edge Functions, via `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')` (variável já injetada automaticamente pela plataforma, não precisa configurar).
+
+Toda operação que exige privilégio elevado (criar/editar usuário no Auth, ler `access_token` de `instagram_tokens`, publicar no Instagram) deve passar por uma Edge Function em `supabase/functions/`, chamada do client via o helper `callFn(nome, body)` (definido no topo do `<script>` de `index.html`), que envia o JWT da sessão do admin no header `Authorization`. Cada Edge Function sensível chama `requireAdmin(req)` (`supabase/functions/_shared/auth.ts`) para validar que quem chamou é `gislainebarbeto@gmail.com` antes de fazer qualquer coisa.
+
+Edge Functions existentes: `instagram-oauth`, `instagram-publish`, `instagram-metrics`, `create-team-user`, `create-client-user`, `manage-client-access`, `save-instagram-token`, `anthropic-proxy` (sem guard — não usada atualmente, IA usa o Cloudflare Worker `_PROXY` em `agentes_workspace_module.js`).
+
+Se precisar de uma nova operação privilegiada: crie uma nova Edge Function com `requireAdmin(req)`, nunca reintroduza `createClient(URL, SERVICE_KEY)` no navegador.
+
 ## CLAUDE.md Auto-Update
 
 Este arquivo deve ser atualizado sempre que novas features, tabelas, ou padrões relevantes forem adicionados ao projeto.

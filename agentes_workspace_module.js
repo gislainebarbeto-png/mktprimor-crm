@@ -68,7 +68,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   }
   function _histInsertMsg(role,content){
     if(!_ag)return;
-    const svc=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+    const svc=db; // usa a sessão autenticada do admin (RLS aplica no servidor)
     svc.from('agentes_chat_historico').insert({agente_id:_ag.id,client_email:_cliente||'',role,content}).then(()=>{},e=>console.error('[chat save]',e?.message));
   }
   function _histLoad(){
@@ -1704,7 +1704,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   async function _saveQuadroCards(cards){
     if(!_cliente)return false;
     try{
-      const svc=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+      const svc=db; // usa a sessão autenticada do admin (RLS aplica no servidor)
       const{error}=await svc.from('agentes_trabalhos').upsert({agente_id:'chloe',aba_id:'quadro',client_email:_cliente,data:_hoje(),conteudo:{cards}},{onConflict:'agente_id,aba_id,client_email,data'});
       if(error)console.error('[_saveQuadroCards]',error.message);
       return!error;
@@ -2081,7 +2081,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   async function _migrateLegacyChat(localMsgs){
     // Se o Supabase ainda não tem mensagens deste agente+cliente, migra tudo do localStorage
     try{
-      const svc=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+      const svc=db; // usa a sessão autenticada do admin (RLS aplica no servidor)
       const{count}=await svc.from('agentes_chat_historico').select('id',{count:'exact',head:true}).eq('agente_id',_ag.id).eq('client_email',_cliente||'');
       if((count||0)===0&&localMsgs.length){
         const rows=localMsgs.map(m=>({agente_id:_ag.id,client_email:_cliente||'',role:m.role,content:m.content}));
@@ -2774,7 +2774,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       try{
         const tipoVal=['feed','reels','carrossel','stories'].includes(card.formato)?card.formato:'feed';
         // Usa service role para garantir que RLS não bloqueie o insert
-        const svcDb=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+        const svcDb=db; // usa a sessão autenticada do admin (RLS aplica no servidor)
         const{error}=await svcDb.from('posts').insert({
           client_email:_cliente,
           tema_titulo:card.titulo||'',
@@ -2824,7 +2824,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       _quadroCreating.add(card.id);
       try{
         const tipoVal=['feed','reels','carrossel','stories'].includes(card.formato)?card.formato:'feed';
-        const svcDb=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+        const svcDb=db; // usa a sessão autenticada do admin (RLS aplica no servidor)
         // Guarda DB-level: se já existe post com o mesmo titulo+cliente+data não cria duplicata
         const{data:existing}=await svcDb.from('posts').select('id').eq('client_email',_cliente).eq('tema_titulo',card.titulo||'').eq('data_post',card.data||_hoje()).maybeSingle();
         if(existing?.id){card.post_id=existing.id;await _saveQuadroCards(cards);return;}
@@ -3598,7 +3598,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       if(!confirm('Limpar toda a conversa com '+_ag.nome+'?'))return;
       _chatHist[_ag.id]=[];
       try{localStorage.removeItem(_histKey());}catch(e){}
-      const svc=window.supabase.createClient(SUPABASE_URL,SUPABASE_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+      const svc=db; // usa a sessão autenticada do admin (RLS aplica no servidor)
       svc.from('agentes_chat_historico').delete().eq('agente_id',_ag.id).eq('client_email',_cliente||'').then(()=>{},()=>{});
       _renderAba('chat');
     },
