@@ -1469,6 +1469,47 @@ const PERM_PRESETS = {
   operacional: { posts:{ver:true,criar:true,editar:true,deletar:false},leads:{ver:false,criar:false,editar:false,deletar:false},clientes:{ver:false,criar:false,editar:false,deletar:false},financeiro:{ver:false,criar:false,editar:false,deletar:false},followup:{ver:false,criar:false,editar:false,deletar:false},tarefas:{ver:true,criar:false,editar:true,deletar:false},demandas:{ver:true,criar:true,editar:true,deletar:false},metricas:{ver:false,criar:false,editar:false,deletar:false},arquivos:{ver:true,criar:true,editar:false,deletar:false},chat:{ver:true,criar:true,editar:false,deletar:false},lab:{ver:true,criar:false,editar:false,deletar:false},info:{ver:false,criar:false,editar:false,deletar:false},solicitacoes:{ver:false,criar:false,editar:false,deletar:false},relatorio:{ver:false,criar:false,editar:false,deletar:false},usuarios:{ver:false,criar:false,editar:false,deletar:false} },
 };
 
+// ─── GUIA DE CONTEÚDO (exibido antes do calendário, admin + cliente) ───────
+function calendarGuideHTML() {
+  const tipos = [
+    ['Story','Talvez o mais assistido no dia a dia, aliado ao Reels. Use conteúdos mais imediatos, do dia a dia, ou que gerem interação — o cliente pode falar diretamente com você.'],
+    ['Reels','Um dos mais importantes: a plataforma distribui com maior frequência, aumentando a chance de alcançar novos seguidores. Transforme stories de destaque em reels. Sempre tenha um roteiro.'],
+    ['Live','Usada em casos mais específicos, mas uma grande fonte de contato com clientes. Ótima para interagir com seguidores, promoções relâmpago ou divulgações específicas.'],
+    ['Estático','Composto por uma única imagem, foco mais objetivo que o carrossel. Use a imagem para atrair atenção para a legenda e criar diálogo mais preciso.'],
+    ['Carrossel','Até 10 imagens. A primeira deve gerar curiosidade para o seguidor arrastar. Quanto mais imagens, mais valor precisa ser entregue ao longo do caminho.']
+  ];
+  const editorial = [
+    ['Tema Principal','Qual o principal tema a abordar? Um restaurante mexicano fala de comida mexicana; uma empresa de segurança fala de equipamentos de segurança.'],
+    ['Sub Temas','Além do tema principal, aborde assuntos relacionados — cultura, datas comemorativas, novas tecnologias, cuidados — que chamem a atenção do público-alvo.'],
+    ['Tipos de Conteúdo','Depois de definir os temas, escolha o formato que melhor se encaixa com o público-alvo e siga o calendário abaixo.']
+  ];
+  const dicas = [
+    ['Formatos','Varie entre os formatos. Alguns vão se destacar mais — use essa análise para priorizar.'],
+    ['Adaptar','As ideias são amplas — adapte de acordo com o negócio, sempre pensando na persona e no cliente ideal.'],
+    ['Vá além','O calendário é um guia — aplique as dicas, exercite a imaginação e vá além sempre que possível.']
+  ];
+  const card = ([t,d]) => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--copper);margin-bottom:6px;">${t}</div>
+    <div style="font-size:12px;color:var(--text);line-height:1.55;">${d}</div>
+  </div>`;
+  const block = (title, subtitle, items) => `
+    <div style="margin-bottom:18px;">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:20px;color:var(--brown);margin:0 0 6px;">${title}</h3>
+      ${subtitle?`<p style="font-size:12px;color:var(--muted);margin:0 0 10px;">${subtitle}</p>`:''}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
+        ${items.map(card).join('')}
+      </div>
+    </div>`;
+  return `
+    <div style="margin-bottom:22px;">
+      <h2 class="section-title" style="margin-bottom:4px;">Guia de Conteúdo</h2>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 16px;">Use este guia para planejar o que postar em cada dia do calendário abaixo.</p>
+      ${block('Tipos de Conteúdo', '', tipos)}
+      ${block('Linha Editorial', 'Aliada à persona, a linha editorial direciona o conteúdo do dia a dia para ser mais assertivo com o público.', editorial)}
+      ${block('Dicas Importantes', '', dicas)}
+    </div>`;
+}
+
 const Admin = {
   currentTab: 'leads',
   isEquipe: false,
@@ -1895,6 +1936,11 @@ const Admin = {
         .cal-cell:hover{border-color:rgba(160,160,172,0.8);box-shadow:0 3px 10px rgba(0,0,0,0.08),inset 0 1px 0 #fff;}
         .cal-cell.today{border-color:rgba(201,162,39,0.7)!important;background:linear-gradient(155deg,rgba(255,249,243,0.97) 0%,rgba(250,238,225,0.88) 100%);}
         .cal-cell.outro-mes{opacity:.35;}
+        .cal-cell-blank{border-radius:12px;border:2px dashed var(--border);background:transparent;padding:8px;position:relative;transition:border-color .15s;min-height:130px;box-sizing:border-box;cursor:pointer;}
+        .cal-cell-blank:hover{border-color:var(--copper);}
+        .cal-cell-blank.today{border-color:var(--copper)!important;background:rgba(201,162,39,0.06);}
+        .cal-cell-blank.outro-mes{opacity:.3;cursor:default;}
+        .cal-cell-blank.drag-over{border-color:#3B82F6!important;background:rgba(59,130,246,0.06)!important;}
         .cal-cell.empty-day{cursor:pointer;}
         .cal-cell.empty-day:hover .cal-day-num::after{content:' +';color:var(--copper);font-weight:400;}
         .cal-day-num{font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:700;line-height:1;}
@@ -1943,6 +1989,7 @@ const Admin = {
         </div>
       </div>
       ${stats?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">${stats}</div>`:''}
+      ${calendarGuideHTML()}
       <div id="posts-view-content"></div>
       <div id="cal-preview" class="cal-preview"></div>`;
 
@@ -2168,27 +2215,22 @@ const Admin = {
       const totalDays = new Date(y,m+1,0).getDate();
       const prevLast = new Date(y,m,0).getDate();
       let cells = '';
-      for (let i=startDow-1;i>=0;i--) cells+=`<div class="cal-cell mensal outro-mes"><div class="cal-day-num">${prevLast-i}</div></div>`;
+      for (let i=startDow-1;i>=0;i--) cells+=`<div class="cal-cell-blank outro-mes"><div class="cal-day-num">${prevLast-i}</div></div>`;
       for (let d=1;d<=totalDays;d++) {
-        const date = new Date(y,m,d);
         const isToday = now.getFullYear()===y&&now.getMonth()===m&&now.getDate()===d;
-        const dp = getDay(date);
-        const chips = dp.slice(0,3).map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;return chipCompact(p,sm);}).join('');
-        const more = dp.length>3?`<div style="font-size:9px;color:var(--muted);text-align:center;margin-top:1px;">+${dp.length-3} mais</div>`:'';
         const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const isEmpty = dp.length === 0;
-        cells+=`<div class="cal-cell mensal${isToday?' today':''}${isEmpty?' empty-day':''}"
-          ${isEmpty?`onclick="Admin._newPostOnDate('${dateStr}')"`:``}
+        cells+=`<div class="cal-cell-blank${isToday?' today':''}"
+          onclick="Admin._newPostOnDate('${dateStr}')"
           ondragover="event.preventDefault();this.classList.add('drag-over')"
           ondragleave="this.classList.remove('drag-over')"
           ondrop="event.preventDefault();this.classList.remove('drag-over');Admin._dropPostOnDate('${dateStr}')">
           <div class="cal-day-num" style="display:flex;align-items:center;justify-content:space-between;">
             <span>${d}</span>
             <span class="cal-add-btn" onclick="event.stopPropagation();Admin._newPostOnDate('${dateStr}')" title="Novo post">+</span>
-          </div>${chips}${more}</div>`;
+          </div></div>`;
       }
       const rem=(7-((startDow+totalDays)%7))%7;
-      for (let i=1;i<=rem;i++) cells+=`<div class="cal-cell mensal outro-mes"><div class="cal-day-num">${i}</div></div>`;
+      for (let i=1;i<=rem;i++) cells+=`<div class="cal-cell-blank outro-mes"><div class="cal-day-num">${i}</div></div>`;
       html = `<div class="cal-grid-7" style="margin-bottom:3px;">${diasSemana.map(d=>`<div class="cal-head-day">${d}</div>`).join('')}</div><div class="cal-grid-7">${cells}</div>`;
     }
 
@@ -8947,6 +8989,10 @@ const Client = {
         .cli-cal-cell:hover{border-color:var(--copper);}
         .cli-cal-cell.today{border-color:var(--copper)!important;background:rgba(212,168,130,0.05);}
         .cli-cal-cell.outro-mes{opacity:.3;}
+        .cli-cal-cell-blank{border-radius:10px;border:2px dashed var(--border);background:transparent;padding:6px;position:relative;transition:border-color .15s;min-height:90px;box-sizing:border-box;}
+        .cli-cal-cell-blank.today{border-color:var(--copper)!important;background:rgba(212,168,130,0.06);}
+        .cli-cal-cell-blank.outro-mes{opacity:.3;}
+        @media(max-width:700px){.cli-cal-cell-blank{min-height:0!important;aspect-ratio:1;}}
         .cli-cal-cell.mensal{min-height:90px;}
         @media(max-width:700px){
           .cli-cal-cell.mensal{min-height:0!important;aspect-ratio:1;}
@@ -8983,6 +9029,7 @@ const Client = {
         </div>
       </div>
       ${stats ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">${stats}</div>` : ''}
+      ${calendarGuideHTML()}
       <div id="client-cal-content"></div>
       <div id="client-cal-preview" class="cli-cal-preview"></div>`;
 
@@ -9163,17 +9210,13 @@ const Client = {
       const totalDays = new Date(y,m+1,0).getDate();
       const prevLast = new Date(y,m,0).getDate();
       let cells = '';
-      for (let i=startDow-1;i>=0;i--) cells+=`<div class="cli-cal-cell mensal outro-mes"><div class="cli-day-num">${prevLast-i}</div></div>`;
+      for (let i=startDow-1;i>=0;i--) cells+=`<div class="cli-cal-cell-blank outro-mes"><div class="cli-day-num">${prevLast-i}</div></div>`;
       for (let d=1;d<=totalDays;d++) {
-        const date = new Date(y,m,d);
         const isToday = now.getFullYear()===y&&now.getMonth()===m&&now.getDate()===d;
-        const dp = getDay(date);
-        const chips = dp.slice(0,3).map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;return chipCompact(p,sm);}).join('');
-        const more = dp.length>3?`<div style="font-size:9px;color:var(--muted);text-align:center;margin-top:1px;">+${dp.length-3} mais</div>`:'';
-        cells+=`<div class="cli-cal-cell mensal${isToday?' today':''}"><div class="cli-day-num">${d}</div>${chips}${more}</div>`;
+        cells+=`<div class="cli-cal-cell-blank${isToday?' today':''}"><div class="cli-day-num">${d}</div></div>`;
       }
       const rem=(7-((startDow+totalDays)%7))%7;
-      for (let i=1;i<=rem;i++) cells+=`<div class="cli-cal-cell mensal outro-mes"><div class="cli-day-num">${i}</div></div>`;
+      for (let i=1;i<=rem;i++) cells+=`<div class="cli-cal-cell-blank outro-mes"><div class="cli-day-num">${i}</div></div>`;
       html = `<div class="cli-cal-grid-7" style="margin-bottom:3px;">${diasSemana.map(d=>`<div class="cli-cal-head-day">${d}</div>`).join('')}</div><div class="cli-cal-grid-7">${cells}</div>`;
     }
 
