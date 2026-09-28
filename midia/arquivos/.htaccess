@@ -1,0 +1,14 @@
+# Pasta só de arquivos enviados pelo CRM: nada aqui pode ser executado.
+Options -Indexes -ExecCGI
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar .pl .py .cgi .sh
+RemoveType .php .phtml .phar
+<FilesMatch "(?i)\.(php[0-9]?|phtml|phar|pl|py|cgi|sh|s?html?|svg|js|htaccess)$">
+  Require all denied
+</FilesMatch>
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Access-Control-Allow-Origin "*"
+</IfModule>

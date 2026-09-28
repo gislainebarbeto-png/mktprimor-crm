@@ -146,7 +146,14 @@ Uso especial: `client_email = '__comece__'` → seção Comece (onboarding)
 `id, client_email, de, texto, lida, created_at`  
 `de`: `admin | client`
 
-**Storage buckets:**
+**Arquivos (fotos, vídeos, anexos) — NÃO usam mais o Supabase Storage.**
+O plano grátis do Supabase tem só 1 GB de storage; em set/2026 o projeto foi bloqueado (`exceed_storage_size_quota`).
+Agora os arquivos ficam na Hostinger, em `crm/midia/arquivos/<bucket>/<path>`:
+- `midia/api.php` — recebe `POST ?acao=upload` (multipart: bucket, path, upsert, file) e `POST ?acao=remover` (JSON: bucket, paths). Exige `Authorization: Bearer <token da sessão Supabase>` e valida em `/auth/v1/user`. Aceita só extensões da lista `EXTS` e nomes seguros.
+- `midia/arquivos/.htaccess` — impede execução de scripts e listagem da pasta. Nunca remover.
+- Em `index.html`, logo após `const db = createClient(...)`, um bloco substitui `db.storage.from(bucket)` por uma versão com a mesma interface (upload/getPublicUrl/remove/download) apontando para `midia/`. Todo o código existente continua usando `db.storage.from('posts-media')` normalmente. Não reintroduzir uploads diretos no Supabase Storage.
+
+Pastas usadas dentro do bucket `posts-media`:
 - `posts-media` — mídias de posts (imagens/vídeos)
 - Pasta `demandas/` — anexos de demandas
 - Pasta `tarefas/` — capas e anexos de tarefas

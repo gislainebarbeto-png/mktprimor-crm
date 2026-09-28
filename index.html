@@ -1198,6 +1198,48 @@ const ADMIN_EMAIL   = 'gislainebarbeto@gmail.com';
 const META_APP_ID   = '1698396874498822';
 const { createClient } = window.supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* Arquivos (fotos, vídeos, anexos) ficam no servidor da Hostinger, na pasta midia/,
+   e não no Supabase Storage — o plano grátis do Supabase só tem 1 GB.
+   Mesma interface do supabase-js (upload/getPublicUrl/remove/download), então o resto do código não muda. */
+(function(){
+  const API  = new URL('midia/api.php', location.href).href;
+  const BASE = new URL('midia/arquivos/', location.href).href;
+  const enc  = p => String(p).replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/');
+  async function token(){ try{ const { data } = await db.auth.getSession(); return data && data.session ? data.session.access_token : ''; }catch(e){ return ''; } }
+  function bucket(nome){
+    const base = BASE + nome + '/';
+    return {
+      async upload(path, file, opts){
+        const fd = new FormData();
+        fd.append('bucket', nome); fd.append('path', path); fd.append('upsert', opts && opts.upsert ? '1' : '0');
+        fd.append('file', file, (file && file.name) || String(path).split('/').pop());
+        try{
+          const r = await fetch(API + '?acao=upload', { method:'POST', headers:{ Authorization:'Bearer ' + await token() }, body:fd });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok || j.erro) return { data:null, error:{ message: j.erro || ('Erro ' + r.status), statusCode: r.status } };
+          return { data:{ path: j.path, fullPath: nome + '/' + j.path }, error:null };
+        }catch(e){ return { data:null, error:{ message: e.message } }; }
+      },
+      getPublicUrl(path){ return { data:{ publicUrl: base + enc(path) } }; },
+      async remove(paths){
+        try{
+          const r = await fetch(API + '?acao=remover', { method:'POST', headers:{ Authorization:'Bearer ' + await token(), 'Content-Type':'application/json' }, body: JSON.stringify({ bucket:nome, paths }) });
+          const j = await r.json().catch(() => ({}));
+          return r.ok ? { data: j.removidos || [], error:null } : { data:null, error:{ message: j.erro || ('Erro ' + r.status) } };
+        }catch(e){ return { data:null, error:{ message: e.message } }; }
+      },
+      async download(path){
+        try{
+          const r = await fetch(base + enc(path) + '?t=' + Date.now(), { cache:'no-store' });
+          if (!r.ok) return { data:null, error:{ message:'Arquivo não encontrado', statusCode: r.status } };
+          return { data: await r.blob(), error:null };
+        }catch(e){ return { data:null, error:{ message: e.message } }; }
+      }
+    };
+  }
+  Object.defineProperty(db, 'storage', { value: { from: bucket }, configurable: true });
+})();
 window.ANTHROPIC_KEY = ''; // ← Cole aqui sua chave da API Anthropic
 
 // Headers autenticados para chamar Edge Functions protegidas (usa o JWT da sessão do admin,
