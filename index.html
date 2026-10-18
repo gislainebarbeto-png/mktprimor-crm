@@ -364,6 +364,8 @@
     .field input:focus{border-color:var(--copper);background:#fff;}
     .btn-login{width:100%;margin-top:6px;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:11px;font-weight:300;letter-spacing:.12em;text-transform:uppercase;box-shadow:0 6px 24px rgba(45,35,0,.3);}
     .btn-login:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(45,35,0,.4);}
+    .login-esqueci{display:inline-block;margin-top:16px;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer}
+    .login-ok{background:#EEF7EE!important;border-color:#C8E6C9!important;color:#2E7D32!important}
     .login-error{display:none;margin-top:12px;padding:10px 14px;background:#FFF0F0;border:1px solid #FFCDD2;border-radius:8px;color:#C62828;font-size:12px;text-align:left;}
 
     /* ── SHARED HEADER ── */
@@ -1052,6 +1054,14 @@
       <div class="field"><label>Senha</label><input type="password" id="password" required placeholder="••••••••"/></div>
       <button type="submit" class="btn-login">Entrar →</button>
       <div id="login-error" class="login-error"></div>
+      <a href="#" id="esqueci-link" class="login-esqueci">Esqueci minha senha</a>
+    </form>
+    <form id="nova-senha-form" class="hidden">
+      <p style="font-size:13px;color:var(--muted);margin:-10px 0 18px;text-transform:none;letter-spacing:0">Crie a sua nova senha</p>
+      <div class="field"><label>Nova senha</label><input type="password" id="nova-senha" required minlength="8" placeholder="mínimo 8 caracteres" autocomplete="new-password"/></div>
+      <div class="field"><label>Repita a nova senha</label><input type="password" id="nova-senha2" required minlength="8" autocomplete="new-password"/></div>
+      <button type="submit" class="btn-login">Salvar nova senha →</button>
+      <div id="nova-senha-msg" class="login-error"></div>
     </form>
   </div>
 </div>
@@ -1381,6 +1391,12 @@ const App = {
   async init() {
     this.loader(true);
     document.getElementById('login-form').addEventListener('submit', e => this.login(e));
+    document.getElementById('esqueci-link').addEventListener('click', e => this.esqueciSenha(e));
+    document.getElementById('nova-senha-form').addEventListener('submit', e => this.salvarNovaSenha(e));
+    // link de "Esqueci minha senha" do e-mail: abre a tela de nova senha
+    const _recuperando = /type=recovery/.test(window.location.hash);
+    db.auth.onAuthStateChange((ev) => { if (ev === 'PASSWORD_RECOVERY') this.mostrarNovaSenha(); });
+    if (_recuperando) { this.loader(false); this.mostrarNovaSenha(); return; }
 
     // Detecta retorno do OAuth do Facebook (?code=...&state=...)
     const _p = new URLSearchParams(window.location.search);
@@ -1428,6 +1444,48 @@ const App = {
       err.style.display = 'block';
       err.innerText = ex.message.includes('Invalid login') ? 'E-mail ou senha incorretos.' : 'Erro: ' + ex.message;
     } finally { this.loader(false); }
+  },
+
+  async esqueciSenha(e) {
+    e.preventDefault();
+    const err = document.getElementById('login-error');
+    const email = document.getElementById('email').value.trim();
+    err.classList.remove('login-ok'); err.style.display = 'block';
+    if (!email) { err.innerText = 'Digite o seu e-mail no campo acima e clique de novo em "Esqueci minha senha".'; return; }
+    this.loader(true);
+    try {
+      const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+      if (error) throw error;
+      err.classList.add('login-ok');
+      err.innerText = 'Enviamos um link para ' + email + '. Abra o e-mail e clique no link para criar uma senha nova.';
+    } catch(ex) { err.innerText = 'Não consegui enviar o e-mail: ' + ex.message; }
+    finally { this.loader(false); }
+  },
+
+  mostrarNovaSenha() {
+    this.show('login-view');
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('nova-senha-form').classList.remove('hidden');
+  },
+
+  async salvarNovaSenha(e) {
+    e.preventDefault();
+    const s1 = document.getElementById('nova-senha').value, s2 = document.getElementById('nova-senha2').value;
+    const msg = document.getElementById('nova-senha-msg');
+    msg.classList.remove('login-ok'); msg.style.display = 'block';
+    if (s1.length < 8) { msg.innerText = 'A senha precisa ter pelo menos 8 caracteres.'; return; }
+    if (s1 !== s2) { msg.innerText = 'As duas senhas não são iguais.'; return; }
+    this.loader(true);
+    try {
+      const { data, error } = await db.auth.updateUser({ password: s1 });
+      if (error) throw error;
+      window.history.replaceState({}, '', window.location.pathname);
+      document.getElementById('nova-senha-form').classList.add('hidden');
+      document.getElementById('login-form').classList.remove('hidden');
+      this.user = data.user;
+      this.route();
+    } catch(ex) { msg.innerText = 'Não consegui salvar: ' + ex.message + '. Peça um link novo em "Esqueci minha senha".'; }
+    finally { this.loader(false); }
   },
 
   async logout() {
