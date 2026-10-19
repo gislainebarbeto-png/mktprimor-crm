@@ -44,7 +44,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
   let _clientes=[],_fiscal={};
   let _chatHist={},_chatLoad=false;
   let _arquivosDocs=[];
-  let _dgFrom='',_dgTo='';
+  let _dgFrom='',_dgTo='',_dgSort='reach';
   let _concScreenshots={}; // {0:[url,url], 1:[url], ...} — screenshots por concorrente
   let _calMes=_hoje().substring(0,7); // YYYY-MM — mês exibido no histórico
   let _chatPendingMsg=null; // mensagem a auto-enviar quando chat abrir
@@ -1375,48 +1375,122 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     }
 
     const fN=n=>(n||0).toLocaleString('pt-BR');
+    const fP=n=>(n||0).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
     const fD=s=>s?new Date(s.slice(0,10)+'T12:00:00').toLocaleDateString('pt-BR'):'—';
-    const kpi=(icon,label,val,sub)=>`<div class="aw2-kpi" style="padding:10px 8px">
+    const kpi=(icon,label,val,sub,title)=>`<div class="aw2-kpi" style="padding:10px 8px"${title?` title="${title}"`:''}>
       <div class="aw2-kl" style="font-size:10px">${icon} ${label}</div>
       <div class="aw2-kv" style="font-size:16px;font-weight:700">${val}</div>
       ${sub?`<div style="font-size:9px;color:var(--muted);margin-top:1px">${sub}</div>`:''}
     </div>`;
+    const v2=extras.versao===2;
+    const grid='display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px';
 
-    const kpisHtml=meta?`
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px">
-        ${kpi('👥','Seguidores',fN(meta.seguidores),'total atual')}
-        ${kpi('👁','Alcance',fN(meta.alcance),'contas únicas')}
-        ${kpi('👀','Visualizações',fN(meta.impressoes),'views totais')}
+    let kpisHtml='';
+    if(meta&&v2){
+      const saldo=(extras.novos_seg||0)-(extras.deixaram_seg||0);
+      const pctFora=meta.alcance>0?Math.round((extras.alcance_nao_seguidores||0)/meta.alcance*100):0;
+      kpisHtml=`
+      <div style="${grid};margin-bottom:6px">
+        ${kpi('👥','Seguidores',fN(meta.seguidores),`+${fN(extras.novos_seg)} / −${fN(extras.deixaram_seg)} no período (saldo ${saldo>=0?'+':''}${saldo})`)}
+        ${kpi('👁','Alcance',fN(meta.alcance),`pessoas únicas · ${pctFora}% não seguidores${extras.periodo_longo?' · aprox. (>30 dias)':''}`,'Contas únicas que viram qualquer conteúdo no período (posts, reels, stories)')}
+        ${kpi('👀','Visualizações',fN(meta.impressoes),'vezes que o conteúdo foi exibido')}
         ${kpi('🔍','Visitas ao perfil',fN(meta.visitas_perfil),'no período')}
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
-        ${kpi('❤️','Engajamento',`${meta.engajamento||0}%`,'interações/alcance')}
-        ${kpi('💬','Interações',fN(extras.interacoes||0),'likes+coments+saves')}
-        ${kpi('🔖','Saves',fN(extras.saves_total||0),'no período')}
-        ${kpi('🌐','Cliques no site',fN(extras.website_clicks||0),'no período')}
-      </div>` : '';
+      <div style="${grid}">
+        ${kpi('❤️','Engajamento real',fP(extras.eng_real),`${fN(extras.contas_engajadas)} de ${fN(meta.alcance)} pessoas interagiram`,'Pessoas únicas que interagiram ÷ pessoas únicas alcançadas. Não conta a mesma pessoa várias vezes.')}
+        ${kpi('📊','Taxa média por post',fP(extras.eng_posts),`interações ÷ alcance · ${fP(extras.eng_seguidores)} por seguidor`,'Soma de (curtidas+comentários+salvamentos+compartilhamentos) dos posts do período ÷ soma do alcance desses posts')}
+        ${kpi('💬','Interações',fN(extras.interacoes),`${fN(extras.likes)}❤ ${fN(extras.comments)}💬 ${fN(extras.saves_total)}🔖 ${fN(extras.shares)}↗`,'Inclui interações em posts antigos feitas dentro do período')}
+        ${kpi('🌐','Cliques no site',fN(extras.website_clicks),'link da bio')}
+      </div>`;
+    } else if(meta){
+      kpisHtml=`<div style="font-size:12px;color:#b45309;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 12px">⚠️ Esses dados foram sincronizados com o cálculo antigo (alcance somado por dia e engajamento inflado). Clique em <strong>Sincronizar</strong> para atualizar com os números corretos.</div>`;
+    }
 
-    const postRow=p=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface)">
-      ${p.thumbnail?`<img src="${p.thumbnail}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
-        :`<div style="width:40px;height:40px;border-radius:6px;background:var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px">${p.media_type==='VIDEO'?'🎬':'🖼'}</div>`}
-      <div style="flex:1;min-width:0">
-        <div style="font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc((p.caption||'').slice(0,70))||'<em style="color:var(--muted)">(sem legenda)</em>'}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px">${fD(p.timestamp)}</div>
-      </div>
-      <div style="display:flex;gap:10px;flex-shrink:0;font-size:11px;color:var(--text)">
-        <span title="Alcance">👁 <strong>${fN(p.reach)}</strong></span>
-        <span title="Impressões">💫 <strong>${fN(p.impressions)}</strong></span>
-        <span title="Likes">❤️ <strong>${fN(p.like_count)}</strong></span>
-        <span title="Comentários">💬 <strong>${fN(p.comments_count)}</strong></span>
-        <span title="Saves">🔖 <strong>${fN(p.saved)}</strong></span>
-      </div>
-      ${p.permalink?`<a href="${p.permalink}" target="_blank" style="font-size:10px;color:var(--accent);flex-shrink:0;text-decoration:none">↗</a>`:''}
-    </div>`;
+    // De onde vieram os seguidores
+    let segHtml='';
+    if(meta&&v2){
+      const comFollow=topPosts.filter(p=>(p.follows||0)>0).sort((a,b)=>b.follows-a.follows);
+      const semAtrib=Math.max(0,(extras.novos_seg||0)-(extras.seg_posts||0));
+      const fmtNome={REEL:'Reels',CAROUSEL_CONTAINER:'Carrossel',POST:'Post (foto)',STORY:'Stories',AD:'Anúncios',IGTV:'Vídeo'};
+      const af=Object.entries(extras.alcance_formato||{}).sort((a,b)=>b[1]-a[1]);
+      const afMax=af.length?af[0][1]:1;
+      const dias=(extras.seg_por_dia||[]);const dMax=Math.max(1,...dias.map(d=>d.v));
+      segHtml=`
+      <div style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">
+        <div style="border:1px solid var(--border);border-radius:9px;padding:10px 12px;background:var(--surface)">
+          <div style="font-size:11px;font-weight:700;color:var(--brown);margin-bottom:8px">🧲 De onde vieram os seguidores</div>
+          ${comFollow.length?comFollow.map(p=>`<div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;padding:3px 0"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc((p.caption||'(sem legenda)').slice(0,45))} · ${fD(p.timestamp)}</span><strong>+${p.follows}</strong></div>`).join('')
+            :`<div style="font-size:11px;color:var(--muted)">Nenhum post de feed gerou seguidor diretamente.</div>`}
+          <div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;color:var(--muted)"><span>Reels, Stories, busca e perfil</span><strong>+${semAtrib}</strong></div>
+          <div style="font-size:9px;color:var(--muted);margin-top:6px;line-height:1.4">A Meta só informa seguidores por post para fotos e carrosséis. Os de Reels e Stories aparecem juntos na última linha.</div>
+          ${dias.length?`<div style="margin-top:10px;font-size:10px;color:var(--muted)">Novos seguidores por dia</div>
+          <div style="display:flex;align-items:flex-end;gap:2px;height:40px;margin-top:4px">${dias.map(d=>`<div title="${fD(d.d)}: +${d.v}" style="flex:1;background:${d.v?'var(--accent,#8B5E3C)':'var(--border)'};height:${Math.max(3,d.v/dMax*40)}px;border-radius:2px"></div>`).join('')}</div>`:''}
+        </div>
+        <div style="border:1px solid var(--border);border-radius:9px;padding:10px 12px;background:var(--surface)">
+          <div style="font-size:11px;font-weight:700;color:var(--brown);margin-bottom:8px">📡 Alcance por formato</div>
+          ${af.map(([k,v])=>`<div style="font-size:11px;margin-bottom:6px"><div style="display:flex;justify-content:space-between"><span>${fmtNome[k]||k}</span><strong>${fN(v)}</strong></div><div style="height:5px;background:var(--border);border-radius:3px;margin-top:2px"><div style="height:5px;width:${v/afMax*100}%;background:var(--accent,#8B5E3C);border-radius:3px"></div></div></div>`).join('')||'<div style="font-size:11px;color:var(--muted)">Sem dados.</div>'}
+          <div style="font-size:10px;color:var(--muted);margin-top:8px">Seguidores alcançados: <strong>${fN(extras.alcance_seguidores)}</strong> · Não seguidores: <strong>${fN(extras.alcance_nao_seguidores)}</strong></div>
+        </div>
+      </div>`;
+    }
+
+    // Todos os posts do período
+    const sorts={data:['Data',(a,b)=>new Date(b.timestamp)-new Date(a.timestamp)],reach:['Alcance',(a,b)=>b.reach-a.reach],eng:['Engajamento',(a,b)=>b.eng-a.eng],score:['Potencial',(a,b)=>(b.score||0)-(a.score||0)],follows:['Seguidores',(a,b)=>(b.follows||0)-(a.follows||0)]};
+    const sk=sorts[_dgSort]?_dgSort:'reach';
+    const lista=v2?[...topPosts].sort(sorts[sk][1]):topPosts;
+    const fmtTipo=p=>p.produto==='REELS'?'🎬 Reels':p.media_type==='CAROUSEL_ALBUM'?'🗂 Carrossel':p.media_type==='VIDEO'?'🎬 Vídeo':'🖼 Foto';
+    const th='padding:6px 6px;font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;text-align:center;white-space:nowrap';
+    const td='padding:6px;font-size:11px;text-align:center;white-space:nowrap';
+    const postRow=p=>`<tr style="border-top:1px solid var(--border)">
+      <td style="padding:6px;min-width:220px">
+        <div style="display:flex;align-items:center;gap:8px">
+          ${p.thumbnail?`<img src="${p.thumbnail}" style="width:38px;height:38px;border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:6px;background:var(--border);flex-shrink:0"></div>`}
+          <div style="min-width:0">
+            <div style="font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px">${_esc((p.caption||'').split('\n')[0].slice(0,70))||'<em style="color:var(--muted)">(sem legenda)</em>'}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">${fD(p.timestamp)} · ${fmtTipo(p)}${p.avg_watch?` · ${p.avg_watch}s assistidos`:''}</div>
+            ${(p.turbinar||p.saiu_bolha)?`<div style="display:flex;gap:4px;margin-top:3px;flex-wrap:wrap">
+              ${p.turbinar?`<span title="${_esc((p.motivos||[]).join(' · '))}" style="font-size:9px;background:#fef3c7;color:#92400e;border-radius:10px;padding:1px 7px;font-weight:600">💰 Turbinar</span>`:''}
+              ${p.saiu_bolha?`<span title="Alcance ${p.fora_base_pct}% fora da base de seguidores: foi distribuído pelo Explorar, aba Reels, busca ou compartilhamentos" style="font-size:9px;background:#dbeafe;color:#1e40af;border-radius:10px;padding:1px 7px;font-weight:600">🚀 Saiu da bolha</span>`:''}
+            </div>`:''}
+          </div>
+        </div>
+      </td>
+      <td style="${td}"><strong>${fN(p.reach)}</strong></td>
+      <td style="${td}">${fN(p.views??p.impressions)}</td>
+      <td style="${td}">${fN(p.like_count)}</td>
+      <td style="${td}">${fN(p.comments_count)}</td>
+      <td style="${td}">${fN(p.saved)}</td>
+      <td style="${td}">${fN(p.shares)}</td>
+      <td style="${td}">${p.follows==null?'<span title="A Meta não informa para Reels" style="color:var(--muted)">—</span>':fN(p.follows)}</td>
+      <td style="${td}"><strong>${fP(p.eng)}</strong></td>
+      <td style="${td}">${p.reach?p.fora_base_pct+'%':'—'}</td>
+      <td style="${td}">${p.permalink?`<a href="${p.permalink}" target="_blank" style="color:var(--accent);text-decoration:none">↗</a>`:''}</td>
+    </tr>`;
+
+    const turb=lista.filter(p=>p.turbinar).sort((a,b)=>b.score-a.score);
+    const turbHtml=v2&&topPosts.length?`
+      <div style="margin-top:14px;border:1px solid #fde68a;background:#fffbeb;border-radius:9px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:6px">💰 Posts com potencial para turbinar</div>
+        ${turb.length?turb.map((p,i)=>`<div style="font-size:11px;padding:3px 0;color:#78350f"><strong>${i+1}. ${_esc((p.caption||'(sem legenda)').split('\n')[0].slice(0,55))}</strong> · ${fD(p.timestamp)}<br><span style="color:#92400e">${(p.motivos||[]).join(' · ')||'acima da média no conjunto das métricas'}</span></div>`).join('')
+          :`<div style="font-size:11px;color:#92400e">Nenhum post ficou claramente acima da média neste período. Turbinar agora tende a dar pouco retorno.</div>`}
+        <div style="font-size:9px;color:#a16207;margin-top:6px">Critério: salvamentos+compartilhamentos e engajamento por alcance (peso maior), alcance e alcance fora da base, comparados com a média dos posts do período.</div>
+      </div>`:'';
 
     const topPostsHtml=topPosts.length?`
+      ${turbHtml}
       <div style="margin-top:14px">
-        <div style="font-size:11px;font-weight:700;color:var(--brown);margin-bottom:8px">🏆 Top Posts por Alcance · ${extras.total_posts_period||0} posts no período</div>
-        <div style="display:flex;flex-direction:column;gap:6px">${topPosts.map(postRow).join('')}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--brown)">📋 ${v2?'Todos os posts do período':'Top posts'} · ${extras.total_posts_period||topPosts.length} posts</div>
+          ${v2?`<div style="display:flex;gap:4px;flex-wrap:wrap;font-size:10px"><span style="color:var(--muted);align-self:center">Ordenar:</span>${Object.entries(sorts).map(([k,[l]])=>`<button onclick="_AW2.setDgSort('${k}')" style="font-size:10px;padding:3px 9px;border-radius:12px;border:1px solid var(--border);cursor:pointer;background:${k===sk?'var(--brown)':'var(--surface)'};color:${k===sk?'#fff':'var(--text)'}">${l}</button>`).join('')}</div>`:''}
+        </div>
+        <div style="overflow-x:auto;border:1px solid var(--border);border-radius:9px;background:var(--surface)">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr>
+              <th style="${th};text-align:left">Post</th><th style="${th}">Alcance</th><th style="${th}">Views</th><th style="${th}">❤</th><th style="${th}">💬</th><th style="${th}">🔖</th><th style="${th}">↗</th><th style="${th}" title="Seguidores ganhos com o post">+Seg</th><th style="${th}" title="(curtidas+comentários+salvamentos+compartilhamentos) ÷ alcance">Eng.</th><th style="${th}" title="Parte mínima do alcance que veio de não seguidores">Fora base</th><th style="${th}"></th>
+            </tr></thead>
+            <tbody>${lista.map(postRow).join('')}</tbody>
+          </table>
+        </div>
       </div>`:'';
 
     const periodoLabel=extras.period_from?`${fD(extras.period_from)} → ${fD(extras.period_to)}`:'';
@@ -1433,7 +1507,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
         ${syncInfo}
         <span class="aw2-svd" id="dg-sync-s"></span>
       </div>
-      ${meta?`<div style="border-left:3px solid #4CAF50;padding-left:12px">${kpisHtml}</div>${topPostsHtml}`
+      ${meta?`<div style="border-left:3px solid #4CAF50;padding-left:12px">${kpisHtml}</div>${segHtml}${topPostsHtml}`
         :_cliente?`<div style="font-size:12px;color:var(--muted);padding:10px 0">Selecione o período e clique em Sincronizar para buscar os dados do Instagram.</div>`
         :`<div style="font-size:12px;color:var(--muted);padding:8px 0">Selecione um cliente acima.</div>`}
     </div>
@@ -2163,6 +2237,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
     // Pedro — Diagnóstico
     async saveDiagnostico(){const c={pontos_fortes:_v('dg-pf'),pontos_fracos:_v('dg-pw'),posicionamento:_v('dg-pos'),obs:_v('dg-obs')};const ok=await _save(c);_flash('dg-s',ok?'✓ Salvo':'⚠ Erro');if(ok)_syncCRM('diagnostico',c);},
     // Pedro — Sincronização Meta API
+    // Busca TODOS os posts do período com métricas individuais + totais da conta.
+    // Métricas únicas (alcance, contas engajadas) usam total_value — nunca soma dia a dia.
     async fetchMetaInsights(){
       if(!_cliente){alert('Selecione um cliente primeiro.');return;}
       const btn=document.getElementById('dg-meta-btn');
@@ -2174,94 +2250,168 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
           return;
         }
         const{tok,aid}=igCreds;
-        const BASE='https://graph.facebook.com/v19.0';
+        const BASE='https://graph.facebook.com/v25.0';
+        const get=u=>fetch(u+(u.includes('?')?'&':'?')+'access_token='+tok).then(r=>r.json());
         const from=_dgFrom||new Date().toISOString().slice(0,8)+'01';
         const to=_dgTo||new Date().toISOString().slice(0,10);
-        const since=Math.floor(new Date(from+'T00:00:00').getTime()/1000);
-        // Meta API limita exatamente 30 dias (2592000s) — usa início do dia final para não ultrapassar
-        const untilDate=new Date(to+'T00:00:00');
-        if((untilDate.getTime()/1000-since)>2592000)untilDate.setTime(since*1000+2591999000);
-        const until=Math.floor(untilDate.getTime()/1000);
+        const fromMs=new Date(from+'T00:00:00').getTime();
+        const toMs=new Date(to+'T23:59:59').getTime();
+
+        // Janelas de até 30 dias (limite da Meta) cobrindo o período inteiro, incluindo o último dia
+        const DAY=86400,MAXW=2592000;
+        const sinceAll=Math.floor(fromMs/1000);
+        const untilAll=Math.min(Math.floor(new Date(to+'T00:00:00').getTime()/1000)+DAY,Math.floor(Date.now()/1000));
+        const janelas=[];
+        for(let s=sinceAll;s<untilAll;s+=MAXW)janelas.push([s,Math.min(s+MAXW,untilAll)]);
+        const periodoLongo=janelas.length>1;
+
+        // total_value por janela; métricas aditivas somam exato, únicas (reach/accounts_engaged) ficam aproximadas se >30 dias
+        const tv=async(metrics,breakdown)=>{
+          const tot={},bd={};
+          for(const[s,u]of janelas){
+            const r=await get(`${BASE}/${aid}/insights?metric=${metrics}&metric_type=total_value&period=day&since=${s}&until=${u}${breakdown?'&breakdown='+breakdown:''}`);
+            if(r.error)throw new Error(`[Meta API ${r.error.code}] ${r.error.message}`);
+            (r.data||[]).forEach(m=>{
+              tot[m.name]=(tot[m.name]||0)+(m.total_value?.value||0);
+              (m.total_value?.breakdowns?.[0]?.results||[]).forEach(x=>{
+                const k=x.dimension_values?.[0];bd[m.name]=bd[m.name]||{};bd[m.name][k]=(bd[m.name][k]||0)+(x.value||0);
+              });
+            });
+          }
+          return{tot,bd};
+        };
 
         // 1. Perfil
-        const profR=await fetch(`${BASE}/${aid}?fields=followers_count,media_count&access_token=${tok}`).then(r=>r.json());
+        const profR=await get(`${BASE}/${aid}?fields=followers_count,media_count,username`);
         if(profR.error)throw new Error('Perfil: '+profR.error.message);
         const seguidores=profR.followers_count||0;
 
-        // 2. Insights do período — API Meta v19+
-        // reach: não precisa de metric_type
-        let alcance=0,visualizacoes=0,interacoes=0,saves_conta=0,visitas_perfil=0,website_clicks=0;
-        const reachTotals=await _insightsPaged(
-          `${BASE}/${aid}/insights?metric=reach&period=day&since=${since}&until=${until}&access_token=${tok}`
-        );
-        alcance=reachTotals.reach||0;
-        // views, total_interactions, saves precisam de metric_type=total_value
+        // 2. Totais da conta no período
+        const conta=await tv('reach,accounts_engaged,total_interactions,likes,comments,saves,shares,replies,views,profile_views,website_clicks');
+        const T=conta.tot;
+        const alcance=T.reach||0;
+        const contas_engajadas=T.accounts_engaged||0;
+        const interacoes=T.total_interactions||0;
+        let alcance_seguidores=0,alcance_nao_seguidores=0,alcance_formato={},novos_seg=0,deixaram_seg=0;
+        try{const r=await tv('reach','follow_type');alcance_seguidores=r.bd.reach?.FOLLOWER||0;alcance_nao_seguidores=r.bd.reach?.NON_FOLLOWER||0;}catch{}
+        try{const r=await tv('reach','media_product_type');alcance_formato=r.bd.reach||{};}catch{}
+        try{const r=await tv('follows_and_unfollows','follow_type');novos_seg=r.bd.follows_and_unfollows?.FOLLOWER||0;deixaram_seg=r.bd.follows_and_unfollows?.NON_FOLLOWER||0;}catch{}
+        // Seguidores ganhos por dia (Meta só entrega os últimos 30 dias)
+        let seg_por_dia=[];
         try{
-          const tvTotals=await _insightsPaged(
-            `${BASE}/${aid}/insights?metric=views,total_interactions,saves&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${tok}`
-          );
-          visualizacoes=tvTotals.views||0;
-          interacoes=tvTotals.total_interactions||0;
-          saves_conta=tvTotals.saves||0;
-        }catch{}
-        // Opcionais — falha silenciosa
-        try{const t=await _insightsPaged(`${BASE}/${aid}/insights?metric=profile_views&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${tok}`);visitas_perfil=t.profile_views||0;}catch{}
-        try{const t=await _insightsPaged(`${BASE}/${aid}/insights?metric=website_clicks&period=day&since=${since}&until=${until}&access_token=${tok}`);website_clicks=t.website_clicks||0;}catch{}
-
-        // 3. Todos os posts do período (até 50 mais recentes)
-        const mediaR=await fetch(`${BASE}/${aid}/media?fields=id,caption,media_type,timestamp,permalink,like_count,comments_count,media_url,thumbnail_url&limit=50&access_token=${tok}`).then(r=>r.json());
-        const allPosts=(!mediaR.error&&mediaR.data)||[];
-        const fromMs=new Date(from+'T00:00:00').getTime();
-        const toMs=new Date(to+'T23:59:59').getTime();
-        const periodPosts=allPosts.filter(p=>{const t=new Date(p.timestamp).getTime();return t>=fromMs&&t<=toMs;});
-        const forEng=periodPosts.length?periodPosts:allPosts.slice(0,20);
-
-        // 4. Engajamento: usa total_interactions da API se disponível, senão calcula por posts
-        let engajamento=0;
-        if(interacoes>0&&alcance>0){
-          engajamento=parseFloat(((interacoes/alcance)*100).toFixed(2));
-        } else if(seguidores>0&&forEng.length>0){
-          let totalEng=0;forEng.forEach(p=>{totalEng+=(p.like_count||0)+(p.comments_count||0);});
-          engajamento=parseFloat(((totalEng/forEng.length/seguidores)*100).toFixed(2));
-        }
-
-        // 5. Top posts: busca insights individuais (reach, impressions, saved ainda válidos por media)
-        const sorted=[...forEng].sort((a,b)=>((b.like_count||0)+(b.comments_count||0))-((a.like_count||0)+(a.comments_count||0)));
-        const top7=sorted.slice(0,7);
-        const insightsRes=await Promise.allSettled(
-          top7.map(p=>fetch(`${BASE}/${p.id}/insights?metric=reach,impressions,saved&access_token=${tok}`).then(r=>r.json()))
-        );
-        const topPostsData=top7.map((p,i)=>{
-          const ins=insightsRes[i].status==='fulfilled'?insightsRes[i].value:{};
-          const im={};(ins.data||[]).forEach(d=>{im[d.name]=d.values?.[0]?.value||0;});
-          return{id:p.id,caption:p.caption||'',media_type:p.media_type,timestamp:p.timestamp,permalink:p.permalink,thumbnail:p.thumbnail_url||p.media_url||'',like_count:p.like_count||0,comments_count:p.comments_count||0,reach:im.reach||0,impressions:im.impressions||0,saved:im.saved||0};
-        });
-        topPostsData.sort((a,b)=>b.reach-a.reach);
-
-        // 6. Público demográfico — novo formato Meta API (engaged_audience_demographics)
-        let publico_principal='';
-        try{
-          const audR=await fetch(`${BASE}/${aid}/insights?metric=engaged_audience_demographics&period=lifetime&timeframe=last_90_days&breakdown=gender&access_token=${tok}`).then(r=>r.json());
-          if(!audR.error&&audR.data?.[0]?.total_value?.breakdowns?.[0]?.results){
-            const rows=audR.data[0].total_value.breakdowns[0].results;
-            const top=rows.sort((a,b)=>b.value-a.value)[0];
-            if(top){const g=top.dimension_values?.[0];publico_principal=g==='F'?'Mulheres':g==='M'?'Homens':g||'—';}
+          for(const[s,u]of janelas){
+            const r=await get(`${BASE}/${aid}/insights?metric=follower_count&period=day&since=${s}&until=${u}`);
+            (r.data?.[0]?.values||[]).forEach(v=>seg_por_dia.push({d:v.end_time.slice(0,10),v:v.value||0}));
           }
         }catch{}
 
-        // 7. Salva
+        // 3. TODOS os posts do período (paginando até passar da data inicial)
+        const allPosts=[];
+        let next=`${BASE}/${aid}/media?fields=id,caption,media_type,media_product_type,timestamp,permalink,like_count,comments_count,media_url,thumbnail_url,boost_eligibility_info&limit=100`;
+        for(let guard=0;next&&guard<30;guard++){
+          const r=await (next.includes('access_token=')?fetch(next).then(x=>x.json()):get(next));
+          if(r.error)throw new Error('Posts: '+r.error.message);
+          const data=r.data||[];
+          allPosts.push(...data);
+          const last=data[data.length-1];
+          if(!last||new Date(last.timestamp).getTime()<fromMs)break;
+          next=r.paging?.next||null;
+        }
+        const periodPosts=allPosts.filter(p=>{const t=new Date(p.timestamp).getTime();return t>=fromMs&&t<=toMs;});
+
+        // 4. Métricas individuais de cada post (lote de 5 por vez)
+        const FEED='reach,views,likes,comments,saved,shares,total_interactions,follows,profile_visits';
+        const REEL='reach,views,likes,comments,saved,shares,total_interactions,ig_reels_avg_watch_time';
+        const BASICO='reach,likes,comments,saved,shares,total_interactions';
+        const insPost=async p=>{
+          const tent=p.media_product_type==='REELS'?[REEL,BASICO]:[FEED,BASICO];
+          for(const m of tent){
+            const r=await get(`${BASE}/${p.id}/insights?metric=${m}`);
+            if(!r.error){const o={};(r.data||[]).forEach(d=>{o[d.name]=d.values?.[0]?.value||0;});return o;}
+          }
+          return{};
+        };
+        const insArr=[];
+        for(let i=0;i<periodPosts.length;i+=5){
+          insArr.push(...await Promise.all(periodPosts.slice(i,i+5).map(insPost)));
+        }
+        const posts=periodPosts.map((p,i)=>{
+          const m=insArr[i]||{};
+          const likes=m.likes??p.like_count??0,comments=m.comments??p.comments_count??0,saved=m.saved||0,shares=m.shares||0;
+          const inter=likes+comments+saved+shares;
+          const reach=m.reach||0;
+          return{
+            id:p.id,caption:p.caption||'',media_type:p.media_type,produto:p.media_product_type||'',timestamp:p.timestamp,permalink:p.permalink,
+            thumbnail:p.thumbnail_url||p.media_url||'',
+            reach,views:m.views||0,impressions:m.views||0,like_count:likes,comments_count:comments,saved,shares,interacoes:inter,
+            follows:m.follows??null,profile_visits:m.profile_visits??null,avg_watch:m.ig_reels_avg_watch_time?Math.round(m.ig_reels_avg_watch_time/100)/10:null,
+            eng:reach>0?+(inter/reach*100).toFixed(2):0,
+            // Mínimo de não seguidores: só "seguidores" pessoas podem ser seguidoras, o resto do alcance é fora da base
+            fora_base:reach>0?Math.max(0,reach-seguidores):0,
+            fora_base_pct:reach>0?Math.round(Math.max(0,reach-seguidores)/reach*100):0,
+            pode_turbinar:p.boost_eligibility_info?.eligible_to_boost!==false
+          };
+        });
+
+        // 5. Potencial de turbinar: compara cada post com a média do período
+        const avg=f=>posts.length?posts.reduce((s,p)=>s+f(p),0)/posts.length:0;
+        const rate=(p,f)=>p.reach>0?f(p)/p.reach:0;
+        const aEng=avg(p=>rate(p,x=>x.interacoes)),aSS=avg(p=>rate(p,x=>x.saved+x.shares)),aReach=avg(p=>p.reach),aFora=avg(p=>p.fora_base_pct);
+        const rel=(v,a)=>a>0?v/a:0;
+        posts.forEach(p=>{
+          if(p.reach<10){p.score=0;p.motivos=[];return;}
+          const rE=rel(rate(p,x=>x.interacoes),aEng),rS=rel(rate(p,x=>x.saved+x.shares),aSS),rR=rel(p.reach,aReach),rF=rel(p.fora_base_pct,aFora);
+          p.score=+(0.35*rE+0.35*rS+0.15*rR+0.15*rF).toFixed(2);
+          p.motivos=[];
+          if(rS>=1.3)p.motivos.push(`salvamentos+compartilhamentos ${rS.toFixed(1)}x acima da média`);
+          if(rE>=1.3)p.motivos.push(`engajamento ${rE.toFixed(1)}x acima da média`);
+          if(rF>=1.3&&p.fora_base_pct>=50)p.motivos.push(`${p.fora_base_pct}% do alcance fora da base de seguidores`);
+          if((p.follows||0)>0)p.motivos.push(`trouxe ${p.follows} seguidor(es)`);
+        });
+        // Alcance mínimo: em posts com pouca gente, 2 ou 3 curtidas viram uma taxa enganosa
+        const minReach=Math.max(30,aReach*0.5);
+        const ranking=[...posts].filter(p=>p.pode_turbinar&&p.reach>=minReach&&p.score>=1.15).sort((a,b)=>b.score-a.score).slice(0,3);
+        ranking.forEach(p=>{p.turbinar=true;});
+        posts.forEach(p=>{p.saiu_bolha=seguidores>0&&p.reach>=seguidores*1.5;});
+
+        // 6. Taxas de engajamento
+        const somaInter=posts.reduce((s,p)=>s+p.interacoes,0),somaReach=posts.reduce((s,p)=>s+p.reach,0);
+        const eng_posts=somaReach>0?+(somaInter/somaReach*100).toFixed(2):0;          // interações ÷ alcance (média dos posts)
+        const eng_seguidores=seguidores>0&&posts.length?+(somaInter/posts.length/seguidores*100).toFixed(2):0; // por post ÷ seguidores
+        const eng_real=alcance>0?+(contas_engajadas/alcance*100).toFixed(2):0;          // pessoas que interagiram ÷ pessoas alcançadas
+        const engajamento=contas_engajadas>0?eng_real:eng_posts;
+
+        // Seguidores atribuídos a posts (Reels e Stories não informam follows na API)
+        const seg_posts=posts.reduce((s,p)=>s+(p.follows||0),0);
+
+        // 7. Público demográfico
+        let publico_principal='';
+        try{
+          const audR=await get(`${BASE}/${aid}/insights?metric=engaged_audience_demographics&period=lifetime&timeframe=last_90_days&breakdown=gender&metric_type=total_value`);
+          const rows=audR.data?.[0]?.total_value?.breakdowns?.[0]?.results;
+          if(rows?.length){const top=rows.sort((a,b)=>b.value-a.value)[0];const g=top.dimension_values?.[0];publico_principal=g==='F'?'Mulheres':g==='M'?'Homens':g||'—';}
+        }catch{}
+
+        // 8. Salva
         const hoje=new Date().toISOString().slice(0,10);
+        const top_posts=[...posts].sort((a,b)=>b.reach-a.reach);
         const{error:dbErr}=await db.from('metricas_instagram').upsert(
-          {client_email:_cliente,data:hoje,seguidores,alcance,impressoes:visualizacoes,engajamento,visitas_perfil,publico_principal,
-           dados_completos:{top_posts:topPostsData,website_clicks,saves_total:saves_conta,interacoes,period_from:from,period_to:to,total_posts_period:periodPosts.length}},
+          {client_email:_cliente,data:hoje,seguidores,alcance,impressoes:T.views||0,engajamento,visitas_perfil:T.profile_views||0,publico_principal,
+           dados_completos:{
+             versao:2,top_posts,period_from:from,period_to:to,total_posts_period:posts.length,periodo_longo:periodoLongo,
+             interacoes,likes:T.likes||0,comments:T.comments||0,saves_total:T.saves||0,shares:T.shares||0,replies:T.replies||0,
+             website_clicks:T.website_clicks||0,contas_engajadas,alcance_seguidores,alcance_nao_seguidores,alcance_formato,
+             novos_seg,deixaram_seg,seg_por_dia,seg_posts,eng_real,eng_posts,eng_seguidores
+           }},
           {onConflict:'client_email,data'}
         );
         if(dbErr)throw new Error('Erro ao salvar: '+dbErr.message);
 
-        _flash('dg-sync-s',`✓ ${(seguidores||0).toLocaleString('pt-BR')} seg · alcance ${(alcance||0).toLocaleString('pt-BR')} · ${topPostsData.length} top posts`);
+        _flash('dg-sync-s',`✓ ${posts.length} posts · alcance ${(alcance||0).toLocaleString('pt-BR')} · ${contas_engajadas} pessoas engajadas`);
         _renderAba(_aba);
       }catch(e){alert('Erro: '+e.message);}finally{if(btn){btn.disabled=false;btn.textContent='🔄 Sincronizar';}}
     },
+    setDgSort(k){_dgSort=k;_renderAba(_aba);},
     setDgDates(){
       _dgFrom=document.getElementById('dg-from')?.value||_dgFrom;
       _dgTo=document.getElementById('dg-to')?.value||_dgTo;
@@ -3279,7 +3429,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
           ${kpiBox('🔍','Visitas ao perfil',fN(meta.visitas_perfil))}
         </div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px;">
-          ${kpiBox('❤️','Engajamento',`${meta.engajamento||0}%`)}
+          ${kpiBox('❤️',extras.versao===2?'Engajamento real':'Engajamento',`${meta.engajamento||0}%`)}
           ${kpiBox('💬','Interações',fN(extras.interacoes||0))}
           ${kpiBox('🔖','Saves',fN(extras.saves_total||0))}
           ${kpiBox('🌐','Cliques no site',fN(extras.website_clicks||0))}
@@ -3292,7 +3442,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
               <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:left;font-weight:500;">Legenda</th>
               <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Data</th>
               <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Alcance</th>
-              <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Impressões</th>
+              <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Visualizações</th>
               <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Likes</th>
               <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Coments</th>
               <th style="padding:8px;font-size:10px;color:#9B6B3A;text-align:center;font-weight:500;">Saves</th>
