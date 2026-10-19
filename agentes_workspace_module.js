@@ -1391,7 +1391,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       const pctFora=meta.alcance>0?Math.round((extras.alcance_nao_seguidores||0)/meta.alcance*100):0;
       kpisHtml=`
       <div style="${grid};margin-bottom:6px">
-        ${kpi('👥','Seguidores',fN(meta.seguidores),`+${fN(extras.novos_seg)} / −${fN(extras.deixaram_seg)} no período (saldo ${saldo>=0?'+':''}${saldo})`)}
+        ${kpi('👥','Seguidores',fN(meta.seguidores),`+${fN(extras.novos_seg)} / -${fN(extras.deixaram_seg)} no período (saldo ${saldo>=0?'+':''}${saldo})`)}
         ${kpi('👁','Alcance',fN(meta.alcance),`pessoas únicas · ${pctFora}% não seguidores${extras.periodo_longo?' · aprox. (>30 dias)':''}`,'Contas únicas que viram qualquer conteúdo no período (posts, reels, stories)')}
         ${kpi('👀','Visualizações',fN(meta.impressoes),'vezes que o conteúdo foi exibido')}
         ${kpi('🔍','Visitas ao perfil',fN(meta.visitas_perfil),'no período')}
@@ -3400,7 +3400,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       let meta=null;
       try{const{data}=await db.from('metricas_instagram').select('*').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle();meta=data;}catch{}
       if(!meta){alert('Nenhuma sincronização ainda. Clique em Sincronizar primeiro.');return;}
-      if(window.MetricasIGReport?.isV2(meta)){MetricasIGReport.imprimir(meta,{nome:cliNome});return;}
+      if(window.MetricasIGReport?.isV2(meta)){MetricasIGReport.imprimir(meta,{nome:cliNome,sort:_dgSort});return;}
       const extras=meta.dados_completos||{};
       const topPosts=extras.top_posts||[];
       const fN=n=>(n||0).toLocaleString('pt-BR');
