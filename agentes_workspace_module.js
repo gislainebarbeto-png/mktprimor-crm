@@ -3400,6 +3400,7 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
       let meta=null;
       try{const{data}=await db.from('metricas_instagram').select('*').eq('client_email',_cliente).order('data',{ascending:false}).limit(1).maybeSingle();meta=data;}catch{}
       if(!meta){alert('Nenhuma sincronização ainda. Clique em Sincronizar primeiro.');return;}
+      if(window.MetricasIGReport?.isV2(meta)){MetricasIGReport.imprimir(meta,{nome:cliNome});return;}
       const extras=meta.dados_completos||{};
       const topPosts=extras.top_posts||[];
       const fN=n=>(n||0).toLocaleString('pt-BR');
@@ -3455,10 +3456,8 @@ IMPORTANTE: JSON sempre em UMA única linha. Nunca quebre linhas dentro de [[SAV
           <div style="font-size:9px;color:#C8B89A;">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
         </div>
       </div>`;
-      if(typeof html2pdf==='undefined'){alert('Biblioteca html2pdf não carregada.');return;}
-      const el=document.createElement('div');el.innerHTML=html;document.body.appendChild(el);
-      await html2pdf().set({margin:[8,8],filename:`metricas-${cliNome.replace(/\s+/g,'-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.pdf`,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save();
-      el.remove();
+      // Dados antigos: janela de impressão (html2pdf gerava páginas em branco)
+      _abrirJanelaPDF(html,`Métricas Instagram — ${cliNome}`);
     },
     // PDF de Aprovação
     openPdfModal(){

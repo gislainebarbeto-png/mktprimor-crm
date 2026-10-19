@@ -9947,6 +9947,24 @@ ${text}`,
         </svg>`;
       };
 
+      // Relatório completo (sincronização nova) — mesmo conteúdo do PDF
+      if (window.MetricasIGReport?.isV2(latest)) {
+        const { data: cli } = await db.from('clients').select('nome').eq('email', email).maybeSingle();
+        this._metIG = { meta: latest, nome: cli?.nome || '' };
+        el.innerHTML = `<div style="max-width:860px;margin:0 auto;padding:8px 4px 40px;">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+            <button onclick="MetricasIGReport.imprimir(Client._metIG.meta,{nome:Client._metIG.nome})" style="padding:9px 16px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;letter-spacing:.04em;cursor:pointer;border:none;">📄 Baixar PDF</button>
+          </div>
+          ${MetricasIGReport.html(latest, { nome: cli?.nome || '' })}
+          ${monthlyData.length >= 2 ? `<div style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;overflow-x:auto;"><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:14px;">📈 Crescimento de Seguidores</div>${svgChart(monthlyData,'#C9A800','seguidores')}</div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;overflow-x:auto;"><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:14px;">📈 Alcance Mensal</div>${svgChart(monthlyData,'#7A5C00','alcance')}</div>
+          </div>` : ''}
+          <div style="text-align:center;margin-top:20px;font-size:10px;color:var(--muted);">Dados sincronizados em ${new Date(latest.created_at||latest.data+'T12:00:00').toLocaleDateString('pt-BR')} · Marketing Primor</div>
+        </div>`;
+        return;
+      }
+
       el.innerHTML = `<div style="max-width:480px;margin:0 auto;padding:8px 4px 40px;">
         <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);">
           <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Marketing Primor</div>
@@ -11389,6 +11407,7 @@ document.addEventListener('keydown', e => {
 <script src="comercial_hub_module.js?v=20260518"></script>
 <script src="fiscal_module.js?v=20260518b"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="agentes_workspace_module.js?v=20260525j"></script>
+<script src="metricas_ig_report.js?v=20261019a"></script>
+<script src="agentes_workspace_module.js?v=20261019a"></script>
 </body>
 </html>
