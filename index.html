@@ -2404,7 +2404,9 @@ const Admin = {
           <div class="cal-day-num" style="display:flex;align-items:center;justify-content:space-between;">
             <span>${d}</span>
             <span class="cal-add-btn" onclick="event.stopPropagation();Admin._newPostOnDate('${dateStr}')" title="Novo post">+</span>
-          </div></div>`;
+          </div>
+          ${getDay(new Date(y,m,d)).map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;return chipCompact(p,sm);}).join('')}
+          </div>`;
       }
       const rem=(7-((startDow+totalDays)%7))%7;
       for (let i=1;i<=rem;i++) cells+=`<div class="cal-cell-blank outro-mes"><div class="cal-day-num">${i}</div></div>`;
@@ -9404,7 +9406,7 @@ const Client = {
       for (let i=startDow-1;i>=0;i--) cells+=`<div class="cli-cal-cell-blank outro-mes"><div class="cli-day-num">${prevLast-i}</div></div>`;
       for (let d=1;d<=totalDays;d++) {
         const isToday = now.getFullYear()===y&&now.getMonth()===m&&now.getDate()===d;
-        cells+=`<div class="cli-cal-cell-blank${isToday?' today':''}"><div class="cli-day-num">${d}</div></div>`;
+        cells+=`<div class="cli-cal-cell-blank${isToday?' today':''}"><div class="cli-day-num">${d}</div>${getDay(new Date(y,m,d)).map(p=>{const sm=SM[p.status||'criacao']||SM.criacao;return chipCompact(p,sm);}).join('')}</div>`;
       }
       const rem=(7-((startDow+totalDays)%7))%7;
       for (let i=1;i<=rem;i++) cells+=`<div class="cli-cal-cell-blank outro-mes"><div class="cli-day-num">${i}</div></div>`;
