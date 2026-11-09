@@ -1605,13 +1605,13 @@ function calendarGuideHTML() {
     ['Vá além','O calendário é um guia — aplique as dicas, exercite a imaginação e vá além sempre que possível.']
   ];
   const card = ([t,d]) => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
-    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--copper);margin-bottom:6px;">${t}</div>
-    <div style="font-size:12px;color:var(--text);line-height:1.55;">${d}</div>
+    <div class="pt" style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--copper);margin-bottom:6px;"><strong>${t}</strong></div>
+    <div class="pl" style="font-size:12px;color:var(--text);line-height:1.55;">${d}</div>
   </div>`;
   const block = (title, subtitle, items) => `
     <div style="margin-bottom:18px;">
-      <h3 style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:20px;color:var(--brown);margin:0 0 6px;">${title}</h3>
-      ${subtitle?`<p style="font-size:12px;color:var(--muted);margin:0 0 10px;">${subtitle}</p>`:''}
+      <h3 class="pt" style="font-size:20px;color:var(--brown);margin:0 0 6px;text-transform:none;letter-spacing:.02em;">${title}</h3>
+      ${subtitle?`<p class="pl" style="font-size:12px;color:var(--muted);margin:0 0 10px;">${subtitle}</p>`:''}
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
         ${items.map(card).join('')}
       </div>
@@ -1619,7 +1619,7 @@ function calendarGuideHTML() {
   return `
     <div style="margin-bottom:22px;">
       <h2 class="section-title" style="margin-bottom:4px;">Guia de Conteúdo</h2>
-      <p style="font-size:12px;color:var(--muted);margin:0 0 16px;">Use este guia para planejar o que postar em cada dia do calendário abaixo.</p>
+      <p class="pl" style="font-size:12px;color:var(--muted);margin:0 0 16px;">Use este guia para planejar o que postar em cada dia do calendário abaixo.</p>
       ${block('Tipos de Conteúdo', '', tipos)}
       ${block('Linha Editorial', 'Aliada à persona, a linha editorial direciona o conteúdo do dia a dia para ser mais assertivo com o público.', editorial)}
       ${block('Dicas Importantes', '', dicas)}
