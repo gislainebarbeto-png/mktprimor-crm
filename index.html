@@ -18,7 +18,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Mkt Primor">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500&family=Montserrat:wght@200;300&family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500&family=Montserrat:wght@200;300;400;600;700&family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
   <script src="config.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -324,6 +324,10 @@
     input,textarea{font-family:"Poppins",sans-serif;font-weight:300;outline:none;}
     .hidden{display:none!important;}
 
+    /* ── POSTS: título Montserrat 200 (palavras-chave em negrito), legenda Montserrat Regular ── */
+    .pt{font-family:'Montserrat',sans-serif!important;font-weight:200!important;font-style:normal!important;}
+    .pt b,.pt strong{font-weight:700!important;}
+    .pl{font-family:'Montserrat',sans-serif!important;font-weight:400!important;font-style:normal!important;}
     /* ── TIPOGRAFIA PRIMOR — Montserrat 200 + Great Vibes ── */
     /* Captura todos os elementos com Cormorant inline (gerados via JS) */
     [style*="Cormorant Garamond"]:not([style*="italic"]),
@@ -1208,6 +1212,14 @@ const META_APP_ID   = '973377455462974'; // app "primor crm" (empresa mktprimor,
 const META_CONFIG_ID = ''; // ID da configuração do Login do Facebook para Empresas (se preenchido, substitui o scope)
 const { createClient } = window.supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Título do post: escapa HTML, mantém <b>/<strong> e transforma **palavra** em negrito
+function fmtTit(t){
+  return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/&lt;(\/?)(b|strong)&gt;/gi,'<$1$2>')
+    .replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>');
+}
+// Título sem marcação (para textos curtos/cortados)
+function txtTit(t){ return String(t||'').replace(/<[^>]*>/g,'').replace(/\*\*/g,''); }
 
 /* Arquivos (fotos, vídeos, anexos) ficam no servidor da Hostinger, na pasta midia/,
    e não no Supabase Storage — o plano grátis do Supabase só tem 1 GB.
@@ -2129,9 +2141,9 @@ const Admin = {
         ${img?`<img src="${esc(img)}" style="width:110px;flex-shrink:0;object-fit:cover;max-height:200px" onerror="this.style.display='none'">`:''}
         <div style="flex:1;padding:10px 12px;overflow:hidden">
           <div style="font-size:10px;font-weight:700;color:#777;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:3px;margin-bottom:5px">Título</div>
-          <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px;line-height:1.3">${esc(p.tema_titulo||'(sem título)')}</div>
+          <div class="pt" style="font-size:13px;color:#1a1a1a;margin-bottom:10px;line-height:1.3">${fmtTit(p.tema_titulo||'(sem título)')}</div>
           <div style="font-size:10px;font-weight:700;color:#777;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:3px;margin-bottom:5px">Legenda</div>
-          <div class="cal-preview-cap">${esc(p.legenda||'—')}</div>
+          <div class="cal-preview-cap pl">${esc(p.legenda||'—')}</div>
           ${p.hashtags?`<div style="font-size:10px;color:#9B6B3A;margin-top:8px;font-weight:500;line-height:1.6">${esc(p.hashtags.split(' ').slice(0,6).join(' '))}${p.hashtags.split(' ').length>6?'…':''}</div>`:''}
         </div>
       </div>`;
@@ -2209,7 +2221,7 @@ const Admin = {
     const statusDot = (status) => `<span style="width:10px;height:10px;border-radius:50%;background:${statusColor(status)};display:inline-block;flex-shrink:0;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,.08);"></span>`;
     const chipCompact = (p, sm) => {
       const tipo = p.tipo||'Feed';
-      const tema = p.tema_titulo ? stripHtml(p.tema_titulo).slice(0,30) : '';
+      const tema = p.tema_titulo ? txtTit(p.tema_titulo).slice(0,30) : '';
       const titulo = stripHtml(p.legenda||'—').slice(0,36);
       const thumb = p.capa_url || parseFirst(p.midia_urls) || parseFirst(p.img_url) || '';
       const isVid = thumb && /\.(mp4|mov|webm|m4v)/i.test(thumb);
@@ -2233,7 +2245,7 @@ const Admin = {
           <div style="display:flex;align-items:center;justify-content:space-between;gap:3px;">
             <span class="pchip-tipo" style="color:${isPostado?'#16a34a':sm.dot};">${tipoIco(tipo)} ${tipo} ${isPostado?'<span style="font-size:8px;background:#16a34a;color:#fff;border-radius:3px;padding:1px 4px;font-weight:700">✓</span>':statusDot(p.status||'criacao')}</span>
           </div>
-          ${tema?`<span class="pchip-tema" style="color:${txtCol};">${tema}</span>`:''}
+          ${tema?`<span class="pchip-tema pt" style="color:${txtCol};">${tema}</span>`:''}
           <span class="pchip-titulo" style="color:${txtCol};">${titulo}</span>
           ${!isPostado?`<button onclick="event.stopPropagation();Admin.publicarNoInstagram(${p.id})" style="margin-top:4px;display:block;width:100%;background:linear-gradient(135deg,#E1306C,#833AB4);color:#fff;border:none;border-radius:4px;padding:3px 6px;font-size:9px;font-weight:700;cursor:pointer;letter-spacing:.03em;">📸 Publicar</button>`:''}
         </div>
@@ -2458,7 +2470,7 @@ const Admin = {
       <div style="background:var(--surface);border-radius:16px;width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.45);display:flex;flex-direction:column;">
         <div style="background:${isPublicado?'#16a34a':fmtBg}10;border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;border-radius:16px 16px 0 0;">
           <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-weight:700;font-size:14px;color:var(--brown)">${eV(p.tema_titulo||'Post')}</span>
+            <span class="pt" style="font-size:14px;color:var(--brown)">${fmtTit(p.tema_titulo||'Post')}</span>
             <span style="background:${fmtBg}22;color:${fmtBg};border:1px solid ${fmtBg}44;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">${tipo.toUpperCase()}</span>
             ${isPublicado?`<span style="background:#16a34a;color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:.06em">✓ POSTADO</span>`:''}
           </div>
@@ -2483,9 +2495,9 @@ const Admin = {
           </div>
           <div style="flex:1;padding:18px 22px;min-width:0;background:#fff;color:#1a1a1a">
             <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:4px;border-bottom:1px solid #eee;padding-bottom:4px">Título</div>
-            <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:16px;line-height:1.4">${eV(p.tema_titulo||'—')}</div>
+            <div class="pt" style="font-size:15px;color:#1a1a1a;margin-bottom:16px;line-height:1.4">${fmtTit(p.tema_titulo||'—')}</div>
             <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Legenda</div>
-            <div style="font-size:12px;color:#333;margin-bottom:16px;line-height:1.7;white-space:pre-wrap">${eV(legenda||'—')}</div>
+            <div class="pl" style="font-size:12px;color:#333;margin-bottom:16px;line-height:1.7;white-space:pre-wrap">${eV(legenda||'—')}</div>
             ${p.hashtags?`<div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Hashtags</div>
             <div style="font-size:12px;color:#9B6B3A;font-weight:500;line-height:1.8">${eV(p.hashtags)}</div>`:''}
             ${p.obs_int?`<div style="margin-top:14px;font-size:10px;font-weight:700;letter-spacing:.12em;color:#777;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">Obs. interna</div><div style="font-size:12px;color:#555;line-height:1.6;white-space:pre-wrap">${eV(stripH(p.obs_int))}</div>`:''}
@@ -2997,7 +3009,7 @@ const Admin = {
             </div>
             <div style="padding:10px 12px;">
               <div style="font-size:11px;color:var(--muted);margin-bottom:3px;">${date} · ${p.tipo||'Feed'}</div>
-              <div style="font-size:12px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.tema_titulo || (p.legenda||'').substring(0,40) || '—'}</div>
+              <div class="pt" style="font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.tema_titulo ? fmtTit(p.tema_titulo) : (txtTit(p.legenda).substring(0,40) || '—')}</div>
             </div>
           </div>`;
         }).join('')}
@@ -3098,7 +3110,7 @@ const Admin = {
           ondragend="document.querySelectorAll('.feed-cell').forEach(el=>el.classList.remove('feed-drag-over'))"
           onclick="Admin.openPost(${p.id})"
           style="background:${bg};aspect-ratio:1/1;position:relative;cursor:pointer;overflow:hidden;border-radius:2px;">
-          ${!img ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;"><span style="font-size:10px;color:${sm.dot};font-weight:600;text-align:center;padding:4px 6px;">${(p.legenda||p.tema_titulo||'Post').replace(/<[^>]*>/g,'').slice(0,30)}</span></div>` : ''}
+          ${!img ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;"><span style="font-size:10px;color:${sm.dot};font-weight:600;text-align:center;padding:4px 6px;">${txtTit(p.legenda||p.tema_titulo||'Post').slice(0,30)}</span></div>` : ''}
           <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.55) 0%,transparent 50%);opacity:0;transition:opacity .2s;" class="feed-overlay"></div>
           <div style="position:absolute;bottom:0;left:0;right:0;padding:6px 7px;opacity:0;transition:opacity .2s;" class="feed-meta">
             <div style="font-size:9px;color:#fff;font-weight:500;">${dateStr}</div>
@@ -9243,7 +9255,7 @@ const Client = {
     const stripHtml = s => s ? s.replace(/<[^>]*>/g,'').replace(/&[^;]+;/g,' ').trim() : '';
     const chipCompact = (p, sm) => {
       const tipo = p.tipo||'Feed';
-      const tema = p.tema_titulo ? stripHtml(p.tema_titulo).slice(0,22) : '';
+      const tema = p.tema_titulo ? txtTit(p.tema_titulo).slice(0,22) : '';
       const titulo = stripHtml(p.legenda||'—').slice(0,26);
       const thumb = p.capa_url || parseFirst(p.midia_urls) || parseFirst(p.img_url) || '';
       const isVid = thumb && /\.(mp4|mov|webm|m4v)/i.test(thumb);
@@ -9255,7 +9267,7 @@ const Client = {
         ${isVid?`<span style="width:28px;height:28px;border-radius:4px;flex-shrink:0;background:${sm.bc};border:1px solid ${sm.dot}40;display:flex;align-items:center;justify-content:center;font-size:12px;">🎬</span>`:''}
         <div style="flex:1;min-width:0;">
           <span class="cli-pchip-tipo" style="color:${sm.dot};">${cliTipoIco(tipo)} ${tipo}</span>
-          ${tema?`<span class="cli-pchip-tema" style="color:${sm.c};">${tema}</span>`:''}
+          ${tema?`<span class="cli-pchip-tema pt" style="color:${sm.c};">${tema}</span>`:''}
           <span class="cli-pchip-titulo" style="color:${sm.c};">${titulo}</span>
         </div>
       </div>`;
@@ -9427,7 +9439,7 @@ const Client = {
         <!-- Header -->
         <div style="padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;">
           <div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--brown);line-height:1.2;margin-bottom:4px;">${p.tema_titulo||'Post'}</div>
+            <div class="pt" style="font-size:20px;color:var(--brown);line-height:1.2;margin-bottom:4px;">${fmtTit(p.tema_titulo||'Post')}</div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
               ${date?`<span style="font-size:11px;color:var(--muted);">📅 ${date}</span>`:''}
               <span style="font-size:11px;color:var(--muted);">${p.tipo||'Feed'}</span>
@@ -9448,7 +9460,7 @@ const Client = {
           ${note}
           ${p.legenda ? `<div style="margin-bottom:14px;">
             <div style="font-size:9px;color:var(--copper);letter-spacing:.12em;text-transform:uppercase;font-weight:600;margin-bottom:6px;">Legenda</div>
-            <div style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;">${p.legenda}</div>
+            <div class="pl" style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;">${p.legenda}</div>
           </div>` : ''}
           ${p.hashtags ? `<div style="font-size:12px;color:var(--copper);margin-bottom:14px;line-height:1.6;">${p.hashtags}</div>` : ''}
           ${actions}
@@ -9584,7 +9596,7 @@ const Client = {
         const imgs = this.postMedia(p);
         const st = this.statusInfo(p.status);
         const th = imgs[0] ? this.mediaTag(imgs[0], '', 'style="width:36px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0;"') : `<div style="width:36px;height:36px;background:var(--beige);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--copper);">✦</div>`;
-        return `<div class="cal-info-item">${th}<div style="flex:1;"><div style="font-size:11px;color:var(--text);">${(p.tema_titulo||p.legenda||'Post').substring(0,45)}...</div><div style="display:flex;align-items:center;gap:6px;margin-top:2px;"><span class="client-status-pill ${st.cls}" style="padding:2px 7px;">${st.label}</span><span style="font-size:10px;color:var(--muted);">${p.tipo||'Feed'}</span></div></div></div>`;
+        return `<div class="cal-info-item">${th}<div style="flex:1;"><div class="pt" style="font-size:11px;color:var(--text);">${txtTit(p.tema_titulo||p.legenda||'Post').substring(0,45)}...</div><div style="display:flex;align-items:center;gap:6px;margin-top:2px;"><span class="client-status-pill ${st.cls}" style="padding:2px 7px;">${st.label}</span><span style="font-size:10px;color:var(--muted);">${p.tipo||'Feed'}</span></div></div></div>`;
       }).join('');
   },
 
@@ -10808,7 +10820,7 @@ document.addEventListener('keydown', e => {
             </div>
             <div class="modal-field">
               <label>Tema da publicação</label>
-              <input id="mp-tema-titulo" type="text" placeholder="Ex: Cuidados antes da consulta"/>
+              <input id="mp-tema-titulo" type="text" placeholder="Ex: Cuidados **antes da consulta**  (use **palavra** para negrito)"/>
             </div>
             <div class="modal-field">
               <label>Referências do tema até 3</label>
