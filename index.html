@@ -1204,7 +1204,7 @@
 const SUPABASE_URL  = 'https://dloxddrdqsltuwdabwaq.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_ZAEE1Rt9yMMWVTNqcdEo6w_WNhPt29M';
 const ADMIN_EMAIL   = 'gislainebarbeto@gmail.com';
-const META_APP_ID   = '1698396874498822';
+const META_APP_ID   = '2182339425500456'; // app Primor.API crm (o antigo 1698396874498822 foi bloqueado pela Meta)
 const { createClient } = window.supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -1280,7 +1280,7 @@ const Meta = {
     const redirect = encodeURIComponent(window.location.origin + '/');
     const scope = 'instagram_basic,instagram_manage_insights,instagram_content_publish,pages_read_engagement,pages_show_list,business_management';
     window.location.href =
-      `https://www.facebook.com/v19.0/dialog/oauth?client_id=${META_APP_ID}` +
+      `https://www.facebook.com/v21.0/dialog/oauth?client_id=${META_APP_ID}` +
       `&redirect_uri=${redirect}&scope=${scope}&state=${state}&response_type=code&auth_type=rerequest`;
   },
 
