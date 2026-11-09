@@ -5745,6 +5745,18 @@ const Admin = {
         const accs = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username}&access_token=${token}`).then(r=>r.json());
         if (accs.error) throw new Error(accs.error.message);
         pagesWithIg = (accs.data||[]).filter(p=>p.instagram_business_account?.id);
+        // Páginas que ficam dentro de um Business (ex.: Alinhadas no Business florescer_entreelas)
+        // não aparecem em /me/accounts — busca também nos Business da conta
+        try {
+          const G = 'https://graph.facebook.com/v21.0', F = 'id,name,access_token,instagram_business_account{id,username}';
+          const biz = await fetch(`${G}/me/businesses?fields=id&limit=50&access_token=${token}`).then(r=>r.json());
+          for (const b of (biz.data||[])) {
+            for (const edge of ['owned_pages','client_pages']) {
+              const r = await fetch(`${G}/${b.id}/${edge}?fields=${F}&limit=100&access_token=${token}`).then(r=>r.json());
+              (r.data||[]).forEach(p => { if (p.instagram_business_account?.id && !pagesWithIg.some(x=>x.id===p.id)) pagesWithIg.push(p); });
+            }
+          }
+        } catch(_) {}
         // Para cada página encontrada, usar o PAGE token dela (não o user token)
         if (pagesWithIg.length) {
           pagesWithIg = pagesWithIg.map(p => ({
