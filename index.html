@@ -2091,8 +2091,8 @@ const Admin = {
     const parseFirst = (raw) => { if (!raw) return ''; try { const a=JSON.parse(raw); return Array.isArray(a)?a[0]:raw; } catch{return raw;} };
     const cliMap = {}; clientList.forEach(c => { cliMap[c.email] = c; });
     const stats = Object.entries(SM).map(([k,sv]) => { const n=postsFiltrados.filter(p=>(p.status||'criacao')===k).length; return n?`<div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:${sv.bc};border:1px solid ${sv.dot}33;"><span style="width:6px;height:6px;border-radius:50%;background:${sv.dot};display:inline-block;flex-shrink:0;"></span><span style="font-size:11px;color:${sv.c};font-weight:500;">${n} ${sv.l}</span></div>`:'';}).filter(Boolean).join('');
-    const views = ['diario','semanal','quinzenal','mensal','boards'];
-    const viewLabels = {diario:'Diário',semanal:'Semanal',quinzenal:'Quinzenal',mensal:'Mensal',boards:'▦ Boards'};
+    const views = ['diario','semanal','quinzenal','mensal','boards','guia'];
+    const viewLabels = {diario:'Diário',semanal:'Semanal',quinzenal:'Quinzenal',mensal:'Mensal',boards:'▦ Boards',guia:'📘 Guia de Conteúdo'};
 
     main.innerHTML = `
       <style>
@@ -2166,14 +2166,14 @@ const Admin = {
         </div>
       </div>
       ${stats?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">${stats}</div>`:''}
-      ${calendarGuideHTML()}
       <div id="posts-view-content"></div>
       <div id="cal-preview" class="cal-preview"></div>`;
 
     document.removeEventListener('mousemove', Admin._calPreviewMove);
     document.addEventListener('mousemove', Admin._calPreviewMove);
 
-    if (v==='boards') this._renderBoards(postsFiltrados, SM, cliMap, parseFirst);
+    if (v==='guia') { const el=document.getElementById('posts-view-content'); if(el) el.innerHTML=calendarGuideHTML(); }
+    else if (v==='boards') this._renderBoards(postsFiltrados, SM, cliMap, parseFirst);
     else this._renderCalGrid(postsFiltrados, SM, cliMap, parseFirst, v);
   },
 
@@ -9169,8 +9169,8 @@ const Client = {
         <span style="width:6px;height:6px;border-radius:50%;background:${sv.dot};display:inline-block;flex-shrink:0;"></span>
         <span style="font-size:11px;color:${sv.c};font-weight:500;">${n} ${sv.l}</span></div>` : '';
     }).filter(Boolean).join('');
-    const views = ['diario','semanal','quinzenal','mensal'];
-    const viewLabels = {diario:'Diário',semanal:'Semanal',quinzenal:'Quinzenal',mensal:'Mensal'};
+    const views = ['diario','semanal','quinzenal','mensal','guia'];
+    const viewLabels = {diario:'Diário',semanal:'Semanal',quinzenal:'Quinzenal',mensal:'Mensal',guia:'📘 Guia de Conteúdo'};
     container.innerHTML = `
       <style>
         .cli-cal-grid-7{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
@@ -9220,13 +9220,13 @@ const Client = {
         </div>
       </div>
       ${stats ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">${stats}</div>` : ''}
-      ${calendarGuideHTML()}
       <div id="client-cal-content"></div>
       <div id="client-cal-preview" class="cli-cal-preview"></div>`;
 
     document.removeEventListener('mousemove', Client._clientPreviewMove);
     document.addEventListener('mousemove', Client._clientPreviewMove);
-    this._renderClientCalGrid(posts, SM, parseFirst, v);
+    if (v==='guia') { const el=document.getElementById('client-cal-content'); if(el) el.innerHTML=calendarGuideHTML(); }
+    else this._renderClientCalGrid(posts, SM, parseFirst, v);
   },
 
   _clientPreviewMove(e) {
