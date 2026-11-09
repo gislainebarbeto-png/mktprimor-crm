@@ -1204,7 +1204,8 @@
 const SUPABASE_URL  = 'https://dloxddrdqsltuwdabwaq.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_ZAEE1Rt9yMMWVTNqcdEo6w_WNhPt29M';
 const ADMIN_EMAIL   = 'gislainebarbeto@gmail.com';
-const META_APP_ID   = '2182339425500456'; // app Primor.API crm (o antigo 1698396874498822 foi bloqueado pela Meta)
+const META_APP_ID   = '973377455462974'; // app "primor crm" (empresa mktprimor, conta da Gi)
+const META_CONFIG_ID = ''; // ID da configuração do Login do Facebook para Empresas (se preenchido, substitui o scope)
 const { createClient } = window.supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -1281,7 +1282,8 @@ const Meta = {
     const scope = 'instagram_basic,instagram_manage_insights,instagram_content_publish,pages_read_engagement,pages_show_list,business_management';
     window.location.href =
       `https://www.facebook.com/v21.0/dialog/oauth?client_id=${META_APP_ID}` +
-      `&redirect_uri=${redirect}&scope=${scope}&state=${state}&response_type=code&auth_type=rerequest`;
+      `&redirect_uri=${redirect}&state=${state}&response_type=code` +
+      (META_CONFIG_ID ? `&config_id=${META_CONFIG_ID}&override_default_response_type=true` : `&scope=${scope}&auth_type=rerequest`);
   },
 
   // Chamado pelo App.init() quando detecta ?code= na URL (retorno do Facebook)
