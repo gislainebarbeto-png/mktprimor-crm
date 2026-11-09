@@ -1120,7 +1120,6 @@
     </div>
     <div class="client-tabs">
       <div class="client-tab active" id="ctab-posts" onclick="Client.clientTab('posts')">Posts</div>
-      <div class="client-tab" id="ctab-metricas_ig" onclick="Client.clientTab('metricas_ig')">📊 Métricas</div>
       <div class="client-tab" id="ctab-comece" onclick="Client.clientTab('comece')">🌱 Início</div>
       <div class="client-tab" id="ctab-onboarding" onclick="Client.clientTab('onboarding')">🌿 Onboarding</div>
       <div class="client-tab" id="ctab-financeiro" onclick="Client.clientTab('financeiro')">💰 Financeiro</div>
@@ -8807,7 +8806,7 @@ const Client = {
       this.render(posts);
       this.checkChatBadge();
       Admin.refreshChatBadge();
-      const validClientTabs = ['posts','metricas_ig','comece','onboarding','financeiro','arquivos','info','solicitacoes','chat'];
+      const validClientTabs = ['posts','comece','onboarding','financeiro','arquivos','info','solicitacoes','chat'];
       const savedTab = validClientTabs.includes(localStorage.getItem('clientTab')) ? localStorage.getItem('clientTab') : 'posts';
       if (savedTab !== 'posts') this.clientTab(savedTab);
     } finally { App.loader(false); }
@@ -9741,7 +9740,7 @@ ${text}`,
       const c = document.getElementById('ctab-content-'+t);
       if (c) c.classList.toggle('hidden', t!==name);
     });
-    if (name==='metricas_ig')   this.renderMetricasInstagramTab();
+    // Aba Métricas escondida do portal da cliente (só a admin vê métricas, em Agentes → Pedro → Diagnóstico)
     if (name==='comece')        this.renderComecePorAqui();
     if (name==='onboarding')    this.renderOnboardingTab();
     if (name==='financeiro')    this.renderFinanceiroTab();
