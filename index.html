@@ -2021,7 +2021,18 @@ const Admin = {
   _igCache: null,
   async _carregarIgPostados() {
     if (this._igCache && Date.now() - this._igCache.t < 30*60*1000) return this._igCache.posts;
-    const clis = (this._clientList||[]).filter(c => c.instagram_token && c.instagram_account_id);
+    // Credenciais: ficha da cliente (clients) ou tabela instagram_tokens (onde o token manual é salvo)
+    const porEmail = {};
+    (this._clientList||[]).forEach(c => { if (c.instagram_token && c.instagram_account_id) porEmail[c.email] = { email:c.email, nome:c.nome, instagram_token:c.instagram_token, instagram_account_id:c.instagram_account_id }; });
+    try {
+      const { data: toks } = await db.from('instagram_tokens').select('client_email,ig_user_id,access_token');
+      (toks||[]).forEach(t => {
+        if (!t.access_token || !t.ig_user_id) return;
+        const c = (this._clientList||[]).find(x => x.email === t.client_email);
+        porEmail[t.client_email] = { email:t.client_email, nome:c?.nome || t.client_email, instagram_token:t.access_token, instagram_account_id:t.ig_user_id };
+      });
+    } catch (_) {}
+    const clis = Object.values(porEmail);
     const desde = new Date(); desde.setMonth(desde.getMonth()-6); desde.setDate(1); desde.setHours(0,0,0,0);
     const porCliente = await Promise.all(clis.map(async c => {
       const lista = [];
