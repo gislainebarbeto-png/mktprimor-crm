@@ -2014,6 +2014,51 @@ const Admin = {
       this._postsMonth = { y: now.getFullYear(), m: now.getMonth() };
     }
     this._renderPostsView();
+    this._juntarIgPostados();
+  },
+
+  // ── Posts já publicados no Instagram de cada cliente conectada (só leitura, nada é gravado no banco) ──
+  _igCache: null,
+  async _carregarIgPostados() {
+    if (this._igCache && Date.now() - this._igCache.t < 30*60*1000) return this._igCache.posts;
+    const clis = (this._clientList||[]).filter(c => c.instagram_token && c.instagram_account_id);
+    const desde = new Date(); desde.setMonth(desde.getMonth()-6); desde.setDate(1); desde.setHours(0,0,0,0);
+    const porCliente = await Promise.all(clis.map(async c => {
+      const lista = [];
+      let url = `https://graph.facebook.com/v21.0/${c.instagram_account_id}/media?fields=id,caption,media_type,media_product_type,timestamp,permalink,media_url,thumbnail_url&limit=100&access_token=${encodeURIComponent(c.instagram_token)}`;
+      for (let g = 0; url && g < 6; g++) {
+        const r = await fetch(url).then(x=>x.json()).catch(()=>({}));
+        if (r.error || !r.data) break;
+        for (const m of r.data) {
+          const t = new Date(m.timestamp);
+          if (t < desde) { url = null; break; }
+          const ds = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+          const img = m.thumbnail_url || m.media_url || '';
+          const tipo = m.media_product_type==='REELS' ? 'Reels' : m.media_type==='CAROUSEL_ALBUM' ? 'Carrossel' : 'Post';
+          const cap = m.caption || '';
+          lista.push({ _ig:true, permalink:m.permalink, client_email:c.email, cliente_nome:c.nome, data_post:ds, status:'publicado',
+            tipo, rede_social:'Instagram', tema_titulo:'', legenda:cap, img_url:img, capa_url:img, created_at:m.timestamp,
+            obs_int:`${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}` });
+        }
+        if (url) url = r.paging?.next || null;
+      }
+      return lista;
+    }));
+    let n = 0;
+    const posts = porCliente.flat().map(p => ({ ...p, id: -(++n) }));
+    this._igCache = { t: Date.now(), posts };
+    return posts;
+  },
+  async _juntarIgPostados() {
+    try {
+      const ig = await this._carregarIgPostados();
+      if (!ig.length || this.currentTab !== 'posts') return;
+      const real = (this.posts||[]).filter(p => !p._ig);
+      const chave = p => p.client_email + '|' + p.data_post;
+      const jaNoCrm = new Set(real.filter(p => p.status === 'publicado').map(chave));
+      this.posts = real.concat(ig.filter(p => !jaNoCrm.has(chave(p))));
+      this._renderPostsView();
+    } catch (e) { console.warn('Posts do Instagram:', e); }
   },
 
   _renderPostsView() {
@@ -2453,6 +2498,7 @@ const Admin = {
   },
 
   async viewPostDetail(id) {
+    if (Number(id) < 0) { const ig = (this.posts||[]).find(x => x.id === Number(id)); if (ig?.permalink) window.open(ig.permalink, '_blank'); return; }
     const { data: p } = await db.from('posts').select('*').eq('id', id).single();
     if (!p) return;
     const eV = t => (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -5864,6 +5910,7 @@ const Admin = {
   async _dropPostOnDate(dateStr) {
     const id = this._dragPostId;
     if (!id) return;
+    if (Number(id) < 0) { this._dragPostId = null; return; } // post vindo do Instagram
     this._dragPostId = null;
     this.loader(true);
     await db.from('posts').update({data_post: dateStr}).eq('id', id);
