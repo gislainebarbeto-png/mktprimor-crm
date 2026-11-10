@@ -25,6 +25,41 @@ async function pollVideoStatus(containerId: string, token: string): Promise<void
   throw new Error('Tempo esgotado aguardando processamento do vídeo. Tente novamente.')
 }
 
+// Aguarda o container ficar pronto. Fotos (principalmente de Stories) também levam alguns segundos;
+// publicar antes disso dá "Media ID is not available".
+async function esperarContainer(containerId: string, token: string, maxMs = 60000): Promise<void> {
+  const ini = Date.now()
+  let espera = 1500
+  while (Date.now() - ini < maxMs) {
+    await new Promise(r => setTimeout(r, espera))
+    const r = await fetch(`${BASE}/${containerId}?fields=status_code,status&access_token=${token}`)
+    const d = await r.json()
+    if (d.status_code === 'FINISHED' || d.status_code === 'PUBLISHED') return
+    if (d.status_code === 'ERROR' || d.status_code === 'EXPIRED') {
+      throw new Error(`O Instagram não conseguiu processar a mídia: ${d.status || d.status_code}`)
+    }
+    if (d.error) return   // campo indisponível: deixa o media_publish tentar
+    espera = Math.min(espera + 1500, 5000)
+  }
+}
+
+// Publica o container; se o Instagram ainda disser que a mídia não está pronta, espera e tenta de novo
+async function publicarContainer(igUserId: string, creationId: string, token: string): Promise<any> {
+  for (let i = 0; i < 6; i++) {
+    const r = await fetch(`${BASE}/${igUserId}/media_publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ creation_id: creationId, access_token: token }),
+    })
+    const pub = await r.json()
+    const e = pub.error
+    const naoPronto = e && (e.code === 9007 || e.error_subcode === 2207027 || /not available|not ready/i.test(String(e.message || '')))
+    if (!naoPronto) return pub
+    await new Promise(r => setTimeout(r, 4000))
+  }
+  return { error: { message: 'O Instagram ainda está processando a mídia. Espere 1 minuto e tente publicar de novo.' } }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
@@ -89,13 +124,9 @@ serve(async (req) => {
       const container = await r1.json()
       if (container.error) throw new Error('Erro ao criar o Stories: ' + container.error.message)
       if (storyVideo) await pollVideoStatus(container.id, access_token)
+      else await esperarContainer(container.id, access_token)
 
-      const r2 = await fetch(`${BASE}/${ig_user_id}/media_publish`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ creation_id: container.id, access_token }),
-      })
-      const pub = await r2.json()
+      const pub = await publicarContainer(ig_user_id, container.id, access_token)
       if (pub.error) throw new Error('Erro ao publicar o Stories: ' + pub.error.message)
 
       return new Response(JSON.stringify({ success: true, story: true, media_id: pub.id, ig_username: tok.ig_username }), {
@@ -124,12 +155,8 @@ serve(async (req) => {
       const carousel = await r2.json()
       if (carousel.error) throw new Error('Erro ao criar carrossel: ' + carousel.error.message)
 
-      const r3 = await fetch(`${BASE}/${ig_user_id}/media_publish`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ creation_id: carousel.id, access_token }),
-      })
-      const pub = await r3.json()
+      await esperarContainer(carousel.id, access_token)
+      const pub = await publicarContainer(ig_user_id, carousel.id, access_token)
       if (pub.error) throw new Error('Erro ao publicar carrossel: ' + pub.error.message)
 
       return new Response(JSON.stringify({ success: true, media_id: pub.id, ig_username: tok.ig_username, alt_ignorado: altIgnorado }), {
@@ -145,12 +172,8 @@ serve(async (req) => {
       })
       if (container.error) throw new Error('Erro ao criar container de imagem: ' + container.error.message)
 
-      const r2 = await fetch(`${BASE}/${ig_user_id}/media_publish`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ creation_id: container.id, access_token }),
-      })
-      const pub = await r2.json()
+      await esperarContainer(container.id, access_token)
+      const pub = await publicarContainer(ig_user_id, container.id, access_token)
       if (pub.error) throw new Error('Erro ao publicar imagem: ' + pub.error.message)
 
       return new Response(JSON.stringify({ success: true, media_id: pub.id, ig_username: tok.ig_username, alt_ignorado: altIgnorado }), {
@@ -181,12 +204,7 @@ serve(async (req) => {
     // Aguarda processamento (obrigatório para vídeos)
     await pollVideoStatus(container.id, access_token)
 
-    const r2 = await fetch(`${BASE}/${ig_user_id}/media_publish`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ creation_id: container.id, access_token }),
-    })
-    const pub = await r2.json()
+    const pub = await publicarContainer(ig_user_id, container.id, access_token)
     if (pub.error) throw new Error('Erro ao publicar vídeo: ' + pub.error.message)
 
     return new Response(JSON.stringify({ success: true, media_id: pub.id, ig_username: tok.ig_username, alt_ignorado: altIgnorado, capa_usada: Boolean(cover_url) }), {
