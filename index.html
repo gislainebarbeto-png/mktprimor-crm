@@ -337,6 +337,41 @@
     html body .cal-wrap *:not(.pt):not(.pt *), html body [class*="pchip"]:not(.pt), html body [class*="pchip"] *:not(.pt):not(.pt *),
     html body .cal-info-item *:not(.pt):not(.pt *), html body .cal-preview-cap{
       font-family:'Montserrat Primor',sans-serif!important;font-weight:400!important;font-style:normal!important;letter-spacing:normal!important;}
+    /* ── PAINEL: calendário de posts com respiro e sem estourar a largura ── */
+    html body #admin-main{min-width:0!important;}
+    html body #admin-main:has(#posts-view-content){padding:28px 36px 40px!important;box-sizing:border-box;}
+    @media(max-width:768px){ html body #admin-main:has(#posts-view-content){padding:14px 12px 28px!important;} }
+    html body #admin-main .cal-wrap{max-width:100%;}
+    html body #admin-view .grava-tag{background:#e11d48!important;color:#fff!important;}
+    #admin-view .cli-agenda{display:none;margin-top:16px;}
+    #admin-view .cli-ag-h{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:600;margin:0 0 8px;}
+    #admin-view .cli-ag-item{display:flex;gap:12px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface);margin-bottom:8px;cursor:pointer;}
+    #admin-view .cli-ag-item.is-grava{border-color:#e11d48;box-shadow:0 0 0 2px #e11d48;}
+    #admin-view .cli-ag-thumb{width:64px;height:64px;border-radius:9px;object-fit:cover;flex-shrink:0;background:var(--beige);display:flex;align-items:center;justify-content:center;font-size:22px;}
+    #admin-view .cli-ag-body{flex:1;min-width:0;}
+    #admin-view .cli-ag-meta{font-size:11px;color:var(--muted);margin-bottom:3px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+    #admin-view .cli-ag-tit{font-size:15px;line-height:1.3;color:var(--text);margin-bottom:3px;}
+    #admin-view .cli-ag-leg{font-size:12px;line-height:1.45;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    #admin-view .cli-ag-st{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;}
+    #admin-view .cli-ag-item .grava-tag{display:inline-block;margin:0 0 4px;}
+    @media(max-width:768px){
+      html body #admin-main .cal-grid-7, html body #admin-main .cal-grid-14, html body #admin-main .cal-head-row{grid-template-columns:repeat(7,minmax(0,1fr))!important;min-width:0!important;gap:2px!important;grid-auto-rows:auto!important;}
+      html body #admin-main .cal-cell, html body #admin-main .cal-cell-blank{min-height:0!important;padding:3px!important;border-radius:6px!important;aspect-ratio:1;overflow:hidden;}
+      html body #admin-main .cal-wrap .pchip, html body #admin-main .cal-wrap .pcardv{padding:2px!important;margin-bottom:2px!important;}
+      html body #admin-main .cal-wrap .pchip > div, html body #admin-main .cal-wrap .pchip button, html body #admin-main .cal-wrap .pcardv-body, html body #admin-main .cal-wrap .pchip > div[style*="POSTADO"]{display:none!important;}
+      html body #admin-main .cal-wrap .pchip-thumb{width:100%!important;height:auto!important;aspect-ratio:1;}
+      html body #admin-main .cal-wrap .pcardv > div[style*="position:absolute"]{display:none!important;}
+      html body #admin-main .cal-head-day{font-size:9px!important;padding:4px 0!important;}
+      html body #admin-main .cal-day-num{font-size:10px!important;margin-bottom:2px!important;}
+      html body #admin-main .cli-agenda{display:block;}
+      html body #admin-main .adm-views{flex-wrap:wrap;max-width:100%;}
+      html body #admin-main .adm-views button{flex:1 1 30%;}
+    }
+    @media(min-width:1000px){
+      html body #admin-main .cal-grid-7, html body #admin-main .cal-grid-14, html body #admin-main .cal-head-row{grid-template-columns:repeat(7,minmax(0,1fr))!important;min-width:0!important;}
+    }
+    /* Painel também só em Montserrat */
+    html body #admin-view *:not(.pt):not(.pt *):not(.grava-tag){font-family:'Montserrat Primor',sans-serif!important;font-style:normal!important;}
     /* ── LOGIN E PORTAL DA CLIENTE: só Montserrat (sem as fontes manuscritas/condensadas do tema) ── */
     html body #login-view *:not(.pt):not(.pt *):not(.grava-tag),
     html body #client-view *:not(.pt):not(.pt *):not(.grava-tag),
@@ -2193,7 +2228,7 @@ const Admin = {
         <h2 class="section-title" style="margin:0;">Posts</h2>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <select onchange="Admin._postsCliFiltro=this.value;Admin._renderPostsView()" style="padding:6px 10px;border-radius:9px;border:1px solid var(--border);background:var(--bg);font-size:12px;color:var(--text);">${cliOptions}</select>
-          <div style="display:flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;">
+          <div class="adm-views" style="display:flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;">
             ${views.map(vv=>`<button onclick="Admin._postsView='${vv}';Admin._postsWeekOffset=0;Admin._renderPostsView()" style="padding:6px 11px;font-size:11px;border:none;cursor:pointer;background:${v===vv?'var(--brown)':'var(--surface)'};color:${v===vv?'#F5F5F5':'var(--muted)'};border-right:1px solid var(--border);">${viewLabels[vv]}</button>`).join('')}
           </div>
           <button onclick="Admin.abrirModalPost()" style="padding:7px 14px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown2));color:#F5F5F5;font-size:12px;border:none;cursor:pointer;">+ Novo Post</button>
@@ -2447,11 +2482,38 @@ const Admin = {
       }
       const rem=(7-((startDow+totalDays)%7))%7;
       for (let i=1;i<=rem;i++) cells+=`<div class="cal-cell-blank outro-mes"><div class="cal-day-num">${i}</div></div>`;
-      html = `<div class="cal-grid-7" style="margin-bottom:3px;">${diasSemana.map(d=>`<div class="cal-head-day">${d}</div>`).join('')}</div><div class="cal-grid-7">${cells}</div>`;
+      html = `<div class="cal-grid-7" style="margin-bottom:3px;grid-auto-rows:auto;">${diasSemana.map(d=>`<div class="cal-head-day">${d}</div>`).join('')}</div><div class="cal-grid-7">${cells}</div>`;
     }
 
     // Posts sem data
     const semData = posts.filter(p=>!p.data_post);
+
+    // Lista legível do período (só no celular, via CSS .cli-agenda)
+    const agKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const agLista = posts.filter(p => p.data_post && p.data_post >= agKey(startDate) && p.data_post <= agKey(endDate))
+      .sort((a,b) => a.data_post.localeCompare(b.data_post));
+    const agStatus = { criacao:['Em produção','#92400E','#fef3c7'], revisao:['Revisar','#9A3412','#ffedd5'], aprovado:['Aprovado','#166534','#dcfce7'], design:['Em design','#5b21b6','#f3e8ff'], publicado:['Publicado','#1e3a8a','#dbeafe'] };
+    const agHtml = `<div class="cli-agenda">
+      <div class="cli-ag-h">Posts do período (${agLista.length})</div>
+      ${agLista.length ? agLista.map(p => {
+        const midia = p.capa_url || parseFirst(p.midia_urls) || parseFirst(p.img_url) || '';
+        const ehVid = /\.(mp4|mov|webm|m4v)/i.test(midia);
+        const thumb = midia && !ehVid ? `<img class="cli-ag-thumb" src="${midia}" onerror="this.style.visibility='hidden'"/>` : `<div class="cli-ag-thumb">${p.tipo==='Reels'||ehVid ? '🎬' : p.tipo==='Stories' ? '📖' : '📷'}</div>`;
+        const st = agStatus[p.status||'criacao'] || agStatus.criacao;
+        const dia = new Date(p.data_post+'T12:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
+        const cli = p.cliente_nome || (cliMap[p.client_email]?.nome) || '';
+        return `<div class="cli-ag-item${precisaGravar(p)?' is-grava':''}" onclick="Admin.viewPostDetail(${p.id})">
+          ${thumb}
+          <div class="cli-ag-body">
+            ${precisaGravar(p)?GRAVA_TAG:''}
+            <div class="cli-ag-meta"><span>📅 ${dia}</span><span>${p.tipo||'Feed'}</span><span class="cli-ag-st" style="background:${st[2]};color:${st[1]};">${st[0]}</span></div>
+            ${cli?`<div class="cli-ag-meta" style="font-weight:600;">${cli}</div>`:''}
+            ${p.tema_titulo?`<div class="cli-ag-tit pt">${fmtTit(p.tema_titulo)}</div>`:''}
+            <div class="cli-ag-leg pl">${stripHtml(p.legenda||'')}</div>
+          </div>
+        </div>`;
+      }).join('') : '<div style="font-size:13px;color:var(--muted);padding:8px 0;">Nenhum post neste período.</div>'}
+    </div>`;
 
     document.getElementById('posts-view-content').innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -2462,6 +2524,7 @@ const Admin = {
       <div class="cal-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
         ${html}
       </div>
+      ${agHtml}
       ${semData.length ? `
         <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
           <div style="font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Sem data (${semData.length})</div>
