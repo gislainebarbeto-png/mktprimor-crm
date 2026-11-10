@@ -27,7 +27,7 @@ async function pollVideoStatus(containerId: string, token: string): Promise<void
 
 // Aguarda o container ficar pronto. Fotos (principalmente de Stories) também levam alguns segundos;
 // publicar antes disso dá "Media ID is not available".
-async function esperarContainer(containerId: string, token: string, maxMs = 60000): Promise<void> {
+async function esperarContainer(containerId: string, token: string, maxMs = 25000): Promise<void> {
   const ini = Date.now()
   let espera = 1500
   while (Date.now() - ini < maxMs) {
@@ -38,14 +38,14 @@ async function esperarContainer(containerId: string, token: string, maxMs = 6000
     if (d.status_code === 'ERROR' || d.status_code === 'EXPIRED') {
       throw new Error(`O Instagram não conseguiu processar a mídia: ${d.status || d.status_code}`)
     }
-    if (d.error) return   // campo indisponível: deixa o media_publish tentar
-    espera = Math.min(espera + 1500, 5000)
+    if (d.error || !d.status_code) return   // campo indisponível: deixa o media_publish tentar
+    espera = Math.min(espera + 1000, 4000)
   }
 }
 
 // Publica o container; se o Instagram ainda disser que a mídia não está pronta, espera e tenta de novo
 async function publicarContainer(igUserId: string, creationId: string, token: string): Promise<any> {
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 5; i++) {
     const r = await fetch(`${BASE}/${igUserId}/media_publish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -55,9 +55,15 @@ async function publicarContainer(igUserId: string, creationId: string, token: st
     const e = pub.error
     const naoPronto = e && (e.code === 9007 || e.error_subcode === 2207027 || /not available|not ready/i.test(String(e.message || '')))
     if (!naoPronto) return pub
-    await new Promise(r => setTimeout(r, 4000))
+    await new Promise(r => setTimeout(r, 3000))
   }
-  return { error: { message: 'O Instagram ainda está processando a mídia. Espere 1 minuto e tente publicar de novo.' } }
+  // conta o que o Instagram diz da mídia, para saber o motivo
+  let st = ''
+  try {
+    const r = await fetch(`${BASE}/${creationId}?fields=status_code,status&access_token=${token}`)
+    const d = await r.json(); st = [d.status_code, d.status].filter(Boolean).join(' · ')
+  } catch (_) { /* sem detalhe */ }
+  return { error: { message: 'O Instagram não terminou de processar a mídia' + (st ? ` (${st})` : '') + '. Confira se a imagem é JPG e tem menos de 8 MB, e tente de novo.' } }
 }
 
 serve(async (req) => {
