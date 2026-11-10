@@ -71,7 +71,7 @@ serve(async (req) => {
 
   try {
     await requireAdmin(req)
-    const { client_email, image_url, video_url, caption, media_urls, alt_text, story_url, cover_url } = await req.json()
+    const { client_email, image_url, video_url, caption, media_urls, alt_text, story_url, cover_url, etapa, creation_id, so_criar } = await req.json()
     const alt = typeof alt_text === 'string' ? alt_text.trim().slice(0, 1000) : ''
     let altIgnorado = false
 
@@ -113,6 +113,24 @@ serve(async (req) => {
     }
 
     const { ig_user_id, access_token } = tok
+    const resp = (o: unknown) => new Response(JSON.stringify(o), { headers: { ...cors, 'Content-Type': 'application/json' } })
+
+    // ── Publicação em passos curtos (o CRM pergunta o status e só publica quando estiver pronto) ──
+    if (etapa === 'status' && creation_id) {
+      const r = await fetch(`${BASE}/${creation_id}?fields=status_code,status&access_token=${access_token}`)
+      const d = await r.json()
+      return resp({ status_code: d.status_code || null, status: d.status || (d.error && d.error.message) || null })
+    }
+    if (etapa === 'publicar' && creation_id) {
+      const r = await fetch(`${BASE}/${ig_user_id}/media_publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ creation_id: String(creation_id), access_token }),
+      })
+      const pub = await r.json()
+      if (pub.error) return resp({ publicado: false, erro: pub.error.message, codigo: pub.error.code || null, sub: pub.error.error_subcode || null })
+      return resp({ success: true, story: true, publicado: true, media_id: pub.id, ig_username: tok.ig_username })
+    }
     const isVideo = Boolean(video_url)
     const isCarousel = Array.isArray(media_urls) && media_urls.length > 1
 
@@ -129,6 +147,7 @@ serve(async (req) => {
       })
       const container = await r1.json()
       if (container.error) throw new Error('Erro ao criar o Stories: ' + container.error.message)
+      if (so_criar) return resp({ success: true, story: true, container_id: container.id, video: storyVideo, ig_username: tok.ig_username })
       if (storyVideo) await pollVideoStatus(container.id, access_token)
       else await esperarContainer(container.id, access_token)
 

@@ -2819,6 +2819,34 @@ const Admin = {
     document.body.appendChild(t); setTimeout(()=>t.remove(),5000);
   },
 
+  // Stories em passos curtos: cria no Instagram, pergunta o status a cada 4 s e publica quando estiver pronto
+  async _publicarStoryEmPassos(email, url, n, total) {
+    try { return await this._storyPassos(email, url, n, total); }
+    finally { const el = document.querySelector('#loader p'); if (el) el.textContent = 'Carregando...'; }
+  },
+  async _storyPassos(email, url, n, total) {
+    const aviso = (t) => { const el = document.querySelector('#loader p'); if (el) el.textContent = t; };
+    const pre = total > 1 ? `Stories ${n} de ${total}: ` : '';
+    aviso(pre + 'enviando a mídia para o Instagram...');
+    const c = await callFn('instagram-publish', { client_email: email, story_url: url, so_criar: true });
+    if (!c.container_id) return c;   // função antiga no Supabase: ela mesma já tentou publicar
+    const fim = Date.now() + 180000;
+    let ultimo = '';
+    while (Date.now() < fim) {
+      await new Promise(r => setTimeout(r, 4000));
+      const st = await callFn('instagram-publish', { client_email: email, etapa: 'status', creation_id: c.container_id });
+      ultimo = [st.status_code, st.status].filter(Boolean).join(' · ');
+      if (st.status_code === 'ERROR' || st.status_code === 'EXPIRED')
+        throw new Error('O Instagram recusou a mídia do Stories: ' + (st.status || st.status_code) + '. Use JPG (até 8 MB) ou vídeo MP4 de até 60 s.');
+      aviso(pre + 'o Instagram está processando...');
+      if (st.status_code && st.status_code !== 'FINISHED') continue;
+      const pub = await callFn('instagram-publish', { client_email: email, etapa: 'publicar', creation_id: c.container_id });
+      if (pub.publicado) return pub;
+      if (!(pub.codigo === 9007 || pub.sub === 2207027 || /not available|not ready/i.test(pub.erro || ''))) throw new Error('Erro ao publicar o Stories: ' + pub.erro);
+    }
+    throw new Error('O Instagram não terminou de processar o Stories em 3 minutos' + (ultimo ? ` (${ultimo})` : '') + '. Confira no Instagram antes de tentar de novo.');
+  },
+
   async publicarNoInstagram(id) {
     // Busca o post — primeiro no cache, depois direto no banco
     let p = this.posts?.find(x => x.id === id);
@@ -2855,7 +2883,7 @@ const Admin = {
         let pubS = null;
         for (let i = 0; i < lista.length; i++) {
           try {
-            pubS = await callFn('instagram-publish', { client_email: p.client_email, story_url: lista[i] });
+            pubS = await this._publicarStoryEmPassos(p.client_email, lista[i], i + 1, lista.length);
           } catch (err) {
             const msg = String(err && err.message || err);
             const prefixo = i ? `${i} de ${lista.length} Stories já foram publicados. ` : '';
