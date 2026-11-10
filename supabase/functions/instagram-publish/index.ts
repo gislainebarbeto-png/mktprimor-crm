@@ -30,7 +30,7 @@ serve(async (req) => {
 
   try {
     await requireAdmin(req)
-    const { client_email, image_url, video_url, caption, media_urls, alt_text } = await req.json()
+    const { client_email, image_url, video_url, caption, media_urls, alt_text, story_url } = await req.json()
     const alt = typeof alt_text === 'string' ? alt_text.trim().slice(0, 1000) : ''
     let altIgnorado = false
 
@@ -74,6 +74,34 @@ serve(async (req) => {
     const { ig_user_id, access_token } = tok
     const isVideo = Boolean(video_url)
     const isCarousel = Array.isArray(media_urls) && media_urls.length > 1
+
+    // ── Stories (uma foto ou um vídeo por vez; Stories não tem legenda) ──
+    if (story_url) {
+      const storyVideo = /\.(mp4|mov|webm|m4v)(\?|$)/i.test(String(story_url))
+      const campos: Record<string, string> = { media_type: 'STORIES', access_token }
+      if (storyVideo) campos.video_url = story_url
+      else campos.image_url = story_url
+      const r1 = await fetch(`${BASE}/${ig_user_id}/media`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(campos),
+      })
+      const container = await r1.json()
+      if (container.error) throw new Error('Erro ao criar o Stories: ' + container.error.message)
+      if (storyVideo) await pollVideoStatus(container.id, access_token)
+
+      const r2 = await fetch(`${BASE}/${ig_user_id}/media_publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ creation_id: container.id, access_token }),
+      })
+      const pub = await r2.json()
+      if (pub.error) throw new Error('Erro ao publicar o Stories: ' + pub.error.message)
+
+      return new Response(JSON.stringify({ success: true, story: true, media_id: pub.id, ig_username: tok.ig_username }), {
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      })
+    }
 
     // ── Carrossel (múltiplas imagens) ───────────────────────────────────
     if (isCarousel) {

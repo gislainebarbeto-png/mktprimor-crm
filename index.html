@@ -2663,7 +2663,8 @@ const Admin = {
     }
     if (!p) { alert('Post não encontrado.'); return; }
 
-    if (!confirm(`Publicar "${(p.tema_titulo || p.legenda || 'este post').substring(0,50)}" no Instagram agora?`)) return;
+    const isStory = /stor/i.test(String(p.tipo || ''));
+    if (!confirm(`Publicar "${txtTit(p.tema_titulo || p.legenda || 'este post').substring(0,50)}" ${isStory ? 'nos STORIES' : 'no feed'} do Instagram agora?`)) return;
 
     this.loader(true);
     try {
@@ -2679,6 +2680,34 @@ const Admin = {
       const todasMidias = midias.length ? midias : parseMedia(p.img_url);
       const mediaUrl = todasMidias[0] || p.capa_url || '';
       if (!mediaUrl) throw new Error('Nenhuma mídia encontrada no post. Adicione uma imagem ou vídeo antes de publicar.');
+
+      // Stories: cada mídia vira um Stories, em sequência (sem legenda)
+      if (isStory) {
+        const lista = todasMidias.length ? todasMidias : [mediaUrl];
+        let pubS = null;
+        for (let i = 0; i < lista.length; i++) {
+          try {
+            pubS = await callFn('instagram-publish', { client_email: p.client_email, story_url: lista[i] });
+          } catch (err) {
+            const msg = String(err && err.message || err);
+            const prefixo = i ? `${i} de ${lista.length} Stories já foram publicados. ` : '';
+            if (/container de imagem/i.test(msg)) throw new Error(prefixo + 'A função instagram-publish do Supabase ainda é a antiga e não sabe publicar Stories. Cole o código novo no painel e clique em Deploy.');
+            throw new Error(prefixo + msg);
+          }
+          if (!pubS || !pubS.story) throw new Error('A função instagram-publish do Supabase ainda é a antiga. Cole o código novo no painel e clique em Deploy.');
+        }
+        await db.from('posts').update({ status: 'publicado' }).eq('id', id);
+        this.posts = this.posts.map(x => x.id === id ? {...x, status:'publicado'} : x);
+        this.loader(false);
+        this.closeDetail();
+        this._renderPostsView();
+        const toastS = document.createElement('div');
+        toastS.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:14px 28px;border-radius:30px;font-size:13px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);';
+        toastS.textContent = `✦ ${lista.length > 1 ? lista.length + ' Stories publicados' : 'Stories publicado'}` + (pubS.ig_username ? ' em @' + pubS.ig_username : '') + '!';
+        document.body.appendChild(toastS);
+        setTimeout(() => toastS.remove(), 4000);
+        return;
+      }
 
       // Limpa HTML da legenda
       const stripHtml = (html) => {
