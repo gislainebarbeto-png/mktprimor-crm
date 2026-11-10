@@ -6276,7 +6276,10 @@ const Admin = {
     document.getElementById('mp-seo-alt').value = seo.alt || '';
     document.getElementById('mp-seo-na-legenda').checked = seo.na_legenda !== false;
     document.getElementById('mp-gravar').checked = !!seo.gravar;
-    document.getElementById('mp-tipo').value     = p.tipo||'Feed';
+    // tipo vindo de outras telas pode estar escrito diferente ("stories", "carrossel"...): ajusta para uma opção da lista
+    { const sel = document.getElementById('mp-tipo'), t = String(p.tipo || '');
+      const opts = [...sel.options].map(o => o.value);
+      sel.value = opts.includes(t) ? t : /stor/i.test(t) ? 'Stories' : /reel/i.test(t) ? 'Reels' : /carros/i.test(t) ? 'Feed · Carrossel' : 'Feed · Foto'; }
     this._ajustarStories();
     document.getElementById('mp-data').value     = p.data_post||'';
     document.getElementById('mp-ajuste').value   = p.ajuste_cliente||p.obs||'';
