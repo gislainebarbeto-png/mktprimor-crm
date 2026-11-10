@@ -344,13 +344,20 @@
     html body #admin-main .cal-wrap{max-width:100%;}
     html body #admin-view .grava-tag{background:#e11d48!important;color:#fff!important;}
     /* Post aberto no painel: mídias completas e legenda inteira */
-    .vp-ov .vp-mid{width:100%;border-radius:8px;display:block;background:#000;max-height:420px;object-fit:contain;}
+    .vp-ov .vp-mid{width:100%;border-radius:8px;display:block;background:#000;max-height:380px;object-fit:contain;position:relative;z-index:0;}
+    .vp-ov .vp-par{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;}
+    .vp-ov .vp-par .vp-mid{aspect-ratio:9/16;object-fit:cover;max-height:none;}
+    .vp-ov .vp-par video.vp-mid{object-fit:contain;}
+    .vp-ov .vp-rot{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#777;margin:0 0 4px;}
+    .vp-ov .vp-foot{position:relative;z-index:2;}
+    .vp-ov .vp-box > *{flex-shrink:0;}
     @media(max-width:768px){
       .vp-ov{padding:0!important;align-items:stretch!important;}
       .vp-ov .vp-box{max-width:none!important;max-height:none!important;height:100%!important;border-radius:0!important;-webkit-overflow-scrolling:touch;}
       .vp-ov .vp-body{flex-direction:column!important;}
       .vp-ov .vp-media{width:100%!important;border-right:none!important;border-bottom:1px solid #e5e5e5;box-sizing:border-box;}
-      .vp-ov .vp-mid{max-height:70vh;}
+      .vp-ov .vp-mid{max-height:42vh;}
+      .vp-ov .vp-par .vp-mid{max-height:42vh;}
       .vp-ov .vp-txt{padding:16px!important;}
       .vp-ov .vp-txt .pl{font-size:14px!important;}
       .vp-ov .vp-foot{padding:12px!important;}
@@ -578,8 +585,9 @@
       #client-view .client-layout{padding-left:12px;padding-right:12px;box-sizing:border-box;}
       .cpm-overlay{padding:0!important;align-items:stretch!important;}
       .cpm-overlay .cpm-box{max-width:none!important;max-height:none!important;height:100%!important;border-radius:0!important;border:none!important;-webkit-overflow-scrolling:touch;}
-      .cpm-overlay .cpm-slide{max-height:65vh!important;}
-      .cpm-overlay video.cpm-slide{max-height:70vh!important;}
+      .cpm-overlay .cpm-slide{max-height:55vh!important;}
+      .cpm-overlay video.cpm-slide{max-height:50vh!important;}
+      .cpm-overlay .cpm-box > *{flex-shrink:0;}
     }
     .client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
     .client-post-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
@@ -2644,10 +2652,19 @@ const Admin = {
     const todas = [...new Set(medias)];
     const videos = todas.filter(ehVideo);
     const fotos = todas.filter(u => !ehVideo(u));
-    const listaMidia = videos.length ? [...videos, ...fotos.filter(u => u !== p.capa_url)] : (fotos.length ? fotos : (p.capa_url ? [p.capa_url] : []));
-    const midiaHtml = listaMidia.map(u => ehVideo(u)
-      ? `<video class="vp-mid" src="${eV(u)}#t=0.1" ${p.capa_url && !ehVideo(p.capa_url) ? `poster="${eV(p.capa_url)}"` : ''} controls playsinline preload="metadata"></video>`
+    const capaFoto = p.capa_url && !ehVideo(p.capa_url) ? p.capa_url : '';
+    const listaMidia = videos.length ? [...videos, ...fotos.filter(u => u !== capaFoto)] : (fotos.length ? fotos : (capaFoto ? [capaFoto] : []));
+    const rot = t => `<div class="vp-rot">${t}</div>`;
+    let midiaHtml = listaMidia.map(u => ehVideo(u)
+      ? `<video class="vp-mid" src="${eV(u)}#t=0.1" ${capaFoto ? `poster="${eV(capaFoto)}"` : ''} controls playsinline preload="metadata"></video>`
       : `<img class="vp-mid" src="${eV(u)}" style="${isPublicado?'filter:brightness(.9)':''}"/>`).join('');
+    // Reels com capa: vídeo e capa lado a lado, cada um com o seu nome
+    if (videos.length && capaFoto) {
+      midiaHtml = `<div class="vp-par">
+        <div>${rot('🎬 Vídeo')}${midiaHtml}</div>
+        <div>${rot('🖼 Capa')}<img class="vp-mid" src="${eV(capaFoto)}"/></div>
+      </div>`;
+    }
     // If it exists, close any side detail panel
     this.closeDetail && this.closeDetail();
     // Remove old overlay if any
@@ -9788,7 +9805,7 @@ const Client = {
         const isVid = this.isVideo(u);
         const displayStyle = i===0 ? 'display:block' : 'display:none';
         return isVid
-          ? `<video class="cpm-slide" src="${u}${/#t=/.test(u)?'':'#t=0.1'}" controls playsinline preload="metadata" style="width:100%;max-height:75vh;object-fit:contain;${displayStyle};background:#000;"></video>`
+          ? `<video class="cpm-slide" src="${u}${/#t=/.test(u)?'':'#t=0.1'}" ${p.capa_url && !this.isVideo(p.capa_url) ? `poster="${p.capa_url}"` : ''} controls playsinline preload="metadata" style="width:100%;max-height:75vh;object-fit:contain;${displayStyle};background:#000;"></video>`
           : `<img class="cpm-slide" src="${u}" style="width:100%;max-height:75vh;object-fit:contain;${displayStyle};cursor:zoom-in;background:#111;" onclick="Client.openLightbox(window._cpmImgsList,${i})" onerror="this.style.display='none';console.warn('Imagem quebrada:','${u}')"/>`;
       }).join('');
 
