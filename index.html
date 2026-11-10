@@ -2490,6 +2490,7 @@ const Admin = {
       ${p.conteudo_html ? this.dpField('Conteúdo', p.conteudo_html) : ''}
       ${this.dpField('Legenda', p.legenda_html || p.legenda)}
       ${p.hashtags ? this.dpField('Hashtags', `<span style="color:var(--copper);font-size:11px;">${p.hashtags}</span>`) : ''}
+      ${(this._seoParse(p.seo)||{}).palavras ? this.dpField('Palavras-chave (SEO)', `<span style="font-size:11px;">${String(this._seoParse(p.seo).palavras).replace(/</g,'&lt;')}${this._seoParse(p.seo).na_legenda === false ? ' <span style="color:var(--muted);">(não vão na legenda)</span>' : ''}</span>`) : ''}
       ${this.dpField('Tipo · Data', `${p.tipo||'Feed'} · ${p.data_post||'—'}`)}
       ${p.ajuste_cliente ? this.dpField('Ajustes', p.ajuste_cliente) : ''}
       ${this.dpField('Status', `<span style="color:${m.c};">${m.l}</span>`)}
@@ -2687,7 +2688,8 @@ const Admin = {
           .replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<')
           .replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
       };
-      const caption = [stripHtml(p.legenda), stripHtml(p.hashtags)].filter(Boolean).join('\n\n');
+      // Legenda + linha de palavras-chave (aba SEO) + hashtags
+      const caption = this._legendaFinal(p.legenda, p.hashtags, this._seoParse(p.seo));
       const isReel = String(p.tipo || '').toLowerCase().includes('reels');
       const isVideo = isReel || /\.(mp4|mov|webm|m4v)/i.test(mediaUrl);
       const isCarousel = !isVideo && todasMidias.length > 1;
@@ -2699,6 +2701,7 @@ const Admin = {
         image_url: !isVideo && !isCarousel ? mediaUrl : undefined,
         video_url: isVideo ? mediaUrl : undefined,
         media_urls: isCarousel ? todasMidias.filter(u => !/\.(mp4|mov|webm|m4v)/i.test(u)) : undefined,
+        alt_text: !isVideo ? ((this._seoParse(p.seo) || {}).alt || undefined) : undefined,
       });
 
       const igHandle = pub.ig_username || '';
@@ -2713,7 +2716,7 @@ const Admin = {
 
       const toast = document.createElement('div');
       toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:14px 28px;border-radius:30px;font-size:13px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);';
-      toast.textContent = '✦ Publicado no Instagram' + (igHandle ? ' de @' + igHandle : '') + '!';
+      toast.textContent = '✦ Publicado no Instagram' + (igHandle ? ' de @' + igHandle : '') + '!' + (pub.alt_ignorado ? ' (o Instagram não aceitou o texto alternativo)' : '');
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 4000);
 
@@ -5482,10 +5485,102 @@ const Admin = {
   },
 
   postTab(tab) {
-    ['tema','conteudo','midia','legenda'].forEach(t => {
+    ['tema','conteudo','midia','legenda','seo'].forEach(t => {
       document.getElementById('post-tab-'+t).style.display = t===tab ? 'block' : 'none';
       document.getElementById('ptab-'+t).classList.toggle('active', t===tab);
     });
+    if (tab === 'seo') this._seoAtualizar();
+  },
+
+  /* ── SEO: palavras-chave do post (vão junto na legenda ao publicar) ── */
+  _seoLista(txt) {
+    const vistos = new Set();
+    return String(txt || '').split(/[,\n;]+/).map(s => s.trim().replace(/^#/, '')).filter(s => {
+      const k = s.toLowerCase();
+      if (!s || vistos.has(k)) return false;
+      vistos.add(k); return true;
+    });
+  },
+
+  _seoLinha(seo) {
+    if (!seo || seo.na_legenda === false) return '';
+    const lista = this._seoLista(seo.palavras);
+    return lista.length ? '🔎 ' + lista.join(' | ') : '';
+  },
+
+  _seoParse(raw) {
+    if (!raw) return null;
+    if (typeof raw === 'object') return raw;
+    try { return JSON.parse(raw); } catch { return null; }
+  },
+
+  _textoLimpo(html) {
+    if (!html) return '';
+    return String(html)
+      .replace(/<br\s*\/?>/gi, '\n').replace(/<\/div>/gi, '\n').replace(/<\/p>/gi, '\n')
+      .replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  },
+
+  // Legenda exatamente como vai para o Instagram: legenda + linha de palavras-chave + hashtags
+  _legendaFinal(legenda, hashtags, seo) {
+    return [this._textoLimpo(legenda), this._seoLinha(seo), this._textoLimpo(hashtags)].filter(Boolean).join('\n\n');
+  },
+
+  _seoAtualizar() {
+    const box = document.getElementById('mp-seo-check');
+    const prev = document.getElementById('mp-seo-preview');
+    if (!box || !prev) return;
+    const seo = {
+      palavras: document.getElementById('mp-seo-palavras').value,
+      na_legenda: document.getElementById('mp-seo-na-legenda').checked
+    };
+    const lista = this._seoLista(seo.palavras);
+    const legenda = this._textoLimpo(document.getElementById('mp-legenda').value);
+    const hashtags = this._textoLimpo(document.getElementById('mp-hashtags').value);
+    const final = this._legendaFinal(document.getElementById('mp-legenda').value, hashtags, seo);
+    const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const esc = t => String(t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const itens = [];
+    const ok = (t) => itens.push(`<div style="color:#1f8a4c;">✓ ${t}</div>`);
+    const av = (t) => itens.push(`<div style="color:#b7791f;">⚠ ${t}</div>`);
+    if (!lista.length) {
+      av('Coloque pelo menos uma palavra-chave. A primeira é a principal.');
+    } else {
+      const principal = lista[0];
+      if (!legenda) av('Escreva a legenda na aba Legenda para conferir as palavras-chave.');
+      else if (norm(legenda.slice(0, 125)).includes(norm(principal))) ok(`A palavra principal "${esc(principal)}" aparece no começo da legenda.`);
+      else av(`Coloque "${esc(principal)}" na primeira frase da legenda. É o trecho que o Instagram e o Google mais leem.`);
+      const fora = lista.filter(k => !norm(legenda).includes(norm(k)));
+      if (legenda && fora.length && fora.length < lista.length) av(`Não aparecem no texto: ${fora.map(esc).join(', ')}${seo.na_legenda ? ' (vão só na linha 🔎)' : ''}.`);
+      else if (legenda && !fora.length) ok('Todas as palavras-chave aparecem no texto da legenda.');
+    }
+    const alt = (document.getElementById('mp-seo-alt').value || '').trim();
+    if (!alt) av('Sem texto alternativo. Use o botão "Gerar com as palavras-chave" ou escreva um.');
+    else if (lista.length && !norm(alt).includes(norm(lista[0]))) av(`O texto alternativo não cita a palavra principal "${esc(lista[0])}".`);
+    else ok('Texto alternativo preenchido.');
+    if (alt && String(document.getElementById('mp-tipo')?.value || '').toLowerCase().includes('reels'))
+      av('Este post é Reels: o texto alternativo não vai pela API. Cole no app, em Configurações avançadas.');
+    const nTags = (hashtags.match(/#[^\s#]+/g) || []).length;
+    if (nTags > 5) av(`${nTags} hashtags. O Instagram recomenda de 3 a 5.`);
+    else if (nTags) ok(`${nTags} hashtag${nTags > 1 ? 's' : ''}.`);
+    if (final.length > 2200) av(`A legenda final tem ${final.length} caracteres. O limite do Instagram é 2.200.`);
+    box.innerHTML = itens.join('');
+    prev.textContent = final || '—';
+  },
+
+  _seoGerarAlt() {
+    const lista = this._seoLista(document.getElementById('mp-seo-palavras').value);
+    const tema = this._textoLimpo(document.getElementById('mp-tema-titulo').value);
+    if (!lista.length && !tema) { alert('Preencha as palavras-chave (ou o tema) primeiro.'); return; }
+    const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+    const partes = [];
+    partes.push(cap(lista[0] || tema) + (tema && lista[0] && !tema.toLowerCase().includes(lista[0].toLowerCase()) ? ': ' + tema : ''));
+    if (lista.length > 1) partes.push('Sobre ' + lista.slice(1).join(', '));
+    const el = document.getElementById('mp-seo-alt');
+    el.value = partes.join('. ').replace(/\.\./g, '.') + '.';
+    el.focus();
+    this._seoAtualizar();
   },
 
   _postMediaFiles: [],
@@ -5586,6 +5681,8 @@ const Admin = {
           conteudo: get('mp-conteudo'),
           legenda: get('mp-legenda'),
           hashtags: get('mp-hashtags'),
+          seoPalavras: get('mp-seo-palavras'),
+          seoAlt: get('mp-seo-alt'),
           ajuste: get('mp-ajuste'),
           data: get('mp-data'),
           rede: get('mp-rede'),
@@ -5605,6 +5702,8 @@ const Admin = {
     set('mp-conteudo', draft.conteudo);
     set('mp-legenda', draft.legenda);
     set('mp-hashtags', draft.hashtags);
+    set('mp-seo-palavras', draft.seoPalavras);
+    set('mp-seo-alt', draft.seoAlt);
     set('mp-ajuste', draft.ajuste);
     set('mp-data', draft.data);
     set('mp-rede', draft.rede);
@@ -5622,9 +5721,10 @@ const Admin = {
       (clients||[]).map(c => `<option value="${c.email}">${c.nome}</option>`).join('');
 
     // Reset fields
-    ['mp-tema-titulo','mp-ref-1','mp-ref-2','mp-ref-3','mp-conteudo','mp-legenda','mp-hashtags','mp-ajuste'].forEach(id => {
+    ['mp-tema-titulo','mp-ref-1','mp-ref-2','mp-ref-3','mp-conteudo','mp-legenda','mp-hashtags','mp-seo-palavras','mp-seo-alt','mp-ajuste'].forEach(id => {
       const el = document.getElementById(id); if(el) el.value = '';
     });
+    document.getElementById('mp-seo-na-legenda').checked = true;
     this._postMediaFiles = [];
     this._postCoverFile = null;
     this._postExistingMedia = [];
@@ -5690,6 +5790,8 @@ const Admin = {
     const legendaHtml = document.getElementById('mp-legenda').value.trim();
     const legenda     = legendaHtml || conteudo || temaTitulo;
     const hashtags    = document.getElementById('mp-hashtags').value.trim();
+    const seoPalavras = document.getElementById('mp-seo-palavras').value.trim();
+    const seo         = { palavras: seoPalavras, na_legenda: document.getElementById('mp-seo-na-legenda').checked, alt: document.getElementById('mp-seo-alt').value.trim() };
     const tipo        = document.getElementById('mp-tipo').value;
     const data_post   = document.getElementById('mp-data').value;
     const ajuste      = document.getElementById('mp-ajuste').value.trim();
@@ -5750,11 +5852,16 @@ const Admin = {
       };
       if (tema_imagem_url) payload.tema_imagem_url = tema_imagem_url;
       if (img_url) payload.img_url = img_url;
-      let error;
-      if (this._editPostId) {
-        ({ error } = await db.from('posts').update(payload).eq('id', this._editPostId));
-      } else {
-        ({ error } = await db.from('posts').insert([payload]));
+      payload.seo = seo;
+      const gravar = () => this._editPostId
+        ? db.from('posts').update(payload).eq('id', this._editPostId)
+        : db.from('posts').insert([payload]);
+      let { error } = await gravar();
+      // Banco ainda sem a coluna "seo": salva o resto do post e avisa
+      if (error && /seo/i.test(error.message || '')) {
+        delete payload.seo;
+        ({ error } = await gravar());
+        if (!error && (seoPalavras || seo.alt)) alert('O post foi salvo, mas as palavras-chave e o texto alternativo não.\n\nFalta criar a coluna no Supabase (SQL Editor):\nalter table posts add column if not exists seo jsonb;');
       }
       if (error) throw error;
 
@@ -5955,6 +6062,10 @@ const Admin = {
     document.getElementById('mp-conteudo').value = p.conteudo_html||p.obs_int||'';
     document.getElementById('mp-legenda').value  = p.legenda_html||p.legenda||'';
     document.getElementById('mp-hashtags').value = p.hashtags||'';
+    const seo = this._seoParse(p.seo) || {};
+    document.getElementById('mp-seo-palavras').value = seo.palavras || '';
+    document.getElementById('mp-seo-alt').value = seo.alt || '';
+    document.getElementById('mp-seo-na-legenda').checked = seo.na_legenda !== false;
     document.getElementById('mp-tipo').value     = p.tipo||'Feed';
     document.getElementById('mp-data').value     = p.data_post||'';
     document.getElementById('mp-ajuste').value   = p.ajuste_cliente||p.obs||'';
@@ -10867,6 +10978,7 @@ document.addEventListener('keydown', e => {
         <div class="tab-btn" onclick="Admin.postTab('conteudo')" id="ptab-conteudo">Conteúdo</div>
         <div class="tab-btn" onclick="Admin.postTab('midia')" id="ptab-midia">Mídia</div>
         <div class="tab-btn" onclick="Admin.postTab('legenda')" id="ptab-legenda">Legenda</div>
+        <div class="tab-btn" onclick="Admin.postTab('seo')" id="ptab-seo">SEO</div>
       </div>
 
       <div class="post-modal-grid">
@@ -11020,6 +11132,34 @@ document.addEventListener('keydown', e => {
             <div class="modal-field">
               <label>Hashtags</label>
               <textarea id="mp-hashtags" rows="2" placeholder="#hashtag1 #hashtag2 #hashtag3" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:none;font-family:Poppins,sans-serif;font-weight:300;color:var(--copper);"></textarea>
+            </div>
+          </div>
+
+          <!-- Tab SEO -->
+          <div id="post-tab-seo" style="display:none;">
+            <div class="modal-field">
+              <label>Palavras-chave</label>
+              <textarea id="mp-seo-palavras" rows="3" oninput="Admin._seoAtualizar()" placeholder="furo humanizado em Jacareí, furo de orelha, Drogaria Igarapés" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;font-family:Poppins,sans-serif;font-weight:300;line-height:1.6;"></textarea>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px;">Separe por vírgula. A primeira é a palavra principal: o que as pessoas digitam na busca.</div>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);margin:-4px 0 14px;cursor:pointer;">
+              <input type="checkbox" id="mp-seo-na-legenda" checked onchange="Admin._seoAtualizar()" style="width:auto;margin:0;">
+              Incluir as palavras-chave na legenda ao publicar (linha 🔎 antes das hashtags)
+            </label>
+            <div class="modal-field">
+              <label style="display:flex;justify-content:space-between;align-items:center;">Texto alternativo
+                <button type="button" onclick="Admin._seoGerarAlt()" style="font-size:10px;letter-spacing:.04em;text-transform:none;padding:3px 10px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--copper);cursor:pointer;">✦ Gerar com as palavras-chave</button>
+              </label>
+              <textarea id="mp-seo-alt" rows="3" maxlength="1000" oninput="Admin._seoAtualizar()" placeholder="Descreva a imagem: o que aparece, onde e para quê. Ex: Furo de orelha humanizado em bebê na Drogaria Igarapés, em Jacareí SP." style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;font-family:Poppins,sans-serif;font-weight:300;line-height:1.6;"></textarea>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px;">Vai junto ao publicar fotos e carrosséis. Em Reels o Instagram não aceita pela API: cole no app, em Configurações avançadas.</div>
+            </div>
+            <div class="modal-field">
+              <label>Conferência</label>
+              <div id="mp-seo-check" style="font-size:12px;line-height:1.8;"></div>
+            </div>
+            <div class="modal-field">
+              <label>Legenda que vai para o Instagram</label>
+              <div id="mp-seo-preview" style="white-space:pre-wrap;font-size:12px;line-height:1.6;padding:11px 13px;border:1px dashed var(--border);border-radius:9px;background:var(--bg);color:var(--text);max-height:220px;overflow-y:auto;"></div>
             </div>
           </div>
         </div>

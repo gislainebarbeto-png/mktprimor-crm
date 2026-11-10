@@ -30,7 +30,30 @@ serve(async (req) => {
 
   try {
     await requireAdmin(req)
-    const { client_email, image_url, video_url, caption, media_urls } = await req.json()
+    const { client_email, image_url, video_url, caption, media_urls, alt_text } = await req.json()
+    const alt = typeof alt_text === 'string' ? alt_text.trim().slice(0, 1000) : ''
+    let altIgnorado = false
+
+    // Cria um container de imagem com texto alternativo; se o Instagram recusar o alt_text, tenta sem ele
+    async function criarImagem(igUserId: string, token: string, campos: Record<string, string>) {
+      const enviar = async (comAlt: boolean) => {
+        const body = new URLSearchParams({ ...campos, access_token: token })
+        if (comAlt) body.set('alt_text', alt)
+        const r = await fetch(`${BASE}/${igUserId}/media`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body,
+        })
+        return await r.json()
+      }
+      let res = await enviar(Boolean(alt))
+      if (res.error && alt) {
+        const sem = await enviar(false)
+        if (!sem.error) altIgnorado = true
+        res = sem
+      }
+      return res
+    }
 
     const db = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -56,12 +79,7 @@ serve(async (req) => {
     if (isCarousel) {
       const childIds: string[] = []
       for (const url of media_urls) {
-        const r = await fetch(`${BASE}/${ig_user_id}/media`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ image_url: url, is_carousel_item: 'true', access_token }),
-        })
-        const child = await r.json()
+        const child = await criarImagem(ig_user_id, access_token, { image_url: url, is_carousel_item: 'true' })
         if (child.error) throw new Error('Erro no item do carrossel: ' + child.error.message)
         childIds.push(child.id)
       }
@@ -86,23 +104,17 @@ serve(async (req) => {
       const pub = await r3.json()
       if (pub.error) throw new Error('Erro ao publicar carrossel: ' + pub.error.message)
 
-      return new Response(JSON.stringify({ success: true, media_id: pub.id, ig_username: tok.ig_username }), {
+      return new Response(JSON.stringify({ success: true, media_id: pub.id, ig_username: tok.ig_username, alt_ignorado: altIgnorado }), {
         headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
 
     // ── Imagem única ─────────────────────────────────────────────────────
     if (!isVideo) {
-      const r1 = await fetch(`${BASE}/${ig_user_id}/media`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          image_url: image_url || '',
-          caption:   caption || '',
-          access_token,
-        }),
+      const container = await criarImagem(ig_user_id, access_token, {
+        image_url: image_url || '',
+        caption:   caption || '',
       })
-      const container = await r1.json()
       if (container.error) throw new Error('Erro ao criar container de imagem: ' + container.error.message)
 
       const r2 = await fetch(`${BASE}/${ig_user_id}/media_publish`, {
@@ -113,7 +125,7 @@ serve(async (req) => {
       const pub = await r2.json()
       if (pub.error) throw new Error('Erro ao publicar imagem: ' + pub.error.message)
 
-      return new Response(JSON.stringify({ success: true, media_id: pub.id, ig_username: tok.ig_username }), {
+      return new Response(JSON.stringify({ success: true, media_id: pub.id, ig_username: tok.ig_username, alt_ignorado: altIgnorado }), {
         headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
@@ -144,7 +156,7 @@ serve(async (req) => {
     const pub = await r2.json()
     if (pub.error) throw new Error('Erro ao publicar vídeo: ' + pub.error.message)
 
-    return new Response(JSON.stringify({ success: true, media_id: pub.id, ig_username: tok.ig_username }), {
+    return new Response(JSON.stringify({ success: true, media_id: pub.id, ig_username: tok.ig_username, alt_ignorado: altIgnorado }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
     })
 
