@@ -5994,7 +5994,9 @@ const Admin = {
     const redeSocial  = document.getElementById('mp-rede').value;
     const conteudo    = document.getElementById('mp-conteudo').value.trim();
     const legendaHtml = document.getElementById('mp-legenda').value.trim();
-    const legenda     = legendaHtml || conteudo || temaTitulo;
+    const ehStorySalvar = /stor/i.test(document.getElementById('mp-tipo').value || '');
+    // Stories não tem legenda no Instagram: salva com o título (ou "Stories") só para identificar o post no CRM
+    const legenda     = legendaHtml || conteudo || temaTitulo || (ehStorySalvar ? 'Stories' : '');
     const hashtags    = document.getElementById('mp-hashtags').value.trim();
     const seoPalavras = document.getElementById('mp-seo-palavras').value.trim();
     const seo         = { palavras: seoPalavras, na_legenda: document.getElementById('mp-seo-na-legenda').checked, alt: document.getElementById('mp-seo-alt').value.trim() };
