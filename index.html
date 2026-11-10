@@ -10,8 +10,9 @@
   <meta name="color-scheme" content="light dark">
   <title>Marketing Primor · Portal v5.11</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="logo-icone-escuro.png">
-  <link rel="apple-touch-icon" href="logo-icone-escuro.png">
+  <link rel="icon" href="favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
   <meta name="theme-color" content="#7A5C00">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -509,6 +510,14 @@
 
     /* Client posts grid */
     .client-layout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start;}
+    .client-layout > *{min-width:0;}
+    @media(max-width:700px){
+      #client-view .client-layout{padding-left:12px;padding-right:12px;box-sizing:border-box;}
+      .cpm-overlay{padding:0!important;align-items:stretch!important;}
+      .cpm-overlay .cpm-box{max-width:none!important;max-height:none!important;height:100%!important;border-radius:0!important;border:none!important;-webkit-overflow-scrolling:touch;}
+      .cpm-overlay .cpm-slide{max-height:65vh!important;}
+      .cpm-overlay video.cpm-slide{max-height:70vh!important;}
+    }
     .client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
     .client-post-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
     .client-status-legend{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
@@ -9331,7 +9340,28 @@ const Client = {
     const viewLabels = {diario:'Diário',semanal:'Semanal',quinzenal:'Quinzenal',mensal:'Mensal',guia:'📘 Guia de Conteúdo'};
     container.innerHTML = `
       <style>
-        .cli-cal-grid-7{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+        .cli-cal-grid-7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;}
+        /* Lista do período: só no celular, embaixo do calendário */
+        .cli-agenda{display:none;margin-top:16px;}
+        .cli-ag-h{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:600;margin:0 0 8px;}
+        .cli-ag-item{display:flex;gap:12px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface);margin-bottom:8px;cursor:pointer;}
+        .cli-ag-item.is-grava{border-color:#e11d48;}
+        .cli-ag-thumb{width:64px;height:64px;border-radius:9px;object-fit:cover;flex-shrink:0;background:var(--beige);display:flex;align-items:center;justify-content:center;font-size:22px;}
+        .cli-ag-body{flex:1;min-width:0;}
+        .cli-ag-meta{font-size:11px;color:var(--muted);margin-bottom:3px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+        .cli-ag-tit{font-size:15px;line-height:1.3;color:var(--text);margin-bottom:3px;}
+        .cli-ag-leg{font-size:12px;line-height:1.45;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+        .cli-ag-st{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;}
+        .cli-ag-item .grava-tag{display:inline-block;margin:0 0 4px;}
+        @media(max-width:700px){
+          .cli-agenda{display:block;}
+          .cli-cal-grid-7{gap:2px;}
+          .cli-cal-cell-blank,.cli-cal-cell{padding:3px!important;border-radius:6px!important;}
+          .cli-cal-cell-blank .cli-pchip-tipo,.cli-cal-cell.mensal .cli-pchip-tipo{display:none!important;}
+          .cli-cal-cell-blank .cli-pchip,.cli-cal-cell.mensal .cli-pchip{min-height:8px;}
+          .cli-cal-cell-blank .grava-tag,.cli-cal-cell.mensal .grava-tag{font-size:0!important;padding:0!important;height:4px;margin:0!important;}
+          .cli-cal-head-day{font-size:9px;padding:4px 0;}
+        }
         .cli-cal-grid-14{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;}
         .cli-cal-head-day{font-size:10px;color:var(--muted);text-align:center;padding:6px 2px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;}
         .cli-cal-cell{border-radius:10px;border:1px solid var(--border);background:var(--surface);padding:6px;position:relative;transition:border-color .15s;overflow:hidden;}
@@ -9398,6 +9428,7 @@ const Client = {
   },
 
   _showClientPreview(id, e) {
+    if (window.matchMedia && window.matchMedia('(hover: none)').matches) return; // celular: o toque já abre o post
     const p = this._posts.find(x=>x.id===id); if(!p) return;
     const SM = {
       criacao:{l:'Criação',c:'#c9a800',bc:'#fffae6'},
@@ -9572,6 +9603,32 @@ const Client = {
     }
 
     const semData = posts.filter(p=>!p.data_post);
+    // Lista legível do período (aparece só no celular, via CSS .cli-agenda)
+    let agIni, agFim;
+    if (mode === 'mensal') { const {y, m} = this._clientMonth; agIni = new Date(y, m, 1); agFim = new Date(y, m + 1, 0); }
+    else { agIni = startDate; agFim = endDate; }
+    const agKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const agLista = posts.filter(p => p.data_post && p.data_post >= agKey(agIni) && p.data_post <= agKey(agFim))
+      .sort((a,b) => a.data_post.localeCompare(b.data_post));
+    const agStatus = { criacao:['Em produção','#92400E','#fef3c7'], revisao:['Revisar','#9A3412','#ffedd5'], aprovado:['Aprovado','#166534','#dcfce7'], design:['Em design','#5b21b6','#f3e8ff'], publicado:['Publicado','#1e3a8a','#dbeafe'] };
+    const agHtml = `<div class="cli-agenda">
+      <div class="cli-ag-h">Posts do período (${agLista.length})</div>
+      ${agLista.length ? agLista.map(p => {
+        const midia = this.postMedia(p)[0] || '';
+        const thumb = midia && !this.isVideo(midia) ? `<img class="cli-ag-thumb" src="${midia}" onerror="this.outerHTML='<div class=&quot;cli-ag-thumb&quot;>📷</div>'"/>` : `<div class="cli-ag-thumb">${midia ? '🎬' : (p.tipo==='Reels' ? '🎬' : p.tipo==='Stories' ? '📖' : '📷')}</div>`;
+        const st = agStatus[p.status||'criacao'] || agStatus.criacao;
+        const dia = new Date(p.data_post+'T12:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
+        return `<div class="cli-ag-item${precisaGravar(p)?' is-grava':''}" onclick="Client.openClientPost(${p.id})">
+          ${thumb}
+          <div class="cli-ag-body">
+            ${precisaGravar(p)?GRAVA_TAG:''}
+            <div class="cli-ag-meta"><span>📅 ${dia}</span><span>${p.tipo||'Feed'}</span><span class="cli-ag-st" style="background:${st[2]};color:${st[1]};">${st[0]}</span></div>
+            ${p.tema_titulo?`<div class="cli-ag-tit pt">${fmtTit(p.tema_titulo)}</div>`:''}
+            <div class="cli-ag-leg pl">${stripHtml(p.legenda||'')}</div>
+          </div>
+        </div>`;
+      }).join('') : '<div style="font-size:13px;color:var(--muted);padding:8px 0;">Nenhum post neste período.</div>'}
+    </div>`;
     document.getElementById('client-cal-content').innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <button onclick="${prevFn}" style="padding:6px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:16px;">‹</button>
@@ -9579,6 +9636,7 @@ const Client = {
         <button onclick="${nextFn}" style="padding:6px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:16px;">›</button>
       </div>
       ${html}
+      ${agHtml}
       ${semData.length ? `
         <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
           <div style="font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Sem data (${semData.length})</div>
@@ -9631,7 +9689,7 @@ const Client = {
         const isVid = this.isVideo(u);
         const displayStyle = i===0 ? 'display:block' : 'display:none';
         return isVid
-          ? `<video class="cpm-slide" src="${u}" controls style="width:100%;max-height:75vh;object-fit:contain;${displayStyle};background:#000;"></video>`
+          ? `<video class="cpm-slide" src="${u}${/#t=/.test(u)?'':'#t=0.1'}" controls playsinline preload="metadata" style="width:100%;max-height:75vh;object-fit:contain;${displayStyle};background:#000;"></video>`
           : `<img class="cpm-slide" src="${u}" style="width:100%;max-height:75vh;object-fit:contain;${displayStyle};cursor:zoom-in;background:#111;" onclick="Client.openLightbox(window._cpmImgsList,${i})" onerror="this.style.display='none';console.warn('Imagem quebrada:','${u}')"/>`;
       }).join('');
 
@@ -9660,9 +9718,10 @@ const Client = {
 
     const modal = document.createElement('div');
     modal.id = 'client-post-modal';
+    modal.className = 'cpm-overlay';
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:8000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);';
     modal.innerHTML = `
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5);display:flex;flex-direction:column;">
+      <div class="cpm-box" style="background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5);display:flex;flex-direction:column;">
         <!-- Header -->
         <div style="padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;">
           <div>
