@@ -5675,6 +5675,16 @@ const Admin = {
     return lista.length ? '🔎 ' + lista.join(' | ') : '';
   },
 
+  // Stories: esconde legenda, hashtags e SEO (o Instagram não aceita) e mostra o aviso
+  _ajustarStories() {
+    const ehStory = /stor/i.test(document.getElementById('mp-tipo')?.value || '');
+    ['post-tab-legenda','post-tab-seo'].forEach(id => {
+      const tab = document.getElementById(id); if (!tab) return;
+      tab.querySelectorAll(':scope > .modal-field, :scope > label').forEach(el => { el.style.display = ehStory ? 'none' : ''; });
+      const av = tab.querySelector('.mp-stories-aviso'); if (av) av.style.display = ehStory ? 'block' : 'none';
+    });
+  },
+
   _seoParse(raw) {
     if (!raw) return null;
     if (typeof raw === 'object') return raw;
@@ -5875,6 +5885,7 @@ const Admin = {
     set('mp-data', draft.data);
     set('mp-rede', draft.rede);
     set('mp-tipo', draft.tipo);
+    this._ajustarStories && this._ajustarStories();
     set('mp-status', draft.status);
     localStorage.removeItem('post_draft_new');
     this._showToast('Rascunho do post recuperado ✓');
@@ -5908,6 +5919,7 @@ const Admin = {
     document.getElementById('mp-rede').value = 'Instagram';
     document.getElementById('mp-tipo').value = 'Feed · Foto';
     document.getElementById('mp-gravar').checked = false;
+    this._ajustarStories();
     document.getElementById('mp-subcliente').value = '';
     document.getElementById('mp-status').value = 'revisao';
     document.getElementById('mp-status-abas').value = 'todos_aprovados';
@@ -6237,6 +6249,7 @@ const Admin = {
     document.getElementById('mp-seo-na-legenda').checked = seo.na_legenda !== false;
     document.getElementById('mp-gravar').checked = !!seo.gravar;
     document.getElementById('mp-tipo').value     = p.tipo||'Feed';
+    this._ajustarStories();
     document.getElementById('mp-data').value     = p.data_post||'';
     document.getElementById('mp-ajuste').value   = p.ajuste_cliente||p.obs||'';
     document.getElementById('mp-status').value   = p.status||'criacao';
@@ -11278,7 +11291,7 @@ document.addEventListener('keydown', e => {
               </div>
               <div class="modal-field">
                 <label>Formato</label>
-                <select id="mp-tipo" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;color:var(--text);">
+                <select id="mp-tipo" onchange="Admin._ajustarStories()" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);font-family:Poppins,sans-serif;color:var(--text);">
                   <option value="Feed · Foto">Feed · Foto</option>
                   <option value="Feed · Carrossel">Feed · Carrossel</option>
                   <option value="Reels">Reels</option>
@@ -11344,6 +11357,7 @@ document.addEventListener('keydown', e => {
 
           <!-- Tab Legenda -->
           <div id="post-tab-legenda" style="display:none;">
+            <div class="mp-stories-aviso" style="display:none;margin:4px 0 14px;padding:12px 14px;border-radius:10px;background:rgba(155,107,58,.1);border:1px solid rgba(155,107,58,.3);font-size:12px;line-height:1.6;color:var(--text);">📖 <strong>Stories não tem legenda.</strong> O Instagram só deixa o sistema publicar a foto ou o vídeo: sem legenda, hashtags, figurinha de link, enquete ou música. Para pôr link, publique e depois adicione a figurinha pelo app do Instagram.</div>
             <div class="modal-field">
               <label>Legenda</label>
               <div class="post-toolbar">
@@ -11363,6 +11377,7 @@ document.addEventListener('keydown', e => {
 
           <!-- Tab SEO -->
           <div id="post-tab-seo" style="display:none;">
+            <div class="mp-stories-aviso" style="display:none;margin:4px 0 14px;padding:12px 14px;border-radius:10px;background:rgba(155,107,58,.1);border:1px solid rgba(155,107,58,.3);font-size:12px;line-height:1.6;color:var(--text);">📖 <strong>Stories não tem legenda.</strong> O Instagram só deixa o sistema publicar a foto ou o vídeo: sem legenda, hashtags, figurinha de link, enquete ou música. Para pôr link, publique e depois adicione a figurinha pelo app do Instagram.</div>
             <div class="modal-field">
               <label>Palavras-chave</label>
               <textarea id="mp-seo-palavras" rows="3" oninput="Admin._seoAtualizar()" placeholder="furo humanizado em Jacareí, furo de orelha, Drogaria Igarapés" style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);resize:vertical;font-family:Poppins,sans-serif;font-weight:300;line-height:1.6;"></textarea>
