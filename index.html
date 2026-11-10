@@ -1327,7 +1327,25 @@ const GRAVA_TAG = '<div class="grava-tag">🎥 GRAVAR</div>';
   const API  = new URL('midia/api.php', location.href).href;
   const BASE = new URL('midia/arquivos/', location.href).href;
   const enc  = p => String(p).replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/');
-  async function token(){ try{ const { data } = await db.auth.getSession(); return data && data.session ? data.session.access_token : ''; }catch(e){ return ''; } }
+  // Token da sessão; renova antes se estiver para vencer (aba aberta há muito tempo)
+  async function token(forcar){
+    try{
+      let { data } = await db.auth.getSession();
+      let ses = data && data.session;
+      const vence = ses && ses.expires_at ? ses.expires_at * 1000 : 0;
+      if (forcar || !ses || (vence && vence - Date.now() < 120000)) {
+        const r = await db.auth.refreshSession();
+        if (r && r.data && r.data.session) ses = r.data.session;
+      }
+      return ses ? ses.access_token : '';
+    }catch(e){ return ''; }
+  }
+  // Faz a chamada; se o servidor disser que a sessão venceu (401), renova e tenta mais uma vez
+  async function chamar(url, montar){
+    let r = await fetch(url, montar(await token(false)));
+    if (r.status === 401) r = await fetch(url, montar(await token(true)));
+    return r;
+  }
   function bucket(nome){
     const base = BASE + nome + '/';
     return {
@@ -1336,7 +1354,7 @@ const GRAVA_TAG = '<div class="grava-tag">🎥 GRAVAR</div>';
         fd.append('bucket', nome); fd.append('path', path); fd.append('upsert', opts && opts.upsert ? '1' : '0');
         fd.append('file', file, (file && file.name) || String(path).split('/').pop());
         try{
-          const r = await fetch(API + '?acao=upload', { method:'POST', headers:{ Authorization:'Bearer ' + await token() }, body:fd });
+          const r = await chamar(API + '?acao=upload', tk => ({ method:'POST', headers:{ Authorization:'Bearer ' + tk }, body:fd }));
           const j = await r.json().catch(() => ({}));
           if (!r.ok || j.erro) return { data:null, error:{ message: j.erro || ('Erro ' + r.status), statusCode: r.status } };
           return { data:{ path: j.path, fullPath: nome + '/' + j.path }, error:null };
@@ -1345,7 +1363,7 @@ const GRAVA_TAG = '<div class="grava-tag">🎥 GRAVAR</div>';
       getPublicUrl(path){ return { data:{ publicUrl: base + enc(path) } }; },
       async remove(paths){
         try{
-          const r = await fetch(API + '?acao=remover', { method:'POST', headers:{ Authorization:'Bearer ' + await token(), 'Content-Type':'application/json' }, body: JSON.stringify({ bucket:nome, paths }) });
+          const r = await chamar(API + '?acao=remover', tk => ({ method:'POST', headers:{ Authorization:'Bearer ' + tk, 'Content-Type':'application/json' }, body: JSON.stringify({ bucket:nome, paths }) }));
           const j = await r.json().catch(() => ({}));
           return r.ok ? { data: j.removidos || [], error:null } : { data:null, error:{ message: j.erro || ('Erro ' + r.status) } };
         }catch(e){ return { data:null, error:{ message: e.message } }; }
@@ -1366,7 +1384,10 @@ window.ANTHROPIC_KEY = ''; // ← Cole aqui sua chave da API Anthropic
 // Headers autenticados para chamar Edge Functions protegidas (usa o JWT da sessão do admin,
 // verificado no servidor — nunca a service_role key, que não deve rodar no navegador).
 async function authHeaders() {
-  const { data: { session } } = await db.auth.getSession();
+  let { data: { session } } = await db.auth.getSession();
+  if (session && session.expires_at && session.expires_at * 1000 - Date.now() < 120000) {
+    try { const r = await db.auth.refreshSession(); if (r?.data?.session) session = r.data.session; } catch(e) {}
+  }
   return {
     'Content-Type': 'application/json',
     'apikey': SUPABASE_KEY,
