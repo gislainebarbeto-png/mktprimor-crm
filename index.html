@@ -2838,7 +2838,10 @@ const Admin = {
 
       const midias = parseMedia(p.midia_urls);
       const todasMidias = midias.length ? midias : parseMedia(p.img_url);
-      const mediaUrl = todasMidias[0] || p.capa_url || '';
+      const ehVid = u => /\.(mp4|mov|webm|m4v)/i.test(u || '');
+      // Reels: o vídeo é a mídia principal, mesmo que a lista comece por uma imagem
+      const primeiroVideo = todasMidias.find(ehVid);
+      const mediaUrl = (String(p.tipo||'').toLowerCase().includes('reels') && primeiroVideo) ? primeiroVideo : (todasMidias[0] || p.capa_url || '');
       if (!mediaUrl) throw new Error('Nenhuma mídia encontrada no post. Adicione uma imagem ou vídeo antes de publicar.');
 
       // Stories: cada mídia vira um Stories, em sequência (sem legenda)
@@ -2889,6 +2892,7 @@ const Admin = {
         caption,
         image_url: !isVideo && !isCarousel ? mediaUrl : undefined,
         video_url: isVideo ? mediaUrl : undefined,
+        cover_url: isVideo && p.capa_url && !ehVid(p.capa_url) ? p.capa_url : undefined,
         media_urls: isCarousel ? todasMidias.filter(u => !/\.(mp4|mov|webm|m4v)/i.test(u)) : undefined,
         alt_text: !isVideo ? ((this._seoParse(p.seo) || {}).alt || undefined) : undefined,
       });

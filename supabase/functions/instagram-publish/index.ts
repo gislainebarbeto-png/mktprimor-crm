@@ -30,7 +30,7 @@ serve(async (req) => {
 
   try {
     await requireAdmin(req)
-    const { client_email, image_url, video_url, caption, media_urls, alt_text, story_url } = await req.json()
+    const { client_email, image_url, video_url, caption, media_urls, alt_text, story_url, cover_url } = await req.json()
     const alt = typeof alt_text === 'string' ? alt_text.trim().slice(0, 1000) : ''
     let altIgnorado = false
 
@@ -162,13 +162,18 @@ serve(async (req) => {
     const r1 = await fetch(`${BASE}/${ig_user_id}/media`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        media_type:    'REELS',
-        video_url:     video_url,
-        caption:       caption || '',
-        share_to_feed: 'true',
-        access_token,
-      }),
+      body: (() => {
+        const b = new URLSearchParams({
+          media_type:    'REELS',
+          video_url:     video_url,
+          caption:       caption || '',
+          share_to_feed: 'true',
+          access_token,
+        })
+        // Capa escolhida no CRM (imagem). Sem ela, o Instagram usa um quadro do vídeo.
+        if (cover_url) b.set('cover_url', String(cover_url))
+        return b
+      })(),
     })
     const container = await r1.json()
     if (container.error) throw new Error('Erro ao criar container de vídeo: ' + container.error.message)
@@ -184,7 +189,7 @@ serve(async (req) => {
     const pub = await r2.json()
     if (pub.error) throw new Error('Erro ao publicar vídeo: ' + pub.error.message)
 
-    return new Response(JSON.stringify({ success: true, media_id: pub.id, ig_username: tok.ig_username, alt_ignorado: altIgnorado }), {
+    return new Response(JSON.stringify({ success: true, media_id: pub.id, ig_username: tok.ig_username, alt_ignorado: altIgnorado, capa_usada: Boolean(cover_url) }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
     })
 
